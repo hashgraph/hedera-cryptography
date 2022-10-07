@@ -104,10 +104,10 @@ public final class BLS12381Group2Bindings {
 	 */
 	public static native byte[] g2Compress(final BLS12381Group2Element element);
 
-	static {
-		final List<Class> classList = new ArrayList<>();
-		classList.add(BLS12381Group2Bindings.class);
-
-		new LibraryLoader(classList).loadLibrary(PREFER_BUNDLED, "pairings_jni_rust");
-	}
+//	static {
+//		final List<Class> classList = new ArrayList<>();
+//		classList.add(BLS12381Group2Bindings.class);
+//
+//		new LibraryLoader(classList).loadLibrary(PREFER_BUNDLED, "pairings_jni_rust");
+//	}
 }

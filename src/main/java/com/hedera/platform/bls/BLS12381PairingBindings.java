@@ -41,10 +41,10 @@ public final class BLS12381PairingBindings {
 	 */
 	public static native byte[] pairingDisplay(final BLS12381Group1Element g1, final BLS12381Group2Element g2);
 
-	static {
-		final List<Class> classList = new ArrayList<>();
-		classList.add(BLS12381PairingBindings.class);
-
-		new LibraryLoader(classList).loadLibrary(PREFER_BUNDLED, "pairings_jni_rust");
-	}
+//	static {
+//		final List<Class> classList = new ArrayList<>();
+//		classList.add(BLS12381PairingBindings.class);
+//
+//		new LibraryLoader(classList).loadLibrary(PREFER_BUNDLED, "pairings_jni_rust");
+//	}
 }
