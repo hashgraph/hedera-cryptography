@@ -20,7 +20,6 @@ dependencyResolutionManagement {
             // JNI
             version("resource-loader-version", "2.0.2")
 
-
             // Define the individual libraries
             library("resource-loader", "com.goterl", "resource-loader").versionRef("resource-loader-version")
         }

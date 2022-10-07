@@ -1,301 +1,301 @@
-/*
- * Copyright 2016-2022 Hedera Hashgraph, LLC
- *
- * This software is the confidential and proprietary information of
- * Hedera Hashgraph, LLC. ("Confidential Information"). You shall not
- * disclose such Confidential Information and shall use it only in
- * accordance with the terms of the license agreement you entered into
- * with Hedera Hashgraph.
- *
- * HEDERA HASHGRAPH MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
- * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
- * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
- * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. HEDERA HASHGRAPH SHALL NOT BE LIABLE FOR
- * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
- * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
- */
-
-package com.hedera.platform.bls;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-public class JNITestUtils {
-	/**
-	 * Asserts that a JNI call returned a specific error code
-	 *
-	 * @param callReturn
-	 * 		the byte array returned by a JNI call
-	 * @param expectedError
-	 * 		the expected error code
-	 */
-	public static void assertErrorFromCall(final byte[] callReturn, final int expectedError) {
-		final JNICallResult result = new JNICallResult(callReturn);
-		assertEquals(expectedError, result.getErrorCode(), "call didn't return error code [" + expectedError + "]");
-	}
-
-	/**
-	 * Gets the result of a comparison done through a JNI equality call
-	 *
-	 * @param callReturn
-	 * 		the byte array returned by a JNI call
-	 * @return true if the call indicates equality, otherwise false
-	 */
-	public static boolean getEqualityFromCall(final byte[] callReturn) {
-		final JNICallResult result = new JNICallResult(callReturn);
-		assertEquals(0, result.getErrorCode(), "call returned error code");
-
-		return result.getResultArray()[0] == 1;
-	}
-
-	/**
-	 * Gets a scalar from the byte array returned from a JNI call
-	 *
-	 * @param callReturn
-	 * 		the byte array returned by a JNI call
-	 * @return the scalar result
-	 */
-	public static BLS12381FieldElement getScalarFromCall(final byte[] callReturn) {
-		final JNICallResult result = new JNICallResult(callReturn);
-		assertEquals(0, result.getErrorCode(), "call returned error code");
-
-		return new BLS12381FieldElement(result.getResultArray(), new BLS12381Field());
-	}
-
-	/**
-	 * Gets a scalar from a byte array seed
-	 *
-	 * @return a scalar from a byte array seed
-	 */
-	public static BLS12381FieldElement getRandomScalar(final byte[] seed) {
-		return getScalarFromCall(BLS12381ScalarBindings.newRandomScalar(seed));
-	}
-
-	/**
-	 * Gets a one scalar
-	 *
-	 * @return a one scalar
-	 */
-	public static BLS12381FieldElement getOneScalar() {
-		return getScalarFromCall(BLS12381ScalarBindings.newOneScalar());
-	}
-
-	/**
-	 * Gets a zero scalar
-	 *
-	 * @return a zero scalar
-	 */
-	public static BLS12381FieldElement getZeroScalar() {
-		return getScalarFromCall(BLS12381ScalarBindings.newZeroScalar());
-	}
-
-	/**
-	 * Gets a scalar from an integer
-	 *
-	 * @return a scalar from an integer
-	 */
-	public static BLS12381FieldElement getScalarFromInt(final int inputValue) {
-		return getScalarFromCall(BLS12381ScalarBindings.newScalarFromInt(inputValue));
-	}
-
-	/**
-	 * Asserts that two scalars are equal
-	 *
-	 * @param scalar1
-	 * 		the first scalar being compared
-	 * @param scalar2
-	 * 		the second scalar being compared
-	 * @param errorMessage
-	 * 		the error message if the assertion fails
-	 */
-	public static void assertScalarEquals(
-			final BLS12381FieldElement scalar1,
-			final BLS12381FieldElement scalar2,
-			final String errorMessage) {
-
-		assertBooleanCallTrue(BLS12381ScalarBindings.scalarEquals(scalar1, scalar2), errorMessage);
-	}
-
-	/**
-	 * Asserts that two scalars are not equal
-	 *
-	 * @param scalar1
-	 * 		the first scalar being compared
-	 * @param scalar2
-	 * 		the second scalar being compared
-	 * @param errorMessage
-	 * 		the error message if the assertion fails
-	 */
-	public static void assertScalarNotEquals(
-			final BLS12381FieldElement scalar1,
-			final BLS12381FieldElement scalar2,
-			final String errorMessage) {
-
-		assertBooleanCallFalse(BLS12381ScalarBindings.scalarEquals(scalar1, scalar2), errorMessage);
-	}
-
-	/**
-	 * Asserts that a JNI call that returns a boolean returned true
-	 *
-	 * @param callReturn
-	 * 		the byte array returned from the call
-	 * @param errorMessage
-	 * 		the error to print if the assertion fails
-	 */
-	public static void assertBooleanCallTrue(final byte[] callReturn, final String errorMessage) {
-		assertTrue(getEqualityFromCall(callReturn), errorMessage);
-	}
-
-	/**
-	 * Asserts that a JNI call that returns a boolean returned false
-	 *
-	 * @param callReturn
-	 * 		the byte array returned from the call
-	 * @param errorMessage
-	 * 		the error message to print if the assertion fails
-	 */
-	public static void assertBooleanCallFalse(final byte[] callReturn, final String errorMessage) {
-		assertFalse(getEqualityFromCall(callReturn), errorMessage);
-	}
-
-	/**
-	 * Gets a group element from the byte array returned from a JNI call
-	 *
-	 * @param callReturn
-	 * 		the byte array returned by a JNI call
-	 * @return the group element
-	 */
-	public static BLS12381Group1Element getG1ElementFromCall(final byte[] callReturn) {
-		final JNICallResult result = new JNICallResult(callReturn);
-		assertEquals(0, result.getErrorCode(), "call returned error code");
-
-		return new BLS12381Group1Element(result.getResultArray(), new BLS12381Group1());
-	}
-
-	/**
-	 * Gets an identity element
-	 *
-	 * @return an identity element
-	 */
-	public static BLS12381Group1Element getG1Identity() {
-		return getG1ElementFromCall(BLS12381Group1Bindings.newG1Identity());
-	}
-
-	/**
-	 * Gets a random group element from a byte seed
-	 *
-	 * @param seed
-	 * 		the seed
-	 * @return the new group element
-	 */
-	public static BLS12381Group1Element getG1RandomElement(final byte[] seed) {
-		return getG1ElementFromCall(BLS12381Group1Bindings.newRandomG1(seed));
-	}
-
-	/**
-	 * Asserts that two group 1 elements are equal
-	 *
-	 * @param element1
-	 * 		the first element being compared
-	 * @param element2
-	 * 		the second element being compared
-	 * @param errorMessage
-	 * 		the error message if the assertion fails
-	 */
-	public static void assertG1ElementEquals(
-			final BLS12381Group1Element element1,
-			final BLS12381Group1Element element2,
-			final String errorMessage) {
-
-		assertBooleanCallTrue(BLS12381Group1Bindings.g1ElementEquals(element1, element2), errorMessage);
-	}
-
-	/**
-	 * Asserts that two group 1 elements are not equal
-	 *
-	 * @param element1
-	 * 		the first element being compared
-	 * @param element2
-	 * 		the second element being compared
-	 * @param errorMessage
-	 * 		the error message if the assertion fails
-	 */
-	public static void assertG1ElementNotEquals(
-			final BLS12381Group1Element element1,
-			final BLS12381Group1Element element2,
-			final String errorMessage) {
-
-		assertBooleanCallFalse(BLS12381Group1Bindings.g1ElementEquals(element1, element2), errorMessage);
-	}
-
-	/**
-	 * Gets a group element from the byte array returned from a JNI call
-	 *
-	 * @param callReturn
-	 * 		the byte array returned by a JNI call
-	 * @return the group element
-	 */
-	public static BLS12381Group2Element getG2ElementFromCall(final byte[] callReturn) {
-		final JNICallResult result = new JNICallResult(callReturn);
-		assertEquals(0, result.getErrorCode(), "call returned error code");
-
-		return new BLS12381Group2Element(result.getResultArray(), new BLS12381Group2());
-	}
-
-	/**
-	 * Gets an identity element
-	 *
-	 * @return an identity element
-	 */
-	public static BLS12381Group2Element getG2Identity() {
-		return getG2ElementFromCall(BLS12381Group2Bindings.newG2Identity());
-	}
-
-	/**
-	 * Gets a random group element from a byte seed
-	 *
-	 * @param seed
-	 * 		the seed
-	 * @return the new group element
-	 */
-	public static BLS12381Group2Element getG2RandomElement(final byte[] seed) {
-		return getG2ElementFromCall(BLS12381Group2Bindings.newRandomG2(seed));
-	}
-
-	/**
-	 * Asserts that two group 2 elements are equal
-	 *
-	 * @param element1
-	 * 		the first element being compared
-	 * @param element2
-	 * 		the second element being compared
-	 * @param errorMessage
-	 * 		the error message if the assertion fails
-	 */
-	public static void assertG2ElementEquals(
-			final BLS12381Group2Element element1,
-			final BLS12381Group2Element element2,
-			final String errorMessage) {
-
-		assertBooleanCallTrue(BLS12381Group2Bindings.g2ElementEquals(element1, element2), errorMessage);
-	}
-
-	/**
-	 * Asserts that two group 2 elements are not equal
-	 *
-	 * @param element1
-	 * 		the first element being compared
-	 * @param element2
-	 * 		the second element being compared
-	 * @param errorMessage
-	 * 		the error message if the assertion fails
-	 */
-	public static void assertG2ElementNotEquals(
-			final BLS12381Group2Element element1,
-			final BLS12381Group2Element element2,
-			final String errorMessage) {
-
-		assertBooleanCallFalse(BLS12381Group2Bindings.g2ElementEquals(element1, element2), errorMessage);
-	}
-}
+///*
+// * Copyright 2016-2022 Hedera Hashgraph, LLC
+// *
+// * This software is the confidential and proprietary information of
+// * Hedera Hashgraph, LLC. ("Confidential Information"). You shall not
+// * disclose such Confidential Information and shall use it only in
+// * accordance with the terms of the license agreement you entered into
+// * with Hedera Hashgraph.
+// *
+// * HEDERA HASHGRAPH MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
+// * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+// * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+// * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. HEDERA HASHGRAPH SHALL NOT BE LIABLE FOR
+// * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
+// * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+// */
+//
+//package com.hedera.platform.bls;
+//
+//import static org.junit.jupiter.api.Assertions.assertEquals;
+//import static org.junit.jupiter.api.Assertions.assertFalse;
+//import static org.junit.jupiter.api.Assertions.assertTrue;
+//
+//public class JNITestUtils {
+//	/**
+//	 * Asserts that a JNI call returned a specific error code
+//	 *
+//	 * @param callReturn
+//	 * 		the byte array returned by a JNI call
+//	 * @param expectedError
+//	 * 		the expected error code
+//	 */
+//	public static void assertErrorFromCall(final byte[] callReturn, final int expectedError) {
+//		final JNICallResult result = new JNICallResult(callReturn);
+//		assertEquals(expectedError, result.getErrorCode(), "call didn't return error code [" + expectedError + "]");
+//	}
+//
+//	/**
+//	 * Gets the result of a comparison done through a JNI equality call
+//	 *
+//	 * @param callReturn
+//	 * 		the byte array returned by a JNI call
+//	 * @return true if the call indicates equality, otherwise false
+//	 */
+//	public static boolean getEqualityFromCall(final byte[] callReturn) {
+//		final JNICallResult result = new JNICallResult(callReturn);
+//		assertEquals(0, result.getErrorCode(), "call returned error code");
+//
+//		return result.getResultArray()[0] == 1;
+//	}
+//
+//	/**
+//	 * Gets a scalar from the byte array returned from a JNI call
+//	 *
+//	 * @param callReturn
+//	 * 		the byte array returned by a JNI call
+//	 * @return the scalar result
+//	 */
+//	public static BLS12381FieldElement getScalarFromCall(final byte[] callReturn) {
+//		final JNICallResult result = new JNICallResult(callReturn);
+//		assertEquals(0, result.getErrorCode(), "call returned error code");
+//
+//		return new BLS12381FieldElement(result.getResultArray(), new BLS12381Field());
+//	}
+//
+//	/**
+//	 * Gets a scalar from a byte array seed
+//	 *
+//	 * @return a scalar from a byte array seed
+//	 */
+//	public static BLS12381FieldElement getRandomScalar(final byte[] seed) {
+//		return getScalarFromCall(BLS12381ScalarBindings.newRandomScalar(seed));
+//	}
+//
+//	/**
+//	 * Gets a one scalar
+//	 *
+//	 * @return a one scalar
+//	 */
+//	public static BLS12381FieldElement getOneScalar() {
+//		return getScalarFromCall(BLS12381ScalarBindings.newOneScalar());
+//	}
+//
+//	/**
+//	 * Gets a zero scalar
+//	 *
+//	 * @return a zero scalar
+//	 */
+//	public static BLS12381FieldElement getZeroScalar() {
+//		return getScalarFromCall(BLS12381ScalarBindings.newZeroScalar());
+//	}
+//
+//	/**
+//	 * Gets a scalar from an integer
+//	 *
+//	 * @return a scalar from an integer
+//	 */
+//	public static BLS12381FieldElement getScalarFromInt(final int inputValue) {
+//		return getScalarFromCall(BLS12381ScalarBindings.newScalarFromInt(inputValue));
+//	}
+//
+//	/**
+//	 * Asserts that two scalars are equal
+//	 *
+//	 * @param scalar1
+//	 * 		the first scalar being compared
+//	 * @param scalar2
+//	 * 		the second scalar being compared
+//	 * @param errorMessage
+//	 * 		the error message if the assertion fails
+//	 */
+//	public static void assertScalarEquals(
+//			final BLS12381FieldElement scalar1,
+//			final BLS12381FieldElement scalar2,
+//			final String errorMessage) {
+//
+//		assertBooleanCallTrue(BLS12381ScalarBindings.scalarEquals(scalar1, scalar2), errorMessage);
+//	}
+//
+//	/**
+//	 * Asserts that two scalars are not equal
+//	 *
+//	 * @param scalar1
+//	 * 		the first scalar being compared
+//	 * @param scalar2
+//	 * 		the second scalar being compared
+//	 * @param errorMessage
+//	 * 		the error message if the assertion fails
+//	 */
+//	public static void assertScalarNotEquals(
+//			final BLS12381FieldElement scalar1,
+//			final BLS12381FieldElement scalar2,
+//			final String errorMessage) {
+//
+//		assertBooleanCallFalse(BLS12381ScalarBindings.scalarEquals(scalar1, scalar2), errorMessage);
+//	}
+//
+//	/**
+//	 * Asserts that a JNI call that returns a boolean returned true
+//	 *
+//	 * @param callReturn
+//	 * 		the byte array returned from the call
+//	 * @param errorMessage
+//	 * 		the error to print if the assertion fails
+//	 */
+//	public static void assertBooleanCallTrue(final byte[] callReturn, final String errorMessage) {
+//		assertTrue(getEqualityFromCall(callReturn), errorMessage);
+//	}
+//
+//	/**
+//	 * Asserts that a JNI call that returns a boolean returned false
+//	 *
+//	 * @param callReturn
+//	 * 		the byte array returned from the call
+//	 * @param errorMessage
+//	 * 		the error message to print if the assertion fails
+//	 */
+//	public static void assertBooleanCallFalse(final byte[] callReturn, final String errorMessage) {
+//		assertFalse(getEqualityFromCall(callReturn), errorMessage);
+//	}
+//
+//	/**
+//	 * Gets a group element from the byte array returned from a JNI call
+//	 *
+//	 * @param callReturn
+//	 * 		the byte array returned by a JNI call
+//	 * @return the group element
+//	 */
+//	public static BLS12381Group1Element getG1ElementFromCall(final byte[] callReturn) {
+//		final JNICallResult result = new JNICallResult(callReturn);
+//		assertEquals(0, result.getErrorCode(), "call returned error code");
+//
+//		return new BLS12381Group1Element(result.getResultArray(), new BLS12381Group1());
+//	}
+//
+//	/**
+//	 * Gets an identity element
+//	 *
+//	 * @return an identity element
+//	 */
+//	public static BLS12381Group1Element getG1Identity() {
+//		return getG1ElementFromCall(BLS12381Group1Bindings.newG1Identity());
+//	}
+//
+//	/**
+//	 * Gets a random group element from a byte seed
+//	 *
+//	 * @param seed
+//	 * 		the seed
+//	 * @return the new group element
+//	 */
+//	public static BLS12381Group1Element getG1RandomElement(final byte[] seed) {
+//		return getG1ElementFromCall(BLS12381Group1Bindings.newRandomG1(seed));
+//	}
+//
+//	/**
+//	 * Asserts that two group 1 elements are equal
+//	 *
+//	 * @param element1
+//	 * 		the first element being compared
+//	 * @param element2
+//	 * 		the second element being compared
+//	 * @param errorMessage
+//	 * 		the error message if the assertion fails
+//	 */
+//	public static void assertG1ElementEquals(
+//			final BLS12381Group1Element element1,
+//			final BLS12381Group1Element element2,
+//			final String errorMessage) {
+//
+//		assertBooleanCallTrue(BLS12381Group1Bindings.g1ElementEquals(element1, element2), errorMessage);
+//	}
+//
+//	/**
+//	 * Asserts that two group 1 elements are not equal
+//	 *
+//	 * @param element1
+//	 * 		the first element being compared
+//	 * @param element2
+//	 * 		the second element being compared
+//	 * @param errorMessage
+//	 * 		the error message if the assertion fails
+//	 */
+//	public static void assertG1ElementNotEquals(
+//			final BLS12381Group1Element element1,
+//			final BLS12381Group1Element element2,
+//			final String errorMessage) {
+//
+//		assertBooleanCallFalse(BLS12381Group1Bindings.g1ElementEquals(element1, element2), errorMessage);
+//	}
+//
+//	/**
+//	 * Gets a group element from the byte array returned from a JNI call
+//	 *
+//	 * @param callReturn
+//	 * 		the byte array returned by a JNI call
+//	 * @return the group element
+//	 */
+//	public static BLS12381Group2Element getG2ElementFromCall(final byte[] callReturn) {
+//		final JNICallResult result = new JNICallResult(callReturn);
+//		assertEquals(0, result.getErrorCode(), "call returned error code");
+//
+//		return new BLS12381Group2Element(result.getResultArray(), new BLS12381Group2());
+//	}
+//
+//	/**
+//	 * Gets an identity element
+//	 *
+//	 * @return an identity element
+//	 */
+//	public static BLS12381Group2Element getG2Identity() {
+//		return getG2ElementFromCall(BLS12381Group2Bindings.newG2Identity());
+//	}
+//
+//	/**
+//	 * Gets a random group element from a byte seed
+//	 *
+//	 * @param seed
+//	 * 		the seed
+//	 * @return the new group element
+//	 */
+//	public static BLS12381Group2Element getG2RandomElement(final byte[] seed) {
+//		return getG2ElementFromCall(BLS12381Group2Bindings.newRandomG2(seed));
+//	}
+//
+//	/**
+//	 * Asserts that two group 2 elements are equal
+//	 *
+//	 * @param element1
+//	 * 		the first element being compared
+//	 * @param element2
+//	 * 		the second element being compared
+//	 * @param errorMessage
+//	 * 		the error message if the assertion fails
+//	 */
+//	public static void assertG2ElementEquals(
+//			final BLS12381Group2Element element1,
+//			final BLS12381Group2Element element2,
+//			final String errorMessage) {
+//
+//		assertBooleanCallTrue(BLS12381Group2Bindings.g2ElementEquals(element1, element2), errorMessage);
+//	}
+//
+//	/**
+//	 * Asserts that two group 2 elements are not equal
+//	 *
+//	 * @param element1
+//	 * 		the first element being compared
+//	 * @param element2
+//	 * 		the second element being compared
+//	 * @param errorMessage
+//	 * 		the error message if the assertion fails
+//	 */
+//	public static void assertG2ElementNotEquals(
+//			final BLS12381Group2Element element1,
+//			final BLS12381Group2Element element2,
+//			final String errorMessage) {
+//
+//		assertBooleanCallFalse(BLS12381Group2Bindings.g2ElementEquals(element1, element2), errorMessage);
+//	}
+//}

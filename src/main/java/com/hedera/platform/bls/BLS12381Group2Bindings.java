@@ -3,8 +3,6 @@ package com.hedera.platform.bls;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.hedera.platform.bls.LibraryLoader.Mode.PREFER_BUNDLED;
-
 public final class BLS12381Group2Bindings {
 	private BLS12381Group2Bindings() {
 	}

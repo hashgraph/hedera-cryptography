@@ -9,5 +9,6 @@ extraJavaModuleInfo {
     failOnMissingModuleInfo.set(true)
 
     automaticModule("com.goterl:resource-loader", "resource.loader")
+    automaticModule("com.goterl:lazysodium-java", "lazysodium.java")
 }
 

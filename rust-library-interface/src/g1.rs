@@ -36,7 +36,7 @@ pub(crate) fn g1_from_jobject(env: &JNIEnv, object: &jobject) -> Result<G1Affine
 
 /// Creates a new identity element of group g1
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_newG1Identity(
+pub extern "system" fn newG1Identity(
     env: JNIEnv,
     _class: JClass,
 ) -> jbyteArray {

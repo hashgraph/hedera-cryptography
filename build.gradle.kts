@@ -16,8 +16,9 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
 
-    implementation("net.java.dev.jna:jna:5.12.1")
+    implementation("net.java.dev.jna:jna:5.8.0")
     implementation("com.goterl:resource-loader:2.0.2")
+    implementation("com.goterl:lazysodium-java:5.1.1")
 }
 
 java.sourceSets["main"].java {

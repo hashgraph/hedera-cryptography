@@ -3,3 +3,4 @@ mod scalar;
 mod g1;
 mod g2;
 mod pairing;
+mod test;

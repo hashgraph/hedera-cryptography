@@ -3,8 +3,6 @@ package com.hedera.platform.bls;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.hedera.platform.bls.LibraryLoader.Mode.PREFER_BUNDLED;
-
 /**
  * An interface class to allow java access to functions in the rust library BLS12_381
  * <p>
