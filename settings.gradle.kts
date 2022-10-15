@@ -1,12 +1,11 @@
-rootProject.name = "hedera-bls-cryptography"
-
-pluginManagement {
-    includeBuild("build-logic")
-}
-
 plugins {
     id("com.gradle.enterprise").version("3.10.3")
 }
+
+rootProject.name = "hedera-bls-cryptography"
+
+include(":hedera-bls-api")
+include(":hedera-bls-rust-jni")
 
 dependencyResolutionManagement {
     @Suppress("UnstableApiUsage")
@@ -19,9 +18,11 @@ dependencyResolutionManagement {
 
             // JNI
             version("resource-loader-version", "2.0.2")
+            version("jna-version", "5.9.0")
 
             // Define the individual libraries
             library("resource-loader", "com.goterl", "resource-loader").versionRef("resource-loader-version")
+            library("jna", "net.java.dev.jna", "jna").versionRef("jna-version")
         }
     }
 }
