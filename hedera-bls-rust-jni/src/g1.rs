@@ -3,8 +3,8 @@ use std::convert::TryInto;
 use bls12_381::*;
 use group::{Curve, Group};
 use jni::JNIEnv;
-use jni::objects::JClass;
-use jni::sys::{jbyteArray, jobject, jobjectArray};
+use jni::objects::{JClass, JObject};
+use jni::sys::{jbyteArray, jobjectArray};
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 
@@ -12,12 +12,12 @@ use crate::common::*;
 use crate::scalar::scalar_from_jobject;
 
 /// Converts a g1 jobject to a G1Affine object
-pub(crate) fn g1_from_jobject(env: &JNIEnv, object: &jobject) -> Result<G1Affine, GenericError> {
+pub(crate) fn g1_from_jobject(env: &JNIEnv, object: &JObject) -> Result<G1Affine, GenericError> {
     let compressed = env.get_field(*object, "compressed", "Z")?.z()?;
     let g1_bytes = env
         .get_field(*object, "groupElement", "[B")?
         .l()?
-        .into_inner();
+        .into_raw();
 
     if compressed {
         Ok(from_bytes_generic(
@@ -36,7 +36,7 @@ pub(crate) fn g1_from_jobject(env: &JNIEnv, object: &jobject) -> Result<G1Affine
 
 /// Creates a new identity element of group g1
 #[no_mangle]
-pub extern "system" fn newG1Identity(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group1Bindings_newG1Identity(
     env: JNIEnv,
     _class: JClass,
 ) -> jbyteArray {
@@ -48,8 +48,8 @@ pub extern "system" fn newG1Identity(
 /// Internal
 fn g1_element_equals(
     env: &JNIEnv,
-    g1_1_object: &jobject,
-    g1_2_object: &jobject,
+    g1_1_object: &JObject,
+    g1_2_object: &JObject,
 ) -> Result<jbyteArray, GenericError> {
     let g1_1 = g1_from_jobject(&env, g1_1_object)?;
     let g1_2 = g1_from_jobject(&env, g1_2_object)?;
@@ -59,11 +59,11 @@ fn g1_element_equals(
 
 /// Checks if 2 g1 elements are equal
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_g1ElementEquals(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group1Bindings_g1ElementEquals(
     env: JNIEnv,
     _class: JClass,
-    g1_1_object: jobject,
-    g1_2_object: jobject,
+    g1_1_object: JObject,
+    g1_2_object: JObject,
 ) -> jbyteArray {
     match g1_element_equals(&env, &g1_1_object, &g1_2_object) {
         Ok(output) => output,
@@ -75,10 +75,10 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_g1ElementEqual
 
 /// Checks if a g1 element is valid
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_checkG1Validity(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group1Bindings_checkG1Validity(
     env: JNIEnv,
     _class: JClass,
-    g1_object: jobject,
+    g1_object: JObject,
 ) -> jbyteArray {
     match g1_from_jobject(&env, &g1_object) {
         Ok(_) => create_output(&env, &[1]),
@@ -106,7 +106,7 @@ fn new_g1_from_bytes(
 
 /// Creates a new g1 element based on a byte array seed
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_newRandomG1(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group1Bindings_newRandomG1(
     env: JNIEnv,
     _class: JClass,
     input_seed_bytes: jbyteArray,
@@ -122,8 +122,8 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_newRandomG1(
 /// Internal
 fn g1_divide(
     env: &JNIEnv,
-    g1_1_object: &jobject,
-    g1_2_object: &jobject,
+    g1_1_object: &JObject,
+    g1_2_object: &JObject,
 ) -> Result<jbyteArray, GenericError> {
     let g1_1 = g1_from_jobject(&env, &g1_1_object)?;
     let g1_2 = g1_from_jobject(&env, &g1_2_object)?;
@@ -141,11 +141,11 @@ fn g1_divide(
 /// Computes the quotient of 2 group elements of g1
 /// Result is an element of g1
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_g1Divide(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group1Bindings_g1Divide(
     env: JNIEnv,
     _class: JClass,
-    g1_1_object: jobject,
-    g1_2_object: jobject,
+    g1_1_object: JObject,
+    g1_2_object: JObject,
 ) -> jbyteArray {
     match g1_divide(&env, &g1_1_object, &g1_2_object) {
         Ok(output) => output,
@@ -158,8 +158,8 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_g1Divide(
 /// Internal
 fn g1_multiply(
     env: &JNIEnv,
-    g1_1_object: &jobject,
-    g1_2_object: &jobject,
+    g1_1_object: &JObject,
+    g1_2_object: &JObject,
 ) -> Result<jbyteArray, GenericError> {
     let g1_1 = g1_from_jobject(&env, &g1_1_object)?;
     let g1_2 = g1_from_jobject(&env, &g1_2_object)?;
@@ -177,11 +177,11 @@ fn g1_multiply(
 /// Computes the product of 2 group elements of g1
 /// Result is an element of g1
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_g1Multiply(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group1Bindings_g1Multiply(
     env: JNIEnv,
     _class: JClass,
-    g1_1_object: jobject,
-    g1_2_object: jobject,
+    g1_1_object: JObject,
+    g1_2_object: JObject,
 ) -> jbyteArray {
     match g1_multiply(&env, &g1_1_object, &g1_2_object) {
         Ok(output) => output,
@@ -208,7 +208,7 @@ fn g1_batch_multiply(
 
     for index in 0..element_batch_len {
         let g1_object = env.get_object_array_element(*element_batch, index)?;
-        let g1 = g1_from_jobject(&env, &g1_object.into_inner())?;
+        let g1 = g1_from_jobject(&env, &g1_object)?;
 
         product = product + g1;
     }
@@ -219,7 +219,7 @@ fn g1_batch_multiply(
 /// Computes the product of a batch of group elements of g1
 /// Result is an element of g1
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_g1BatchMultiply(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group1Bindings_g1BatchMultiply(
     env: JNIEnv,
     _class: JClass,
     element_batch: jobjectArray,
@@ -235,8 +235,8 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_g1BatchMultipl
 /// Internal
 fn g1_pow_zn(
     env: &JNIEnv,
-    base_object: &jobject,
-    exponent_object: &jobject,
+    base_object: &JObject,
+    exponent_object: &JObject,
 ) -> Result<jbyteArray, GenericError> {
     let base = g1_from_jobject(&env, base_object)?;
     let exponent = scalar_from_jobject(&env, exponent_object)?;
@@ -254,11 +254,11 @@ fn g1_pow_zn(
 /// Computes the value of a g1 group element, taken to the power of a scalar
 /// Result is an element of g1
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_g1PowZn(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group1Bindings_g1PowZn(
     env: JNIEnv,
     _class: JClass,
-    base_object: jobject,     // g1
-    exponent_object: jobject, // scalar
+    base_object: JObject,     // g1
+    exponent_object: JObject, // scalar
 ) -> jbyteArray {
     match g1_pow_zn(&env, &base_object, &exponent_object) {
         Ok(output) => output,
@@ -270,10 +270,10 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_g1PowZn(
 
 /// Compresses a group element
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381Group1Bindings_g1Compress(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group1Bindings_g1Compress(
     env: JNIEnv,
     _class: JClass,
-    element_object: jobject,
+    element_object: JObject,
 ) -> jbyteArray {
     let element = match g1_from_jobject(&env, &element_object) {
         Ok(base) => base,

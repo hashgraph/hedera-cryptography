@@ -1,3 +1,3 @@
 cargo build --release
 
-mv target/release/libpairings_jni_rust.dylib ../src/main/resources/mac/aarch64
+mv target/release/libhedera_bls_jni.dylib ../hedera-bls-api/src/main/resources/mac/aarch64

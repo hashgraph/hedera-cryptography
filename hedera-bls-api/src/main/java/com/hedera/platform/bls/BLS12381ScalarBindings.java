@@ -1,5 +1,6 @@
 package com.hedera.platform.bls;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -128,10 +129,11 @@ public final class BLS12381ScalarBindings {
 	 */
 	public static native byte[] scalarPower(final BLS12381FieldElement base, final byte[] exponent);
 
-//	static {
-//		final List<Class> classList = new ArrayList<>();
-//		classList.add(BLS12381ScalarBindings.class);
-//
-//		new LibraryLoader(classList).loadLibrary(PREFER_BUNDLED, "pairings_jni_rust");
-//	}
+	static {
+		try {
+			new LibraryLoader().loadBundledLibrary(BLS12381ScalarBindings.class);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

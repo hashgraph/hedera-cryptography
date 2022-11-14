@@ -1,7 +1,6 @@
 package com.hedera.platform.bls;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
 
 public final class BLS12381Group2Bindings {
 	private BLS12381Group2Bindings() {
@@ -102,10 +101,11 @@ public final class BLS12381Group2Bindings {
 	 */
 	public static native byte[] g2Compress(final BLS12381Group2Element element);
 
-//	static {
-//		final List<Class> classList = new ArrayList<>();
-//		classList.add(BLS12381Group2Bindings.class);
-//
-//		new LibraryLoader(classList).loadLibrary(PREFER_BUNDLED, "pairings_jni_rust");
-//	}
+	static {
+		try {
+			new LibraryLoader().loadBundledLibrary(BLS12381Group2Bindings.class);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

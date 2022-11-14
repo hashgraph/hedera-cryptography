@@ -2,8 +2,8 @@ use std::convert::TryInto;
 
 use bls12_381::*;
 use ff::Field;
-use jni::objects::JClass;
-use jni::sys::{jbyteArray, jint, jobject};
+use jni::objects::{JClass, JObject};
+use jni::sys::{jbyteArray, jint};
 use jni::JNIEnv;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
@@ -13,11 +13,11 @@ use crate::common::*;
 const BIG_INT_SIZE: usize = 32;
 
 /// Converts a scalar jobject to a Scalar object
-pub(crate) fn scalar_from_jobject(env: &JNIEnv, object: &jobject) -> Result<Scalar, GenericError> {
+pub(crate) fn scalar_from_jobject(env: &JNIEnv, object: &JObject) -> Result<Scalar, GenericError> {
     let scalar_bytes = env
         .get_field(*object, "fieldElement", "[B")?
         .l()?
-        .into_inner();
+        .into_raw();
 
     Ok(from_bytes_generic(
         &env,
@@ -66,7 +66,7 @@ fn new_scalar_from_bytes(
 
 /// Creates a new scalar, based on input bytes
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_newRandomScalar(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_newRandomScalar(
     env: JNIEnv,
     _class: JClass,
     input_seed_bytes: jbyteArray,
@@ -81,7 +81,7 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_newRandomScala
 
 /// Creates a new scalar from an integer
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_newScalarFromInt(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_newScalarFromInt(
     env: JNIEnv,
     _class: JClass,
     input_int: jint,
@@ -91,7 +91,7 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_newScalarFromI
 
 /// Creates a new 0 value scalar
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_newZeroScalar(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_newZeroScalar(
     env: JNIEnv,
     _class: JClass,
 ) -> jbyteArray {
@@ -100,7 +100,7 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_newZeroScalar(
 
 /// Creates a new 1 value scalar
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_newOneScalar(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_newOneScalar(
     env: JNIEnv,
     _class: JClass,
 ) -> jbyteArray {
@@ -110,8 +110,8 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_newOneScalar(
 /// Internal
 fn scalar_equals(
     env: &JNIEnv,
-    scalar1_object: &jobject,
-    scalar2_object: &jobject,
+    scalar1_object: &JObject,
+    scalar2_object: &JObject,
 ) -> Result<jbyteArray, GenericError> {
     let scalar1 = scalar_from_jobject(&env, &scalar1_object)?;
     let scalar2 = scalar_from_jobject(&env, &scalar2_object)?;
@@ -124,11 +124,11 @@ fn scalar_equals(
 
 /// Checks if 2 scalar values are equal
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_scalarEquals(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_scalarEquals(
     env: JNIEnv,
     _class: JClass,
-    scalar1_object: jobject,
-    scalar2_object: jobject,
+    scalar1_object: JObject,
+    scalar2_object: JObject,
 ) -> jbyteArray {
     match scalar_equals(&env, &scalar1_object, &scalar2_object) {
         Ok(output) => output,
@@ -140,10 +140,10 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_scalarEquals(
 
 /// Checks if a scalar is valid
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_checkScalarValidity(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_checkScalarValidity(
     env: JNIEnv,
     _class: JClass,
-    scalar_object: jobject,
+    scalar_object: JObject,
 ) -> jbyteArray {
     match scalar_from_jobject(&env, &scalar_object) {
         Ok(_) => create_output(&env, &[1]),
@@ -156,8 +156,8 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_checkScalarVal
 /// Internal
 fn scalar_add(
     env: &JNIEnv,
-    scalar1_object: &jobject,
-    scalar2_object: &jobject,
+    scalar1_object: &JObject,
+    scalar2_object: &JObject,
 ) -> Result<jbyteArray, GenericError> {
     let scalar1 = scalar_from_jobject(&env, &scalar1_object)?;
     let scalar2 = scalar_from_jobject(&env, &scalar2_object)?;
@@ -168,11 +168,11 @@ fn scalar_add(
 /// Computes the sum of 2 scalar values
 /// Result is a scalar
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_scalarAdd(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_scalarAdd(
     env: JNIEnv,
     _class: JClass,
-    scalar1_object: jobject,
-    scalar2_object: jobject,
+    scalar1_object: JObject,
+    scalar2_object: JObject,
 ) -> jbyteArray {
     match scalar_add(&env, &scalar1_object, &scalar2_object) {
         Ok(output) => output,
@@ -185,8 +185,8 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_scalarAdd(
 /// Internal
 fn scalar_subtract(
     env: &JNIEnv,
-    scalar1_object: &jobject,
-    scalar2_object: &jobject,
+    scalar1_object: &JObject,
+    scalar2_object: &JObject,
 ) -> Result<jbyteArray, GenericError> {
     let scalar1 = scalar_from_jobject(&env, &scalar1_object)?;
     let scalar2 = scalar_from_jobject(&env, &scalar2_object)?;
@@ -197,11 +197,11 @@ fn scalar_subtract(
 /// Computes the difference between 2 scalar values
 /// Result is a scalar
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_scalarSubtract(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_scalarSubtract(
     env: JNIEnv,
     _class: JClass,
-    scalar1_object: jobject,
-    scalar2_object: jobject,
+    scalar1_object: JObject,
+    scalar2_object: JObject,
 ) -> jbyteArray {
     match scalar_subtract(&env, &scalar1_object, &scalar2_object) {
         Ok(output) => output,
@@ -214,8 +214,8 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_scalarSubtract
 /// Internal
 fn scalar_multiply(
     env: &JNIEnv,
-    scalar1_object: &jobject,
-    scalar2_object: &jobject,
+    scalar1_object: &JObject,
+    scalar2_object: &JObject,
 ) -> Result<jbyteArray, GenericError> {
     let scalar1 = scalar_from_jobject(&env, &scalar1_object)?;
     let scalar2 = scalar_from_jobject(&env, &scalar2_object)?;
@@ -226,11 +226,11 @@ fn scalar_multiply(
 /// Computes the product of 2 scalar values
 /// Result is a scalar
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_scalarMultiply(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_scalarMultiply(
     env: JNIEnv,
     _class: JClass,
-    scalar1_object: jobject,
-    scalar2_object: jobject,
+    scalar1_object: JObject,
+    scalar2_object: JObject,
 ) -> jbyteArray {
     match scalar_multiply(&env, &scalar1_object, &scalar2_object) {
         Ok(output) => output,
@@ -243,8 +243,8 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_scalarMultiply
 /// Internal
 fn scalar_divide(
     env: &JNIEnv,
-    scalar1_object: &jobject,
-    scalar2_object: &jobject,
+    scalar1_object: &JObject,
+    scalar2_object: &JObject,
 ) -> Result<jbyteArray, GenericError> {
     let scalar1 = scalar_from_jobject(&env, &scalar1_object)?;
     let scalar2 = scalar_from_jobject(&env, &scalar2_object)?;
@@ -261,11 +261,11 @@ fn scalar_divide(
 /// Computes the quotient of 2 scalar values
 /// Result is a scalar
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_scalarDivide(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_scalarDivide(
     env: JNIEnv,
     _class: JClass,
-    scalar1_object: jobject,
-    scalar2_object: jobject,
+    scalar1_object: JObject,
+    scalar2_object: JObject,
 ) -> jbyteArray {
     match scalar_divide(&env, &scalar1_object, &scalar2_object) {
         Ok(output) => output,
@@ -278,7 +278,7 @@ pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_scalarDivide(
 /// Internal
 fn scalar_power(
     env: &JNIEnv,
-    base_object: &jobject,
+    base_object: &JObject,
     exponent_bytes: &jbyteArray,
 ) -> Result<jbyteArray, GenericError> {
     let base = scalar_from_jobject(&env, &base_object)?;
@@ -290,10 +290,10 @@ fn scalar_power(
 /// Computes the value of a scalar taken to the power of a big integer
 /// Result is a scalar value
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_bls_BLS12381ScalarBindings_scalarPower(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_scalarPower(
     env: JNIEnv,
     _class: JClass,
-    base_object: jobject,       // scalar
+    base_object: JObject,       // scalar
     exponent_bytes: jbyteArray, // big int
 ) -> jbyteArray {
     match scalar_power(&env, &base_object, &exponent_bytes) {
