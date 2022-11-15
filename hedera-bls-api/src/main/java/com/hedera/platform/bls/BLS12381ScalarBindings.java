@@ -38,16 +38,20 @@ public final class BLS12381ScalarBindings {
 	/**
 	 * Creates a new zero value scalar
 	 *
-	 * @return a byte array with byte 0 being an error code, and the remaining bytes representing the new scalar
+	 * @param output
+	 * 		the byte array that will be filled with the new scalar
+	 * @return a non-zero error code if there was an error, otherwise 0
 	 */
-	public static native byte[] newZeroScalar();
+	public static native int newZeroScalar(final byte[] output);
 
 	/**
 	 * Creates a new one value scalar
 	 *
-	 * @return a byte array with byte 0 being an error code, and the remaining bytes representing the new scalar
+	 * @param output
+	 * 		the byte array that will be filled with the new scalar
+	 * @return a non-zero error code if there was an error, otherwise 0
 	 */
-	public static native byte[] newOneScalar();
+	public static native int newOneScalar(final byte[] output);
 
 	/**
 	 * Checks whether 2 scalar values are equal
@@ -56,20 +60,18 @@ public final class BLS12381ScalarBindings {
 	 * 		the first scalar value
 	 * @param scalar2
 	 * 		the second scalar value
-	 * @return a byte array with byte 0 being an error code, and the second byte representing the equality of the input
-	 * 		scalars. A value of 1 indicates equality, and a value of 0 indicates inequality
+	 * @return true if the scalars are equal, otherwise false
 	 */
-	public static native byte[] scalarEquals(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2);
+	public static native boolean scalarEquals(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2);
 
 	/**
 	 * Checks whether a scalar is valid
 	 *
 	 * @param scalar
 	 * 		the scalar being checked for validity
-	 * @return a byte array with byte 0 being an error code, and the second byte representing the validity of the input
-	 * 		scalar. A value of 1 indicates a valid scalar, and a value of 0 indicates an invalid scalar
+	 * @return true if the scalar is valid, otherwise false
 	 */
-	public static native byte[] checkScalarValidity(final BLS12381FieldElement scalar);
+	public static native boolean checkScalarValidity(final BLS12381FieldElement scalar);
 
 	/**
 	 * Computes the sum of 2 scalar values
@@ -78,10 +80,12 @@ public final class BLS12381ScalarBindings {
 	 * 		the first scalar value
 	 * @param scalar2
 	 * 		the second scalar value
-	 * @return a byte array with byte 0 being an error code, and the remaining bytes representing a scalar, which is
-	 * 		the sum of the 2 input scalars
+	 * @param output
+	 * 		the byte array that will be filled with the new scalar
+	 * @return a non-zero error code if there was an error, otherwise 0
 	 */
-	public static native byte[] scalarAdd(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2);
+	public static native int scalarAdd(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2,
+			final byte[] output);
 
 	/**
 	 * Computes the difference between 2 scalar values
@@ -90,10 +94,12 @@ public final class BLS12381ScalarBindings {
 	 * 		the first scalar value
 	 * @param scalar2
 	 * 		the second scalar value
-	 * @return a byte array with byte 0 being an error code, and the remaining bytes representing a scalar, which is
-	 * 		the difference between the 2 input scalars
+	 * @param output
+	 * 		the byte array that will be filled with the new scalar
+	 * @return a non-zero error code if there was an error, otherwise 0
 	 */
-	public static native byte[] scalarSubtract(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2);
+	public static native int scalarSubtract(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2,
+			final byte[] output);
 
 	/**
 	 * Computes the product of 2 scalar values
@@ -102,10 +108,12 @@ public final class BLS12381ScalarBindings {
 	 * 		the first scalar value
 	 * @param scalar2
 	 * 		the second scalar value
-	 * @return a byte array with byte 0 being an error code, and the remaining bytes representing a scalar, which is
-	 * 		the product of the 2 input scalars
+	 * @param output
+	 * 		the byte array that will be filled with the new scalar
+	 * @return a non-zero error code if there was an error, otherwise 0
 	 */
-	public static native byte[] scalarMultiply(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2);
+	public static native int scalarMultiply(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2,
+			final byte[] output);
 
 	/**
 	 * Computes the quotient of 2 scalar values
@@ -114,10 +122,12 @@ public final class BLS12381ScalarBindings {
 	 * 		the first scalar value
 	 * @param scalar2
 	 * 		the second scalar value
-	 * @return a byte array with byte 0 being an error code, and the remaining bytes representing a scalar, which is
-	 * 		the quotient of the 2 input scalars
+	 * @param output
+	 * 		the byte array that will be filled with the new scalar
+	 * @return a non-zero error code if there was an error, otherwise 0
 	 */
-	public static native byte[] scalarDivide(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2);
+	public static native int scalarDivide(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2,
+			final byte[] output);
 
 	/**
 	 * Computes the value a scalar to the power of a big integer
@@ -126,10 +136,11 @@ public final class BLS12381ScalarBindings {
 	 * 		a scalar value
 	 * @param exponent
 	 * 		a big integer
-	 * @return a byte array with byte 0 being an error code, and the remaining bytes representing a scalar, which is
-	 * 		the result of a scalar value taken to the power of a big integer
+	 * @param output
+	 * 		the byte array that will be filled with the new scalar
+	 * @return a non-zero error code if there was an error, otherwise 0
 	 */
-	public static native byte[] scalarPower(final BLS12381FieldElement base, final byte[] exponent);
+	public static native int scalarPower(final BLS12381FieldElement base, final byte[] exponent, final byte[] output);
 
 	static {
 		try {

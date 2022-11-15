@@ -36,13 +36,14 @@ public class BLS12381Field implements DistCryptField {
 	 */
 	@Override
 	public DistCryptFieldElement newZeroElement() {
-		final JNICallResult callResult = new JNICallResult(BLS12381ScalarBindings.newZeroScalar());
+		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("newZeroScalar", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381ScalarBindings.newZeroScalar(output)) != 0) {
+			throw new BLS12381Exception("newZeroScalar", errorCode);
 		}
 
-		return new BLS12381FieldElement(callResult.getResultArray(), this);
+		return new BLS12381FieldElement(output, this);
 	}
 
 	/**
@@ -50,13 +51,14 @@ public class BLS12381Field implements DistCryptField {
 	 */
 	@Override
 	public DistCryptFieldElement newOneElement() {
-		final JNICallResult callResult = new JNICallResult(BLS12381ScalarBindings.newOneScalar());
+		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("newOneScalar", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381ScalarBindings.newOneScalar(output)) != 0) {
+			throw new BLS12381Exception("newOneScalar", errorCode);
 		}
 
-		return new BLS12381FieldElement(callResult.getResultArray(), this);
+		return new BLS12381FieldElement(output, this);
 	}
 
 	/**
@@ -89,14 +91,8 @@ public class BLS12381Field implements DistCryptField {
 
 		final BLS12381FieldElement outputElement = new BLS12381FieldElement(bytes, this);
 
-		final JNICallResult callResult = new JNICallResult(BLS12381ScalarBindings.checkScalarValidity(outputElement));
-
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("checkScalarValidity", callResult.getErrorCode());
-		}
-
-		if (callResult.getResultArray()[0] == 0) {
-			throw new IOException("input bytes don't represent a valid field element");
+		if (!BLS12381ScalarBindings.checkScalarValidity(outputElement)) {
+			throw new BLS12381Exception("checkScalarValidity", 1);
 		}
 
 		return outputElement;

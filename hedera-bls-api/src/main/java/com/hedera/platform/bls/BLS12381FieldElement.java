@@ -50,14 +50,14 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 */
 	@Override
 	public DistCryptFieldElement add(final DistCryptFieldElement other) {
-		final JNICallResult callResult = new JNICallResult(
-				BLS12381ScalarBindings.scalarAdd(this, (BLS12381FieldElement) other));
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("scalarAdd", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381ScalarBindings.scalarAdd(this, (BLS12381FieldElement) other, output)) != 0) {
+			throw new BLS12381Exception("scalarAdd", errorCode);
 		}
 
-		return new BLS12381FieldElement(callResult.getResultArray(), field);
+		return new BLS12381FieldElement(output, field);
 	}
 
 	/**
@@ -65,14 +65,14 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 */
 	@Override
 	public DistCryptFieldElement subtract(final DistCryptFieldElement other) {
-		final JNICallResult callResult = new JNICallResult(
-				BLS12381ScalarBindings.scalarSubtract(this, (BLS12381FieldElement) other));
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("scalarSubtract", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381ScalarBindings.scalarSubtract(this, (BLS12381FieldElement) other, output)) != 0) {
+			throw new BLS12381Exception("scalarSubtract", errorCode);
 		}
 
-		return new BLS12381FieldElement(callResult.getResultArray(), field);
+		return new BLS12381FieldElement(output, field);
 	}
 
 	/**
@@ -80,14 +80,14 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 */
 	@Override
 	public DistCryptFieldElement multiply(final DistCryptFieldElement other) {
-		final JNICallResult callResult = new JNICallResult(
-				BLS12381ScalarBindings.scalarMultiply(this, (BLS12381FieldElement) other));
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("scalarMultiply", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381ScalarBindings.scalarMultiply(this, (BLS12381FieldElement) other, output)) != 0) {
+			throw new BLS12381Exception("scalarMultiply", errorCode);
 		}
 
-		return new BLS12381FieldElement(callResult.getResultArray(), field);
+		return new BLS12381FieldElement(output, field);
 	}
 
 	/**
@@ -95,14 +95,14 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 */
 	@Override
 	public DistCryptFieldElement divide(final DistCryptFieldElement other) {
-		final JNICallResult callResult = new JNICallResult(
-				BLS12381ScalarBindings.scalarDivide(this, (BLS12381FieldElement) other));
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("scalarDivide", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381ScalarBindings.scalarDivide(this, (BLS12381FieldElement) other, output)) != 0) {
+			throw new BLS12381Exception("scalarDivide", errorCode);
 		}
 
-		return new BLS12381FieldElement(callResult.getResultArray(), field);
+		return new BLS12381FieldElement(output, field);
 	}
 
 	/**
@@ -110,14 +110,14 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 */
 	@Override
 	public DistCryptFieldElement power(final BigInteger exponent) {
-		final JNICallResult callResult = new JNICallResult(
-				BLS12381ScalarBindings.scalarPower(this, exponent.toByteArray()));
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("scalarPower", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381ScalarBindings.scalarPower(this, exponent.toByteArray(), output)) != 0) {
+			throw new BLS12381Exception("scalarPower", errorCode);
 		}
 
-		return new BLS12381FieldElement(callResult.getResultArray(), field);
+		return new BLS12381FieldElement(output, field);
 	}
 
 	@Override
@@ -131,14 +131,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 		}
 
 		if (o instanceof BLS12381FieldElement element) {
-			final JNICallResult callResult = new JNICallResult(
-					BLS12381ScalarBindings.scalarEquals(this, element));
-
-			if (callResult.getErrorCode() != 0) {
-				throw new BLS12381Exception("scalarEquals", callResult.getErrorCode());
-			}
-
-			return callResult.getResultArray()[0] == 1 && field.equals(element.field);
+			return field.equals(element.field) && BLS12381ScalarBindings.scalarEquals(this, element);
 		}
 
 		return false;

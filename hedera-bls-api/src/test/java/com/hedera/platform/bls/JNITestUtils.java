@@ -82,7 +82,11 @@ public class JNITestUtils {
 	 * @return a one scalar
 	 */
 	public static BLS12381FieldElement getOneScalar() {
-		return getScalarFromCall(BLS12381ScalarBindings.newOneScalar());
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+
+		assertEquals(0, BLS12381ScalarBindings.newOneScalar(output));
+
+		return new BLS12381FieldElement(output, new BLS12381Field());
 	}
 
 	/**
@@ -91,7 +95,11 @@ public class JNITestUtils {
 	 * @return a zero scalar
 	 */
 	public static BLS12381FieldElement getZeroScalar() {
-		return getScalarFromCall(BLS12381ScalarBindings.newZeroScalar());
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+
+		assertEquals(0, BLS12381ScalarBindings.newZeroScalar(output));
+
+		return new BLS12381FieldElement(output, new BLS12381Field());
 	}
 
 	/**
@@ -108,39 +116,113 @@ public class JNITestUtils {
 	}
 
 	/**
-	 * Asserts that two scalars are equal
+	 * Computes the sum of 2 scalars. Returns null if an error occurs
 	 *
-	 * @param scalar1
-	 * 		the first scalar being compared
-	 * @param scalar2
-	 * 		the second scalar being compared
-	 * @param errorMessage
-	 * 		the error message if the assertion fails
+	 * @param element1
+	 * 		the first scalar
+	 * @param element2
+	 * 		the second scalar
+	 * @return the sum, or null if an error occurred
 	 */
-	public static void assertScalarEquals(
-			final BLS12381FieldElement scalar1,
-			final BLS12381FieldElement scalar2,
-			final String errorMessage) {
+	public static BLS12381FieldElement scalarAdd(
+			final BLS12381FieldElement element1,
+			final BLS12381FieldElement element2) {
 
-		assertBooleanCallTrue(BLS12381ScalarBindings.scalarEquals(scalar1, scalar2), errorMessage);
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+
+		if (BLS12381ScalarBindings.scalarAdd(element1, element2, output) != 0) {
+			return null;
+		}
+
+		return new BLS12381FieldElement(output, new BLS12381Field());
 	}
 
 	/**
-	 * Asserts that two scalars are not equal
+	 * Computes the difference of 2 scalars. Returns null if an error occurs
 	 *
-	 * @param scalar1
-	 * 		the first scalar being compared
-	 * @param scalar2
-	 * 		the second scalar being compared
-	 * @param errorMessage
-	 * 		the error message if the assertion fails
+	 * @param element1
+	 * 		the first scalar
+	 * @param element2
+	 * 		the second scalar
+	 * @return the difference, or null if an error occurred
 	 */
-	public static void assertScalarNotEquals(
-			final BLS12381FieldElement scalar1,
-			final BLS12381FieldElement scalar2,
-			final String errorMessage) {
+	public static BLS12381FieldElement scalarSubtract(
+			final BLS12381FieldElement element1,
+			final BLS12381FieldElement element2) {
 
-		assertBooleanCallFalse(BLS12381ScalarBindings.scalarEquals(scalar1, scalar2), errorMessage);
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+
+		if (BLS12381ScalarBindings.scalarSubtract(element1, element2, output) != 0) {
+			return null;
+		}
+
+		return new BLS12381FieldElement(output, new BLS12381Field());
+	}
+
+	/**
+	 * Computes the product of 2 scalars. Returns null if an error occurs
+	 *
+	 * @param element1
+	 * 		the first scalar
+	 * @param element2
+	 * 		the second scalar
+	 * @return the product, or null if an error occurred
+	 */
+	public static BLS12381FieldElement scalarMultiply(
+			final BLS12381FieldElement element1,
+			final BLS12381FieldElement element2) {
+
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+
+		if (BLS12381ScalarBindings.scalarMultiply(element1, element2, output) != 0) {
+			return null;
+		}
+
+		return new BLS12381FieldElement(output, new BLS12381Field());
+	}
+
+	/**
+	 * Computes the quotient of 2 scalars. Returns null if an error occurs
+	 *
+	 * @param element1
+	 * 		the first scalar
+	 * @param element2
+	 * 		the second scalar
+	 * @return the quotient, or null if an error occurred
+	 */
+	public static BLS12381FieldElement scalarDivide(
+			final BLS12381FieldElement element1,
+			final BLS12381FieldElement element2) {
+
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+
+		if (BLS12381ScalarBindings.scalarDivide(element1, element2, output) != 0) {
+			return null;
+		}
+
+		return new BLS12381FieldElement(output, new BLS12381Field());
+	}
+
+	/**
+	 * Computes a scalar base the power of a big int
+	 *
+	 * @param element
+	 * 		the scalar base
+	 * @param exponent
+	 * 		the big int exponent
+	 * @return the power, or null if an error occurred
+	 */
+	public static BLS12381FieldElement scalarPower(
+			final BLS12381FieldElement element,
+			final byte[] exponent) {
+
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+
+		if (BLS12381ScalarBindings.scalarPower(element, exponent, output) != 0) {
+			return null;
+		}
+
+		return new BLS12381FieldElement(output, new BLS12381Field());
 	}
 
 	/**

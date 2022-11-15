@@ -5,7 +5,7 @@ use bls12_381::*;
 use ff::Field;
 use jni::JNIEnv;
 use jni::objects::{JClass, JObject};
-use jni::sys::{jbyte, jbyteArray, jint};
+use jni::sys::{jboolean, jbyte, jbyteArray, jint};
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 
@@ -51,7 +51,7 @@ fn bytes_to_big_int(env: &JNIEnv, bytes: &jbyteArray) -> Result<[u64; 4], Generi
     Ok([x1, x2, x3, x4])
 }
 
-/// Creates a new scalar, based on input bytes
+/// Creates a new scalar, based on input seed
 #[no_mangle]
 pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_newRandomScalar(
     env: JNIEnv,
@@ -64,7 +64,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_newRa
         Err(_) => return 1
     };
 
-    let seed_array = match seed_vector.try_into() {
+    let seed_array: [u8; 32] = match seed_vector.try_into() {
         Ok(val) => val,
         Err(_) => return 1
     };
@@ -98,8 +98,14 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_newSc
 pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_newZeroScalar(
     env: JNIEnv,
     _class: JClass,
-) -> jbyteArray {
-    create_output(&env, &Scalar::zero().to_bytes())
+    output: jbyteArray,
+) -> jint {
+    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&Scalar::zero().to_bytes()) };
+
+    return match env.set_byte_array_region(output, 0, scalar) {
+        Ok(_) => 0,
+        Err(_) => 1
+    };
 }
 
 /// Creates a new 1 value scalar
@@ -107,23 +113,14 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_newZe
 pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_newOneScalar(
     env: JNIEnv,
     _class: JClass,
-) -> jbyteArray {
-    create_output(&env, &Scalar::one().to_bytes())
-}
+    output: jbyteArray,
+) -> jint {
+    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&Scalar::one().to_bytes()) };
 
-/// Internal
-fn scalar_equals(
-    env: &JNIEnv,
-    scalar1_object: &JObject,
-    scalar2_object: &JObject,
-) -> Result<jbyteArray, GenericError> {
-    let scalar1 = scalar_from_jobject(&env, &scalar1_object)?;
-    let scalar2 = scalar_from_jobject(&env, &scalar2_object)?;
-
-    Ok(create_output(
-        &env,
-        if scalar1 == scalar2 { &[1] } else { &[0] },
-    ))
+    return match env.set_byte_array_region(output, 0, scalar) {
+        Ok(_) => 0,
+        Err(_) => 1
+    };
 }
 
 /// Checks if 2 scalar values are equal
@@ -133,13 +130,18 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_scala
     _class: JClass,
     scalar1_object: JObject,
     scalar2_object: JObject,
-) -> jbyteArray {
-    match scalar_equals(&env, &scalar1_object, &scalar2_object) {
-        Ok(output) => output,
-        Err(error) => {
-            return set_error_and_expect(&env, GenericError::from(error).get_error_code());
-        }
-    }
+) -> jboolean {
+    let scalar1 = match scalar_from_jobject(&env, &scalar1_object) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false),
+    };
+
+    let scalar2 = match scalar_from_jobject(&env, &scalar2_object) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false),
+    };
+
+    jboolean::from(scalar1 == scalar2)
 }
 
 /// Checks if a scalar is valid
@@ -148,25 +150,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_check
     env: JNIEnv,
     _class: JClass,
     scalar_object: JObject,
-) -> jbyteArray {
-    match scalar_from_jobject(&env, &scalar_object) {
-        Ok(_) => create_output(&env, &[1]),
-        Err(_) => {
-            return create_output(&env, &[0]);
-        }
+) -> jboolean {
+    return match scalar_from_jobject(&env, &scalar_object) {
+        Ok(_) => jboolean::from(true),
+        Err(_) => jboolean::from(false),
     }
-}
-
-/// Internal
-fn scalar_add(
-    env: &JNIEnv,
-    scalar1_object: &JObject,
-    scalar2_object: &JObject,
-) -> Result<jbyteArray, GenericError> {
-    let scalar1 = scalar_from_jobject(&env, &scalar1_object)?;
-    let scalar2 = scalar_from_jobject(&env, &scalar2_object)?;
-
-    Ok(create_output(&env, &(scalar1 + scalar2).to_bytes()))
 }
 
 /// Computes the sum of 2 scalar values
@@ -177,25 +165,24 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_scala
     _class: JClass,
     scalar1_object: JObject,
     scalar2_object: JObject,
-) -> jbyteArray {
-    match scalar_add(&env, &scalar1_object, &scalar2_object) {
-        Ok(output) => output,
-        Err(error) => {
-            return set_error_and_expect(&env, GenericError::from(error).get_error_code());
-        }
-    }
-}
+    output: jbyteArray,
+) -> jint {
+    let scalar1 = match scalar_from_jobject(&env, &scalar1_object) {
+        Ok(val) => val,
+        Err(_) => return 1,
+    };
 
-/// Internal
-fn scalar_subtract(
-    env: &JNIEnv,
-    scalar1_object: &JObject,
-    scalar2_object: &JObject,
-) -> Result<jbyteArray, GenericError> {
-    let scalar1 = scalar_from_jobject(&env, &scalar1_object)?;
-    let scalar2 = scalar_from_jobject(&env, &scalar2_object)?;
+    let scalar2 = match scalar_from_jobject(&env, &scalar2_object) {
+        Ok(val) => val,
+        Err(_) => return 1,
+    };
 
-    Ok(create_output(&env, &(scalar1 - scalar2).to_bytes()))
+    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(scalar1 + scalar2).to_bytes()) };
+
+    return match env.set_byte_array_region(output, 0, scalar) {
+        Ok(_) => 0,
+        Err(_) => 1
+    };
 }
 
 /// Computes the difference between 2 scalar values
@@ -206,25 +193,24 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_scala
     _class: JClass,
     scalar1_object: JObject,
     scalar2_object: JObject,
-) -> jbyteArray {
-    match scalar_subtract(&env, &scalar1_object, &scalar2_object) {
-        Ok(output) => output,
-        Err(error) => {
-            return set_error_and_expect(&env, GenericError::from(error).get_error_code());
-        }
-    }
-}
+    output: jbyteArray,
+) -> jint {
+    let scalar1 = match scalar_from_jobject(&env, &scalar1_object) {
+        Ok(val) => val,
+        Err(_) => return 1,
+    };
 
-/// Internal
-fn scalar_multiply(
-    env: &JNIEnv,
-    scalar1_object: &JObject,
-    scalar2_object: &JObject,
-) -> Result<jbyteArray, GenericError> {
-    let scalar1 = scalar_from_jobject(&env, &scalar1_object)?;
-    let scalar2 = scalar_from_jobject(&env, &scalar2_object)?;
+    let scalar2 = match scalar_from_jobject(&env, &scalar2_object) {
+        Ok(val) => val,
+        Err(_) => return 1,
+    };
 
-    Ok(create_output(&env, &(scalar1 * scalar2).to_bytes()))
+    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(scalar1 - scalar2).to_bytes()) };
+
+    return match env.set_byte_array_region(output, 0, scalar) {
+        Ok(_) => 0,
+        Err(_) => 1
+    };
 }
 
 /// Computes the product of 2 scalar values
@@ -235,31 +221,24 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_scala
     _class: JClass,
     scalar1_object: JObject,
     scalar2_object: JObject,
-) -> jbyteArray {
-    match scalar_multiply(&env, &scalar1_object, &scalar2_object) {
-        Ok(output) => output,
-        Err(error) => {
-            return set_error_and_expect(&env, GenericError::from(error).get_error_code());
-        }
-    }
-}
+    output: jbyteArray,
+) -> jint {
+    let scalar1 = match scalar_from_jobject(&env, &scalar1_object) {
+        Ok(val) => val,
+        Err(_) => return 1,
+    };
 
-/// Internal
-fn scalar_divide(
-    env: &JNIEnv,
-    scalar1_object: &JObject,
-    scalar2_object: &JObject,
-) -> Result<jbyteArray, GenericError> {
-    let scalar1 = scalar_from_jobject(&env, &scalar1_object)?;
-    let scalar2 = scalar_from_jobject(&env, &scalar2_object)?;
+    let scalar2 = match scalar_from_jobject(&env, &scalar2_object) {
+        Ok(val) => val,
+        Err(_) => return 1,
+    };
 
-    let scalar2_inversion: Scalar = Option::from(scalar2.invert())
-        .ok_or_else(|| GenericError::Computation("BLS12_381 lib invert() failure".to_owned()))?;
+    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(scalar1 * scalar2).to_bytes()) };
 
-    Ok(create_output(
-        &env,
-        &(scalar1 * scalar2_inversion).to_bytes(),
-    ))
+    return match env.set_byte_array_region(output, 0, scalar) {
+        Ok(_) => 0,
+        Err(_) => 1
+    };
 }
 
 /// Computes the quotient of 2 scalar values
@@ -270,25 +249,29 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_scala
     _class: JClass,
     scalar1_object: JObject,
     scalar2_object: JObject,
-) -> jbyteArray {
-    match scalar_divide(&env, &scalar1_object, &scalar2_object) {
-        Ok(output) => output,
-        Err(error) => {
-            return set_error_and_expect(&env, GenericError::from(error).get_error_code());
-        }
-    }
-}
+    output: jbyteArray,
+) -> jint {
+    let scalar1 = match scalar_from_jobject(&env, &scalar1_object) {
+        Ok(val) => val,
+        Err(_) => return 1,
+    };
 
-/// Internal
-fn scalar_power(
-    env: &JNIEnv,
-    base_object: &JObject,
-    exponent_bytes: &jbyteArray,
-) -> Result<jbyteArray, GenericError> {
-    let base = scalar_from_jobject(&env, &base_object)?;
-    let exponent = bytes_to_big_int(&env, exponent_bytes)?;
+    let scalar2 = match scalar_from_jobject(&env, &scalar2_object) {
+        Ok(val) => val,
+        Err(_) => return 1,
+    };
 
-    Ok(create_output(&env, &(base.pow(&exponent)).to_bytes()))
+    let scalar2_inversion: Scalar = match Option::from(scalar2.invert()) {
+        Some(val) => val,
+        None => return 1,
+    };
+
+    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(scalar1 * scalar2_inversion).to_bytes()) };
+
+    return match env.set_byte_array_region(output, 0, scalar) {
+        Ok(_) => 0,
+        Err(_) => 1
+    };
 }
 
 /// Computes the value of a scalar taken to the power of a big integer
@@ -299,11 +282,22 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381ScalarBindings_scala
     _class: JClass,
     base_object: JObject,       // scalar
     exponent_bytes: jbyteArray, // big int
-) -> jbyteArray {
-    match scalar_power(&env, &base_object, &exponent_bytes) {
-        Ok(output) => output,
-        Err(error) => {
-            return set_error_and_expect(&env, GenericError::from(error).get_error_code());
-        }
-    }
+    output: jbyteArray,
+) -> jint {
+    let base = match scalar_from_jobject(&env, &base_object) {
+        Ok(val) => val,
+        Err(_) => return 1,
+    };
+
+    let exponent = match bytes_to_big_int(&env, &exponent_bytes) {
+        Ok(val) => val,
+        Err(_) => return 1,
+    };
+
+    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(base.pow(&exponent)).to_bytes()) };
+
+    return match env.set_byte_array_region(output, 0, scalar) {
+        Ok(_) => 0,
+        Err(_) => 1
+    };
 }
