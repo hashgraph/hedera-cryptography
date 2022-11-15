@@ -21,13 +21,14 @@ public class BLS12381Field implements DistCryptField {
 	 */
 	@Override
 	public DistCryptFieldElement newElement(final int i) {
-		final JNICallResult callResult = new JNICallResult(BLS12381ScalarBindings.newScalarFromInt(i));
+		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("newScalarFromInt", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381ScalarBindings.newScalarFromInt(i, output)) != 0) {
+			throw new BLS12381Exception("newScalarFromInt", errorCode);
 		}
 
-		return new BLS12381FieldElement(callResult.getResultArray(), this);
+		return new BLS12381FieldElement(output, this);
 	}
 
 	/**
@@ -67,14 +68,14 @@ public class BLS12381Field implements DistCryptField {
 			throw new IllegalArgumentException(String.format("seed must be %s bytes in length", SEED_SIZE));
 		}
 
-		final JNICallResult callResult =
-				new JNICallResult(BLS12381ScalarBindings.newRandomScalar(seed));
+		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("newRandomScalar", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381ScalarBindings.newRandomScalar(seed, output)) != 0) {
+			throw new BLS12381Exception("newRandomScalar", errorCode);
 		}
 
-		return new BLS12381FieldElement(callResult.getResultArray(), this);
+		return new BLS12381FieldElement(output, this);
 	}
 
 	/**

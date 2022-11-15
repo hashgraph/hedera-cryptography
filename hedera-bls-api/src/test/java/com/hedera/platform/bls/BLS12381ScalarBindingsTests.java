@@ -24,6 +24,8 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Random;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @DisplayName("BLS12_381 Scalar Bindings Unit Tests")
 class BLS12381ScalarBindingsTests {
 	@Test
@@ -66,9 +68,10 @@ class BLS12381ScalarBindingsTests {
 	void newRandomScalarBadSeed() {
 		final Random random = RandomUtils.getRandomPrintSeed();
 
-		JNITestUtils.assertErrorFromCall(BLS12381ScalarBindings.newRandomScalar(RandomUtils.randomByteArray(random,
-						31)),
-				3);
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+
+		assertEquals(1, BLS12381ScalarBindings.newRandomScalar(RandomUtils.randomByteArray(random, 31), output));
+		assertEquals(1, BLS12381ScalarBindings.newRandomScalar(RandomUtils.randomByteArray(random, 33), output));
 	}
 
 	@Test

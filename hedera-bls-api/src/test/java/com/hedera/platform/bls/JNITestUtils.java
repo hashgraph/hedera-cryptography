@@ -69,7 +69,11 @@ public class JNITestUtils {
 	 * @return a scalar from a byte array seed
 	 */
 	public static BLS12381FieldElement getRandomScalar(final byte[] seed) {
-		return getScalarFromCall(BLS12381ScalarBindings.newRandomScalar(seed));
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+
+		assertEquals(0, BLS12381ScalarBindings.newRandomScalar(seed, output));
+
+		return new BLS12381FieldElement(output, new BLS12381Field());
 	}
 
 	/**
@@ -96,7 +100,11 @@ public class JNITestUtils {
 	 * @return a scalar from an integer
 	 */
 	public static BLS12381FieldElement getScalarFromInt(final int inputValue) {
-		return getScalarFromCall(BLS12381ScalarBindings.newScalarFromInt(inputValue));
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+
+		assertEquals(0, BLS12381ScalarBindings.newScalarFromInt(inputValue, output));
+
+		return new BLS12381FieldElement(output, new BLS12381Field());
 	}
 
 	/**

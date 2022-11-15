@@ -1,8 +1,6 @@
 package com.hedera.platform.bls;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * An interface class to allow java access to functions in the rust library BLS12_381
@@ -20,18 +18,22 @@ public final class BLS12381ScalarBindings {
 	 *
 	 * @param inputSeed
 	 * 		the byte seed to be used to create the new scalar
-	 * @return a byte array with byte 0 being an error code, and the remaining bytes representing the new scalar
+	 * @param output
+	 * 		the byte array that will be filled with the new scalar
+	 * @return a non-zero error code if there was an error, otherwise 0
 	 */
-	public static native byte[] newRandomScalar(final byte[] inputSeed);
+	public static native int newRandomScalar(final byte[] inputSeed, final byte[] output);
 
 	/**
 	 * Creates a new scalar from an integer
 	 *
 	 * @param integer
 	 * 		the integer to be used to create the new scalar
-	 * @return a byte array with byte 0 being an error code, and the remaining bytes representing the new scalar
+	 * @param output
+	 * 		the byte array that will be filled with the new scalar
+	 * @return a non-zero error code if there was an error, otherwise 0
 	 */
-	public static native byte[] newScalarFromInt(final int integer);
+	public static native int newScalarFromInt(final int integer, final byte[] output);
 
 	/**
 	 * Creates a new zero value scalar
