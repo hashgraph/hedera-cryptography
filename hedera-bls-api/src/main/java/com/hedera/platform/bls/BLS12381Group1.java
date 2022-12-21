@@ -1,9 +1,7 @@
 package com.hedera.platform.bls;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * G1 of the BLS12-381 curve family
@@ -29,13 +27,14 @@ public class BLS12381Group1 implements DistCryptGroup {
 	 */
 	@Override
 	public DistCryptGroupElement newOneElement() {
-		final JNICallResult callResult = new JNICallResult(BLS12381Group1Bindings.newG1Identity());
+		final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("newG1Identity", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381Group1Bindings.newG1Identity(output)) != 0) {
+			throw new BLS12381Exception("newG1Identity", errorCode);
 		}
 
-		return new BLS12381Group1Element(callResult.getResultArray(), this);
+		return new BLS12381Group1Element(output, this);
 	}
 
 	/**
@@ -47,13 +46,14 @@ public class BLS12381Group1 implements DistCryptGroup {
 			throw new IllegalArgumentException(String.format("seed must be %s bytes in length", SEED_SIZE));
 		}
 
-		final JNICallResult callResult = new JNICallResult(BLS12381Group1Bindings.newRandomG1(seed));
+		final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("newRandomG1", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381Group1Bindings.newRandomG1(seed, output)) != 0) {
+			throw new BLS12381Exception("newRandomG1", errorCode);
 		}
 
-		return new BLS12381Group1Element(callResult.getResultArray(), this);
+		return new BLS12381Group1Element(output, this);
 	}
 
 	/**
@@ -61,15 +61,14 @@ public class BLS12381Group1 implements DistCryptGroup {
 	 */
 	@Override
 	public DistCryptGroupElement hashToGroup(final byte[] input) {
-		final byte[] hash = Utils.computeSha256(input);
+		final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
-		final JNICallResult callResult = new JNICallResult(BLS12381Group1Bindings.newRandomG1(hash));
-
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("newRandomG1", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381Group1Bindings.newRandomG1(Utils.computeSha256(input), output)) != 0) {
+			throw new BLS12381Exception("newRandomG1", errorCode);
 		}
 
-		return new BLS12381Group1Element(callResult.getResultArray(), this);
+		return new BLS12381Group1Element(output, this);
 	}
 
 	/**
@@ -77,22 +76,22 @@ public class BLS12381Group1 implements DistCryptGroup {
 	 */
 	@Override
 	public DistCryptGroupElement batchMultiply(final Collection<DistCryptGroupElement> elements) {
-		final List<BLS12381Group1Element> elementList = new ArrayList<>();
-
-		for (final DistCryptGroupElement element : elements) {
-			elementList.add((BLS12381Group1Element) element);
-		}
-
 		final BLS12381Group1Element[] elementArray = new BLS12381Group1Element[elements.size()];
-		elementList.toArray(elementArray);
 
-		final JNICallResult callResult = new JNICallResult(BLS12381Group1Bindings.g1BatchMultiply(elementArray));
-
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("g1BatchMultiply", callResult.getErrorCode());
+		int count = 0;
+		for (final DistCryptGroupElement element : elements) {
+			elementArray[count] = (BLS12381Group1Element) element;
+			++count;
 		}
 
-		return new BLS12381Group1Element(callResult.getResultArray(), this);
+		final byte[] output = new byte[UNCOMPRESSED_SIZE];
+
+		final int errorCode;
+		if ((errorCode = BLS12381Group1Bindings.g1BatchMultiply(elementArray, output)) != 0) {
+			throw new BLS12381Exception("g1BatchMultiply", errorCode);
+		}
+
+		return new BLS12381Group1Element(output, this);
 	}
 
 	/**
@@ -109,14 +108,8 @@ public class BLS12381Group1 implements DistCryptGroup {
 		// create the object, but check validity before returning
 		final BLS12381Group1Element outputElement = new BLS12381Group1Element(inputBytes, this);
 
-		final JNICallResult callResult = new JNICallResult(BLS12381Group1Bindings.checkG1Validity(outputElement));
-
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("checkG1Validity", callResult.getErrorCode());
-		}
-
-		if (callResult.getResultArray()[0] == 0) {
-			throw new IOException("input bytes don't represent a valid g1 element");
+		if (!BLS12381Group1Bindings.checkG1Validity(outputElement)) {
+			throw new BLS12381Exception("checkG1Validity", 1);
 		}
 
 		return outputElement;

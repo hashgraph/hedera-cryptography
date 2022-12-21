@@ -24,24 +24,63 @@ import java.util.Arrays;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("BLS12_381 Group 1 Bindings Unit Tests")
 class BLS12381Group1BindingsTests {
+	@Test
+	@DisplayName("newRandomG1 with unique seeds produces unique results")
+	void newRandomElementUnique() {
+		final Random random = RandomUtils.getRandomPrintSeed();
+
+		final BLS12381Group1Element randomElement1 = JNITestUtils.getG1RandomElement(
+				RandomUtils.randomByteArray(random, 32));
+		final BLS12381Group1Element randomElement2 = JNITestUtils.getG1RandomElement(
+				RandomUtils.randomByteArray(random, 32));
+
+		assertNotEquals(null, randomElement1, "randomElement1 should be valid");
+		assertNotEquals(null, randomElement2, "randomElement2 should be valid");
+		assertFalse(BLS12381Group1Bindings.g1ElementEquals(randomElement1, randomElement2),
+				"random elements shouldn't be equal");
+		assertFalse(BLS12381Group1Bindings.g1ElementEquals(randomElement1, JNITestUtils.getG1Identity()),
+				"random element 1 shouldn't equal identity");
+		assertFalse(BLS12381Group1Bindings.g1ElementEquals(randomElement2, JNITestUtils.getG1Identity()),
+				"random element 2 shouldn't equal identity");
+	}
 
 	@Test
-	@DisplayName("newRandomG1 with bad seed returns error code")
+	@DisplayName("getG1RandomElement from same seed are equal")
+	void newRandomElementDeterministic() {
+		final Random random = RandomUtils.getRandomPrintSeed();
+
+		final byte[] seed = RandomUtils.randomByteArray(random, 32);
+
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(
+						JNITestUtils.getG1RandomElement(seed),
+						JNITestUtils.getG1RandomElement(seed)),
+				"elements from the same seed should be equal");
+	}
+
+	@Test
+	@DisplayName("newRandomG1 with bad seed fails")
 	void newRandomG1BadSeed() {
 		final Random random = RandomUtils.getRandomPrintSeed();
 
+		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		JNITestUtils.assertErrorFromCall(BLS12381Group1Bindings.newRandomG1(RandomUtils.randomByteArray(random, 31)),
-				3);
+		assertNotEquals(0, BLS12381Group1Bindings.newRandomG1(RandomUtils.randomByteArray(random, 31), output));
+		assertNotEquals(0, BLS12381Group1Bindings.newRandomG1(RandomUtils.randomByteArray(random, 33), output));
 	}
 
 	@Test
 	@DisplayName("newG1Identity produces the same result every time")
 	void newG1IdentityDeterministic() {
-		JNITestUtils.assertG1ElementEquals(JNITestUtils.getG1Identity(), JNITestUtils.getG1Identity(),
+		assertNotEquals(null, JNITestUtils.getG1Identity(), "identity should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(
+						JNITestUtils.getG1Identity(), JNITestUtils.getG1Identity()),
 				"identity should equal identity");
 	}
 
@@ -55,11 +94,13 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement2 = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element quotient = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Divide(randomElement1, randomElement2));
+		final BLS12381Group1Element quotient = JNITestUtils.g1Divide(randomElement1, randomElement2);
 
-		JNITestUtils.assertG1ElementNotEquals(quotient, randomElement1, "quotient shouldn't equal randomElement1");
-				JNITestUtils.assertG1ElementNotEquals(quotient, randomElement2, "quotient shouldn't equal randomElement2");
+		assertNotEquals(null, quotient, "quotient should be valid");
+		assertFalse(BLS12381Group1Bindings.g1ElementEquals(quotient, randomElement1),
+				"quotient shouldn't equal randomElement1");
+		assertFalse(BLS12381Group1Bindings.g1ElementEquals(quotient, randomElement2),
+				"quotient shouldn't equal randomElement2");
 	}
 
 	@Test
@@ -72,17 +113,28 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement2 = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element randomElement1Compressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Compress(randomElement1));
-		final BLS12381Group1Element randomElement2Compressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Compress(randomElement2));
+		final BLS12381Group1Element randomElement1Compressed = JNITestUtils.g1Compress(randomElement1);
+		final BLS12381Group1Element randomElement2Compressed = JNITestUtils.g1Compress(randomElement2);
 
-		final BLS12381Group1Element quotient = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Divide(randomElement1, randomElement2));
-		final BLS12381Group1Element quotientCompressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Divide(randomElement1Compressed, randomElement2Compressed));
+		final BLS12381Group1Element quotient = JNITestUtils.g1Divide(randomElement1, randomElement2);
+		final BLS12381Group1Element quotientCompressed = JNITestUtils.g1Divide(
+				randomElement1Compressed, randomElement2Compressed);
+		final BLS12381Group1Element quotientMixed1 = JNITestUtils.g1Divide(
+				randomElement1, randomElement2Compressed);
+		final BLS12381Group1Element quotientMixed2 = JNITestUtils.g1Divide(
+				randomElement1Compressed, randomElement2);
 
-		JNITestUtils.assertG1ElementEquals(quotient, quotientCompressed, "compression shouldn't affect result");
+		assertNotEquals(null, quotient, "quotient should be valid");
+		assertNotEquals(null, quotientCompressed, "quotientCompressed should be valid");
+		assertNotEquals(null, quotientMixed1, "quotientMixed1 should be valid");
+		assertNotEquals(null, quotientMixed2, "quotientMixed2 should be valid");
+
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(quotient, quotientCompressed),
+				"compression shouldn't affect result");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(quotient, quotientMixed1),
+				"compression shouldn't affect result");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(quotient, quotientMixed2),
+				"compression shouldn't affect result");
 	}
 
 	@Test
@@ -90,10 +142,12 @@ class BLS12381Group1BindingsTests {
 	void g1DivideFailure() {
 		final Random random = RandomUtils.getRandomPrintSeed();
 
-		JNITestUtils.assertErrorFromCall(BLS12381Group1Bindings.g1Divide(
-				JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32)), null), 1);
-		JNITestUtils.assertErrorFromCall(BLS12381Group1Bindings.g1Divide(
-				null, JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32))), 1);
+		assertNull(JNITestUtils.g1Divide(
+						JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32)), null),
+				"Null argument should cause error");
+		assertNull(JNITestUtils.g1Divide(
+						null, JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32))),
+				"Null argument should cause error");
 	}
 
 	@Test
@@ -104,10 +158,10 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		JNITestUtils.assertG1ElementEquals(
-				JNITestUtils.getG1ElementFromCall(
-						BLS12381Group1Bindings.g1Divide(randomElement, JNITestUtils.getG1Identity())),
-				randomElement,
+		final BLS12381Group1Element quotient = JNITestUtils.g1Divide(randomElement, JNITestUtils.getG1Identity());
+
+		assertNotEquals(null, quotient, "quotient should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(quotient, randomElement),
 				"dividing by identity shouldn't have an effect");
 	}
 
@@ -121,11 +175,12 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement2 = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		JNITestUtils.assertG1ElementEquals(
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1Divide(randomElement1,
-						randomElement2)),
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1Divide(randomElement1,
-						randomElement2)),
+		final BLS12381Group1Element quotient1 = JNITestUtils.g1Divide(randomElement1, randomElement2);
+		final BLS12381Group1Element quotient2 = JNITestUtils.g1Divide(randomElement1, randomElement2);
+
+		assertNotEquals(null, quotient1, "quotient1 should be valid");
+		assertNotEquals(null, quotient2, "quotient2 should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(quotient1, quotient2),
 				"division with same inputs should produce same result");
 	}
 
@@ -139,11 +194,13 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement2 = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element product = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Multiply(randomElement1, randomElement2));
+		final BLS12381Group1Element product = JNITestUtils.g1Multiply(randomElement1, randomElement2);
 
-		JNITestUtils.assertG1ElementNotEquals(product, randomElement1, "product shouldn't equal randomElement1");
-				JNITestUtils.assertG1ElementNotEquals(product, randomElement2, "product shouldn't equal randomElement2");
+		assertNotEquals(null, product, "product should be valid");
+		assertFalse(BLS12381Group1Bindings.g1ElementEquals(product, randomElement1),
+				"product shouldn't equal randomElement1");
+		assertFalse(BLS12381Group1Bindings.g1ElementEquals(product, randomElement2),
+				"product shouldn't equal randomElement2");
 	}
 
 	@Test
@@ -156,17 +213,27 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement2 = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element randomElement1Compressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Compress(randomElement1));
-		final BLS12381Group1Element randomElement2Compressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Compress(randomElement2));
+		final BLS12381Group1Element randomElement1Compressed = JNITestUtils.g1Compress(randomElement1);
+		final BLS12381Group1Element randomElement2Compressed = JNITestUtils.g1Compress(randomElement2);
 
-		final BLS12381Group1Element product = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Multiply(randomElement1, randomElement2));
-		final BLS12381Group1Element productCompressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Multiply(randomElement1Compressed, randomElement2Compressed));
+		final BLS12381Group1Element product = JNITestUtils.g1Multiply(randomElement1, randomElement2);
+		final BLS12381Group1Element productCompressed = JNITestUtils.g1Multiply(
+				randomElement1Compressed, randomElement2Compressed);
+		final BLS12381Group1Element productMixed1 = JNITestUtils.g1Multiply(
+				randomElement1, randomElement2Compressed);
+		final BLS12381Group1Element productMixed2 = JNITestUtils.g1Multiply(
+				randomElement1Compressed, randomElement2);
 
-		JNITestUtils.assertG1ElementEquals(product, productCompressed, "compression shouldn't affect result");
+		assertNotEquals(null, product, "product should be valid");
+		assertNotEquals(null, productCompressed, "productCompressed should be valid");
+		assertNotEquals(null, productMixed1, "productMixed1 should be valid");
+		assertNotEquals(null, productMixed2, "productMixed2 should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(product, productCompressed),
+				"compression shouldn't affect result");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(product, productMixed1),
+				"compression shouldn't affect result");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(product, productMixed2),
+				"compression shouldn't affect result");
 	}
 
 	@Test
@@ -174,10 +241,12 @@ class BLS12381Group1BindingsTests {
 	void g1MultiplyFailure() {
 		final Random random = RandomUtils.getRandomPrintSeed();
 
-		JNITestUtils.assertErrorFromCall(BLS12381Group1Bindings.g1Multiply(
-				JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32)), null), 1);
-		JNITestUtils.assertErrorFromCall(BLS12381Group1Bindings.g1Multiply(
-				null, JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32))), 1);
+		assertNull(JNITestUtils.g1Multiply(
+						JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32)), null),
+				"Null argument should cause error");
+		assertNull(JNITestUtils.g1Multiply(
+						null, JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32))),
+				"Null argument should cause error");
 	}
 
 	@Test
@@ -188,10 +257,10 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		JNITestUtils.assertG1ElementEquals(
-				JNITestUtils.getG1ElementFromCall(
-						BLS12381Group1Bindings.g1Multiply(randomElement, JNITestUtils.getG1Identity())),
-				randomElement,
+		final BLS12381Group1Element product = JNITestUtils.g1Multiply(randomElement, JNITestUtils.getG1Identity());
+
+		assertNotEquals(null, product, "product should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(product, randomElement),
 				"multiplying by identity shouldn't have an effect");
 	}
 
@@ -205,12 +274,32 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement2 = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		JNITestUtils.assertG1ElementEquals(
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1Multiply(randomElement1,
-						randomElement2)),
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1Multiply(randomElement1,
-						randomElement2)),
+		final BLS12381Group1Element product1 = JNITestUtils.g1Multiply(randomElement1, randomElement2);
+		final BLS12381Group1Element product2 = JNITestUtils.g1Multiply(randomElement1, randomElement2);
+
+		assertNotEquals(null, product1, "product1 should be valid");
+		assertNotEquals(null, product2, "product2 should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(product1, product2),
 				"multiplication with same inputs should produce same result");
+	}
+
+	@Test
+	@DisplayName("g1Multiply produces the same result when swapping operands")
+	void g1MultiplyCommutative() {
+		final Random random = RandomUtils.getRandomPrintSeed();
+
+		final BLS12381Group1Element randomElement1 = JNITestUtils.getG1RandomElement(
+				RandomUtils.randomByteArray(random, 32));
+		final BLS12381Group1Element randomElement2 = JNITestUtils.getG1RandomElement(
+				RandomUtils.randomByteArray(random, 32));
+
+		final BLS12381Group1Element product1 = JNITestUtils.g1Multiply(randomElement1, randomElement2);
+		final BLS12381Group1Element product2 = JNITestUtils.g1Multiply(randomElement2, randomElement1);
+
+		assertNotEquals(null, product1, "product1 should be valid");
+		assertNotEquals(null, product2, "product2 should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(product1, product2),
+				"multiplication with swapped inputs should produce same result");
 	}
 
 	@Test
@@ -223,14 +312,12 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement2 = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element quotient = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Divide(randomElement1, randomElement2));
+		final BLS12381Group1Element quotient = JNITestUtils.g1Divide(randomElement1, randomElement2);
+		final BLS12381Group1Element product = JNITestUtils.g1Multiply(quotient, randomElement2);
 
-		JNITestUtils.assertG1ElementEquals(
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1Multiply(quotient,
-						randomElement2)),
-				randomElement1,
-				"multiply should negate divide");
+		assertNotEquals(null, quotient, "quotient should be valid");
+		assertNotEquals(null, product, "product should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(product, randomElement1), "multiply should negate divide");
 	}
 
 	@Test
@@ -243,13 +330,12 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement2 = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element product = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Multiply(randomElement1, randomElement2));
+		final BLS12381Group1Element product = JNITestUtils.g1Multiply(randomElement1, randomElement2);
+		final BLS12381Group1Element quotient = JNITestUtils.g1Divide(product, randomElement2);
 
-		JNITestUtils.assertG1ElementEquals(
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1Divide(product, randomElement2)),
-				randomElement1,
-				"divide should negate multiply");
+		assertNotEquals(null, product, "product should be valid");
+		assertNotEquals(null, quotient, "quotient should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(quotient, randomElement1), "divide should negate multiply");
 	}
 
 	@Test
@@ -263,11 +349,12 @@ class BLS12381Group1BindingsTests {
 				JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32))
 		};
 
-		final BLS12381Group1Element product =
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1BatchMultiply(elementArray));
+		final BLS12381Group1Element product = JNITestUtils.g1BatchMultiply(elementArray);
 
+		assertNotEquals(null, product, "product should be valid");
 		for (final BLS12381Group1Element element : elementArray) {
-			JNITestUtils.assertG1ElementNotEquals(product, element, "product shouldn't equal random element");
+			assertFalse(BLS12381Group1Bindings.g1ElementEquals(product, element),
+					"product shouldn't equal random element");
 		}
 	}
 
@@ -283,12 +370,9 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement3 = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element randomElement1Compressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Compress(randomElement1));
-		final BLS12381Group1Element randomElement2Compressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Compress(randomElement2));
-		final BLS12381Group1Element randomElement3Compressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Compress(randomElement3));
+		final BLS12381Group1Element randomElement1Compressed = JNITestUtils.g1Compress(randomElement1);
+		final BLS12381Group1Element randomElement2Compressed = JNITestUtils.g1Compress(randomElement2);
+		final BLS12381Group1Element randomElement3Compressed = JNITestUtils.g1Compress(randomElement3);
 
 		final BLS12381Group1Element[] elementArray = new BLS12381Group1Element[] {
 				randomElement1, randomElement2, randomElement3
@@ -298,13 +382,22 @@ class BLS12381Group1BindingsTests {
 				randomElement1Compressed, randomElement2Compressed, randomElement3Compressed
 		};
 
-		final BLS12381Group1Element product =
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1BatchMultiply(elementArray));
-		final BLS12381Group1Element productCompressed =
+		final BLS12381Group1Element[] elementArrayMixed = new BLS12381Group1Element[] {
+				randomElement1Compressed, randomElement2, randomElement3Compressed
+		};
 
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1BatchMultiply(elementArrayCompressed));
+		final BLS12381Group1Element product = JNITestUtils.g1BatchMultiply(elementArray);
+		final BLS12381Group1Element productCompressed = JNITestUtils.g1BatchMultiply(elementArrayCompressed);
+		final BLS12381Group1Element productMixed = JNITestUtils.g1BatchMultiply(elementArrayMixed);
 
-		JNITestUtils.assertG1ElementEquals(product, productCompressed, "compression shouldn't affect result");
+		assertNotEquals(null, product, "product should be valid");
+		assertNotEquals(null, productCompressed, "productCompressed should be valid");
+		assertNotEquals(null, productMixed, "productMixed should be valid");
+
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(product, productCompressed),
+				"compression shouldn't affect result");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(product, productMixed),
+				"compression shouldn't affect result");
 	}
 
 	@Test
@@ -316,7 +409,7 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element[] elementArray = new BLS12381Group1Element[] {
 				JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32)) };
 
-		JNITestUtils.assertErrorFromCall(BLS12381Group1Bindings.g1BatchMultiply(elementArray), 7);
+		assertNull(JNITestUtils.g1BatchMultiply(elementArray), "not enough elements should result in error");
 	}
 
 	@Test
@@ -325,9 +418,10 @@ class BLS12381Group1BindingsTests {
 		final Random random = RandomUtils.getRandomPrintSeed();
 
 		final BLS12381Group1Element[] elementArray = new BLS12381Group1Element[] {
-				JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32)), null };
+				JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32)),
+				null };
 
-		JNITestUtils.assertErrorFromCall(BLS12381Group1Bindings.g1BatchMultiply(elementArray), 1);
+		assertNull(JNITestUtils.g1BatchMultiply(elementArray), "invalid element in batch should result in error");
 	}
 
 	@Test
@@ -341,10 +435,42 @@ class BLS12381Group1BindingsTests {
 				JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32))
 		};
 
-		JNITestUtils.assertG1ElementEquals(
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1BatchMultiply(elementArray)),
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1BatchMultiply(elementArray)),
+		final BLS12381Group1Element product1 = JNITestUtils.g1BatchMultiply(elementArray);
+		final BLS12381Group1Element product2 = JNITestUtils.g1BatchMultiply(elementArray);
+
+		assertNotEquals(null, product1, "product1 should be valid");
+		assertNotEquals(null, product2, "product2 should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(product1, product2),
 				"multiplication with same inputs should produce same result");
+	}
+
+	@Test
+	@DisplayName("g1BatchMultiply produces the same result every time for identical inputs")
+	void g1BatchMultiplyCommutative() {
+		final Random random = RandomUtils.getRandomPrintSeed();
+
+		final BLS12381Group1Element randomElement1 = JNITestUtils.getG1RandomElement(
+				RandomUtils.randomByteArray(random, 32));
+		final BLS12381Group1Element randomElement2 = JNITestUtils.getG1RandomElement(
+				RandomUtils.randomByteArray(random, 32));
+		final BLS12381Group1Element randomElement3 = JNITestUtils.getG1RandomElement(
+				RandomUtils.randomByteArray(random, 32));
+
+		final BLS12381Group1Element[] elementArray1 = new BLS12381Group1Element[] {
+				randomElement2, randomElement3, randomElement1,
+		};
+
+		final BLS12381Group1Element[] elementArray2 = new BLS12381Group1Element[] {
+				randomElement1, randomElement2, randomElement3
+		};
+
+		final BLS12381Group1Element product1 = JNITestUtils.g1BatchMultiply(elementArray1);
+		final BLS12381Group1Element product2 = JNITestUtils.g1BatchMultiply(elementArray2);
+
+		assertNotEquals(null, product1, "product1 should be valid");
+		assertNotEquals(null, product2, "product2 should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(product1, product2),
+				"multiplication with same differently ordered batch inputs should produce same result");
 	}
 
 	@Test
@@ -355,11 +481,12 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element power = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1PowZn(randomElement,
-						JNITestUtils.getRandomScalar(RandomUtils.randomByteArray(random, 32))));
+		final BLS12381Group1Element power = JNITestUtils.g1PowZn(
+				randomElement, JNITestUtils.getRandomScalar(RandomUtils.randomByteArray(random, 32)));
 
-		JNITestUtils.assertG1ElementNotEquals(power, randomElement, "power shouldn't equal randomElement");
+		assertNotEquals(null, power, "power should be valid");
+		assertFalse(BLS12381Group1Bindings.g1ElementEquals(power, randomElement),
+				"power shouldn't equal randomElement");
 	}
 
 	@Test
@@ -369,18 +496,18 @@ class BLS12381Group1BindingsTests {
 
 		final BLS12381Group1Element randomElement = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
-		final BLS12381FieldElement randomScalar =
-				JNITestUtils.getRandomScalar(RandomUtils.randomByteArray(random, 32));
+		final BLS12381FieldElement randomScalar = JNITestUtils.getRandomScalar(
+				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element randomElementCompressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Compress(randomElement));
+		final BLS12381Group1Element randomElementCompressed = JNITestUtils.g1Compress(randomElement);
 
-		final BLS12381Group1Element power = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1PowZn(randomElement, randomScalar));
-		final BLS12381Group1Element powerCompressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1PowZn(randomElementCompressed, randomScalar));
+		final BLS12381Group1Element power = JNITestUtils.g1PowZn(randomElement, randomScalar);
+		final BLS12381Group1Element powerCompressed = JNITestUtils.g1PowZn(randomElementCompressed, randomScalar);
 
-		JNITestUtils.assertG1ElementEquals(power, powerCompressed, "compression shouldn't affect result");
+		assertNotEquals(null, power, "power should be valid");
+		assertNotEquals(null, powerCompressed, "powerCompressed should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(power, powerCompressed),
+				"compression shouldn't affect result");
 	}
 
 	@Test
@@ -391,10 +518,11 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element power = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1PowZn(randomElement, JNITestUtils.getOneScalar()));
+		final BLS12381Group1Element power = JNITestUtils.g1PowZn(randomElement, JNITestUtils.getOneScalar());
 
-		JNITestUtils.assertG1ElementEquals(power, randomElement, "element to the power of 1 should equal itself");
+		assertNotEquals(null, power, "power should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(power, randomElement),
+				"element to the power of 1 should equal itself");
 	}
 
 	@Test
@@ -402,12 +530,12 @@ class BLS12381Group1BindingsTests {
 	void g1PowZnZero() {
 		final Random random = RandomUtils.getRandomPrintSeed();
 
-		final BLS12381Group1Element power = JNITestUtils.getG1ElementFromCall(
+		final BLS12381Group1Element power = JNITestUtils.g1PowZn(
+				JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32)),
+				JNITestUtils.getZeroScalar());
 
-				BLS12381Group1Bindings.g1PowZn(JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32)),
-						JNITestUtils.getZeroScalar()));
-
-		JNITestUtils.assertG1ElementEquals(power, JNITestUtils.getG1Identity(),
+		assertNotEquals(null, power, "power should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(power, JNITestUtils.getG1Identity()),
 				"element to the power of 0 should equal identity");
 	}
 
@@ -418,26 +546,29 @@ class BLS12381Group1BindingsTests {
 
 		final BLS12381Group1Element randomElement = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
-		final BLS12381FieldElement randomScalar =
-				JNITestUtils.getRandomScalar(RandomUtils.randomByteArray(random, 32));
+		final BLS12381FieldElement randomScalar = JNITestUtils.getRandomScalar(
+				RandomUtils.randomByteArray(random, 32));
 
-		JNITestUtils.assertG1ElementEquals(
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1PowZn(randomElement,
-						randomScalar)),
-				JNITestUtils.getG1ElementFromCall(BLS12381Group1Bindings.g1PowZn(randomElement,
-						randomScalar)),
+		final BLS12381Group1Element power1 = JNITestUtils.g1PowZn(randomElement, randomScalar);
+		final BLS12381Group1Element power2 = JNITestUtils.g1PowZn(randomElement, randomScalar);
+
+		assertNotEquals(null, power1, "power1 should be valid");
+		assertNotEquals(null, power2, "power2 should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(power1, power2),
 				"power with same inputs should produce same result");
 	}
 
 	@Test
-	@DisplayName("g1ElementEquals with null arguments throws error")
-	void g1ElementEqualsFailure() {
+	@DisplayName("g1ElementEquals with null arguments returns false")
+	void g1ElementEqualsInvalid() {
 		final Random random = RandomUtils.getRandomPrintSeed();
 
-		JNITestUtils.assertErrorFromCall(BLS12381Group1Bindings.g1ElementEquals(
-				JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32)), null), 1);
-		JNITestUtils.assertErrorFromCall(BLS12381Group1Bindings.g1ElementEquals(
-				null, JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32))), 1);
+		assertFalse(BLS12381Group1Bindings.g1ElementEquals(
+						JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32)), null),
+				"One value being null should return false");
+		assertFalse(BLS12381Group1Bindings.g1ElementEquals(
+						null, JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32))),
+				"One value being null should return false");
 	}
 
 	@Test
@@ -448,12 +579,12 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element randomElement = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element randomElementCompressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Compress(randomElement));
+		final BLS12381Group1Element randomElementCompressed = JNITestUtils.g1Compress(randomElement);
 
-		JNITestUtils.assertG1ElementEquals(randomElement, randomElementCompressed,
+		assertNotEquals(null, randomElementCompressed, "randomElementCompressed should be valid");
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(randomElement, randomElementCompressed),
 				"comparison should work regardless of compression");
-		JNITestUtils.assertG1ElementEquals(randomElementCompressed, randomElement,
+		assertTrue(BLS12381Group1Bindings.g1ElementEquals(randomElementCompressed, randomElement),
 				"comparison should work regardless of compression");
 	}
 
@@ -467,9 +598,9 @@ class BLS12381Group1BindingsTests {
 
 		assertEquals(96, randomElement.toBytes().length, "uncompressed element should be of length 96");
 
-		final BLS12381Group1Element compressedElement = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Compress(randomElement));
+		final BLS12381Group1Element compressedElement = JNITestUtils.g1Compress(randomElement);
 
+		assertNotEquals(null, compressedElement, "compressedElement should be valid");
 		assertEquals(48, compressedElement.toBytes().length, "compressed element should be of length 48");
 	}
 
@@ -485,12 +616,8 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element validUncompressedElement = JNITestUtils.getG1RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-
-		JNITestUtils.assertBooleanCallTrue(BLS12381Group1Bindings.checkG1Validity(validCompressedElement),
-				"element should be valid");
-
-		JNITestUtils.assertBooleanCallTrue(BLS12381Group1Bindings.checkG1Validity(validUncompressedElement),
-				"element should be valid");
+		assertTrue(BLS12381Group1Bindings.checkG1Validity(validCompressedElement), "element should be valid");
+		assertTrue(BLS12381Group1Bindings.checkG1Validity(validUncompressedElement), "element should be valid");
 	}
 
 	@Test
@@ -508,11 +635,7 @@ class BLS12381Group1BindingsTests {
 		final BLS12381Group1Element invalidUncompressedElement = new BLS12381Group1Element(
 				invalidUncompressedElementBytes, new BLS12381Group1());
 
-
-		JNITestUtils.assertBooleanCallFalse(BLS12381Group1Bindings.checkG1Validity(invalidCompressedElement),
-				"element should be invalid");
-
-		JNITestUtils.assertBooleanCallFalse(BLS12381Group1Bindings.checkG1Validity(invalidUncompressedElement),
-				"element should be invalid");
+		assertFalse(BLS12381Group1Bindings.checkG1Validity(invalidCompressedElement), "element should be invalid");
+		assertFalse(BLS12381Group1Bindings.checkG1Validity(invalidUncompressedElement), "element should be invalid");
 	}
 }

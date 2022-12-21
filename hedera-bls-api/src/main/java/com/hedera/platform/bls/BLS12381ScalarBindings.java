@@ -3,13 +3,12 @@ package com.hedera.platform.bls;
 import java.io.IOException;
 
 /**
- * An interface class to allow java access to functions in the rust library BLS12_381
- * <p>
- * Byte arrays returned by the native functions begin with a byte representing an error code. If this error code is
- * 0, the remaining bytes in the array will contain the function result. If the error code is anything other than 0, the
- * array will not have any other bytes
+ * Class containing definitions for native rust functions that operate on scalars
  */
 public final class BLS12381ScalarBindings {
+	/**
+	 * Hidden constructor
+	 */
 	private BLS12381ScalarBindings() {
 	}
 

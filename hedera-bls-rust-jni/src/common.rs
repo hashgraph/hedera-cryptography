@@ -15,7 +15,6 @@ pub(crate) enum GenericError {
     TryInto(usize),
     InputLength(String),
     Deserialization(String),
-    Computation(String),
     ArraySize(String),
 }
 
@@ -31,7 +30,6 @@ impl fmt::Display for GenericError {
             GenericError::Deserialization(ref string) => {
                 write!(f, "Deserialization error: {}", string)
             }
-            GenericError::Computation(ref string) => write!(f, "Computation error: {}", string),
             GenericError::ArraySize(ref string) => write!(f, "ArraySize error: {}", string),
         }
     }
@@ -66,7 +64,6 @@ impl GenericError {
             GenericError::TryInto(_) => 3,
             GenericError::InputLength(_) => 4,
             GenericError::Deserialization(_) => 5,
-            GenericError::Computation(_) => 6,
             GenericError::ArraySize(_) => 7,
         }
     }
@@ -88,7 +85,8 @@ pub(crate) fn from_bytes_generic<ReturnType, const INPUT_SIZE: usize>(
     byte_conversion_fn: &dyn Fn(&[u8; INPUT_SIZE]) -> CtOption<ReturnType>,
 ) -> Result<ReturnType, GenericError> {
     let vector = env.convert_byte_array(*input_bytes)?;
-    let array = vector.try_into()?;
+
+    let array: [u8; INPUT_SIZE] = vector.try_into()?;
 
     Option::from(byte_conversion_fn(&array)).ok_or_else(|| {
         GenericError::Deserialization(format!("Expected byte array of length {}", INPUT_SIZE))

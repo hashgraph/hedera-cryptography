@@ -92,8 +92,7 @@ class BLS12381PairingTests {
 		final BLS12381Group2Element group2Element = JNITestUtils.getG2RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element group1ElementCompressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Compress(group1Element));
+		final BLS12381Group1Element group1ElementCompressed = JNITestUtils.g1Compress(group1Element);
 		final BLS12381Group2Element group2ElementCompressed = JNITestUtils.getG2ElementFromCall(
 				BLS12381Group2Bindings.g2Compress(group2Element));
 
@@ -169,8 +168,7 @@ class BLS12381PairingTests {
 		final BLS12381Group2Element group2Element = JNITestUtils.getG2RandomElement(
 				RandomUtils.randomByteArray(random, 32));
 
-		final BLS12381Group1Element group1ElementCompressed = JNITestUtils.getG1ElementFromCall(
-				BLS12381Group1Bindings.g1Compress(group1Element));
+		final BLS12381Group1Element group1ElementCompressed = JNITestUtils.g1Compress(group1Element);
 		final BLS12381Group2Element group2ElementCompressed = JNITestUtils.getG2ElementFromCall(
 				BLS12381Group2Bindings.g2Compress(group2Element));
 

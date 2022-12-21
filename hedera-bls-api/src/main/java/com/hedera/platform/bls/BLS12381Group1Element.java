@@ -68,14 +68,14 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
 	 */
 	@Override
 	public DistCryptGroupElement power(final DistCryptFieldElement exponent) {
-		final JNICallResult callResult = new JNICallResult(
-				BLS12381Group1Bindings.g1PowZn(this, (BLS12381FieldElement) exponent));
+		final byte[] output = new byte[BLS12381Group1.UNCOMPRESSED_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("g1PowZn", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381Group1Bindings.g1PowZn(this, (BLS12381FieldElement) exponent, output)) != 0) {
+			throw new BLS12381Exception("g1PowZn", errorCode);
 		}
 
-		return new BLS12381Group1Element(callResult.getResultArray(), group);
+		return new BLS12381Group1Element(output, group);
 	}
 
 	/**
@@ -83,14 +83,14 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
 	 */
 	@Override
 	public DistCryptGroupElement multiply(final DistCryptGroupElement other) {
-		final JNICallResult callResult = new JNICallResult(
-				BLS12381Group1Bindings.g1Multiply(this, (BLS12381Group1Element) other));
+		final byte[] output = new byte[BLS12381Group1.UNCOMPRESSED_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("g1Multiply", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381Group1Bindings.g1Multiply(this, (BLS12381Group1Element) other, output)) != 0) {
+			throw new BLS12381Exception("g1Multiply", errorCode);
 		}
 
-		return new BLS12381Group1Element(callResult.getResultArray(), group);
+		return new BLS12381Group1Element(output, group);
 	}
 
 	/**
@@ -98,14 +98,14 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
 	 */
 	@Override
 	public DistCryptGroupElement divide(final DistCryptGroupElement other) {
-		final JNICallResult callResult = new JNICallResult(
-				BLS12381Group1Bindings.g1Divide(this, (BLS12381Group1Element) other));
+		final byte[] output = new byte[BLS12381Group1.UNCOMPRESSED_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("g1Divide", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381Group1Bindings.g1Divide(this, (BLS12381Group1Element) other, output)) != 0) {
+			throw new BLS12381Exception("g1Divide", errorCode);
 		}
 
-		return new BLS12381Group1Element(callResult.getResultArray(), group);
+		return new BLS12381Group1Element(output, group);
 	}
 
 	/**
@@ -118,14 +118,14 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
 			return this;
 		}
 
-		final JNICallResult callResult =
-				new JNICallResult(BLS12381Group1Bindings.g1Compress(this));
+		byte[] newGroupElement = new byte[BLS12381Group1.COMPRESSED_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("g1Compress", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381Group1Bindings.g1Compress(this, newGroupElement)) != 0) {
+			throw new BLS12381Exception("g1Compress", errorCode);
 		}
 
-		groupElement = callResult.getResultArray();
+		groupElement = newGroupElement;
 		compressed = true;
 
 		return this;
@@ -150,14 +150,7 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
 		}
 
 		if (o instanceof BLS12381Group1Element element) {
-			final JNICallResult callResult = new JNICallResult(
-					BLS12381Group1Bindings.g1ElementEquals(this, element));
-
-			if (callResult.getErrorCode() != 0) {
-				throw new BLS12381Exception("g1ElementEquals", callResult.getErrorCode());
-			}
-
-			return callResult.getResultArray()[0] == 1;
+			return group.equals(element.group) && BLS12381Group1Bindings.g1ElementEquals(this, element);
 		}
 
 		return false;

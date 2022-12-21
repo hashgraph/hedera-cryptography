@@ -50,20 +50,6 @@ public class JNITestUtils {
 	}
 
 	/**
-	 * Gets a scalar from the byte array returned from a JNI call
-	 *
-	 * @param callReturn
-	 * 		the byte array returned by a JNI call
-	 * @return the scalar result
-	 */
-	public static BLS12381FieldElement getScalarFromCall(final byte[] callReturn) {
-		final JNICallResult result = new JNICallResult(callReturn);
-		assertEquals(0, result.getErrorCode(), "call returned error code");
-
-		return new BLS12381FieldElement(result.getResultArray(), new BLS12381Field());
-	}
-
-	/**
 	 * Gets a scalar from a byte array seed
 	 *
 	 * @return a scalar from a byte array seed
@@ -250,26 +236,16 @@ public class JNITestUtils {
 	}
 
 	/**
-	 * Gets a group element from the byte array returned from a JNI call
-	 *
-	 * @param callReturn
-	 * 		the byte array returned by a JNI call
-	 * @return the group element
-	 */
-	public static BLS12381Group1Element getG1ElementFromCall(final byte[] callReturn) {
-		final JNICallResult result = new JNICallResult(callReturn);
-		assertEquals(0, result.getErrorCode(), "call returned error code");
-
-		return new BLS12381Group1Element(result.getResultArray(), new BLS12381Group1());
-	}
-
-	/**
 	 * Gets an identity element
 	 *
 	 * @return an identity element
 	 */
 	public static BLS12381Group1Element getG1Identity() {
-		return getG1ElementFromCall(BLS12381Group1Bindings.newG1Identity());
+		final byte[] output = new byte[BLS12381Group1.UNCOMPRESSED_SIZE];
+
+		assertEquals(0, BLS12381Group1Bindings.newG1Identity(output));
+
+		return new BLS12381Group1Element(output, new BLS12381Group1());
 	}
 
 	/**
@@ -280,43 +256,111 @@ public class JNITestUtils {
 	 * @return the new group element
 	 */
 	public static BLS12381Group1Element getG1RandomElement(final byte[] seed) {
-		return getG1ElementFromCall(BLS12381Group1Bindings.newRandomG1(seed));
+		final byte[] output = new byte[BLS12381Group1.UNCOMPRESSED_SIZE];
+
+		assertEquals(0, BLS12381Group1Bindings.newRandomG1(seed, output));
+
+		return new BLS12381Group1Element(output, new BLS12381Group1());
 	}
 
 	/**
-	 * Asserts that two group 1 elements are equal
+	 * Compress a group element
 	 *
-	 * @param element1
-	 * 		the first element being compared
-	 * @param element2
-	 * 		the second element being compared
-	 * @param errorMessage
-	 * 		the error message if the assertion fails
+	 * @param element
+	 * 		the element to compress
+	 * @return the compressed element
 	 */
-	public static void assertG1ElementEquals(
-			final BLS12381Group1Element element1,
-			final BLS12381Group1Element element2,
-			final String errorMessage) {
+	public static BLS12381Group1Element g1Compress(final BLS12381Group1Element element) {
+		final byte[] output = new byte[BLS12381Group1.COMPRESSED_SIZE];
 
-		assertBooleanCallTrue(BLS12381Group1Bindings.g1ElementEquals(element1, element2), errorMessage);
+		if (BLS12381Group1Bindings.g1Compress(element, output) != 0) {
+			return null;
+		}
+
+		return new BLS12381Group1Element(output, new BLS12381Group1());
 	}
 
 	/**
-	 * Asserts that two group 1 elements are not equal
+	 * Computes the product of 2 group 1 elements. Returns null if an error occurs
 	 *
 	 * @param element1
-	 * 		the first element being compared
+	 * 		the first group1 element
 	 * @param element2
-	 * 		the second element being compared
-	 * @param errorMessage
-	 * 		the error message if the assertion fails
+	 * 		the second group1 element
+	 * @return the product, or null if an error occurred
 	 */
-	public static void assertG1ElementNotEquals(
+	public static BLS12381Group1Element g1Multiply(
 			final BLS12381Group1Element element1,
-			final BLS12381Group1Element element2,
-			final String errorMessage) {
+			final BLS12381Group1Element element2) {
 
-		assertBooleanCallFalse(BLS12381Group1Bindings.g1ElementEquals(element1, element2), errorMessage);
+		final byte[] output = new byte[BLS12381Group1.UNCOMPRESSED_SIZE];
+
+		if (BLS12381Group1Bindings.g1Multiply(element1, element2, output) != 0) {
+			return null;
+		}
+
+		return new BLS12381Group1Element(output, new BLS12381Group1());
+	}
+
+	/**
+	 * Computes the quotient of 2 group 1 elements. Returns null if an error occurs
+	 *
+	 * @param element1
+	 * 		the first group1 element
+	 * @param element2
+	 * 		the second group1 element
+	 * @return the quotient, or null if an error occurred
+	 */
+	public static BLS12381Group1Element g1Divide(
+			final BLS12381Group1Element element1,
+			final BLS12381Group1Element element2) {
+
+		final byte[] output = new byte[BLS12381Group1.UNCOMPRESSED_SIZE];
+
+		if (BLS12381Group1Bindings.g1Divide(element1, element2, output) != 0) {
+			return null;
+		}
+
+		return new BLS12381Group1Element(output, new BLS12381Group1());
+	}
+
+	/**
+	 * Computes the product of a batch of group1 elements. Returns null if an error occurs
+	 *
+	 * @param elements
+	 * 		the batch of elements to get the product of
+	 * @return the product, or null if an error occurred
+	 */
+	public static BLS12381Group1Element g1BatchMultiply(BLS12381Group1Element[] elements) {
+		final byte[] output = new byte[BLS12381Group1.UNCOMPRESSED_SIZE];
+
+		if (BLS12381Group1Bindings.g1BatchMultiply(elements, output) != 0) {
+			return null;
+		}
+
+		return new BLS12381Group1Element(output, new BLS12381Group1());
+	}
+
+	/**
+	 * Computes a group 1 base to a scalar power
+	 *
+	 * @param base
+	 * 		the group 1 base
+	 * @param exponent
+	 * 		the scalar exponent
+	 * @return the resulting group 1 element, or null if an error occurred
+	 */
+	public static BLS12381Group1Element g1PowZn(
+			final BLS12381Group1Element base,
+			final BLS12381FieldElement exponent) {
+
+		final byte[] output = new byte[BLS12381Group1.UNCOMPRESSED_SIZE];
+
+		if (BLS12381Group1Bindings.g1PowZn(base, exponent, output) != 0) {
+			return null;
+		}
+
+		return new BLS12381Group1Element(output, new BLS12381Group1());
 	}
 
 	/**
