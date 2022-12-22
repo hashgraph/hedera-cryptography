@@ -1,6 +1,5 @@
 package com.hedera.platform.bls;
 
-import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -98,7 +97,7 @@ public class BLS12381Group1 implements DistCryptGroup {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptGroupElement newElementFromBytes(final byte[] inputBytes) throws IOException {
+	public DistCryptGroupElement newElementFromBytes(final byte[] inputBytes) {
 		if (inputBytes.length != COMPRESSED_SIZE && inputBytes.length != UNCOMPRESSED_SIZE) {
 			throw new IllegalArgumentException(
 					String.format("Byte representation of a group 1 element should have compressed length %s, " +

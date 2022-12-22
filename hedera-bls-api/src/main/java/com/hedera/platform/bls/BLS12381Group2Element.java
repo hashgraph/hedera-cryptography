@@ -165,8 +165,8 @@ public class BLS12381Group2Element implements DistCryptGroupElement {
 
 	@Override
 	public String toString() {
-		return "com.hedera.bls.BLS12381Group2Element{" +
-				"groupElement=" + (groupElement == null ? null : Arrays.toString(groupElement)) +
+		return "BLS12381Group2Element{" +
+				"bytes=" + (groupElement == null ? null : Arrays.toString(groupElement)) +
 				", group=" + group +
 				", compressed=" + compressed +
 				'}';
