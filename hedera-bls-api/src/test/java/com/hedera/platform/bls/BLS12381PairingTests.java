@@ -17,171 +17,169 @@
 
 package com.hedera.platform.bls;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Random;
 
 import static com.hedera.platform.bls.TestUtils.bytesToHex;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class BLS12381PairingTests {
-	@Test
-	@DisplayName("Equal pairing results")
-	void equalPairings() {
-		final Random random = RandomUtils.getRandomPrintSeed();
+    Random random;
+    DistCryptGroup group1;
+    DistCryptGroup group2;
+    DistCryptBilinearMap bilinearMap;
 
-		final BLS12381Group1Element group1Element = JNITestUtils.getG1RandomElement(
-				RandomUtils.randomByteArray(random, 32));
-		final BLS12381Group2Element group2Element = JNITestUtils.getG2RandomElement(
-				RandomUtils.randomByteArray(random, 32));
+    @BeforeEach
+    public void init() {
+        random = RandomUtils.getRandomPrintSeed();
+        group1 = new BLS12381Group1();
+        group2 = new BLS12381Group2();
+        bilinearMap = new BLS12381BilinearMap();
+    }
 
-		JNITestUtils.assertBooleanCallTrue(
-				BLS12381PairingBindings.comparePairing(group1Element, group2Element, group1Element, group2Element),
-				"pairings should be recognized as equal");
-	}
+    @Test
+    @DisplayName("Equal pairing results")
+    void equalPairings() {
+        final DistCryptGroupElement group1Element = group1.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group1.getSeedSize()));
+        final DistCryptGroupElement group2Element = group2.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
-	@Test
-	@DisplayName("Unequal pairing results")
-	void unequalPairings() {
-		final Random random = RandomUtils.getRandomPrintSeed();
+        assertTrue(bilinearMap.comparePairing(group1Element, group2Element, group1Element, group2Element),
+                "pairings should be recognized as equal");
+    }
 
-		final BLS12381Group1Element group1ElementA = JNITestUtils.getG1RandomElement(
-				RandomUtils.randomByteArray(random, 32));
-		final BLS12381Group2Element group2ElementA = JNITestUtils.getG2RandomElement(
-				RandomUtils.randomByteArray(random, 32));
+    @Test
+    @DisplayName("Unequal pairing results")
+    void unequalPairings() {
+        final DistCryptGroupElement group1ElementA = group1.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group1.getSeedSize()));
+        final DistCryptGroupElement group2ElementA = group2.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
-		final BLS12381Group1Element group1ElementB = JNITestUtils.getG1RandomElement(
-				RandomUtils.randomByteArray(random, 32));
-		final BLS12381Group2Element group2ElementB = JNITestUtils.getG2RandomElement(
-				RandomUtils.randomByteArray(random, 32));
+        final DistCryptGroupElement group1ElementB = group1.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group1.getSeedSize()));
+        final DistCryptGroupElement group2ElementB = group2.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
-		JNITestUtils.assertBooleanCallFalse(
-				BLS12381PairingBindings.comparePairing(group1ElementA, group2ElementA, group1ElementB, group2ElementB),
-				"pairings should not be equal");
-	}
+        assertFalse(bilinearMap.comparePairing(group1ElementA, group2ElementA, group1ElementB, group2ElementB),
+                "pairings should be recognized as equal");
+    }
 
-	@Test
-	@DisplayName("comparePairing failure")
-	void comparePairingFailure() {
-		final Random random = RandomUtils.getRandomPrintSeed();
+    @Test
+    @DisplayName("comparePairing failure")
+    void comparePairingFailure() {
+        final DistCryptGroupElement group1Element = group1.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group1.getSeedSize()));
+        final DistCryptGroupElement group2Element = group2.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
-		final BLS12381Group1Element group1Element = JNITestUtils.getG1RandomElement(
-				RandomUtils.randomByteArray(random, 32));
-		final BLS12381Group2Element group2Element = JNITestUtils.getG2RandomElement(
-				RandomUtils.randomByteArray(random, 32));
+        assertThrows(BLS12381Exception.class, () -> bilinearMap.comparePairing(
+                        null, group2Element, group1Element, group2Element),
+                "Pairing comparison should fail with a null element");
+        assertThrows(BLS12381Exception.class, () -> bilinearMap.comparePairing(
+                        group1Element, null, group1Element, group2Element),
+                "Pairing comparison should fail with a null element");
+        assertThrows(BLS12381Exception.class, () -> bilinearMap.comparePairing(
+                        group1Element, group2Element, null, group2Element),
+                "Pairing comparison should fail with a null element");
+        assertThrows(BLS12381Exception.class, () -> bilinearMap.comparePairing(
+                        group1Element, group2Element, group1Element, null),
+                "Pairing comparison should fail with a null element");
+    }
 
-		JNITestUtils.assertErrorFromCall(
-				BLS12381PairingBindings.comparePairing(null, group2Element, group1Element, group2Element), 1);
-		JNITestUtils.assertErrorFromCall(
-				BLS12381PairingBindings.comparePairing(group1Element, null, group1Element, group2Element), 1);
-		JNITestUtils.assertErrorFromCall(
-				BLS12381PairingBindings.comparePairing(group1Element, group2Element, null, group2Element), 1);
-		JNITestUtils.assertErrorFromCall(
-				BLS12381PairingBindings.comparePairing(group1Element, group2Element, group1Element, null), 1);
-	}
+    @Test
+    @DisplayName("comparePairing with compression")
+    void comparePairingCompressed() {
+        final byte[] seed1 = RandomUtils.randomByteArray(random, group1.getSeedSize());
+        final byte[] seed2 = RandomUtils.randomByteArray(random, group2.getSeedSize());
 
-	@Test
-	@DisplayName("comparePairing with compression")
-	void comparePairingCompressed() {
-		final Random random = RandomUtils.getRandomPrintSeed();
+        final DistCryptGroupElement group1Element = group1.newElementFromSeed(seed1);
+        final DistCryptGroupElement group2Element = group2.newElementFromSeed(seed2);
 
-		final BLS12381Group1Element group1Element = JNITestUtils.getG1RandomElement(
-				RandomUtils.randomByteArray(random, 32));
-		final BLS12381Group2Element group2Element = JNITestUtils.getG2RandomElement(
-				RandomUtils.randomByteArray(random, 32));
+        final DistCryptGroupElement group1ElementCompressed = group1.newElementFromSeed(seed1).compress();
+        final DistCryptGroupElement group2ElementCompressed = group2.newElementFromSeed(seed2).compress();
 
-		final BLS12381Group1Element group1ElementCompressed = JNITestUtils.g1Compress(group1Element);
-		final BLS12381Group2Element group2ElementCompressed = JNITestUtils.getG2ElementFromCall(
-				BLS12381Group2Bindings.g2Compress(group2Element));
+        assertTrue(bilinearMap.comparePairing(group1ElementCompressed, group2Element, group1Element, group2Element),
+                "compression shouldn't affect pairing equality");
+        assertTrue(bilinearMap.comparePairing(group1Element, group2ElementCompressed, group1Element, group2Element),
+                "compression shouldn't affect pairing equality");
+        assertTrue(bilinearMap.comparePairing(group1Element, group2Element, group1ElementCompressed, group2Element),
+                "compression shouldn't affect pairing equality");
+        assertTrue(bilinearMap.comparePairing(group1Element, group2Element, group1Element, group2ElementCompressed),
+                "compression shouldn't affect pairing equality");
+    }
 
-		JNITestUtils.assertBooleanCallTrue(BLS12381PairingBindings.comparePairing(
-						group1ElementCompressed, group2Element, group1Element, group2Element),
-				"compression shouldn't affect equality");
-		JNITestUtils.assertBooleanCallTrue(BLS12381PairingBindings.comparePairing(
-						group1Element, group2ElementCompressed, group1Element, group2Element),
-				"compression shouldn't affect equality");
-		JNITestUtils.assertBooleanCallTrue(BLS12381PairingBindings.comparePairing(
-						group1Element, group2Element, group1ElementCompressed, group2Element),
-				"compression shouldn't affect equality");
-		JNITestUtils.assertBooleanCallTrue(BLS12381PairingBindings.comparePairing(
-						group1Element, group2Element, group1Element, group2ElementCompressed),
-				"compression shouldn't affect equality");
-	}
+    @Test
+    @DisplayName("Different pairings produce unique display strings")
+    void pairingDisplayUnique() {
+        final DistCryptGroupElement group1ElementA = group1.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group1.getSeedSize()));
+        final DistCryptGroupElement group2ElementA = group2.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
-	@Test
-	@DisplayName("Different pairings produce unique display strings")
-	void pairingDisplayUnique() {
-		final Random random = RandomUtils.getRandomPrintSeed();
+        final DistCryptGroupElement group1ElementB = group1.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group1.getSeedSize()));
+        final DistCryptGroupElement group2ElementB = group2.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
-		final BLS12381Group1Element group1ElementA = JNITestUtils.getG1RandomElement(
-				RandomUtils.randomByteArray(random, 32));
-		final BLS12381Group2Element group2ElementA = JNITestUtils.getG2RandomElement(
-				RandomUtils.randomByteArray(random, 32));
+        assertNotEquals(
+                bytesToHex(bilinearMap.displayPairing(group1ElementA, group2ElementA)),
+                bytesToHex(bilinearMap.displayPairing(group1ElementB, group2ElementB)),
+                "pairing displays should be unique");
+    }
 
-		final BLS12381Group1Element group1ElementB = JNITestUtils.getG1RandomElement(
-				RandomUtils.randomByteArray(random, 32));
-		final BLS12381Group2Element group2ElementB = JNITestUtils.getG2RandomElement(
-				RandomUtils.randomByteArray(random, 32));
+    @Test
+    @DisplayName("Identical pairings produce identical display strings")
+    void pairingDisplayDeterministic() {
+        final DistCryptGroupElement group1Element = group1.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group1.getSeedSize()));
+        final DistCryptGroupElement group2Element = group2.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
-		assertNotEquals(
-				bytesToHex(BLS12381PairingBindings.pairingDisplay(group1ElementA, group2ElementA)),
-				bytesToHex(BLS12381PairingBindings.pairingDisplay(group1ElementB, group2ElementB)),
-				"pairing displays should be unique");
-	}
+        assertArrayEquals(
+                bilinearMap.displayPairing(group1Element, group2Element),
+                bilinearMap.displayPairing(group1Element, group2Element),
+                "pairing displays should be identical");
+    }
 
-	@Test
-	@DisplayName("Identical pairings produce identical display strings")
-	void pairingDisplayDeterministic() {
-		final Random random = RandomUtils.getRandomPrintSeed();
+    @Test
+    @DisplayName("pairingDisplay failure")
+    void pairingDisplayFailure() {
+        final DistCryptGroupElement group1Element = group1.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group1.getSeedSize()));
+        final DistCryptGroupElement group2Element = group2.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
-		final BLS12381Group1Element group1Element = JNITestUtils.getG1RandomElement(
-				RandomUtils.randomByteArray(random, 32));
-		final BLS12381Group2Element group2Element = JNITestUtils.getG2RandomElement(
-				RandomUtils.randomByteArray(random, 32));
+        assertThrows(BLS12381Exception.class, () -> bilinearMap.displayPairing(null, group2Element),
+                "Pairing display should fail with a null element");
+        assertThrows(BLS12381Exception.class, () -> bilinearMap.displayPairing(group1Element, null),
+                "Pairing display should fail with a null element");
+    }
 
-		assertArrayEquals(
-				BLS12381PairingBindings.pairingDisplay(group1Element, group2Element),
-				BLS12381PairingBindings.pairingDisplay(group1Element, group2Element),
-				"pairing displays should be identical");
-	}
+    @Test
+    @DisplayName("pairingDisplay with compression")
+    void pairingDisplayCompressed() {
+        final byte[] seed1 = RandomUtils.randomByteArray(random, group1.getSeedSize());
+        final byte[] seed2 = RandomUtils.randomByteArray(random, group2.getSeedSize());
 
-	@Test
-	@DisplayName("pairingDisplay failure")
-	void pairingDisplayFailure() {
-		final Random random = RandomUtils.getRandomPrintSeed();
+        final DistCryptGroupElement group1Element = group1.newElementFromSeed(seed1);
+        final DistCryptGroupElement group2Element = group2.newElementFromSeed(seed2);
 
-		JNITestUtils.assertErrorFromCall(BLS12381PairingBindings.pairingDisplay(
-				JNITestUtils.getG1RandomElement(RandomUtils.randomByteArray(random, 32)), null), 1);
-		JNITestUtils.assertErrorFromCall(BLS12381PairingBindings.pairingDisplay(
-				null, JNITestUtils.getG2RandomElement(RandomUtils.randomByteArray(random, 32))), 1);
-	}
+        final DistCryptGroupElement group1ElementCompressed = group1.newElementFromSeed(seed1).compress();
+        final DistCryptGroupElement group2ElementCompressed = group2.newElementFromSeed(seed2).compress();
 
-	@Test
-	@DisplayName("pairingDisplay with compression")
-	void pairingDisplayCompressed() {
-		final Random random = RandomUtils.getRandomPrintSeed();
+        final byte[] uncompressedDisplay = bilinearMap.displayPairing(group1Element, group2Element);
 
-		final BLS12381Group1Element group1Element = JNITestUtils.getG1RandomElement(
-				RandomUtils.randomByteArray(random, 32));
-		final BLS12381Group2Element group2Element = JNITestUtils.getG2RandomElement(
-				RandomUtils.randomByteArray(random, 32));
-
-		final BLS12381Group1Element group1ElementCompressed = JNITestUtils.g1Compress(group1Element);
-		final BLS12381Group2Element group2ElementCompressed = JNITestUtils.getG2ElementFromCall(
-				BLS12381Group2Bindings.g2Compress(group2Element));
-
-		final byte[] uncompressedDisplay = BLS12381PairingBindings.pairingDisplay(group1Element, group2Element);
-
-		assertArrayEquals(uncompressedDisplay,
-				BLS12381PairingBindings.pairingDisplay(group1ElementCompressed, group2Element),
-				"pairing displays should be identical");
-		assertArrayEquals(uncompressedDisplay,
-				BLS12381PairingBindings.pairingDisplay(group1Element, group2ElementCompressed),
-				"pairing displays should be identical");
-		assertArrayEquals(uncompressedDisplay,
-				BLS12381PairingBindings.pairingDisplay(group1ElementCompressed, group2ElementCompressed),
-				"pairing displays should be identical");
-	}
+        assertArrayEquals(uncompressedDisplay, bilinearMap.displayPairing(group1ElementCompressed, group2Element),
+                "pairing displays should be identical");
+        assertArrayEquals(uncompressedDisplay, bilinearMap.displayPairing(group1Element, group2ElementCompressed),
+                "pairing displays should be identical");
+        assertArrayEquals(uncompressedDisplay, bilinearMap.displayPairing(
+                        group1ElementCompressed, group2ElementCompressed),
+                "pairing displays should be identical");
+    }
 }

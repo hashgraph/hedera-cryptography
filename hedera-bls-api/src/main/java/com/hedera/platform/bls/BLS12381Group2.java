@@ -1,9 +1,6 @@
 package com.hedera.platform.bls;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * G2 of the BLS12-381 curve family
@@ -12,30 +9,31 @@ public class BLS12381Group2 implements DistCryptGroup {
 	/**
 	 * Length of a byte array representing a compressed element
 	 */
-	public static final int COMPRESSED_SIZE = 96;
+	private static final int COMPRESSED_SIZE = 96;
 
 	/**
 	 * Length of a byte array representing an uncompressed element
 	 */
-	public static final int UNCOMPRESSED_SIZE = 192;
+	private static final int UNCOMPRESSED_SIZE = 192;
 
 	/**
 	 * Required size of a seed to create a new group element
 	 */
-	public static final int SEED_SIZE = 32;
+	private static final int SEED_SIZE = 32;
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public DistCryptGroupElement newOneElement() {
-		final JNICallResult callResult = new JNICallResult(BLS12381Group2Bindings.newG2Identity());
+		final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("newG2Identity", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381Group2Bindings.newG2Identity(output)) != 0) {
+			throw new BLS12381Exception("newG2Identity", errorCode);
 		}
 
-		return new BLS12381Group2Element(callResult.getResultArray(), this);
+		return new BLS12381Group2Element(output, this);
 	}
 
 	/**
@@ -47,13 +45,14 @@ public class BLS12381Group2 implements DistCryptGroup {
 			throw new IllegalArgumentException(String.format("seed must be %s bytes in length", SEED_SIZE));
 		}
 
-		final JNICallResult callResult = new JNICallResult(BLS12381Group2Bindings.newRandomG2(seed));
+		final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("newRandomG2", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381Group2Bindings.newRandomG2(seed, output)) != 0) {
+			throw new BLS12381Exception("newRandomG2", errorCode);
 		}
 
-		return new BLS12381Group2Element(callResult.getResultArray(), this);
+		return new BLS12381Group2Element(output, this);
 	}
 
 	/**
@@ -61,15 +60,14 @@ public class BLS12381Group2 implements DistCryptGroup {
 	 */
 	@Override
 	public DistCryptGroupElement hashToGroup(final byte[] input) {
-		final byte[] hash = Utils.computeSha256(input);
+		final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
-		final JNICallResult callResult = new JNICallResult(BLS12381Group2Bindings.newRandomG2(hash));
-
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("newRandomG2", callResult.getErrorCode());
+		final int errorCode;
+		if ((errorCode = BLS12381Group2Bindings.newRandomG2(Utils.computeSha256(input), output)) != 0) {
+			throw new BLS12381Exception("newRandomG2", errorCode);
 		}
 
-		return new BLS12381Group2Element(callResult.getResultArray(), this);
+		return new BLS12381Group2Element(output, this);
 	}
 
 	/**
@@ -77,29 +75,29 @@ public class BLS12381Group2 implements DistCryptGroup {
 	 */
 	@Override
 	public DistCryptGroupElement batchMultiply(final Collection<DistCryptGroupElement> elements) {
-		final List<BLS12381Group2Element> elementList = new ArrayList<>();
-
-		for (final DistCryptGroupElement element : elements) {
-			elementList.add((BLS12381Group2Element) element);
-		}
-
 		final BLS12381Group2Element[] elementArray = new BLS12381Group2Element[elements.size()];
-		elementList.toArray(elementArray);
 
-		final JNICallResult callResult = new JNICallResult(BLS12381Group2Bindings.g2BatchMultiply(elementArray));
-
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("g2BatchMultiply", callResult.getErrorCode());
+		int count = 0;
+		for (final DistCryptGroupElement element : elements) {
+			elementArray[count] = (BLS12381Group2Element) element;
+			++count;
 		}
 
-		return new BLS12381Group2Element(callResult.getResultArray(), this);
+		final byte[] output = new byte[UNCOMPRESSED_SIZE];
+
+		final int errorCode;
+		if ((errorCode = BLS12381Group2Bindings.g2BatchMultiply(elementArray, output)) != 0) {
+			throw new BLS12381Exception("g2BatchMultiply", errorCode);
+		}
+
+		return new BLS12381Group2Element(output, this);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptGroupElement newElementFromBytes(final byte[] inputBytes) throws IOException {
+	public DistCryptGroupElement newElementFromBytes(final byte[] inputBytes) {
 		if (inputBytes.length != COMPRESSED_SIZE && inputBytes.length != UNCOMPRESSED_SIZE) {
 			throw new IllegalArgumentException(
 					String.format("Byte representation of a group 2 element should have compressed length %s, " +
@@ -109,19 +107,38 @@ public class BLS12381Group2 implements DistCryptGroup {
 		// create the object, but check validity before returning
 		final BLS12381Group2Element outputElement = new BLS12381Group2Element(inputBytes, this);
 
-		final JNICallResult callResult = new JNICallResult(BLS12381Group2Bindings.checkG2Validity(outputElement));
-
-		if (callResult.getErrorCode() != 0) {
-			throw new BLS12381Exception("checkG2Validity", callResult.getErrorCode());
-		}
-
-		if (callResult.getResultArray()[0] == 0) {
-			throw new IOException("input bytes don't represent a valid g2 element");
+		if (!outputElement.checkElementValidity()) {
+			throw new BLS12381Exception("checkG2Validity", 1);
 		}
 
 		return outputElement;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getCompressedSize() {
+		return COMPRESSED_SIZE;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getUncompressedSize() {
+		return UNCOMPRESSED_SIZE;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getSeedSize() {
+		return SEED_SIZE;
+	}
+
+	@Override
 	public boolean equals(final Object o) {
 		if (this == o) {
 			return true;

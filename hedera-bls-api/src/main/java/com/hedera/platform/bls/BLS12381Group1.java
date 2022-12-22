@@ -9,17 +9,17 @@ public class BLS12381Group1 implements DistCryptGroup {
 	/**
 	 * Length of a byte array representing a compressed element
 	 */
-	public static final int COMPRESSED_SIZE = 48;
+	private static final int COMPRESSED_SIZE = 48;
 
 	/**
 	 * Length of a byte array representing an uncompressed element
 	 */
-	public static final int UNCOMPRESSED_SIZE = 96;
+	private static final int UNCOMPRESSED_SIZE = 96;
 
 	/**
 	 * Required size of a seed to create a new group element
 	 */
-	public static final int SEED_SIZE = 32;
+	private static final int SEED_SIZE = 32;
 
 	/**
 	 * {@inheritDoc}
@@ -107,11 +107,35 @@ public class BLS12381Group1 implements DistCryptGroup {
 		// create the object, but check validity before returning
 		final BLS12381Group1Element outputElement = new BLS12381Group1Element(inputBytes, this);
 
-		if (!BLS12381Group1Bindings.checkG1Validity(outputElement)) {
+		if (!outputElement.checkElementValidity()) {
 			throw new BLS12381Exception("checkG1Validity", 1);
 		}
 
 		return outputElement;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getCompressedSize() {
+		return COMPRESSED_SIZE;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getUncompressedSize() {
+		return UNCOMPRESSED_SIZE;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getSeedSize() {
+		return SEED_SIZE;
 	}
 
 	@Override

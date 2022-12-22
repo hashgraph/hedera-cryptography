@@ -15,7 +15,6 @@ pub(crate) enum GenericError {
     TryInto(usize),
     InputLength(String),
     Deserialization(String),
-    ArraySize(String),
 }
 
 impl fmt::Display for GenericError {
@@ -30,7 +29,6 @@ impl fmt::Display for GenericError {
             GenericError::Deserialization(ref string) => {
                 write!(f, "Deserialization error: {}", string)
             }
-            GenericError::ArraySize(ref string) => write!(f, "ArraySize error: {}", string),
         }
     }
 }
@@ -64,7 +62,6 @@ impl GenericError {
             GenericError::TryInto(_) => 3,
             GenericError::InputLength(_) => 4,
             GenericError::Deserialization(_) => 5,
-            GenericError::ArraySize(_) => 7,
         }
     }
 }

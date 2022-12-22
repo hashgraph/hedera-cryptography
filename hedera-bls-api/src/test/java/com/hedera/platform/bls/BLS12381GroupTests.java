@@ -20,32 +20,43 @@ package com.hedera.platform.bls;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("BLS12_381 Group 1 Unit Tests")
-class BLS12381Group1Tests {
-    BLS12381Group1 group;
+@DisplayName("BLS12_381 Group Unit Tests")
+class BLS12381GroupTests {
     BLS12381Field field;
+    Random random;
 
     @BeforeEach
     public void init() {
-        group = new BLS12381Group1();
         field = new BLS12381Field();
+        random = RandomUtils.getRandomPrintSeed();
     }
 
-    @Test
-    @DisplayName("newRandomG1 with unique seeds produces unique results")
-    void newRandomElementUnique() {
-        final Random random = RandomUtils.getRandomPrintSeed();
+    static Stream<Arguments> groups() {
+        return Stream.of(
+                Arguments.of(new BLS12381Group1()),
+                Arguments.of(new BLS12381Group2()));
+    }
 
-        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("newElementFromSeed with unique seeds produces unique results")
+    void newElementFromSeedUnique(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         assertNotEquals(null, randomElement1, "randomElement1 should be valid");
         assertNotEquals(null, randomElement2, "randomElement2 should be valid");
@@ -54,42 +65,43 @@ class BLS12381Group1Tests {
         assertNotEquals(randomElement2, group.newOneElement(), "random element 2 shouldn't equal identity");
     }
 
-    @Test
-    @DisplayName("getG1RandomElement from same seed are equal")
-    void newRandomElementDeterministic() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final byte[] seed = RandomUtils.randomByteArray(random, 32);
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("newElementFromSeed from same seed are equal")
+    void newElementFromSeedDeterministic(final DistCryptGroup group) {
+        final byte[] seed = RandomUtils.randomByteArray(random, group.getSeedSize());
 
         assertEquals(group.newElementFromSeed(seed), group.newElementFromSeed(seed),
-                "elements from the same seed " + "should be equal");
+                "elements from the same seed should be equal");
     }
 
-    @Test
-    @DisplayName("newRandomG1 with bad seed fails")
-    void newRandomG1BadSeed() {
-        final Random random = RandomUtils.getRandomPrintSeed();
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("newElementFromSeed with bad seed fails")
+    void newElementFromBadSeed(final DistCryptGroup group) {
+        final byte[] smallSeed = RandomUtils.randomByteArray(random, group.getSeedSize() - 1);
+        final byte[] largeSeed = RandomUtils.randomByteArray(random, group.getSeedSize() + 1);
 
-        final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
-
-        assertNotEquals(0, BLS12381Group1Bindings.newRandomG1(RandomUtils.randomByteArray(random, 31), output));
-        assertNotEquals(0, BLS12381Group1Bindings.newRandomG1(RandomUtils.randomByteArray(random, 33), output));
+        assertThrows(IllegalArgumentException.class, () -> group.newElementFromSeed(smallSeed));
+        assertThrows(IllegalArgumentException.class, () -> group.newElementFromSeed(largeSeed));
     }
 
-    @Test
-    @DisplayName("newG1Identity produces the same result every time")
-    void newG1IdentityDeterministic() {
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("newOneElement produces the same result every time")
+    void newOneElementDeterministic(final DistCryptGroup group) {
         assertNotEquals(null, group.newOneElement(), "identity should be valid");
         assertEquals(group.newOneElement(), group.newOneElement(), "identity should equal identity");
     }
 
-    @Test
-    @DisplayName("g1Divide success")
-    void g1DivideSuccess() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("divide success")
+    void divideSuccess(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement quotient = randomElement1.divide(randomElement2);
 
@@ -98,13 +110,12 @@ class BLS12381Group1Tests {
         assertNotEquals(quotient, randomElement2, "quotient shouldn't equal randomElement2");
     }
 
-    @Test
-    @DisplayName("g1Divide compressed")
-    void g1DivideCompressed() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final byte[] seed1 = RandomUtils.randomByteArray(random, 32);
-        final byte[] seed2 = RandomUtils.randomByteArray(random, 32);
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("divide compressed")
+    void divideCompressed(final DistCryptGroup group) {
+        final byte[] seed1 = RandomUtils.randomByteArray(random, group.getSeedSize());
+        final byte[] seed2 = RandomUtils.randomByteArray(random, group.getSeedSize());
 
         final DistCryptGroupElement randomElement1 = group.newElementFromSeed(seed1);
         final DistCryptGroupElement randomElement2 = group.newElementFromSeed(seed2);
@@ -127,21 +138,22 @@ class BLS12381Group1Tests {
         assertEquals(quotient, quotientMixed2, "compression shouldn't affect result");
     }
 
-    @Test
-    @DisplayName("g1Divide with null arguments throws error")
-    void g1DivideFailure() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        assertThrows(BLS12381Exception.class, () -> randomElement.divide(null), "Null argument should cause error");
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("divide with null arguments throws error")
+    void divideFailure(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        assertThrows(BLS12381Exception.class, () -> randomElement.divide(null),
+                "Null argument should cause error");
     }
 
-    @Test
+    @ParameterizedTest()
+    @MethodSource("groups")
     @DisplayName("Dividing by identity doesn't change element")
-    void g1DivideByIdentity() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    void divideByIdentity(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement quotient = randomElement.divide(group.newOneElement());
 
@@ -149,13 +161,14 @@ class BLS12381Group1Tests {
         assertEquals(randomElement, quotient, "dividing by identity shouldn't have an effect");
     }
 
-    @Test
-    @DisplayName("g1Divide produces the same result every time for identical inputs")
-    void g1DivideDeterministic() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("divide produces the same result every time for identical inputs")
+    void divideDeterministic(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement quotient1 = randomElement1.divide(randomElement2);
         final DistCryptGroupElement quotient2 = randomElement1.divide(randomElement2);
@@ -165,13 +178,14 @@ class BLS12381Group1Tests {
         assertEquals(quotient1, quotient2, "division with same inputs should produce same result");
     }
 
-    @Test
-    @DisplayName("g1Multiply success")
-    void g1MultiplySuccess() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("multiply success")
+    void multiplySuccess(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement product = randomElement1.multiply(randomElement2);
 
@@ -180,13 +194,12 @@ class BLS12381Group1Tests {
         assertNotEquals(randomElement2, product, "product shouldn't equal randomElement2");
     }
 
-    @Test
-    @DisplayName("g1Multiply compressed")
-    void g1MultiplyCompressed() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final byte[] seed1 = RandomUtils.randomByteArray(random, 32);
-        final byte[] seed2 = RandomUtils.randomByteArray(random, 32);
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("multiply compressed")
+    void multiplyCompressed(final DistCryptGroup group) {
+        final byte[] seed1 = RandomUtils.randomByteArray(random, group.getSeedSize());
+        final byte[] seed2 = RandomUtils.randomByteArray(random, group.getSeedSize());
 
         final DistCryptGroupElement randomElement1 = group.newElementFromSeed(seed1);
         final DistCryptGroupElement randomElement2 = group.newElementFromSeed(seed2);
@@ -208,22 +221,23 @@ class BLS12381Group1Tests {
         assertEquals(product, productMixed2, "compression shouldn't affect result");
     }
 
-    @Test
-    @DisplayName("g1Multiply with null arguments throws error")
-    void g1MultiplyFailure() {
-        final Random random = RandomUtils.getRandomPrintSeed();
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("multiply with null arguments throws error")
+    void multiplyFailure(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
-        final DistCryptGroupElement randomElement = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-
-        assertThrows(BLS12381Exception.class, () -> randomElement.multiply(null), "Null argument should cause error");
+        assertThrows(BLS12381Exception.class, () -> randomElement.multiply(null),
+                "Null argument should cause error");
     }
 
-    @Test
+    @ParameterizedTest()
+    @MethodSource("groups")
     @DisplayName("Multiplying by identity doesn't change element")
-    void g1MultiplyByIdentity() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    void multiplyByIdentity(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement product = randomElement.multiply(group.newOneElement());
 
@@ -231,13 +245,14 @@ class BLS12381Group1Tests {
         assertEquals(randomElement, product, "multiplying by identity shouldn't have an effect");
     }
 
-    @Test
-    @DisplayName("g1Multiply produces the same result every time for identical inputs")
-    void g1MultiplyDeterministic() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("multiply produces the same result every time for identical inputs")
+    void multiplyDeterministic(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement product1 = randomElement1.multiply(randomElement2);
         final DistCryptGroupElement product2 = randomElement1.multiply(randomElement2);
@@ -247,13 +262,14 @@ class BLS12381Group1Tests {
         assertEquals(product1, product2, "multiplication with same inputs should produce same result");
     }
 
-    @Test
-    @DisplayName("g1Multiply produces the same result when swapping operands")
-    void g1MultiplyCommutative() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("multiply produces the same result when swapping operands")
+    void multiplyCommutative(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement product1 = randomElement1.multiply(randomElement2);
         final DistCryptGroupElement product2 = randomElement2.multiply(randomElement1);
@@ -263,13 +279,14 @@ class BLS12381Group1Tests {
         assertEquals(product1, product2, "multiplication with swapped inputs should produce same result");
     }
 
-    @Test
+    @ParameterizedTest()
+    @MethodSource("groups")
     @DisplayName("Multiply negates divide")
-    void multiplyNegatesDivide() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    void multiplyNegatesDivide(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement quotient = randomElement1.divide(randomElement2);
         final DistCryptGroupElement product = quotient.multiply(randomElement2);
@@ -279,13 +296,14 @@ class BLS12381Group1Tests {
         assertEquals(randomElement1, product, "multiply should negate divide");
     }
 
-    @Test
+    @ParameterizedTest()
+    @MethodSource("groups")
     @DisplayName("Divide negates multiply")
-    void divideNegatesMultiply() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    void divideNegatesMultiply(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement product = randomElement1.multiply(randomElement2);
         final DistCryptGroupElement quotient = product.divide(randomElement2);
@@ -295,14 +313,16 @@ class BLS12381Group1Tests {
         assertEquals(randomElement1, quotient, "divide should negate multiply");
     }
 
-    @Test
-    @DisplayName("g1BatchMultiply success")
-    void g1BatchMultiplySuccess() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptGroupElement randomElement3 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("batchMultiply success")
+    void batchMultiplySuccess(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement randomElement3 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final Collection<DistCryptGroupElement> elements = Arrays.asList(
                 randomElement1, randomElement2, randomElement3);
@@ -319,14 +339,13 @@ class BLS12381Group1Tests {
                 "Batch multiplication and standard multiplication should yield same result");
     }
 
-    @Test
-    @DisplayName("g1BatchMultiply compressed")
-    void g1BatchMultiplyCompressed() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final byte[] seed1 = RandomUtils.randomByteArray(random, 32);
-        final byte[] seed2 = RandomUtils.randomByteArray(random, 32);
-        final byte[] seed3 = RandomUtils.randomByteArray(random, 32);
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("batchMultiply compressed")
+    void batchMultiplyCompressed(final DistCryptGroup group) {
+        final byte[] seed1 = RandomUtils.randomByteArray(random, group.getSeedSize());
+        final byte[] seed2 = RandomUtils.randomByteArray(random, group.getSeedSize());
+        final byte[] seed3 = RandomUtils.randomByteArray(random, group.getSeedSize());
 
         final DistCryptGroupElement randomElement1 = group.newElementFromSeed(seed1);
         final DistCryptGroupElement randomElement2 = group.newElementFromSeed(seed2);
@@ -357,40 +376,37 @@ class BLS12381Group1Tests {
         assertEquals(product, productMixed, "compression shouldn't affect result");
     }
 
-    @Test
-    @DisplayName("g1BatchMultiply insufficient element count")
-    void g1BatchMultiplyInsufficientElements() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("batchMultiply insufficient element count")
+    void batchMultiplyInsufficientElements(final DistCryptGroup group) {
         // Batch multiplication requires at least 2 elements
         final Collection<DistCryptGroupElement> elements = Collections.singletonList(
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, 32)));
+                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())));
 
         assertThrows(BLS12381Exception.class, () -> group.batchMultiply(elements),
                 "not enough elements should result in error");
     }
 
-    @Test
-    @DisplayName("g1BatchMultiply with invalid element")
-    void g1BatchMultiplyInvalidElement() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("batchMultiply with invalid element")
+    void batchMultiplyInvalidElement(final DistCryptGroup group) {
         final Collection<DistCryptGroupElement> elements = Arrays.asList(
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, 32)), null);
+                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())), null);
 
         assertThrows(BLS12381Exception.class, () -> group.batchMultiply(elements),
                 "invalid element in batch should result in error");
     }
 
-    @Test
-    @DisplayName("g1BatchMultiply produces the same result every time for identical inputs")
-    void g1BatchMultiplyDeterministic() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("batchMultiply produces the same result every time for identical inputs")
+    void batchMultiplyDeterministic(final DistCryptGroup group) {
         final Collection<DistCryptGroupElement> elements = Arrays.asList(
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, 32)),
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, 32)),
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, 32)));
+                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())),
+                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())),
+                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())));
 
         final DistCryptGroupElement product1 = group.batchMultiply(elements);
         final DistCryptGroupElement product2 = group.batchMultiply(elements);
@@ -400,14 +416,16 @@ class BLS12381Group1Tests {
         assertEquals(product1, product2, "multiplication with same inputs should produce same result");
     }
 
-    @Test
-    @DisplayName("g1BatchMultiply produces the same result every time for identical inputs")
-    void g1BatchMultiplyCommutative() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptGroupElement randomElement3 = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("batchMultiply produces the same result every time for identical inputs")
+    void batchMultiplyCommutative(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement1 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement randomElement2 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement randomElement3 = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final Collection<DistCryptGroupElement> elements1 = Arrays.asList(
                 randomElement1, randomElement2, randomElement3);
@@ -424,29 +442,29 @@ class BLS12381Group1Tests {
                 "multiplication with same differently ordered batch inputs should produce same result");
     }
 
-    @Test
-    @DisplayName("g1PowZn success")
-    void g1PowZnSuccess() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("power success")
+    void powerSuccess(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement power =
-                randomElement.power(field.newElementFromSeed(RandomUtils.randomByteArray(random, 32)));
+                randomElement.power(field.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())));
 
         assertNotEquals(null, power, "power should be valid");
         assertNotEquals(randomElement, power, "power shouldn't equal randomElement");
     }
 
-    @Test
-    @DisplayName("g1PowZn compressed")
-    void g1PowZnCompressed() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final byte[] seed = RandomUtils.randomByteArray(random, 32);
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("power compressed")
+    void powerCompressed(final DistCryptGroup group) {
+        final byte[] seed = RandomUtils.randomByteArray(random, group.getSeedSize());
 
         final DistCryptGroupElement randomElement = group.newElementFromSeed(seed);
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement randomElementCompressed = group.newElementFromSeed(seed).compress();
 
@@ -458,12 +476,12 @@ class BLS12381Group1Tests {
         assertEquals(power, powerCompressed, "compression shouldn't affect result");
     }
 
-    @Test
+    @ParameterizedTest()
+    @MethodSource("groups")
     @DisplayName("Element to the power of 1")
-    void g1PowZnOne() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    void powerOfOne(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement power = randomElement.power(field.newOneElement());
 
@@ -471,25 +489,26 @@ class BLS12381Group1Tests {
         assertEquals(randomElement, power, "element to the power of 1 should equal itself");
     }
 
-    @Test
+    @ParameterizedTest()
+    @MethodSource("groups")
     @DisplayName("Element to the power of 0")
-    void g1PowZnZero() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
+    void powerOfZero(final DistCryptGroup group) {
         final DistCryptGroupElement power =
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, 32)).power(field.newZeroElement());
+                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize()))
+                        .power(field.newZeroElement());
 
         assertNotEquals(null, power, "power should be valid");
         assertEquals(group.newOneElement(), power, "element to the power of 0 should equal identity");
     }
 
-    @Test
-    @DisplayName("g1PowZn produces the same result every time for identical inputs")
-    void g1PowZnDeterministic() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final DistCryptGroupElement randomElement = group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("power produces the same result every time for identical inputs")
+    void powerDeterministic(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final DistCryptGroupElement power1 = randomElement.power(randomScalar);
         final DistCryptGroupElement power2 = randomElement.power(randomScalar);
@@ -499,22 +518,20 @@ class BLS12381Group1Tests {
         assertEquals(power1, power2, "power with same inputs should produce same result");
     }
 
-    @Test
-    @DisplayName("g1ElementEquals with null arguments returns false")
-    void g1ElementEqualsInvalid() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        assertNotEquals(null, group.newElementFromSeed(RandomUtils.randomByteArray(random, 32)),
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("equals with null arguments returns false")
+    void equalsInvalid(final DistCryptGroup group) {
+        assertNotEquals(null, group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())),
                 "One value being null should return false");
 
     }
 
-    @Test
-    @DisplayName("uncompressed g1 elements can be compared with compressed elements")
-    void g1EqualsCompressed() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final byte[] seed = RandomUtils.randomByteArray(random, 32);
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("uncompressed elements can be compared with compressed elements")
+    void equalsCompressed(final DistCryptGroup group) {
+        final byte[] seed = RandomUtils.randomByteArray(random, group.getSeedSize());
         final DistCryptGroupElement randomElement = group.newElementFromSeed(seed);
         final DistCryptGroupElement randomElementCompressed = group.newElementFromSeed(seed).compress();
 
@@ -522,43 +539,42 @@ class BLS12381Group1Tests {
         assertEquals(randomElement, randomElementCompressed, "comparison should work regardless of compression");
     }
 
-    @Test
+    @ParameterizedTest()
+    @MethodSource("groups")
     @DisplayName("compress success")
-    void compressSuccess() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
-        final byte[] seed = RandomUtils.randomByteArray(random, 32);
+    void compressSuccess(final DistCryptGroup group) {
+        final byte[] seed = RandomUtils.randomByteArray(random, group.getSeedSize());
         final DistCryptGroupElement randomElement = group.newElementFromSeed(seed);
         final DistCryptGroupElement randomElementCompressed = group.newElementFromSeed(seed).compress();
 
-        assertEquals(96, randomElement.toBytes().length, "uncompressed element should be of length 96");
+        assertEquals(group.getUncompressedSize(), randomElement.toBytes().length,
+                "uncompressed element is of unexpected length");
 
         assertNotEquals(null, randomElementCompressed, "compressedElement should be valid");
-        assertEquals(48, randomElementCompressed.toBytes().length, "compressed element should be of length 48");
+        assertEquals(group.getCompressedSize(), randomElementCompressed.toBytes().length,
+                "compressed element is of unexpected length");
     }
 
-    @Test
-    @DisplayName("checkG1Validity valid")
-    void checkG1ValidityValid() {
-        final Random random = RandomUtils.getRandomPrintSeed();
-
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("checkValidity valid")
+    void checkValidityValid(final DistCryptGroup group) {
         final DistCryptGroupElement validCompressedElement =
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, 32)).compress();
+                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())).compress();
 
         final DistCryptGroupElement validUncompressedElement =
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, 32));
+                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize()));
 
-        assertTrue(BLS12381Group1Bindings.checkG1Validity((BLS12381Group1Element) validCompressedElement),
-                "element should be valid");
-        assertTrue(BLS12381Group1Bindings.checkG1Validity((BLS12381Group1Element) validUncompressedElement),
-                "element should be valid");
+        assertTrue(validCompressedElement.checkElementValidity(), "element should be valid");
+        assertTrue(validUncompressedElement.checkElementValidity(), "element should be valid");
     }
 
-    @Test
-    @DisplayName("checkG1Validity invalid")
-    void checkG1ValidityInvalid() {
-        final byte[] invalidCompressedElementBytes = new byte[48];
-        final byte[] invalidUncompressedElementBytes = new byte[96];
+    @Test()
+    @DisplayName("group1 checkValidity invalid")
+    void group1CheckValidityInvalid() {
+        DistCryptGroup group = new BLS12381Group1();
+        final byte[] invalidCompressedElementBytes = new byte[group.getCompressedSize()];
+        final byte[] invalidUncompressedElementBytes = new byte[group.getUncompressedSize()];
 
         Arrays.fill(invalidCompressedElementBytes, (byte) 0xFF);
         Arrays.fill(invalidUncompressedElementBytes, (byte) 0xFF);
@@ -571,5 +587,25 @@ class BLS12381Group1Tests {
 
         assertFalse(BLS12381Group1Bindings.checkG1Validity(invalidCompressedElement), "element should be invalid");
         assertFalse(BLS12381Group1Bindings.checkG1Validity(invalidUncompressedElement), "element should be invalid");
+    }
+
+    @Test()
+    @DisplayName("group2 checkValidity invalid")
+    void group2CheckValidityInvalid() {
+        BLS12381Group2 group = new BLS12381Group2();
+        final byte[] invalidCompressedElementBytes = new byte[group.getCompressedSize()];
+        final byte[] invalidUncompressedElementBytes = new byte[group.getUncompressedSize()];
+
+        Arrays.fill(invalidCompressedElementBytes, (byte) 0xFF);
+        Arrays.fill(invalidUncompressedElementBytes, (byte) 0xFF);
+
+        final BLS12381Group2Element invalidCompressedElement =
+                new BLS12381Group2Element(invalidCompressedElementBytes, group);
+
+        final BLS12381Group2Element invalidUncompressedElement =
+                new BLS12381Group2Element(invalidUncompressedElementBytes, group);
+
+        assertFalse(BLS12381Group2Bindings.checkG2Validity(invalidCompressedElement), "element should be invalid");
+        assertFalse(BLS12381Group2Bindings.checkG2Validity(invalidUncompressedElement), "element should be invalid");
     }
 }
