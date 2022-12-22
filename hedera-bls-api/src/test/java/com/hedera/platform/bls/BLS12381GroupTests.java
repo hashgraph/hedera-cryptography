@@ -19,11 +19,15 @@ package com.hedera.platform.bls;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Random;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -573,13 +577,62 @@ class BLS12381GroupTests {
         assertEquals(power1, power2, "power with same inputs should produce same result");
     }
 
+    @Test()
+    @DisplayName("group equality success")
+    void groupEqualsSuccess() {
+        DistCryptGroup group1A = new BLS12381Group1();
+        DistCryptGroup group1B = new BLS12381Group1();
+
+        DistCryptGroup group2A = new BLS12381Group2();
+        DistCryptGroup group2B = new BLS12381Group2();
+
+        assertEquals(group1A, group1B, "Group objects of the same class should equal each other");
+        assertEquals(group2A, group2B, "Group objects of the same class should equal each other");
+        assertNotEquals(group1A, group2A, "Group objects of different classes shouldn't be equal");
+    }
+
     @ParameterizedTest()
     @MethodSource("groups")
-    @DisplayName("equals with null arguments returns false")
-    void equalsInvalid(final DistCryptGroup group) {
+    @DisplayName("group equality with null argument returns false")
+    void groupEqualsInvalid(final DistCryptGroup group) {
+        assertNotEquals(null, group, "One value being null should return false");
+    }
+
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("a group equals itself")
+    void groupEqualsSelf(final DistCryptGroup group) {
+        assertEquals(group, group, "A group should equal itself");
+    }
+
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("element equality with null argument returns false")
+    void elementEqualsInvalid(final DistCryptGroup group) {
         assertNotEquals(null, group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())),
                 "One value being null should return false");
+    }
 
+    @Test()
+    @DisplayName("element equality between different groups returns false")
+    void elementEqualsWrongGroup() {
+        DistCryptGroup group1 = new BLS12381Group1();
+        DistCryptGroup group2 = new BLS12381Group2();
+        DistCryptGroupElement group1Element = group1.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group1.getSeedSize()));
+        DistCryptGroupElement group2Element = group2.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group2.getSeedSize()));
+
+        assertNotEquals(group1Element, group2Element, "Elements of different groups should not equal one another");
+    }
+
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("an element equals itself")
+    void elementEqualsSelf(final DistCryptGroup group) {
+        DistCryptGroupElement element = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        assertEquals(element, element, "an element should equal itself");
     }
 
     @ParameterizedTest()
@@ -612,15 +665,25 @@ class BLS12381GroupTests {
 
     @ParameterizedTest()
     @MethodSource("groups")
-    @DisplayName("checkValidity valid")
-    void checkValidityValid(final DistCryptGroup group) {
-        final DistCryptGroupElement validCompressedElement =
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())).compress();
+    @DisplayName("double compression")
+    void doubleCompression(final DistCryptGroup group) {
+        final DistCryptGroupElement doubleCompressedElement = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize())).compress().compress();
 
-        final DistCryptGroupElement validUncompressedElement =
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize()));
+        assertTrue(doubleCompressedElement.checkElementValidity(), "doubleCompressedElement should be valid");
+        assertEquals(group.getCompressedSize(), doubleCompressedElement.toBytes().length,
+                "doubleCompressedElement is of unexpected length");
+    }
 
-        assertTrue(validCompressedElement.checkElementValidity(), "validCompressedElement should be valid");
-        assertTrue(validUncompressedElement.checkElementValidity(), "validUncompressedElement should be valid");
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("copy success")
+    void copySuccess(final DistCryptGroup group) {
+        final DistCryptGroupElement randomElement = group.newElementFromSeed(
+                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement copiedElement = randomElement.copy();
+
+        assertEquals(randomElement, copiedElement, "A copied element should equal the original");
+        assertNotSame(randomElement, copiedElement, "There should be 2 separate objects");
     }
 }

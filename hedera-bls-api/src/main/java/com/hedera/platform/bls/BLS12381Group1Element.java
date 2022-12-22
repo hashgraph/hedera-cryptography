@@ -22,12 +22,13 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
     private boolean compressed;
 
     /**
-     * Constructor
+     * Package private constructor. This is used by {@link BLS12381Group1}, but shouldn't be called directly by
+     * anyone else
      *
      * @param groupElement a byte array representing this group element
      * @param group        the group this element is in
      */
-    public BLS12381Group1Element(final byte[] groupElement, final BLS12381Group1 group) {
+    BLS12381Group1Element(final byte[] groupElement, final BLS12381Group1 group) {
         this.groupElement = groupElement;
         this.group = group;
 
