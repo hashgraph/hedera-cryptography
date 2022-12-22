@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("BLS12_381 Scalar Bindings Unit Tests")
-class BLS12381ScalarBindingsTests {
+class BLS12381BindingsTests {
 	@Test
 	@DisplayName("newRandomScalar with unique seeds produces unique results")
 	void newRandomScalarUnique() {
@@ -43,15 +43,15 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, randomScalar1, "randomScalar1 should be valid");
 		assertNotEquals(null, randomScalar2, "randomScalar2 should be valid");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(randomScalar1, randomScalar2),
+		assertFalse(BLS12381Bindings.scalarEquals(randomScalar1, randomScalar2),
 				"random scalars shouldn't be equal");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(randomScalar1, JNITestUtils.getOneScalar()),
+		assertFalse(BLS12381Bindings.scalarEquals(randomScalar1, JNITestUtils.getOneScalar()),
 				"random scalar shouldn't equal 1");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(randomScalar1, JNITestUtils.getZeroScalar()),
+		assertFalse(BLS12381Bindings.scalarEquals(randomScalar1, JNITestUtils.getZeroScalar()),
 				"random scalar shouldn't equal 0");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(randomScalar2, JNITestUtils.getOneScalar()),
+		assertFalse(BLS12381Bindings.scalarEquals(randomScalar2, JNITestUtils.getOneScalar()),
 				"random scalar shouldn't equal 1");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(randomScalar2, JNITestUtils.getZeroScalar()),
+		assertFalse(BLS12381Bindings.scalarEquals(randomScalar2, JNITestUtils.getZeroScalar()),
 				"random scalar shouldn't equal 0");
 	}
 
@@ -62,7 +62,7 @@ class BLS12381ScalarBindingsTests {
 
 		final byte[] seed = RandomUtils.randomByteArray(random, 32);
 
-		assertTrue(BLS12381ScalarBindings.scalarEquals(
+		assertTrue(BLS12381Bindings.scalarEquals(
 						JNITestUtils.getRandomScalar(seed),
 						JNITestUtils.getRandomScalar(seed)),
 				"scalars from the same seed should be equal");
@@ -75,8 +75,8 @@ class BLS12381ScalarBindingsTests {
 
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		assertNotEquals(0, BLS12381ScalarBindings.newRandomScalar(RandomUtils.randomByteArray(random, 31), output));
-		assertNotEquals(0, BLS12381ScalarBindings.newRandomScalar(RandomUtils.randomByteArray(random, 33), output));
+		assertNotEquals(0, BLS12381Bindings.newRandomScalar(RandomUtils.randomByteArray(random, 31), output));
+		assertNotEquals(0, BLS12381Bindings.newRandomScalar(RandomUtils.randomByteArray(random, 33), output));
 	}
 
 	@Test
@@ -85,17 +85,17 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement scalar1 = JNITestUtils.getScalarFromInt(11);
 		final BLS12381FieldElement scalar2 = JNITestUtils.getScalarFromInt(33);
 
-		assertFalse(BLS12381ScalarBindings.scalarEquals(scalar1, scalar2), "scalars shouldn't be equal");
+		assertFalse(BLS12381Bindings.scalarEquals(scalar1, scalar2), "scalars shouldn't be equal");
 
 		assertNotEquals(null, scalar1, "scalar1 should be valid");
 		assertNotEquals(null, scalar2, "scalar2 should be valid");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(scalar1, JNITestUtils.getOneScalar()),
+		assertFalse(BLS12381Bindings.scalarEquals(scalar1, JNITestUtils.getOneScalar()),
 				"scalar from int shouldn't equal 1");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(scalar1, JNITestUtils.getZeroScalar()),
+		assertFalse(BLS12381Bindings.scalarEquals(scalar1, JNITestUtils.getZeroScalar()),
 				"scalar from int shouldn't equal 0");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(scalar2, JNITestUtils.getOneScalar()),
+		assertFalse(BLS12381Bindings.scalarEquals(scalar2, JNITestUtils.getOneScalar()),
 				"scalar from int shouldn't equal 1");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(scalar2, JNITestUtils.getZeroScalar()),
+		assertFalse(BLS12381Bindings.scalarEquals(scalar2, JNITestUtils.getZeroScalar()),
 				"scalar from int shouldn't equal 0");
 	}
 
@@ -109,7 +109,7 @@ class BLS12381ScalarBindingsTests {
 	@Test
 	@DisplayName("newScalarFromInt from same integer are equal")
 	void newScalarFromIntDeterministic() {
-		assertTrue(BLS12381ScalarBindings.scalarEquals(
+		assertTrue(BLS12381Bindings.scalarEquals(
 						JNITestUtils.getScalarFromInt(44), JNITestUtils.getScalarFromInt(44)),
 				"scalars from the same int should be equal");
 	}
@@ -118,9 +118,9 @@ class BLS12381ScalarBindingsTests {
 	@DisplayName("newZeroScalar produces the same result every time")
 	void newZeroScalarDeterministic() {
 		assertNotEquals(null, JNITestUtils.getZeroScalar(), "0 scalar should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(JNITestUtils.getZeroScalar(), JNITestUtils.getZeroScalar()),
+		assertTrue(BLS12381Bindings.scalarEquals(JNITestUtils.getZeroScalar(), JNITestUtils.getZeroScalar()),
 				"0 should equal 0");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(JNITestUtils.getZeroScalar(), JNITestUtils.getScalarFromInt(0)),
+		assertTrue(BLS12381Bindings.scalarEquals(JNITestUtils.getZeroScalar(), JNITestUtils.getScalarFromInt(0)),
 				"0 should equal 0");
 	}
 
@@ -128,16 +128,16 @@ class BLS12381ScalarBindingsTests {
 	@DisplayName("newOneScalar produces the same result every time")
 	void newOneScalarDeterministic() {
 		assertNotEquals(null, JNITestUtils.getOneScalar(), "1 scalar should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(JNITestUtils.getOneScalar(), JNITestUtils.getOneScalar()),
+		assertTrue(BLS12381Bindings.scalarEquals(JNITestUtils.getOneScalar(), JNITestUtils.getOneScalar()),
 				"1 should equal 1");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(JNITestUtils.getOneScalar(), JNITestUtils.getScalarFromInt(1)),
+		assertTrue(BLS12381Bindings.scalarEquals(JNITestUtils.getOneScalar(), JNITestUtils.getScalarFromInt(1)),
 				"1 should equal 1");
 	}
 
 	@Test
 	@DisplayName("newZeroScalar and newOneScalar are different")
 	void differentZeroOne() {
-		assertFalse(BLS12381ScalarBindings.scalarEquals(JNITestUtils.getZeroScalar(), JNITestUtils.getOneScalar()),
+		assertFalse(BLS12381Bindings.scalarEquals(JNITestUtils.getZeroScalar(), JNITestUtils.getOneScalar()),
 				"0 shouldn't equal 1");
 	}
 
@@ -154,8 +154,8 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement sum = JNITestUtils.scalarAdd(randomScalar1, randomScalar2);
 
 		assertNotEquals(null, sum, "sum should be valid");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(sum, randomScalar1), "sum shouldn't equal randomScalar1");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(sum, randomScalar2), "sum shouldn't equal randomScalar2");
+		assertFalse(BLS12381Bindings.scalarEquals(sum, randomScalar1), "sum shouldn't equal randomScalar1");
+		assertFalse(BLS12381Bindings.scalarEquals(sum, randomScalar2), "sum shouldn't equal randomScalar2");
 	}
 
 	@Test
@@ -181,7 +181,7 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement sum = JNITestUtils.scalarAdd(randomScalar, JNITestUtils.getOneScalar());
 
 		assertNotEquals(null, sum, "sum should be valid");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(sum, randomScalar), "adding 1 should have an effect");
+		assertFalse(BLS12381Bindings.scalarEquals(sum, randomScalar), "adding 1 should have an effect");
 	}
 
 	@Test
@@ -194,7 +194,7 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement sum = JNITestUtils.scalarAdd(randomScalar, JNITestUtils.getZeroScalar());
 
 		assertNotEquals(null, sum, "sum should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(sum, randomScalar), "adding 0 shouldn't have an effect");
+		assertTrue(BLS12381Bindings.scalarEquals(sum, randomScalar), "adding 0 shouldn't have an effect");
 	}
 
 	@Test
@@ -212,7 +212,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, sum1, "sum1 should be valid");
 		assertNotEquals(null, sum2, "sum2 should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(sum1, sum2),
+		assertTrue(BLS12381Bindings.scalarEquals(sum1, sum2),
 				"addition with same inputs should produce same result");
 	}
 
@@ -231,7 +231,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, sum1, "sum1 should be valid");
 		assertNotEquals(null, sum2, "sum2 should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(sum1, sum2),
+		assertTrue(BLS12381Bindings.scalarEquals(sum1, sum2),
 				"addition with swapped inputs should produce same result");
 	}
 
@@ -248,9 +248,9 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement difference = JNITestUtils.scalarSubtract(randomScalar1, randomScalar2);
 
 		assertNotEquals(null, difference, "difference should be valid");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(difference, randomScalar1),
+		assertFalse(BLS12381Bindings.scalarEquals(difference, randomScalar1),
 				"difference shouldn't equal randomScalar1");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(difference, randomScalar2),
+		assertFalse(BLS12381Bindings.scalarEquals(difference, randomScalar2),
 				"difference shouldn't equal randomScalar2");
 	}
 
@@ -277,7 +277,7 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement difference = JNITestUtils.scalarSubtract(randomScalar, JNITestUtils.getOneScalar());
 
 		assertNotEquals(null, difference, "difference should be valid");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(difference, randomScalar),
+		assertFalse(BLS12381Bindings.scalarEquals(difference, randomScalar),
 				"subtracting 1 should have an effect");
 	}
 
@@ -291,7 +291,7 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement difference = JNITestUtils.scalarSubtract(randomScalar, JNITestUtils.getZeroScalar());
 
 		assertNotEquals(null, difference, "difference should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(difference, randomScalar),
+		assertTrue(BLS12381Bindings.scalarEquals(difference, randomScalar),
 				"subtracting 0 shouldn't have an effect");
 	}
 
@@ -310,7 +310,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, difference1, "difference1 should be valid");
 		assertNotEquals(null, difference2, "difference2 should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(difference1, difference2),
+		assertTrue(BLS12381Bindings.scalarEquals(difference1, difference2),
 				"subtraction with same inputs should produce same result");
 	}
 
@@ -327,9 +327,9 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement product = JNITestUtils.scalarMultiply(randomScalar1, randomScalar2);
 
 		assertNotEquals(null, product, "product should be valid");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(product, randomScalar1),
+		assertFalse(BLS12381Bindings.scalarEquals(product, randomScalar1),
 				"product shouldn't equal randomScalar1");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(product, randomScalar2),
+		assertFalse(BLS12381Bindings.scalarEquals(product, randomScalar2),
 				"product shouldn't equal randomScalar2");
 	}
 
@@ -356,7 +356,7 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement product = JNITestUtils.scalarMultiply(randomScalar, JNITestUtils.getOneScalar());
 
 		assertNotEquals(null, product, "product should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(product, randomScalar),
+		assertTrue(BLS12381Bindings.scalarEquals(product, randomScalar),
 				"multiplying by 1 shouldn't have an effect");
 	}
 
@@ -370,7 +370,7 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement product = JNITestUtils.scalarMultiply(randomScalar, JNITestUtils.getZeroScalar());
 
 		assertNotEquals(null, product, "product should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(product, JNITestUtils.getZeroScalar()),
+		assertTrue(BLS12381Bindings.scalarEquals(product, JNITestUtils.getZeroScalar()),
 				"multiplying by 0 should produce 0");
 	}
 
@@ -389,7 +389,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, product1, "product1 should be valid");
 		assertNotEquals(null, product2, "product2 should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(product1, product2),
+		assertTrue(BLS12381Bindings.scalarEquals(product1, product2),
 				"multiplication with same inputs should produce same result");
 	}
 
@@ -408,7 +408,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, product1, "product1 should be valid");
 		assertNotEquals(null, product2, "product2 should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(product1, product2),
+		assertTrue(BLS12381Bindings.scalarEquals(product1, product2),
 				"multiplication with swapped inputs should produce same result");
 	}
 
@@ -425,9 +425,9 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement quotient = JNITestUtils.scalarDivide(randomScalar1, randomScalar2);
 
 		assertNotEquals(null, quotient, "quotient should be valid");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(quotient, randomScalar1),
+		assertFalse(BLS12381Bindings.scalarEquals(quotient, randomScalar1),
 				"quotient shouldn't equal randomScalar1");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(quotient, randomScalar2),
+		assertFalse(BLS12381Bindings.scalarEquals(quotient, randomScalar2),
 				"quotient shouldn't equal randomScalar2");
 	}
 
@@ -454,7 +454,7 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement quotient = JNITestUtils.scalarDivide(randomScalar, JNITestUtils.getOneScalar());
 
 		assertNotEquals(null, quotient, "quotient should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(quotient, randomScalar),
+		assertTrue(BLS12381Bindings.scalarEquals(quotient, randomScalar),
 				"dividing by 1 shouldn't have an effect");
 	}
 
@@ -484,7 +484,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, quotient1, "quotient1 should be valid");
 		assertNotEquals(null, quotient2, "quotient2 should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(quotient1, quotient2),
+		assertTrue(BLS12381Bindings.scalarEquals(quotient1, quotient2),
 				"division with same inputs should produce same result");
 	}
 
@@ -498,7 +498,7 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement result = JNITestUtils.scalarPower(randomScalar, new BigInteger("99").toByteArray());
 
 		assertNotEquals(null, result, "result should be valid");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(result, randomScalar), "power shouldn't equal randomScalar");
+		assertFalse(BLS12381Bindings.scalarEquals(result, randomScalar), "power shouldn't equal randomScalar");
 	}
 
 	@Test
@@ -523,7 +523,7 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement result = JNITestUtils.scalarPower(randomScalar, new BigInteger("1").toByteArray());
 
 		assertNotEquals(null, result, "result should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(result, randomScalar),
+		assertTrue(BLS12381Bindings.scalarEquals(result, randomScalar),
 				"a scalar to the power of 1 shouldn't have an effect");
 	}
 
@@ -537,7 +537,7 @@ class BLS12381ScalarBindingsTests {
 		final BLS12381FieldElement result = JNITestUtils.scalarPower(randomScalar, new BigInteger("0").toByteArray());
 
 		assertNotEquals(null, result, "result should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(result, JNITestUtils.getOneScalar()),
+		assertTrue(BLS12381Bindings.scalarEquals(result, JNITestUtils.getOneScalar()),
 				"a scalar to the power of 0 should equal 1");
 	}
 
@@ -554,7 +554,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, result1, "result1 should be valid");
 		assertNotEquals(null, result2, "result2 should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(result1, result2),
+		assertTrue(BLS12381Bindings.scalarEquals(result1, result2),
 				"power with same inputs should produce same result");
 	}
 
@@ -573,7 +573,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, sum, "sum should be valid");
 		assertNotEquals(null, difference, "difference should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(difference, randomScalar1),
+		assertTrue(BLS12381Bindings.scalarEquals(difference, randomScalar1),
 				"subtraction should negate addition");
 	}
 
@@ -592,7 +592,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, difference, "difference should be valid");
 		assertNotEquals(null, sum, "sum should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(sum, randomScalar1), "addition should negate subtraction");
+		assertTrue(BLS12381Bindings.scalarEquals(sum, randomScalar1), "addition should negate subtraction");
 	}
 
 	@Test
@@ -610,7 +610,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, product, "product should be valid");
 		assertNotEquals(null, quotient, "quotient should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(quotient, randomScalar1), "divide should negate multiply");
+		assertTrue(BLS12381Bindings.scalarEquals(quotient, randomScalar1), "divide should negate multiply");
 	}
 
 	@Test
@@ -628,7 +628,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, quotient, "quotient should be valid");
 		assertNotEquals(null, product, "product should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(product, randomScalar1), "multiply should negate divide");
+		assertTrue(BLS12381Bindings.scalarEquals(product, randomScalar1), "multiply should negate divide");
 	}
 
 	@Test
@@ -644,7 +644,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, power, "power should be valid");
 		assertNotEquals(null, quotient, "quotient should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(quotient, randomScalar), "divide should map to power");
+		assertTrue(BLS12381Bindings.scalarEquals(quotient, randomScalar), "divide should map to power");
 	}
 
 	@Test
@@ -660,7 +660,7 @@ class BLS12381ScalarBindingsTests {
 
 		assertNotEquals(null, sum, "sum should be valid");
 		assertNotEquals(null, product, "product should be valid");
-		assertTrue(BLS12381ScalarBindings.scalarEquals(sum, product), "add should map to multiply");
+		assertTrue(BLS12381Bindings.scalarEquals(sum, product), "add should map to multiply");
 	}
 
 	@Test
@@ -668,10 +668,10 @@ class BLS12381ScalarBindingsTests {
 	void scalarEqualsInvalid() {
 		final Random random = RandomUtils.getRandomPrintSeed();
 
-		assertFalse(BLS12381ScalarBindings.scalarEquals(
+		assertFalse(BLS12381Bindings.scalarEquals(
 						JNITestUtils.getRandomScalar(RandomUtils.randomByteArray(random, 32)), null),
 				"One value being null should return false");
-		assertFalse(BLS12381ScalarBindings.scalarEquals(
+		assertFalse(BLS12381Bindings.scalarEquals(
 						null, JNITestUtils.getRandomScalar(RandomUtils.randomByteArray(random, 32))),
 				"One value being null should return false");
 	}
@@ -681,7 +681,7 @@ class BLS12381ScalarBindingsTests {
 	void checkScalarValidityValid() {
 		final Random random = RandomUtils.getRandomPrintSeed();
 
-		assertTrue(BLS12381ScalarBindings.checkScalarValidity(
+		assertTrue(BLS12381Bindings.checkScalarValidity(
 						JNITestUtils.getRandomScalar(RandomUtils.randomByteArray(random, 32))),
 				"scalar should be valid");
 	}
@@ -694,6 +694,6 @@ class BLS12381ScalarBindingsTests {
 
 		final BLS12381FieldElement invalidElement = new BLS12381FieldElement(invalidElementBytes, new BLS12381Field());
 
-		assertFalse(BLS12381ScalarBindings.checkScalarValidity(invalidElement), "scalar should be invalid");
+		assertFalse(BLS12381Bindings.checkScalarValidity(invalidElement), "scalar should be invalid");
 	}
 }

@@ -24,7 +24,7 @@ public class BLS12381Field implements DistCryptField {
 		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
-		if ((errorCode = BLS12381ScalarBindings.newScalarFromInt(i, output)) != 0) {
+		if ((errorCode = BLS12381Bindings.newScalarFromInt(i, output)) != 0) {
 			throw new BLS12381Exception("newScalarFromInt", errorCode);
 		}
 
@@ -39,7 +39,7 @@ public class BLS12381Field implements DistCryptField {
 		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
-		if ((errorCode = BLS12381ScalarBindings.newZeroScalar(output)) != 0) {
+		if ((errorCode = BLS12381Bindings.newZeroScalar(output)) != 0) {
 			throw new BLS12381Exception("newZeroScalar", errorCode);
 		}
 
@@ -54,7 +54,7 @@ public class BLS12381Field implements DistCryptField {
 		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
-		if ((errorCode = BLS12381ScalarBindings.newOneScalar(output)) != 0) {
+		if ((errorCode = BLS12381Bindings.newOneScalar(output)) != 0) {
 			throw new BLS12381Exception("newOneScalar", errorCode);
 		}
 
@@ -73,7 +73,7 @@ public class BLS12381Field implements DistCryptField {
 		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
-		if ((errorCode = BLS12381ScalarBindings.newRandomScalar(seed, output)) != 0) {
+		if ((errorCode = BLS12381Bindings.newRandomScalar(seed, output)) != 0) {
 			throw new BLS12381Exception("newRandomScalar", errorCode);
 		}
 
@@ -91,7 +91,7 @@ public class BLS12381Field implements DistCryptField {
 
 		final BLS12381FieldElement outputElement = new BLS12381FieldElement(bytes, this);
 
-		if (!BLS12381ScalarBindings.checkScalarValidity(outputElement)) {
+		if (!BLS12381Bindings.checkScalarValidity(outputElement)) {
 			throw new BLS12381Exception("checkScalarValidity", 1);
 		}
 

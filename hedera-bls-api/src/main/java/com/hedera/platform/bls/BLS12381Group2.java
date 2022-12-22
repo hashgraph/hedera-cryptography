@@ -29,7 +29,7 @@ public class BLS12381Group2 implements DistCryptGroup {
 		final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
 		final int errorCode;
-		if ((errorCode = BLS12381Group2Bindings.newG2Identity(output)) != 0) {
+		if ((errorCode = BLS12381Bindings.newG2Identity(output)) != 0) {
 			throw new BLS12381Exception("newG2Identity", errorCode);
 		}
 
@@ -48,7 +48,7 @@ public class BLS12381Group2 implements DistCryptGroup {
 		final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
 		final int errorCode;
-		if ((errorCode = BLS12381Group2Bindings.newRandomG2(seed, output)) != 0) {
+		if ((errorCode = BLS12381Bindings.newRandomG2(seed, output)) != 0) {
 			throw new BLS12381Exception("newRandomG2", errorCode);
 		}
 
@@ -83,7 +83,7 @@ public class BLS12381Group2 implements DistCryptGroup {
 		final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
 		final int errorCode;
-		if ((errorCode = BLS12381Group2Bindings.g2BatchMultiply(elementArray, output)) != 0) {
+		if ((errorCode = BLS12381Bindings.g2BatchMultiply(elementArray, output)) != 0) {
 			throw new BLS12381Exception("g2BatchMultiply", errorCode);
 		}
 

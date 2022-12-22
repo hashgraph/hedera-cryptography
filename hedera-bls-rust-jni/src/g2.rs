@@ -37,7 +37,7 @@ pub(crate) fn g2_from_jobject(env: &JNIEnv, object: &JObject) -> Result<G2Affine
 
 /// Creates a new identity element of group g2
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_newG2Identity(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newG2Identity(
     env: JNIEnv,
     _class: JClass,
     output: jbyteArray,
@@ -54,7 +54,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_newG2
 
 /// Checks if 2 g2 elements are equal
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_g2ElementEquals(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g2ElementEquals(
     env: JNIEnv,
     _class: JClass,
     g2_1_object: JObject,
@@ -75,7 +75,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_g2Ele
 
 /// Checks if a g2 element is valid
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_checkG2Validity(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_checkG2Validity(
     env: JNIEnv,
     _class: JClass,
     g2_object: JObject,
@@ -88,7 +88,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_check
 
 /// Creates a new g2 element based on a byte array seed
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_newRandomG2(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newRandomG2(
     env: JNIEnv,
     _class: JClass,
     input_seed_bytes: jbyteArray,
@@ -120,7 +120,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_newRa
 /// Computes the quotient of 2 group elements of g2
 /// Result is an element of g2
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_g2Divide(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g2Divide(
     env: JNIEnv,
     _class: JClass,
     g2_1_object: JObject,
@@ -153,7 +153,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_g2Div
 /// Computes the product of 2 group elements of g2
 /// Result is an element of g2
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_g2Multiply(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g2Multiply(
     env: JNIEnv,
     _class: JClass,
     g2_1_object: JObject,
@@ -186,7 +186,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_g2Mul
 /// Computes the product of a batch of group elements of g2
 /// Result is an element of g2
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_g2BatchMultiply(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g2BatchMultiply(
     env: JNIEnv,
     _class: JClass,
     element_batch: jobjectArray,
@@ -231,7 +231,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_g2Bat
 /// Computes the value of a g2 group element, taken to the power of a scalar
 /// Result is an element of g2
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_g2PowZn(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g2PowZn(
     env: JNIEnv,
     _class: JClass,
     base_object: JObject,     // g2
@@ -263,7 +263,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_g2Pow
 
 /// Compresses a group element
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group2Bindings_g2Compress(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g2Compress(
     env: JNIEnv,
     _class: JClass,
     element_object: JObject,

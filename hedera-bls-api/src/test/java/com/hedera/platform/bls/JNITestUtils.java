@@ -28,7 +28,7 @@ public class JNITestUtils {
 	public static BLS12381FieldElement getRandomScalar(final byte[] seed) {
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		assertEquals(0, BLS12381ScalarBindings.newRandomScalar(seed, output));
+		assertEquals(0, BLS12381Bindings.newRandomScalar(seed, output));
 
 		return new BLS12381FieldElement(output, new BLS12381Field());
 	}
@@ -41,7 +41,7 @@ public class JNITestUtils {
 	public static BLS12381FieldElement getOneScalar() {
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		assertEquals(0, BLS12381ScalarBindings.newOneScalar(output));
+		assertEquals(0, BLS12381Bindings.newOneScalar(output));
 
 		return new BLS12381FieldElement(output, new BLS12381Field());
 	}
@@ -54,7 +54,7 @@ public class JNITestUtils {
 	public static BLS12381FieldElement getZeroScalar() {
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		assertEquals(0, BLS12381ScalarBindings.newZeroScalar(output));
+		assertEquals(0, BLS12381Bindings.newZeroScalar(output));
 
 		return new BLS12381FieldElement(output, new BLS12381Field());
 	}
@@ -67,7 +67,7 @@ public class JNITestUtils {
 	public static BLS12381FieldElement getScalarFromInt(final int inputValue) {
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		assertEquals(0, BLS12381ScalarBindings.newScalarFromInt(inputValue, output));
+		assertEquals(0, BLS12381Bindings.newScalarFromInt(inputValue, output));
 
 		return new BLS12381FieldElement(output, new BLS12381Field());
 	}
@@ -87,7 +87,7 @@ public class JNITestUtils {
 
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		if (BLS12381ScalarBindings.scalarAdd(element1, element2, output) != 0) {
+		if (BLS12381Bindings.scalarAdd(element1, element2, output) != 0) {
 			return null;
 		}
 
@@ -109,7 +109,7 @@ public class JNITestUtils {
 
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		if (BLS12381ScalarBindings.scalarSubtract(element1, element2, output) != 0) {
+		if (BLS12381Bindings.scalarSubtract(element1, element2, output) != 0) {
 			return null;
 		}
 
@@ -131,7 +131,7 @@ public class JNITestUtils {
 
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		if (BLS12381ScalarBindings.scalarMultiply(element1, element2, output) != 0) {
+		if (BLS12381Bindings.scalarMultiply(element1, element2, output) != 0) {
 			return null;
 		}
 
@@ -153,7 +153,7 @@ public class JNITestUtils {
 
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		if (BLS12381ScalarBindings.scalarDivide(element1, element2, output) != 0) {
+		if (BLS12381Bindings.scalarDivide(element1, element2, output) != 0) {
 			return null;
 		}
 
@@ -175,7 +175,7 @@ public class JNITestUtils {
 
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
-		if (BLS12381ScalarBindings.scalarPower(element, exponent, output) != 0) {
+		if (BLS12381Bindings.scalarPower(element, exponent, output) != 0) {
 			return null;
 		}
 

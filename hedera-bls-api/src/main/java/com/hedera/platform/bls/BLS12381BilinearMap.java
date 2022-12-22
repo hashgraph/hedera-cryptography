@@ -45,7 +45,7 @@ public final class BLS12381BilinearMap implements DistCryptBilinearMap {
 			final DistCryptGroupElement keyElement2) {
 
 		final JNICallResult callResult = new JNICallResult(
-				BLS12381PairingBindings.comparePairing(
+				BLS12381Bindings.comparePairing(
 						(BLS12381Group1Element) signatureElement1,
 						(BLS12381Group2Element) keyElement1,
 						(BLS12381Group1Element) signatureElement2,
@@ -63,7 +63,7 @@ public final class BLS12381BilinearMap implements DistCryptBilinearMap {
 	 */
 	@Override
 	public byte[] displayPairing(final DistCryptGroupElement signatureElement, final DistCryptGroupElement keyElement) {
-		final JNICallResult callResult = new JNICallResult(BLS12381PairingBindings.pairingDisplay(
+		final JNICallResult callResult = new JNICallResult(BLS12381Bindings.pairingDisplay(
 				(BLS12381Group1Element) signatureElement, (BLS12381Group2Element) keyElement));
 
 		if (callResult.getErrorCode() != 0) {

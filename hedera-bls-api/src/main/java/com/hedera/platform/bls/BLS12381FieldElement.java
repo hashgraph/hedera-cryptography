@@ -53,7 +53,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
-		if ((errorCode = BLS12381ScalarBindings.scalarAdd(this, (BLS12381FieldElement) other, output)) != 0) {
+		if ((errorCode = BLS12381Bindings.scalarAdd(this, (BLS12381FieldElement) other, output)) != 0) {
 			throw new BLS12381Exception("scalarAdd", errorCode);
 		}
 
@@ -68,7 +68,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
-		if ((errorCode = BLS12381ScalarBindings.scalarSubtract(this, (BLS12381FieldElement) other, output)) != 0) {
+		if ((errorCode = BLS12381Bindings.scalarSubtract(this, (BLS12381FieldElement) other, output)) != 0) {
 			throw new BLS12381Exception("scalarSubtract", errorCode);
 		}
 
@@ -83,7 +83,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
-		if ((errorCode = BLS12381ScalarBindings.scalarMultiply(this, (BLS12381FieldElement) other, output)) != 0) {
+		if ((errorCode = BLS12381Bindings.scalarMultiply(this, (BLS12381FieldElement) other, output)) != 0) {
 			throw new BLS12381Exception("scalarMultiply", errorCode);
 		}
 
@@ -98,7 +98,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
-		if ((errorCode = BLS12381ScalarBindings.scalarDivide(this, (BLS12381FieldElement) other, output)) != 0) {
+		if ((errorCode = BLS12381Bindings.scalarDivide(this, (BLS12381FieldElement) other, output)) != 0) {
 			throw new BLS12381Exception("scalarDivide", errorCode);
 		}
 
@@ -113,7 +113,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
-		if ((errorCode = BLS12381ScalarBindings.scalarPower(this, exponent.toByteArray(), output)) != 0) {
+		if ((errorCode = BLS12381Bindings.scalarPower(this, exponent.toByteArray(), output)) != 0) {
 			throw new BLS12381Exception("scalarPower", errorCode);
 		}
 
@@ -131,7 +131,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 		}
 
 		if (o instanceof BLS12381FieldElement element) {
-			return field.equals(element.field) && BLS12381ScalarBindings.scalarEquals(this, element);
+			return field.equals(element.field) && BLS12381Bindings.scalarEquals(this, element);
 		}
 
 		return false;

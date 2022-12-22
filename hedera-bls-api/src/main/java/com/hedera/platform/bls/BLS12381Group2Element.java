@@ -78,7 +78,7 @@ public class BLS12381Group2Element implements DistCryptGroupElement {
         final byte[] output = new byte[group.getUncompressedSize()];
 
         final int errorCode;
-        if ((errorCode = BLS12381Group2Bindings.g2PowZn(this, (BLS12381FieldElement) exponent, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.g2PowZn(this, (BLS12381FieldElement) exponent, output)) != 0) {
             throw new BLS12381Exception("g2PowZn", errorCode);
         }
 
@@ -93,7 +93,7 @@ public class BLS12381Group2Element implements DistCryptGroupElement {
         final byte[] output = new byte[group.getUncompressedSize()];
 
         final int errorCode;
-        if ((errorCode = BLS12381Group2Bindings.g2Multiply(this, (BLS12381Group2Element) other, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.g2Multiply(this, (BLS12381Group2Element) other, output)) != 0) {
             throw new BLS12381Exception("g2Multiply", errorCode);
         }
 
@@ -108,7 +108,7 @@ public class BLS12381Group2Element implements DistCryptGroupElement {
         final byte[] output = new byte[group.getUncompressedSize()];
 
         final int errorCode;
-        if ((errorCode = BLS12381Group2Bindings.g2Divide(this, (BLS12381Group2Element) other, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.g2Divide(this, (BLS12381Group2Element) other, output)) != 0) {
             throw new BLS12381Exception("g2Divide", errorCode);
         }
 
@@ -128,7 +128,7 @@ public class BLS12381Group2Element implements DistCryptGroupElement {
         byte[] newGroupElement = new byte[group.getCompressedSize()];
 
         final int errorCode;
-        if ((errorCode = BLS12381Group2Bindings.g2Compress(this, newGroupElement)) != 0) {
+        if ((errorCode = BLS12381Bindings.g2Compress(this, newGroupElement)) != 0) {
             throw new BLS12381Exception("g2Compress", errorCode);
         }
 
@@ -157,7 +157,7 @@ public class BLS12381Group2Element implements DistCryptGroupElement {
         }
 
         if (o instanceof BLS12381Group2Element element) {
-            return group.equals(element.group) && BLS12381Group2Bindings.g2ElementEquals(this, element);
+            return group.equals(element.group) && BLS12381Bindings.g2ElementEquals(this, element);
         }
 
         return false;
@@ -185,6 +185,6 @@ public class BLS12381Group2Element implements DistCryptGroupElement {
      */
     @Override
     public boolean checkElementValidity() {
-        return BLS12381Group2Bindings.checkG2Validity(this);
+        return BLS12381Bindings.checkG2Validity(this);
     }
 }
