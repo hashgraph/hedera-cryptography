@@ -197,7 +197,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Group1Bindings_g1Bat
         Err(_) => return 1,
     };
 
-    if element_batch_len < 2 {
+    if element_batch_len < 1 {
         return 1;
     }
 

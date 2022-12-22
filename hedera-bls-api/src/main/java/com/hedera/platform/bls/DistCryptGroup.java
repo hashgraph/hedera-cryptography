@@ -36,10 +36,9 @@ public interface DistCryptGroup {
      * Creates a group element from its serialized encoding
      *
      * @param bytes serialized form
-     * @return the new group element
-     * @throws IOException if the input bytes can't be deserialized into a valid element
+     * @return the new group element, or null if construction failed
      */
-    DistCryptGroupElement newElementFromBytes(byte[] bytes) throws IOException;
+    DistCryptGroupElement newElementFromBytes(byte[] bytes);
 
     /**
      * Gets the size in bytes of a compressed group element

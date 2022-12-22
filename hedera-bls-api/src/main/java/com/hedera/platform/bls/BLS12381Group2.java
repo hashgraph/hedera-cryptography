@@ -42,7 +42,7 @@ public class BLS12381Group2 implements DistCryptGroup {
 	@Override
 	public DistCryptGroupElement newElementFromSeed(final byte[] seed) {
 		if (seed.length != SEED_SIZE) {
-			throw new IllegalArgumentException(String.format("seed must be %s bytes in length", SEED_SIZE));
+			throw new IllegalArgumentException(String.format("seed must be %d bytes in length", SEED_SIZE));
 		}
 
 		final byte[] output = new byte[UNCOMPRESSED_SIZE];
@@ -60,14 +60,7 @@ public class BLS12381Group2 implements DistCryptGroup {
 	 */
 	@Override
 	public DistCryptGroupElement hashToGroup(final byte[] input) {
-		final byte[] output = new byte[UNCOMPRESSED_SIZE];
-
-		final int errorCode;
-		if ((errorCode = BLS12381Group2Bindings.newRandomG2(Utils.computeSha256(input), output)) != 0) {
-			throw new BLS12381Exception("newRandomG2", errorCode);
-		}
-
-		return new BLS12381Group2Element(output, this);
+		return newElementFromSeed(Utils.computeSha256(input));
 	}
 
 	/**
@@ -75,6 +68,10 @@ public class BLS12381Group2 implements DistCryptGroup {
 	 */
 	@Override
 	public DistCryptGroupElement batchMultiply(final Collection<DistCryptGroupElement> elements) {
+		if (elements.isEmpty()) {
+			throw new IllegalArgumentException("Empty collection is invalid");
+		}
+
 		final BLS12381Group2Element[] elementArray = new BLS12381Group2Element[elements.size()];
 
 		int count = 0;
@@ -108,7 +105,7 @@ public class BLS12381Group2 implements DistCryptGroup {
 		final BLS12381Group2Element outputElement = new BLS12381Group2Element(inputBytes, this);
 
 		if (!outputElement.checkElementValidity()) {
-			throw new BLS12381Exception("checkG2Validity", 1);
+			return null;
 		}
 
 		return outputElement;

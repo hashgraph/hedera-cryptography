@@ -19,15 +19,11 @@ package com.hedera.platform.bls;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -58,8 +54,8 @@ class BLS12381GroupTests {
         final DistCryptGroupElement randomElement2 = group.newElementFromSeed(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
-        assertNotEquals(null, randomElement1, "randomElement1 should be valid");
-        assertNotEquals(null, randomElement2, "randomElement2 should be valid");
+        assertTrue(randomElement1.checkElementValidity(), "randomElement1 should be valid");
+        assertTrue(randomElement2.checkElementValidity(), "randomElement2 should be valid");
         assertNotEquals(randomElement1, randomElement2, "random elements shouldn't be equal");
         assertNotEquals(randomElement1, group.newOneElement(), "random element 1 shouldn't equal identity");
         assertNotEquals(randomElement2, group.newOneElement(), "random element 2 shouldn't equal identity");
@@ -88,9 +84,70 @@ class BLS12381GroupTests {
 
     @ParameterizedTest()
     @MethodSource("groups")
+    @DisplayName("newElementFromBytes success")
+    void newElementFromBytesSuccess(final DistCryptGroup group) {
+        final byte[] seed = RandomUtils.randomByteArray(random, group.getSeedSize());
+
+        final DistCryptGroupElement randomElementUncompressed = group.newElementFromSeed(seed);
+        final DistCryptGroupElement randomElementCompressed = group.newElementFromSeed(seed).compress();
+
+        final DistCryptGroupElement fromUncompressedBytes = group.newElementFromBytes(
+                randomElementUncompressed.toBytes());
+        final DistCryptGroupElement fromCompressedBytes = group.newElementFromBytes(
+                randomElementCompressed.toBytes());
+
+        assertNotEquals(null, fromUncompressedBytes, "valid element should be returned");
+        assertNotEquals(null, fromCompressedBytes, "valid element should be returned");
+        assertEquals(fromCompressedBytes, fromUncompressedBytes, "Elements from bytes should be equal");
+    }
+
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("newElementFromBytes with wrong byte size")
+    void newElementFromWrongBytesSize(final DistCryptGroup group) {
+        final byte[] wrongSizeCompressedElementBytes = new byte[group.getCompressedSize() - 1];
+        final byte[] wrongSizeUncompressedElementBytes = new byte[group.getUncompressedSize() - 1];
+
+        Arrays.fill(wrongSizeCompressedElementBytes, (byte) 0xFF);
+        Arrays.fill(wrongSizeUncompressedElementBytes, (byte) 0xFF);
+
+        assertThrows(IllegalArgumentException.class, () -> group.newElementFromBytes(wrongSizeCompressedElementBytes),
+                "Wrong byte size should throw illegal argument exception");
+        assertThrows(IllegalArgumentException.class, () -> group.newElementFromBytes(wrongSizeUncompressedElementBytes),
+                "Wrong byte size should throw illegal argument exception");
+    }
+
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("newElementFromBytes returns null with invalid bytes")
+    void newElementFromInvalidBytes(final DistCryptGroup group) {
+        final byte[] invalidCompressedElementBytes = new byte[group.getCompressedSize()];
+        final byte[] invalidUncompressedElementBytes = new byte[group.getUncompressedSize()];
+
+        Arrays.fill(invalidCompressedElementBytes, (byte) 0xFF);
+        Arrays.fill(invalidUncompressedElementBytes, (byte) 0xFF);
+
+        assertNull(group.newElementFromBytes(invalidCompressedElementBytes),
+                "null should be returned from invalid bytes");
+        assertNull(group.newElementFromBytes(invalidUncompressedElementBytes),
+                "null should be returned from invalid bytes");
+    }
+
+    @ParameterizedTest()
+    @MethodSource("groups")
+    @DisplayName("hashToGroup success")
+    void hashToGroupSuccess(final DistCryptGroup group) {
+        final byte[] dataToHash = {0x04, 0x08, 0x15, 0x16, 0x23, 0x42};
+        DistCryptGroupElement groupElement = group.hashToGroup(dataToHash);
+
+        assertTrue(groupElement.checkElementValidity(), "Element should be valid");
+    }
+
+    @ParameterizedTest()
+    @MethodSource("groups")
     @DisplayName("newOneElement produces the same result every time")
     void newOneElementDeterministic(final DistCryptGroup group) {
-        assertNotEquals(null, group.newOneElement(), "identity should be valid");
+        assertTrue(group.newOneElement().checkElementValidity(), "identity should be valid");
         assertEquals(group.newOneElement(), group.newOneElement(), "identity should equal identity");
     }
 
@@ -105,7 +162,7 @@ class BLS12381GroupTests {
 
         final DistCryptGroupElement quotient = randomElement1.divide(randomElement2);
 
-        assertNotEquals(null, quotient, "quotient should be valid");
+        assertTrue(quotient.checkElementValidity(), "quotient should be valid");
         assertNotEquals(quotient, randomElement1, "quotient shouldn't equal randomElement1");
         assertNotEquals(quotient, randomElement2, "quotient shouldn't equal randomElement2");
     }
@@ -128,10 +185,10 @@ class BLS12381GroupTests {
         final DistCryptGroupElement quotientMixed1 = randomElement1.divide(randomElement2Compressed);
         final DistCryptGroupElement quotientMixed2 = randomElement1Compressed.divide(randomElement2);
 
-        assertNotEquals(null, quotient, "quotient should be valid");
-        assertNotEquals(null, quotientCompressed, "quotientCompressed should be valid");
-        assertNotEquals(null, quotientMixed1, "quotientMixed1 should be valid");
-        assertNotEquals(null, quotientMixed2, "quotientMixed2 should be valid");
+        assertTrue(quotient.checkElementValidity(), "quotient should be valid");
+        assertTrue(quotientCompressed.checkElementValidity(), "quotientCompressed should be valid");
+        assertTrue(quotientMixed1.checkElementValidity(), "quotientMixed1 should be valid");
+        assertTrue(quotientMixed2.checkElementValidity(), "quotientMixed2 should be valid");
 
         assertEquals(quotient, quotientCompressed, "compression shouldn't affect result");
         assertEquals(quotient, quotientMixed1, "compression shouldn't affect result");
@@ -157,7 +214,7 @@ class BLS12381GroupTests {
 
         final DistCryptGroupElement quotient = randomElement.divide(group.newOneElement());
 
-        assertNotEquals(null, quotient, "quotient should be valid");
+        assertTrue(quotient.checkElementValidity(), "quotient should be valid");
         assertEquals(randomElement, quotient, "dividing by identity shouldn't have an effect");
     }
 
@@ -173,8 +230,8 @@ class BLS12381GroupTests {
         final DistCryptGroupElement quotient1 = randomElement1.divide(randomElement2);
         final DistCryptGroupElement quotient2 = randomElement1.divide(randomElement2);
 
-        assertNotEquals(null, quotient1, "quotient1 should be valid");
-        assertNotEquals(null, quotient2, "quotient2 should be valid");
+        assertTrue(quotient1.checkElementValidity(), "quotient1 should be valid");
+        assertTrue(quotient2.checkElementValidity(), "quotient2 should be valid");
         assertEquals(quotient1, quotient2, "division with same inputs should produce same result");
     }
 
@@ -189,7 +246,7 @@ class BLS12381GroupTests {
 
         final DistCryptGroupElement product = randomElement1.multiply(randomElement2);
 
-        assertNotEquals(null, product, "product should be valid");
+        assertTrue(product.checkElementValidity(), "product should be valid");
         assertNotEquals(randomElement1, product, "product shouldn't equal randomElement1");
         assertNotEquals(randomElement2, product, "product shouldn't equal randomElement2");
     }
@@ -212,10 +269,10 @@ class BLS12381GroupTests {
         final DistCryptGroupElement productMixed1 = randomElement1.multiply(randomElement2Compressed);
         final DistCryptGroupElement productMixed2 = randomElement1Compressed.multiply(randomElement2);
 
-        assertNotEquals(null, product, "product should be valid");
-        assertNotEquals(null, productCompressed, "productCompressed should be valid");
-        assertNotEquals(null, productMixed1, "productMixed1 should be valid");
-        assertNotEquals(null, productMixed2, "productMixed2 should be valid");
+        assertTrue(product.checkElementValidity(), "product should be valid");
+        assertTrue(productCompressed.checkElementValidity(), "productCompressed should be valid");
+        assertTrue(productMixed1.checkElementValidity(), "productMixed1 should be valid");
+        assertTrue(productMixed2.checkElementValidity(), "productMixed2 should be valid");
         assertEquals(product, productCompressed, "compression shouldn't affect result");
         assertEquals(product, productMixed1, "compression shouldn't affect result");
         assertEquals(product, productMixed2, "compression shouldn't affect result");
@@ -241,7 +298,7 @@ class BLS12381GroupTests {
 
         final DistCryptGroupElement product = randomElement.multiply(group.newOneElement());
 
-        assertNotEquals(null, product, "product should be valid");
+        assertTrue(product.checkElementValidity(), "product should be valid");
         assertEquals(randomElement, product, "multiplying by identity shouldn't have an effect");
     }
 
@@ -257,8 +314,8 @@ class BLS12381GroupTests {
         final DistCryptGroupElement product1 = randomElement1.multiply(randomElement2);
         final DistCryptGroupElement product2 = randomElement1.multiply(randomElement2);
 
-        assertNotEquals(null, product1, "product1 should be valid");
-        assertNotEquals(null, product2, "product2 should be valid");
+        assertTrue(product1.checkElementValidity(), "product1 should be valid");
+        assertTrue(product2.checkElementValidity(), "product2 should be valid");
         assertEquals(product1, product2, "multiplication with same inputs should produce same result");
     }
 
@@ -274,8 +331,8 @@ class BLS12381GroupTests {
         final DistCryptGroupElement product1 = randomElement1.multiply(randomElement2);
         final DistCryptGroupElement product2 = randomElement2.multiply(randomElement1);
 
-        assertNotEquals(null, product1, "product1 should be valid");
-        assertNotEquals(null, product2, "product2 should be valid");
+        assertTrue(product1.checkElementValidity(), "product1 should be valid");
+        assertTrue(product2.checkElementValidity(), "product2 should be valid");
         assertEquals(product1, product2, "multiplication with swapped inputs should produce same result");
     }
 
@@ -291,8 +348,8 @@ class BLS12381GroupTests {
         final DistCryptGroupElement quotient = randomElement1.divide(randomElement2);
         final DistCryptGroupElement product = quotient.multiply(randomElement2);
 
-        assertNotEquals(null, quotient, "quotient should be valid");
-        assertNotEquals(null, product, "product should be valid");
+        assertTrue(quotient.checkElementValidity(), "quotient should be valid");
+        assertTrue(product.checkElementValidity(), "product should be valid");
         assertEquals(randomElement1, product, "multiply should negate divide");
     }
 
@@ -308,8 +365,8 @@ class BLS12381GroupTests {
         final DistCryptGroupElement product = randomElement1.multiply(randomElement2);
         final DistCryptGroupElement quotient = product.divide(randomElement2);
 
-        assertNotEquals(null, product, "product should be valid");
-        assertNotEquals(null, quotient, "quotient should be valid");
+        assertTrue(product.checkElementValidity(), "product should be valid");
+        assertTrue(quotient.checkElementValidity(), "quotient should be valid");
         assertEquals(randomElement1, quotient, "divide should negate multiply");
     }
 
@@ -321,16 +378,15 @@ class BLS12381GroupTests {
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
         final DistCryptGroupElement randomElement2 = group.newElementFromSeed(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final DistCryptGroupElement randomElement3 = group.newElementFromSeed(
-                RandomUtils.randomByteArray(random, group.getSeedSize()));
+        final DistCryptGroupElement identityElement = group.newOneElement();
 
         final Collection<DistCryptGroupElement> elements = Arrays.asList(
-                randomElement1, randomElement2, randomElement3);
+                randomElement1, randomElement2, identityElement);
 
         final DistCryptGroupElement batchProduct = group.batchMultiply(elements);
-        final DistCryptGroupElement manualProduct = randomElement1.multiply(randomElement2).multiply(randomElement3);
+        final DistCryptGroupElement manualProduct = randomElement1.multiply(randomElement2).multiply(identityElement);
 
-        assertNotEquals(null, batchProduct, "product should be valid");
+        assertTrue(batchProduct.checkElementValidity(), "batchProduct should be valid");
         for (final DistCryptGroupElement element : elements) {
             assertNotEquals(element, batchProduct, "product shouldn't equal random element");
         }
@@ -368,9 +424,9 @@ class BLS12381GroupTests {
         final DistCryptGroupElement productCompressed = group.batchMultiply(elementsCompressed);
         final DistCryptGroupElement productMixed = group.batchMultiply(elementsMixed);
 
-        assertNotEquals(null, product, "product should be valid");
-        assertNotEquals(null, productCompressed, "productCompressed should be valid");
-        assertNotEquals(null, productMixed, "productMixed should be valid");
+        assertTrue(product.checkElementValidity(), "product should be valid");
+        assertTrue(productCompressed.checkElementValidity(), "productCompressed should be valid");
+        assertTrue(productMixed.checkElementValidity(), "productMixed should be valid");
 
         assertEquals(product, productCompressed, "compression shouldn't affect result");
         assertEquals(product, productMixed, "compression shouldn't affect result");
@@ -380,12 +436,11 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("batchMultiply insufficient element count")
     void batchMultiplyInsufficientElements(final DistCryptGroup group) {
-        // Batch multiplication requires at least 2 elements
-        final Collection<DistCryptGroupElement> elements = Collections.singletonList(
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())));
+        // Batch multiplication requires at least 1 elements
+        final Collection<DistCryptGroupElement> elements = new ArrayList<>();
 
-        assertThrows(BLS12381Exception.class, () -> group.batchMultiply(elements),
-                "not enough elements should result in error");
+        assertThrows(IllegalArgumentException.class, () -> group.batchMultiply(elements),
+                "empty input collection should result in error");
     }
 
     @ParameterizedTest()
@@ -411,8 +466,8 @@ class BLS12381GroupTests {
         final DistCryptGroupElement product1 = group.batchMultiply(elements);
         final DistCryptGroupElement product2 = group.batchMultiply(elements);
 
-        assertNotEquals(null, product1, "product1 should be valid");
-        assertNotEquals(null, product2, "product2 should be valid");
+        assertTrue(product1.checkElementValidity(), "product1 should be valid");
+        assertTrue(product2.checkElementValidity(), "product2 should be valid");
         assertEquals(product1, product2, "multiplication with same inputs should produce same result");
     }
 
@@ -436,8 +491,8 @@ class BLS12381GroupTests {
         final DistCryptGroupElement product1 = group.batchMultiply(elements1);
         final DistCryptGroupElement product2 = group.batchMultiply(elements2);
 
-        assertNotEquals(null, product1, "product1 should be valid");
-        assertNotEquals(null, product2, "product2 should be valid");
+        assertTrue(product1.checkElementValidity(), "product1 should be valid");
+        assertTrue(product2.checkElementValidity(), "product2 should be valid");
         assertEquals(product1, product2,
                 "multiplication with same differently ordered batch inputs should produce same result");
     }
@@ -452,7 +507,7 @@ class BLS12381GroupTests {
         final DistCryptGroupElement power =
                 randomElement.power(field.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())));
 
-        assertNotEquals(null, power, "power should be valid");
+        assertTrue(power.checkElementValidity(), "power should be valid");
         assertNotEquals(randomElement, power, "power shouldn't equal randomElement");
     }
 
@@ -471,8 +526,8 @@ class BLS12381GroupTests {
         final DistCryptGroupElement power = randomElement.power(randomScalar);
         final DistCryptGroupElement powerCompressed = randomElementCompressed.power(randomScalar);
 
-        assertNotEquals(null, power, "power should be valid");
-        assertNotEquals(null, powerCompressed, "powerCompressed should be valid");
+        assertTrue(power.checkElementValidity(), "power should be valid");
+        assertTrue(powerCompressed.checkElementValidity(), "powerCompressed should be valid");
         assertEquals(power, powerCompressed, "compression shouldn't affect result");
     }
 
@@ -485,7 +540,7 @@ class BLS12381GroupTests {
 
         final DistCryptGroupElement power = randomElement.power(field.newOneElement());
 
-        assertNotEquals(null, power, "power should be valid");
+        assertTrue(power.checkElementValidity(), "power should be valid");
         assertEquals(randomElement, power, "element to the power of 1 should equal itself");
     }
 
@@ -497,7 +552,7 @@ class BLS12381GroupTests {
                 group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize()))
                         .power(field.newZeroElement());
 
-        assertNotEquals(null, power, "power should be valid");
+        assertTrue(power.checkElementValidity(), "power should be valid");
         assertEquals(group.newOneElement(), power, "element to the power of 0 should equal identity");
     }
 
@@ -513,8 +568,8 @@ class BLS12381GroupTests {
         final DistCryptGroupElement power1 = randomElement.power(randomScalar);
         final DistCryptGroupElement power2 = randomElement.power(randomScalar);
 
-        assertNotEquals(null, power1, "power1 should be valid");
-        assertNotEquals(null, power2, "power2 should be valid");
+        assertTrue(power1.checkElementValidity(), "power1 should be valid");
+        assertTrue(power2.checkElementValidity(), "power2 should be valid");
         assertEquals(power1, power2, "power with same inputs should produce same result");
     }
 
@@ -535,7 +590,7 @@ class BLS12381GroupTests {
         final DistCryptGroupElement randomElement = group.newElementFromSeed(seed);
         final DistCryptGroupElement randomElementCompressed = group.newElementFromSeed(seed).compress();
 
-        assertNotEquals(null, randomElementCompressed, "randomElementCompressed should be valid");
+        assertTrue(randomElementCompressed.checkElementValidity(), "randomElementCompressed should be valid");
         assertEquals(randomElement, randomElementCompressed, "comparison should work regardless of compression");
     }
 
@@ -550,7 +605,7 @@ class BLS12381GroupTests {
         assertEquals(group.getUncompressedSize(), randomElement.toBytes().length,
                 "uncompressed element is of unexpected length");
 
-        assertNotEquals(null, randomElementCompressed, "compressedElement should be valid");
+        assertTrue(randomElementCompressed.checkElementValidity(), "randomElementCompressed should be valid");
         assertEquals(group.getCompressedSize(), randomElementCompressed.toBytes().length,
                 "compressed element is of unexpected length");
     }
@@ -565,47 +620,7 @@ class BLS12381GroupTests {
         final DistCryptGroupElement validUncompressedElement =
                 group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize()));
 
-        assertTrue(validCompressedElement.checkElementValidity(), "element should be valid");
-        assertTrue(validUncompressedElement.checkElementValidity(), "element should be valid");
-    }
-
-    @Test()
-    @DisplayName("group1 checkValidity invalid")
-    void group1CheckValidityInvalid() {
-        DistCryptGroup group = new BLS12381Group1();
-        final byte[] invalidCompressedElementBytes = new byte[group.getCompressedSize()];
-        final byte[] invalidUncompressedElementBytes = new byte[group.getUncompressedSize()];
-
-        Arrays.fill(invalidCompressedElementBytes, (byte) 0xFF);
-        Arrays.fill(invalidUncompressedElementBytes, (byte) 0xFF);
-
-        final BLS12381Group1Element invalidCompressedElement =
-                new BLS12381Group1Element(invalidCompressedElementBytes, new BLS12381Group1());
-
-        final BLS12381Group1Element invalidUncompressedElement =
-                new BLS12381Group1Element(invalidUncompressedElementBytes, new BLS12381Group1());
-
-        assertFalse(BLS12381Group1Bindings.checkG1Validity(invalidCompressedElement), "element should be invalid");
-        assertFalse(BLS12381Group1Bindings.checkG1Validity(invalidUncompressedElement), "element should be invalid");
-    }
-
-    @Test()
-    @DisplayName("group2 checkValidity invalid")
-    void group2CheckValidityInvalid() {
-        BLS12381Group2 group = new BLS12381Group2();
-        final byte[] invalidCompressedElementBytes = new byte[group.getCompressedSize()];
-        final byte[] invalidUncompressedElementBytes = new byte[group.getUncompressedSize()];
-
-        Arrays.fill(invalidCompressedElementBytes, (byte) 0xFF);
-        Arrays.fill(invalidUncompressedElementBytes, (byte) 0xFF);
-
-        final BLS12381Group2Element invalidCompressedElement =
-                new BLS12381Group2Element(invalidCompressedElementBytes, group);
-
-        final BLS12381Group2Element invalidUncompressedElement =
-                new BLS12381Group2Element(invalidUncompressedElementBytes, group);
-
-        assertFalse(BLS12381Group2Bindings.checkG2Validity(invalidCompressedElement), "element should be invalid");
-        assertFalse(BLS12381Group2Bindings.checkG2Validity(invalidUncompressedElement), "element should be invalid");
+        assertTrue(validCompressedElement.checkElementValidity(), "validCompressedElement should be valid");
+        assertTrue(validUncompressedElement.checkElementValidity(), "validUncompressedElement should be valid");
     }
 }
