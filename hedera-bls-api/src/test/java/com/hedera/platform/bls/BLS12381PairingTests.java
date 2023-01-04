@@ -43,9 +43,9 @@ class BLS12381PairingTests {
     @Test
     @DisplayName("Equal pairing results")
     void equalPairings() {
-        final GroupElement group1Element = group1.newElementFromSeed(
+        final GroupElement group1Element = group1.randomElement(
                 RandomUtils.randomByteArray(random, group1.getSeedSize()));
-        final GroupElement group2Element = group2.newElementFromSeed(
+        final GroupElement group2Element = group2.randomElement(
                 RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
         assertTrue(bilinearMap.comparePairing(group1Element, group2Element, group1Element, group2Element),
@@ -55,14 +55,14 @@ class BLS12381PairingTests {
     @Test
     @DisplayName("Unequal pairing results")
     void unequalPairings() {
-        final GroupElement group1ElementA = group1.newElementFromSeed(
+        final GroupElement group1ElementA = group1.randomElement(
                 RandomUtils.randomByteArray(random, group1.getSeedSize()));
-        final GroupElement group2ElementA = group2.newElementFromSeed(
+        final GroupElement group2ElementA = group2.randomElement(
                 RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
-        final GroupElement group1ElementB = group1.newElementFromSeed(
+        final GroupElement group1ElementB = group1.randomElement(
                 RandomUtils.randomByteArray(random, group1.getSeedSize()));
-        final GroupElement group2ElementB = group2.newElementFromSeed(
+        final GroupElement group2ElementB = group2.randomElement(
                 RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
         assertFalse(bilinearMap.comparePairing(group1ElementA, group2ElementA, group1ElementB, group2ElementB),
@@ -72,9 +72,9 @@ class BLS12381PairingTests {
     @Test
     @DisplayName("comparePairing failure")
     void comparePairingFailure() {
-        final GroupElement group1Element = group1.newElementFromSeed(
+        final GroupElement group1Element = group1.randomElement(
                 RandomUtils.randomByteArray(random, group1.getSeedSize()));
-        final GroupElement group2Element = group2.newElementFromSeed(
+        final GroupElement group2Element = group2.randomElement(
                 RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
         assertThrows(BLS12381Exception.class, () -> bilinearMap.comparePairing(
@@ -97,11 +97,11 @@ class BLS12381PairingTests {
         final byte[] seed1 = RandomUtils.randomByteArray(random, group1.getSeedSize());
         final byte[] seed2 = RandomUtils.randomByteArray(random, group2.getSeedSize());
 
-        final GroupElement group1Element = group1.newElementFromSeed(seed1);
-        final GroupElement group2Element = group2.newElementFromSeed(seed2);
+        final GroupElement group1Element = group1.randomElement(seed1);
+        final GroupElement group2Element = group2.randomElement(seed2);
 
-        final GroupElement group1ElementCompressed = group1.newElementFromSeed(seed1).compress();
-        final GroupElement group2ElementCompressed = group2.newElementFromSeed(seed2).compress();
+        final GroupElement group1ElementCompressed = group1.randomElement(seed1).compress();
+        final GroupElement group2ElementCompressed = group2.randomElement(seed2).compress();
 
         assertTrue(bilinearMap.comparePairing(group1ElementCompressed, group2Element, group1Element, group2Element),
                 "compression shouldn't affect pairing equality");
@@ -116,14 +116,14 @@ class BLS12381PairingTests {
     @Test
     @DisplayName("Different pairings produce unique display strings")
     void pairingDisplayUnique() {
-        final GroupElement group1ElementA = group1.newElementFromSeed(
+        final GroupElement group1ElementA = group1.randomElement(
                 RandomUtils.randomByteArray(random, group1.getSeedSize()));
-        final GroupElement group2ElementA = group2.newElementFromSeed(
+        final GroupElement group2ElementA = group2.randomElement(
                 RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
-        final GroupElement group1ElementB = group1.newElementFromSeed(
+        final GroupElement group1ElementB = group1.randomElement(
                 RandomUtils.randomByteArray(random, group1.getSeedSize()));
-        final GroupElement group2ElementB = group2.newElementFromSeed(
+        final GroupElement group2ElementB = group2.randomElement(
                 RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
         assertNotEquals(
@@ -135,9 +135,9 @@ class BLS12381PairingTests {
     @Test
     @DisplayName("Identical pairings produce identical display strings")
     void pairingDisplayDeterministic() {
-        final GroupElement group1Element = group1.newElementFromSeed(
+        final GroupElement group1Element = group1.randomElement(
                 RandomUtils.randomByteArray(random, group1.getSeedSize()));
-        final GroupElement group2Element = group2.newElementFromSeed(
+        final GroupElement group2Element = group2.randomElement(
                 RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
         assertArrayEquals(
@@ -149,9 +149,9 @@ class BLS12381PairingTests {
     @Test
     @DisplayName("pairingDisplay failure")
     void pairingDisplayFailure() {
-        final GroupElement group1Element = group1.newElementFromSeed(
+        final GroupElement group1Element = group1.randomElement(
                 RandomUtils.randomByteArray(random, group1.getSeedSize()));
-        final GroupElement group2Element = group2.newElementFromSeed(
+        final GroupElement group2Element = group2.randomElement(
                 RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
         assertThrows(BLS12381Exception.class, () -> bilinearMap.displayPairing(null, group2Element),
@@ -166,11 +166,11 @@ class BLS12381PairingTests {
         final byte[] seed1 = RandomUtils.randomByteArray(random, group1.getSeedSize());
         final byte[] seed2 = RandomUtils.randomByteArray(random, group2.getSeedSize());
 
-        final GroupElement group1Element = group1.newElementFromSeed(seed1);
-        final GroupElement group2Element = group2.newElementFromSeed(seed2);
+        final GroupElement group1Element = group1.randomElement(seed1);
+        final GroupElement group2Element = group2.randomElement(seed2);
 
-        final GroupElement group1ElementCompressed = group1.newElementFromSeed(seed1).compress();
-        final GroupElement group2ElementCompressed = group2.newElementFromSeed(seed2).compress();
+        final GroupElement group1ElementCompressed = group1.randomElement(seed1).compress();
+        final GroupElement group2ElementCompressed = group2.randomElement(seed2).compress();
 
         final byte[] uncompressedDisplay = bilinearMap.displayPairing(group1Element, group2Element);
 

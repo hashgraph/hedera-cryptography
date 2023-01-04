@@ -41,18 +41,18 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("newRandomScalar with unique seeds produces unique results")
     void newRandomScalarUnique() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertTrue(randomScalar1.isValid(), "randomScalar1 should be valid");
         assertTrue(randomScalar2.isValid(), "randomScalar2 should be valid");
         assertNotEquals(randomScalar1, randomScalar2, "random scalars shouldn't be equal");
-        assertNotEquals(randomScalar1, field.newOneElement(), "random scalar shouldn't equal 1");
-        assertNotEquals(randomScalar1, field.newZeroElement(), "random scalar shouldn't equal 0");
-        assertNotEquals(randomScalar2, field.newOneElement(), "random scalar shouldn't equal 1");
-        assertNotEquals(randomScalar2, field.newZeroElement(), "random scalar shouldn't equal 0");
+        assertNotEquals(randomScalar1, field.oneElement(), "random scalar shouldn't equal 1");
+        assertNotEquals(randomScalar1, field.zeroElement(), "random scalar shouldn't equal 0");
+        assertNotEquals(randomScalar2, field.oneElement(), "random scalar shouldn't equal 1");
+        assertNotEquals(randomScalar2, field.zeroElement(), "random scalar shouldn't equal 0");
     }
 
     @Test
@@ -60,7 +60,7 @@ class BLS12381ScalarTests {
     void newRandomScalarDeterministic() {
         final byte[] seed = RandomUtils.randomByteArray(random, field.getSeedSize());
 
-        assertEquals(field.newElementFromSeed(seed), field.newElementFromSeed(seed),
+        assertEquals(field.randomElement(seed), field.randomElement(seed),
                 "scalars from the same seed should be equal");
     }
 
@@ -70,69 +70,69 @@ class BLS12381ScalarTests {
         final byte[] smallSeed = RandomUtils.randomByteArray(random, field.getSeedSize() - 1);
         final byte[] largeSeed = RandomUtils.randomByteArray(random, field.getSeedSize() + 1);
 
-        assertThrows(IllegalArgumentException.class, () -> field.newElementFromSeed(smallSeed),
+        assertThrows(IllegalArgumentException.class, () -> field.randomElement(smallSeed),
                 "small seed should yield null");
-        assertThrows(IllegalArgumentException.class, () -> field.newElementFromSeed(largeSeed),
+        assertThrows(IllegalArgumentException.class, () -> field.randomElement(largeSeed),
                 "large seed should yield null");
     }
 
     @Test
     @DisplayName("newScalarFromInt with different integers produces unique results")
     void newScalarFromIntUnique() {
-        final FieldElement scalar1 = field.newElement(11);
-        final FieldElement scalar2 = field.newElement(33);
+        final FieldElement scalar1 = field.elementFromInt(11);
+        final FieldElement scalar2 = field.elementFromInt(33);
 
         assertNotEquals(scalar1, scalar2, "scalars shouldn't be equal");
 
         assertTrue(scalar1.isValid(), "scalar1 should be valid");
         assertTrue(scalar2.isValid(), "scalar2 should be valid");
-        assertNotEquals(scalar1, field.newOneElement(), "scalar from int shouldn't equal 1");
-        assertNotEquals(scalar1, field.newZeroElement(), "scalar from int shouldn't equal 0");
-        assertNotEquals(scalar2, field.newOneElement(), "scalar from int shouldn't equal 1");
-        assertNotEquals(scalar2, field.newZeroElement(), "scalar from int shouldn't equal 0");
+        assertNotEquals(scalar1, field.oneElement(), "scalar from int shouldn't equal 1");
+        assertNotEquals(scalar1, field.zeroElement(), "scalar from int shouldn't equal 0");
+        assertNotEquals(scalar2, field.oneElement(), "scalar from int shouldn't equal 1");
+        assertNotEquals(scalar2, field.zeroElement(), "scalar from int shouldn't equal 0");
     }
 
     @Test
     @DisplayName("newScalarFromInt succeeds with min and max int values")
     void newScalarFromIntExtremes() {
-        assertTrue(field.newElement(Integer.MAX_VALUE).isValid(), "max scalar should be valid");
-        assertTrue(field.newElement(Integer.MIN_VALUE).isValid(), "min scalar should be valid");
+        assertTrue(field.elementFromInt(Integer.MAX_VALUE).isValid(), "max scalar should be valid");
+        assertTrue(field.elementFromInt(Integer.MIN_VALUE).isValid(), "min scalar should be valid");
     }
 
     @Test
     @DisplayName("newScalarFromInt from same integer are equal")
     void newScalarFromIntDeterministic() {
-        assertEquals(field.newElement(44), field.newElement(44), "scalars from the same int should be equal");
+        assertEquals(field.elementFromInt(44), field.elementFromInt(44), "scalars from the same int should be equal");
     }
 
     @Test
     @DisplayName("newZeroScalar produces the same result every time")
     void newZeroScalarDeterministic() {
-        assertTrue(field.newZeroElement().isValid(), "0 scalar should be valid");
-        assertEquals(field.newZeroElement(), field.newZeroElement(), "0 should equal 0");
-        assertEquals(field.newZeroElement(), field.newElement(0), "0 should equal 0");
+        assertTrue(field.zeroElement().isValid(), "0 scalar should be valid");
+        assertEquals(field.zeroElement(), field.zeroElement(), "0 should equal 0");
+        assertEquals(field.zeroElement(), field.elementFromInt(0), "0 should equal 0");
     }
 
     @Test
     @DisplayName("newOneScalar produces the same result every time")
     void newOneScalarDeterministic() {
-        assertNotNull(field.newOneElement(), "1 scalar should be valid");
-        assertEquals(field.newOneElement(), field.newOneElement(), "1 should equal 1");
-        assertEquals(field.newOneElement(), field.newElement(1), "1 should equal 1");
+        assertNotNull(field.oneElement(), "1 scalar should be valid");
+        assertEquals(field.oneElement(), field.oneElement(), "1 should equal 1");
+        assertEquals(field.oneElement(), field.elementFromInt(1), "1 should equal 1");
     }
 
     @Test
     @DisplayName("newZeroScalar and newOneScalar are different")
     void differentZeroOne() {
-        assertNotEquals(field.newZeroElement(), field.newOneElement(), "0 shouldn't equal 1");
+        assertNotEquals(field.zeroElement(), field.oneElement(), "0 shouldn't equal 1");
     }
 
     @Test
     @DisplayName("Add modifies scalar")
     void scalarAddSuccess() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement sum = randomScalar1.add(randomScalar2);
@@ -145,7 +145,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarAdd with null argument throws error")
     void scalarAddFailure() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertThrows(IllegalArgumentException.class, () -> randomScalar.add(null),
@@ -155,10 +155,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Adding 1 modifies scalar")
     void scalarAddOne() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final FieldElement sum = randomScalar.add(field.newOneElement());
+        final FieldElement sum = randomScalar.add(field.oneElement());
 
         assertNotEquals(null, sum, "sum should be valid");
         assertNotEquals(sum, randomScalar, "adding 1 should have an effect");
@@ -167,10 +167,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Adding 0 doesn't modify scalar")
     void scalarAddZero() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final FieldElement sum = randomScalar.add(field.newZeroElement());
+        final FieldElement sum = randomScalar.add(field.zeroElement());
 
         assertNotEquals(null, sum, "sum should be valid");
         assertEquals(sum, randomScalar, "adding 0 shouldn't have an effect");
@@ -179,9 +179,9 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarAdd produces the same result every time for identical inputs")
     void scalarAddDeterministic() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement sum1 = randomScalar1.add(randomScalar2);
@@ -195,9 +195,9 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarAdd produces the same result when swapping operands")
     void scalarAddCommutative() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement sum1 = randomScalar1.add(randomScalar2);
@@ -211,9 +211,9 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Subtract modifies scalar")
     void scalarSubtractSuccess() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement difference = randomScalar1.subtract(randomScalar2);
@@ -226,7 +226,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarSubtract with null arguments throws error")
     void scalarSubtractFailure() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertThrows(IllegalArgumentException.class, () -> randomScalar.subtract(null),
@@ -236,10 +236,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Subtracting 1 modifies scalar")
     void scalarSubtractOne() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final FieldElement difference = randomScalar.subtract(field.newOneElement());
+        final FieldElement difference = randomScalar.subtract(field.oneElement());
 
         assertNotEquals(null, difference, "difference should be valid");
         assertNotEquals(difference, randomScalar, "subtracting 1 should have an effect");
@@ -248,10 +248,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Subtracting 0 doesn't modify scalar")
     void scalarSubtractZero() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final FieldElement difference = randomScalar.subtract(field.newZeroElement());
+        final FieldElement difference = randomScalar.subtract(field.zeroElement());
 
         assertNotEquals(null, difference, "difference should be valid");
         assertEquals(difference, randomScalar, "subtracting 0 shouldn't have an effect");
@@ -260,9 +260,9 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarSubtract produces the same result every time for identical inputs")
     void scalarSubtractDeterministic() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement difference1 = randomScalar1.subtract(randomScalar2);
@@ -276,9 +276,9 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Multiply modifies scalar")
     void scalarMultiplySuccess() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement product = randomScalar1.multiply(randomScalar2);
@@ -291,7 +291,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarMultiply with null arguments throws error")
     void scalarMultiplyFailure() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertThrows(IllegalArgumentException.class, () -> randomScalar.multiply(null),
@@ -301,10 +301,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Multiplying by 1 doesn't modify scalar")
     void scalarMultiplyByOne() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final FieldElement product = randomScalar.multiply(field.newOneElement());
+        final FieldElement product = randomScalar.multiply(field.oneElement());
 
         assertNotEquals(null, product, "product should be valid");
         assertEquals(product, randomScalar, "multiplying by 1 shouldn't have an effect");
@@ -313,21 +313,21 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Multiplying by 0 produces 0")
     void scalarMultiplyByZero() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final FieldElement product = randomScalar.multiply(field.newZeroElement());
+        final FieldElement product = randomScalar.multiply(field.zeroElement());
 
         assertNotEquals(null, product, "product should be valid");
-        assertEquals(product, field.newZeroElement(), "multiplying by 0 should produce 0");
+        assertEquals(product, field.zeroElement(), "multiplying by 0 should produce 0");
     }
 
     @Test
     @DisplayName("scalarMultiply produces the same result every time for identical inputs")
     void scalarMultiplyDeterministic() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement product1 = randomScalar1.multiply(randomScalar2);
@@ -341,9 +341,9 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarMultiply produces the same result when swapping operands")
     void scalarMultiplyCommutative() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement product1 = randomScalar1.multiply(randomScalar2);
@@ -357,9 +357,9 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Divide modifies scalar")
     void scalarDivideSuccess() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement quotient = randomScalar1.divide(randomScalar2);
@@ -372,7 +372,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarDivide with null arguments throws error")
     void scalarDivideFailure() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertThrows(IllegalArgumentException.class, () -> randomScalar.divide(null),
@@ -382,10 +382,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Dividing by 1 doesn't modify scalar")
     void scalarDivideByOne() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final FieldElement quotient = randomScalar.divide(field.newOneElement());
+        final FieldElement quotient = randomScalar.divide(field.oneElement());
 
         assertNotEquals(null, quotient, "quotient should be valid");
         assertEquals(quotient, randomScalar, "dividing by 1 shouldn't have an effect");
@@ -394,19 +394,19 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Dividing by 0 causes error")
     void scalarDivideByZero() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        assertThrows(BLS12381Exception.class, () -> randomScalar.divide(field.newZeroElement()),
+        assertThrows(BLS12381Exception.class, () -> randomScalar.divide(field.zeroElement()),
                 "Dividing by zero should cause error");
     }
 
     @Test
     @DisplayName("scalarDivide produces the same result every time for identical inputs")
     void scalarDivideDeterministic() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement quotient1 = randomScalar1.divide(randomScalar2);
@@ -420,7 +420,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Power modifies scalar")
     void scalarPowerSuccess() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement result = randomScalar.power(new BigInteger("99"));
@@ -432,7 +432,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarPower with null arguments throws error")
     void scalarPowerFailure() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertThrows(IllegalArgumentException.class, () ->
@@ -443,7 +443,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("A scalar to the power of 1 doesn't modify scalar")
     void scalarPowerByOne() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement result = randomScalar.power(new BigInteger("1"));
@@ -455,19 +455,19 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("A scalar to the power of 0 is 1")
     void scalarPowerByZero() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement result = randomScalar.power(new BigInteger("0"));
 
         assertNotEquals(null, result, "result should be valid");
-        assertEquals(result, field.newOneElement(), "a scalar to the power of 0 should equal 1");
+        assertEquals(result, field.oneElement(), "a scalar to the power of 0 should equal 1");
     }
 
     @Test
     @DisplayName("scalarPower produces the same result every time for identical inputs")
     void scalarPowerDeterministic() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
         final BigInteger bigInt = new BigInteger("77");
 
@@ -482,9 +482,9 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Subtract negates add")
     void subtractNegatesAdd() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement sum = randomScalar1.add(randomScalar2);
@@ -498,9 +498,9 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Add negates subtract")
     void addNegatesSubtract() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement difference = randomScalar1.subtract(randomScalar2);
@@ -514,9 +514,9 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("divide negates multiply")
     void divideNegatesMultiply() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement product = randomScalar1.multiply(randomScalar2);
@@ -530,9 +530,9 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Multiply negates divide")
     void multiplyNegatesDivide() {
-        final FieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final FieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement quotient = randomScalar1.divide(randomScalar2);
@@ -546,7 +546,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Divide maps to power")
     void divideMapsToPower() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         // Take scalar to a power of 2
@@ -561,11 +561,11 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Add maps to multiply")
     void addMapsToMultiply() {
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement sum = randomScalar.add(randomScalar);
-        final FieldElement product = randomScalar.multiply(field.newElement(2));
+        final FieldElement product = randomScalar.multiply(field.elementFromInt(2));
 
         assertNotEquals(null, sum, "sum should be valid");
         assertNotEquals(null, product, "product should be valid");
@@ -575,14 +575,14 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarEquals with null arguments returns false")
     void scalarEqualsInvalid() {
-        assertNotEquals(null, field.newElementFromSeed(RandomUtils.randomByteArray(random, field.getSeedSize())),
+        assertNotEquals(null, field.randomElement(RandomUtils.randomByteArray(random, field.getSeedSize())),
                 "One value being null should return false");
     }
 
     @Test
     @DisplayName("checkScalarValidity valid")
     void checkScalarValidityValid() {
-        assertTrue(field.newElementFromSeed(
+        assertTrue(field.randomElement(
                         RandomUtils.randomByteArray(random, field.getSeedSize())).isValid(),
                 "scalar should be valid");
     }

@@ -18,7 +18,7 @@ public class BLS12381Field implements Field {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public FieldElement newElement(final int i) {
+	public FieldElement elementFromInt(final int i) {
 		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
@@ -33,7 +33,7 @@ public class BLS12381Field implements Field {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public FieldElement newZeroElement() {
+	public FieldElement zeroElement() {
 		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
@@ -48,7 +48,7 @@ public class BLS12381Field implements Field {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public FieldElement newOneElement() {
+	public FieldElement oneElement() {
 		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
@@ -63,7 +63,7 @@ public class BLS12381Field implements Field {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public FieldElement newElementFromSeed(final byte[] seed) {
+	public FieldElement randomElement(final byte[] seed) {
 		if (seed.length != SEED_SIZE) {
 			throw new IllegalArgumentException(String.format("seed must be %s bytes in length", SEED_SIZE));
 		}
@@ -82,7 +82,7 @@ public class BLS12381Field implements Field {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public FieldElement newElementFromBytes(final byte[] bytes) {
+	public FieldElement deserializeElementFromBytes(final byte[] bytes) {
 		final BLS12381FieldElement outputElement = new BLS12381FieldElement(bytes, this);
 
 		if (!outputElement.isValid()) {

@@ -8,12 +8,12 @@ public interface Group {
      *
      * @return the new group element
      */
-    GroupElement newOneElement();
+    GroupElement oneElement();
 
     /**
      * Creates a group element from a seed (256 bits)
      */
-    GroupElement newElementFromSeed(final byte[] seed);
+    GroupElement randomElement(final byte[] seed);
 
     /**
      * Hashes an unbounded length input to a group element
@@ -37,7 +37,7 @@ public interface Group {
      * @param bytes serialized form
      * @return the new group element, or null if construction failed
      */
-    GroupElement newElementFromBytes(byte[] bytes);
+    GroupElement deserializeElementFromBytes(byte[] bytes);
 
     /**
      * Gets the size in bytes of a compressed group element

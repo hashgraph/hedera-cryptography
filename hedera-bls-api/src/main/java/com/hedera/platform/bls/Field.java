@@ -10,21 +10,21 @@ public interface Field {
      * @param i the integer to use to create the field element
      * @return the new field element
      */
-    FieldElement newElement(final int i);
+    FieldElement elementFromInt(final int i);
 
     /**
      * Creates a new field element with value 0
      *
      * @return the new field element
      */
-    FieldElement newZeroElement();
+    FieldElement zeroElement();
 
     /**
      * Creates a new field element with value 1
      *
      * @return the new field element
      */
-    FieldElement newOneElement();
+    FieldElement oneElement();
 
     /**
      * Creates a field element from a seed (256 bits)
@@ -32,7 +32,7 @@ public interface Field {
      * @param seed a seed to use to generate randomness
      * @return the new field element
      */
-    FieldElement newElementFromSeed(final byte[] seed);
+    FieldElement randomElement(final byte[] seed);
 
     /**
      * Creates a field element from its serialized encoding
@@ -40,7 +40,7 @@ public interface Field {
      * @param bytes serialized form
      * @return the new field element, or null if construction fails
      */
-    FieldElement newElementFromBytes(byte[] bytes);
+    FieldElement deserializeElementFromBytes(byte[] bytes);
 
     /**
      * Gets the size in bytes of an element

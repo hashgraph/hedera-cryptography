@@ -51,53 +51,53 @@ class BLS12381GroupTests {
 
     @ParameterizedTest()
     @MethodSource("groups")
-    @DisplayName("newElementFromSeed with unique seeds produces unique results")
-    void newElementFromSeedUnique(final Group group) {
-        final GroupElement randomElement1 = group.newElementFromSeed(
+    @DisplayName("randomElementFromSeed with unique seeds produces unique results")
+    void randomElementFromSeedUnique(final Group group) {
+        final GroupElement randomElement1 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final GroupElement randomElement2 = group.newElementFromSeed(
+        final GroupElement randomElement2 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         assertTrue(randomElement1.isValid(), "randomElement1 should be valid");
         assertTrue(randomElement2.isValid(), "randomElement2 should be valid");
         assertNotEquals(randomElement1, randomElement2, "random elements shouldn't be equal");
-        assertNotEquals(randomElement1, group.newOneElement(), "random element 1 shouldn't equal identity");
-        assertNotEquals(randomElement2, group.newOneElement(), "random element 2 shouldn't equal identity");
+        assertNotEquals(randomElement1, group.oneElement(), "random element 1 shouldn't equal identity");
+        assertNotEquals(randomElement2, group.oneElement(), "random element 2 shouldn't equal identity");
     }
 
     @ParameterizedTest()
     @MethodSource("groups")
-    @DisplayName("newElementFromSeed from same seed are equal")
-    void newElementFromSeedDeterministic(final Group group) {
+    @DisplayName("randomElementFromSeed from same seed are equal")
+    void randomElementFromSeedDeterministic(final Group group) {
         final byte[] seed = RandomUtils.randomByteArray(random, group.getSeedSize());
 
-        assertEquals(group.newElementFromSeed(seed), group.newElementFromSeed(seed),
+        assertEquals(group.randomElement(seed), group.randomElement(seed),
                 "elements from the same seed should be equal");
     }
 
     @ParameterizedTest()
     @MethodSource("groups")
-    @DisplayName("newElementFromSeed with bad seed fails")
-    void newElementFromBadSeed(final Group group) {
+    @DisplayName("randomElementFromSeed with bad seed fails")
+    void randomElementFromBadSeed(final Group group) {
         final byte[] smallSeed = RandomUtils.randomByteArray(random, group.getSeedSize() - 1);
         final byte[] largeSeed = RandomUtils.randomByteArray(random, group.getSeedSize() + 1);
 
-        assertThrows(IllegalArgumentException.class, () -> group.newElementFromSeed(smallSeed));
-        assertThrows(IllegalArgumentException.class, () -> group.newElementFromSeed(largeSeed));
+        assertThrows(IllegalArgumentException.class, () -> group.randomElement(smallSeed));
+        assertThrows(IllegalArgumentException.class, () -> group.randomElement(largeSeed));
     }
 
     @ParameterizedTest()
     @MethodSource("groups")
-    @DisplayName("newElementFromBytes success")
-    void newElementFromBytesSuccess(final Group group) {
+    @DisplayName("deserializeElementFromBytes success")
+    void deserializeElementFromBytesSuccess(final Group group) {
         final byte[] seed = RandomUtils.randomByteArray(random, group.getSeedSize());
 
-        final GroupElement randomElementUncompressed = group.newElementFromSeed(seed);
-        final GroupElement randomElementCompressed = group.newElementFromSeed(seed).compress();
+        final GroupElement randomElementUncompressed = group.randomElement(seed);
+        final GroupElement randomElementCompressed = group.randomElement(seed).compress();
 
-        final GroupElement fromUncompressedBytes = group.newElementFromBytes(
+        final GroupElement fromUncompressedBytes = group.deserializeElementFromBytes(
                 randomElementUncompressed.toBytes());
-        final GroupElement fromCompressedBytes = group.newElementFromBytes(
+        final GroupElement fromCompressedBytes = group.deserializeElementFromBytes(
                 randomElementCompressed.toBytes());
 
         assertNotEquals(null, fromUncompressedBytes, "valid element should be returned");
@@ -107,33 +107,33 @@ class BLS12381GroupTests {
 
     @ParameterizedTest()
     @MethodSource("groups")
-    @DisplayName("newElementFromBytes with wrong byte size")
-    void newElementFromWrongBytesSize(final Group group) {
+    @DisplayName("deserializeElementFromBytes with wrong byte size")
+    void deserializeElementFromWrongBytesSize(final Group group) {
         final byte[] wrongSizeCompressedElementBytes = new byte[group.getCompressedSize() - 1];
         final byte[] wrongSizeUncompressedElementBytes = new byte[group.getUncompressedSize() - 1];
 
         Arrays.fill(wrongSizeCompressedElementBytes, (byte) 0xFF);
         Arrays.fill(wrongSizeUncompressedElementBytes, (byte) 0xFF);
 
-        assertNull(group.newElementFromBytes(wrongSizeCompressedElementBytes),
+        assertNull(group.deserializeElementFromBytes(wrongSizeCompressedElementBytes),
                 "Wrong byte size should return null");
-        assertNull(group.newElementFromBytes(wrongSizeUncompressedElementBytes),
+        assertNull(group.deserializeElementFromBytes(wrongSizeUncompressedElementBytes),
                 "Wrong byte size should return null");
     }
 
     @ParameterizedTest()
     @MethodSource("groups")
-    @DisplayName("newElementFromBytes returns null with invalid bytes")
-    void newElementFromInvalidBytes(final Group group) {
+    @DisplayName("deserializeElementFromBytes returns null with invalid bytes")
+    void deserializeElementFromInvalidBytes(final Group group) {
         final byte[] invalidCompressedElementBytes = new byte[group.getCompressedSize()];
         final byte[] invalidUncompressedElementBytes = new byte[group.getUncompressedSize()];
 
         Arrays.fill(invalidCompressedElementBytes, (byte) 0xFF);
         Arrays.fill(invalidUncompressedElementBytes, (byte) 0xFF);
 
-        assertNull(group.newElementFromBytes(invalidCompressedElementBytes),
+        assertNull(group.deserializeElementFromBytes(invalidCompressedElementBytes),
                 "null should be returned from invalid bytes");
-        assertNull(group.newElementFromBytes(invalidUncompressedElementBytes),
+        assertNull(group.deserializeElementFromBytes(invalidUncompressedElementBytes),
                 "null should be returned from invalid bytes");
     }
 
@@ -151,17 +151,17 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("newOneElement produces the same result every time")
     void newOneElementDeterministic(final Group group) {
-        assertTrue(group.newOneElement().isValid(), "identity should be valid");
-        assertEquals(group.newOneElement(), group.newOneElement(), "identity should equal identity");
+        assertTrue(group.oneElement().isValid(), "identity should be valid");
+        assertEquals(group.oneElement(), group.oneElement(), "identity should equal identity");
     }
 
     @ParameterizedTest()
     @MethodSource("groups")
     @DisplayName("divide success")
     void divideSuccess(final Group group) {
-        final GroupElement randomElement1 = group.newElementFromSeed(
+        final GroupElement randomElement1 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final GroupElement randomElement2 = group.newElementFromSeed(
+        final GroupElement randomElement2 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final GroupElement quotient = randomElement1.divide(randomElement2);
@@ -178,11 +178,11 @@ class BLS12381GroupTests {
         final byte[] seed1 = RandomUtils.randomByteArray(random, group.getSeedSize());
         final byte[] seed2 = RandomUtils.randomByteArray(random, group.getSeedSize());
 
-        final GroupElement randomElement1 = group.newElementFromSeed(seed1);
-        final GroupElement randomElement2 = group.newElementFromSeed(seed2);
+        final GroupElement randomElement1 = group.randomElement(seed1);
+        final GroupElement randomElement2 = group.randomElement(seed2);
 
-        final GroupElement randomElement1Compressed = group.newElementFromSeed(seed1).compress();
-        final GroupElement randomElement2Compressed = group.newElementFromSeed(seed2).compress();
+        final GroupElement randomElement1Compressed = group.randomElement(seed1).compress();
+        final GroupElement randomElement2Compressed = group.randomElement(seed2).compress();
 
         final GroupElement quotient = randomElement1.divide(randomElement2);
         final GroupElement quotientCompressed = randomElement1Compressed.divide(randomElement2Compressed);
@@ -203,7 +203,7 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("divide with null arguments throws error")
     void divideFailure(final Group group) {
-        final GroupElement randomElement = group.newElementFromSeed(
+        final GroupElement randomElement = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
         assertThrows(BLS12381Exception.class, () -> randomElement.divide(null),
                 "Null argument should cause error");
@@ -213,10 +213,10 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("Dividing by identity doesn't change element")
     void divideByIdentity(final Group group) {
-        final GroupElement randomElement = group.newElementFromSeed(
+        final GroupElement randomElement = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
-        final GroupElement quotient = randomElement.divide(group.newOneElement());
+        final GroupElement quotient = randomElement.divide(group.oneElement());
 
         assertTrue(quotient.isValid(), "quotient should be valid");
         assertEquals(randomElement, quotient, "dividing by identity shouldn't have an effect");
@@ -226,9 +226,9 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("divide produces the same result every time for identical inputs")
     void divideDeterministic(final Group group) {
-        final GroupElement randomElement1 = group.newElementFromSeed(
+        final GroupElement randomElement1 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final GroupElement randomElement2 = group.newElementFromSeed(
+        final GroupElement randomElement2 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final GroupElement quotient1 = randomElement1.divide(randomElement2);
@@ -243,9 +243,9 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("multiply success")
     void multiplySuccess(final Group group) {
-        final GroupElement randomElement1 = group.newElementFromSeed(
+        final GroupElement randomElement1 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final GroupElement randomElement2 = group.newElementFromSeed(
+        final GroupElement randomElement2 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final GroupElement product = randomElement1.multiply(randomElement2);
@@ -262,11 +262,11 @@ class BLS12381GroupTests {
         final byte[] seed1 = RandomUtils.randomByteArray(random, group.getSeedSize());
         final byte[] seed2 = RandomUtils.randomByteArray(random, group.getSeedSize());
 
-        final GroupElement randomElement1 = group.newElementFromSeed(seed1);
-        final GroupElement randomElement2 = group.newElementFromSeed(seed2);
+        final GroupElement randomElement1 = group.randomElement(seed1);
+        final GroupElement randomElement2 = group.randomElement(seed2);
 
-        final GroupElement randomElement1Compressed = group.newElementFromSeed(seed1).compress();
-        final GroupElement randomElement2Compressed = group.newElementFromSeed(seed2).compress();
+        final GroupElement randomElement1Compressed = group.randomElement(seed1).compress();
+        final GroupElement randomElement2Compressed = group.randomElement(seed2).compress();
 
         final GroupElement product = randomElement1.multiply(randomElement2);
         final GroupElement productCompressed = randomElement1Compressed.multiply(randomElement2Compressed);
@@ -286,7 +286,7 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("multiply with null arguments throws error")
     void multiplyFailure(final Group group) {
-        final GroupElement randomElement = group.newElementFromSeed(
+        final GroupElement randomElement = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         assertThrows(BLS12381Exception.class, () -> randomElement.multiply(null),
@@ -297,10 +297,10 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("Multiplying by identity doesn't change element")
     void multiplyByIdentity(final Group group) {
-        final GroupElement randomElement = group.newElementFromSeed(
+        final GroupElement randomElement = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
-        final GroupElement product = randomElement.multiply(group.newOneElement());
+        final GroupElement product = randomElement.multiply(group.oneElement());
 
         assertTrue(product.isValid(), "product should be valid");
         assertEquals(randomElement, product, "multiplying by identity shouldn't have an effect");
@@ -310,9 +310,9 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("multiply produces the same result every time for identical inputs")
     void multiplyDeterministic(final Group group) {
-        final GroupElement randomElement1 = group.newElementFromSeed(
+        final GroupElement randomElement1 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final GroupElement randomElement2 = group.newElementFromSeed(
+        final GroupElement randomElement2 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final GroupElement product1 = randomElement1.multiply(randomElement2);
@@ -327,9 +327,9 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("multiply produces the same result when swapping operands")
     void multiplyCommutative(final Group group) {
-        final GroupElement randomElement1 = group.newElementFromSeed(
+        final GroupElement randomElement1 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final GroupElement randomElement2 = group.newElementFromSeed(
+        final GroupElement randomElement2 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final GroupElement product1 = randomElement1.multiply(randomElement2);
@@ -344,9 +344,9 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("Multiply negates divide")
     void multiplyNegatesDivide(final Group group) {
-        final GroupElement randomElement1 = group.newElementFromSeed(
+        final GroupElement randomElement1 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final GroupElement randomElement2 = group.newElementFromSeed(
+        final GroupElement randomElement2 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final GroupElement quotient = randomElement1.divide(randomElement2);
@@ -361,9 +361,9 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("Divide negates multiply")
     void divideNegatesMultiply(final Group group) {
-        final GroupElement randomElement1 = group.newElementFromSeed(
+        final GroupElement randomElement1 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final GroupElement randomElement2 = group.newElementFromSeed(
+        final GroupElement randomElement2 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final GroupElement product = randomElement1.multiply(randomElement2);
@@ -378,11 +378,11 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("batchMultiply success")
     void batchMultiplySuccess(final Group group) {
-        final GroupElement randomElement1 = group.newElementFromSeed(
+        final GroupElement randomElement1 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final GroupElement randomElement2 = group.newElementFromSeed(
+        final GroupElement randomElement2 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final GroupElement identityElement = group.newOneElement();
+        final GroupElement identityElement = group.oneElement();
 
         final Collection<GroupElement> elements = Arrays.asList(
                 randomElement1, randomElement2, identityElement);
@@ -407,13 +407,13 @@ class BLS12381GroupTests {
         final byte[] seed2 = RandomUtils.randomByteArray(random, group.getSeedSize());
         final byte[] seed3 = RandomUtils.randomByteArray(random, group.getSeedSize());
 
-        final GroupElement randomElement1 = group.newElementFromSeed(seed1);
-        final GroupElement randomElement2 = group.newElementFromSeed(seed2);
-        final GroupElement randomElement3 = group.newElementFromSeed(seed3);
+        final GroupElement randomElement1 = group.randomElement(seed1);
+        final GroupElement randomElement2 = group.randomElement(seed2);
+        final GroupElement randomElement3 = group.randomElement(seed3);
 
-        final GroupElement randomElement1Compressed = group.newElementFromSeed(seed1).compress();
-        final GroupElement randomElement2Compressed = group.newElementFromSeed(seed2).compress();
-        final GroupElement randomElement3Compressed = group.newElementFromSeed(seed3).compress();
+        final GroupElement randomElement1Compressed = group.randomElement(seed1).compress();
+        final GroupElement randomElement2Compressed = group.randomElement(seed2).compress();
+        final GroupElement randomElement3Compressed = group.randomElement(seed3).compress();
 
         final Collection<GroupElement> elements = Arrays.asList(
                 randomElement1, randomElement2, randomElement3);
@@ -452,7 +452,7 @@ class BLS12381GroupTests {
     @DisplayName("batchMultiply with invalid element")
     void batchMultiplyInvalidElement(final Group group) {
         final Collection<GroupElement> elements = Arrays.asList(
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())), null);
+                group.randomElement(RandomUtils.randomByteArray(random, group.getSeedSize())), null);
 
         assertThrows(BLS12381Exception.class, () -> group.batchMultiply(elements),
                 "invalid element in batch should result in error");
@@ -463,9 +463,9 @@ class BLS12381GroupTests {
     @DisplayName("batchMultiply produces the same result every time for identical inputs")
     void batchMultiplyDeterministic(final Group group) {
         final Collection<GroupElement> elements = Arrays.asList(
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())),
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())),
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())));
+                group.randomElement(RandomUtils.randomByteArray(random, group.getSeedSize())),
+                group.randomElement(RandomUtils.randomByteArray(random, group.getSeedSize())),
+                group.randomElement(RandomUtils.randomByteArray(random, group.getSeedSize())));
 
         final GroupElement product1 = group.batchMultiply(elements);
         final GroupElement product2 = group.batchMultiply(elements);
@@ -479,11 +479,11 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("batchMultiply produces the same result every time for identical inputs")
     void batchMultiplyCommutative(final Group group) {
-        final GroupElement randomElement1 = group.newElementFromSeed(
+        final GroupElement randomElement1 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final GroupElement randomElement2 = group.newElementFromSeed(
+        final GroupElement randomElement2 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final GroupElement randomElement3 = group.newElementFromSeed(
+        final GroupElement randomElement3 = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final Collection<GroupElement> elements1 = Arrays.asList(
@@ -505,11 +505,11 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("power success")
     void powerSuccess(final Group group) {
-        final GroupElement randomElement = group.newElementFromSeed(
+        final GroupElement randomElement = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final GroupElement power =
-                randomElement.power(field.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())));
+                randomElement.power(field.randomElement(RandomUtils.randomByteArray(random, group.getSeedSize())));
 
         assertTrue(power.isValid(), "power should be valid");
         assertNotEquals(randomElement, power, "power shouldn't equal randomElement");
@@ -521,11 +521,11 @@ class BLS12381GroupTests {
     void powerCompressed(final Group group) {
         final byte[] seed = RandomUtils.randomByteArray(random, group.getSeedSize());
 
-        final GroupElement randomElement = group.newElementFromSeed(seed);
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final GroupElement randomElement = group.randomElement(seed);
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
-        final GroupElement randomElementCompressed = group.newElementFromSeed(seed).compress();
+        final GroupElement randomElementCompressed = group.randomElement(seed).compress();
 
         final GroupElement power = randomElement.power(randomScalar);
         final GroupElement powerCompressed = randomElementCompressed.power(randomScalar);
@@ -539,10 +539,10 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("Element to the power of 1")
     void powerOfOne(final Group group) {
-        final GroupElement randomElement = group.newElementFromSeed(
+        final GroupElement randomElement = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
-        final GroupElement power = randomElement.power(field.newOneElement());
+        final GroupElement power = randomElement.power(field.oneElement());
 
         assertTrue(power.isValid(), "power should be valid");
         assertEquals(randomElement, power, "element to the power of 1 should equal itself");
@@ -553,20 +553,20 @@ class BLS12381GroupTests {
     @DisplayName("Element to the power of 0")
     void powerOfZero(final Group group) {
         final GroupElement power =
-                group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize()))
-                        .power(field.newZeroElement());
+                group.randomElement(RandomUtils.randomByteArray(random, group.getSeedSize()))
+                        .power(field.zeroElement());
 
         assertTrue(power.isValid(), "power should be valid");
-        assertEquals(group.newOneElement(), power, "element to the power of 0 should equal identity");
+        assertEquals(group.oneElement(), power, "element to the power of 0 should equal identity");
     }
 
     @ParameterizedTest()
     @MethodSource("groups")
     @DisplayName("power produces the same result every time for identical inputs")
     void powerDeterministic(final Group group) {
-        final GroupElement randomElement = group.newElementFromSeed(
+        final GroupElement randomElement = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
-        final FieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
 
         final GroupElement power1 = randomElement.power(randomScalar);
@@ -609,7 +609,7 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("element equality with null argument returns false")
     void elementEqualsInvalid(final Group group) {
-        assertNotEquals(null, group.newElementFromSeed(RandomUtils.randomByteArray(random, group.getSeedSize())),
+        assertNotEquals(null, group.randomElement(RandomUtils.randomByteArray(random, group.getSeedSize())),
                 "One value being null should return false");
     }
 
@@ -618,9 +618,9 @@ class BLS12381GroupTests {
     void elementEqualsWrongGroup() {
         Group group1 = new BLS12381Group1();
         Group group2 = new BLS12381Group2();
-        GroupElement group1Element = group1.newElementFromSeed(
+        GroupElement group1Element = group1.randomElement(
                 RandomUtils.randomByteArray(random, group1.getSeedSize()));
-        GroupElement group2Element = group2.newElementFromSeed(
+        GroupElement group2Element = group2.randomElement(
                 RandomUtils.randomByteArray(random, group2.getSeedSize()));
 
         assertNotEquals(group1Element, group2Element, "Elements of different groups should not equal one another");
@@ -630,7 +630,7 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("an element equals itself")
     void elementEqualsSelf(final Group group) {
-        GroupElement element = group.newElementFromSeed(
+        GroupElement element = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
         assertEquals(element, element, "an element should equal itself");
     }
@@ -640,8 +640,8 @@ class BLS12381GroupTests {
     @DisplayName("uncompressed elements can be compared with compressed elements")
     void equalsCompressed(final Group group) {
         final byte[] seed = RandomUtils.randomByteArray(random, group.getSeedSize());
-        final GroupElement randomElement = group.newElementFromSeed(seed);
-        final GroupElement randomElementCompressed = group.newElementFromSeed(seed).compress();
+        final GroupElement randomElement = group.randomElement(seed);
+        final GroupElement randomElementCompressed = group.randomElement(seed).compress();
 
         assertTrue(randomElementCompressed.isValid(), "randomElementCompressed should be valid");
         assertEquals(randomElement, randomElementCompressed, "comparison should work regardless of compression");
@@ -652,8 +652,8 @@ class BLS12381GroupTests {
     @DisplayName("compress success")
     void compressSuccess(final Group group) {
         final byte[] seed = RandomUtils.randomByteArray(random, group.getSeedSize());
-        final GroupElement randomElement = group.newElementFromSeed(seed);
-        final GroupElement randomElementCompressed = group.newElementFromSeed(seed).compress();
+        final GroupElement randomElement = group.randomElement(seed);
+        final GroupElement randomElementCompressed = group.randomElement(seed).compress();
 
         assertEquals(group.getUncompressedSize(), randomElement.toBytes().length,
                 "uncompressed element is of unexpected length");
@@ -667,7 +667,7 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("double compression")
     void doubleCompression(final Group group) {
-        final GroupElement doubleCompressedElement = group.newElementFromSeed(
+        final GroupElement doubleCompressedElement = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize())).compress().compress();
 
         assertTrue(doubleCompressedElement.isValid(), "doubleCompressedElement should be valid");
@@ -679,7 +679,7 @@ class BLS12381GroupTests {
     @MethodSource("groups")
     @DisplayName("copy success")
     void copySuccess(final Group group) {
-        final GroupElement randomElement = group.newElementFromSeed(
+        final GroupElement randomElement = group.randomElement(
                 RandomUtils.randomByteArray(random, group.getSeedSize()));
         final GroupElement copiedElement = randomElement.copy();
 

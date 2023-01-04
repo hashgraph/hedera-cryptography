@@ -25,7 +25,7 @@ public class BLS12381Group1 implements Group {
      * {@inheritDoc}
      */
     @Override
-    public GroupElement newOneElement() {
+    public GroupElement oneElement() {
         final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
         final int errorCode;
@@ -40,7 +40,7 @@ public class BLS12381Group1 implements Group {
      * {@inheritDoc}
      */
     @Override
-    public GroupElement newElementFromSeed(final byte[] seed) {
+    public GroupElement randomElement(final byte[] seed) {
         if (seed.length != SEED_SIZE) {
             throw new IllegalArgumentException(String.format("seed must be %d bytes in length", SEED_SIZE));
         }
@@ -60,7 +60,7 @@ public class BLS12381Group1 implements Group {
      */
     @Override
     public GroupElement hashToGroup(final byte[] input) {
-        return newElementFromSeed(Utils.computeSha256(input));
+        return randomElement(Utils.computeSha256(input));
     }
 
     /**
@@ -94,7 +94,7 @@ public class BLS12381Group1 implements Group {
      * {@inheritDoc}
      */
     @Override
-    public GroupElement newElementFromBytes(final byte[] inputBytes) {
+    public GroupElement deserializeElementFromBytes(final byte[] inputBytes) {
         // create the object, but check validity before returning
         final BLS12381Group1Element outputElement = new BLS12381Group1Element(inputBytes, this);
 
