@@ -396,8 +396,9 @@ class BLS12381ScalarTests {
     void scalarDivideByZero() {
         final FieldElement randomScalar = field.randomElement(
                 TestUtils.randomByteArray(random, field.getSeedSize()));
+        final FieldElement zero = field.zeroElement();
 
-        assertThrows(BLS12381Exception.class, () -> randomScalar.divide(field.zeroElement()),
+        assertThrows(BLS12381Exception.class, () -> randomScalar.divide(zero),
                 "Dividing by zero should cause error");
     }
 

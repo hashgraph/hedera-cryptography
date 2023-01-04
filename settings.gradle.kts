@@ -22,6 +22,7 @@ dependencyResolutionManagement {
 
             version("slf4j-version", "2.0.0")
             version("log4j-version", "2.17.2")
+            version("commons-lang3-version", "3.12.0")
 
             // Define the individual libraries
             library("resource-loader", "com.goterl", "resource-loader").versionRef("resource-loader-version")
@@ -32,6 +33,7 @@ dependencyResolutionManagement {
             // Slf4j Bundle
             library("slf4j-api", "org.slf4j", "slf4j-api").versionRef("slf4j-version")
             library("slf4j-nop", "org.slf4j", "slf4j-nop").versionRef("slf4j-version")
+            library("commons-lang3", "org.apache.commons", "commons-lang3").versionRef("commons-lang3-version")
 
             bundle("logging-api", listOf("log4j-api", "slf4j-api"))
             bundle("logging-impl", listOf("log4j-core", "slf4j-nop"))

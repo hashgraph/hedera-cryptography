@@ -1,5 +1,7 @@
 package com.hedera.platform.bls;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import java.util.Arrays;
 
 /**
@@ -172,6 +174,15 @@ public class BLS12381Group2Element implements GroupElement {
         }
 
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder()
+                .append(groupElement)
+                .append(group)
+                .append(compressed)
+                .build();
     }
 
     @Override
