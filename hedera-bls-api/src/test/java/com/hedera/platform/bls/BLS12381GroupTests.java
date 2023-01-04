@@ -205,7 +205,7 @@ class BLS12381GroupTests {
     void divideFailure(final Group group) {
         final GroupElement randomElement = group.randomElement(
                 TestUtils.randomByteArray(random, group.getSeedSize()));
-        assertThrows(BLS12381Exception.class, () -> randomElement.divide(null),
+        assertThrows(IllegalArgumentException.class, () -> randomElement.divide(null),
                 "Null argument should cause error");
     }
 
@@ -289,7 +289,7 @@ class BLS12381GroupTests {
         final GroupElement randomElement = group.randomElement(
                 TestUtils.randomByteArray(random, group.getSeedSize()));
 
-        assertThrows(BLS12381Exception.class, () -> randomElement.multiply(null),
+        assertThrows(IllegalArgumentException.class, () -> randomElement.multiply(null),
                 "Null argument should cause error");
     }
 
@@ -454,7 +454,7 @@ class BLS12381GroupTests {
         final Collection<GroupElement> elements = Arrays.asList(
                 group.randomElement(TestUtils.randomByteArray(random, group.getSeedSize())), null);
 
-        assertThrows(BLS12381Exception.class, () -> group.batchMultiply(elements),
+        assertThrows(IllegalArgumentException.class, () -> group.batchMultiply(elements),
                 "invalid element in batch should result in error");
     }
 

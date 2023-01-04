@@ -44,6 +44,10 @@ public final class BLS12381BilinearMap implements BilinearMap {
             final GroupElement signatureElement2,
             final GroupElement keyElement2) {
 
+        if (signatureElement1 == null || keyElement1 == null || signatureElement2 == null || keyElement2 == null) {
+            throw new IllegalArgumentException("all arguments must be valid");
+        }
+
         return BLS12381Bindings.comparePairing(
                 (BLS12381Group1Element) signatureElement1,
                 (BLS12381Group2Element) keyElement1,
@@ -56,6 +60,11 @@ public final class BLS12381BilinearMap implements BilinearMap {
      */
     @Override
     public byte[] displayPairing(final GroupElement signatureElement, final GroupElement keyElement) {
+        if (signatureElement == null || keyElement == null) {
+            throw new IllegalArgumentException("all arguments must be valid");
+        }
+
+        // display output is always this size
         final byte[] output = new byte[1249];
 
         final int errorCode;

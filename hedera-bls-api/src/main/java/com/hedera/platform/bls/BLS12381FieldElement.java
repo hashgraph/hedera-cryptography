@@ -25,6 +25,10 @@ public class BLS12381FieldElement implements FieldElement {
 	 * 		the field this element is in
 	 */
 	public BLS12381FieldElement(final byte[] fieldElement, final BLS12381Field field) {
+		if (fieldElement == null || field == null) {
+			throw new IllegalArgumentException("all arguments must be valid");
+		}
+
 		this.fieldElement = fieldElement;
 		this.field = field;
 	}

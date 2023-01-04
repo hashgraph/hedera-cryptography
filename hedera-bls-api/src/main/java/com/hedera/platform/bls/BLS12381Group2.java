@@ -72,6 +72,10 @@ public class BLS12381Group2 implements Group {
 			throw new IllegalArgumentException("Empty collection is invalid");
 		}
 
+		if (elements.contains(null)) {
+			throw new IllegalArgumentException("invalid element in collection");
+		}
+
 		final BLS12381Group2Element[] elementArray = new BLS12381Group2Element[elements.size()];
 
 		int count = 0;

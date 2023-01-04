@@ -77,13 +77,17 @@ class BLS12381PairingTests {
         final GroupElement group2Element = group2.randomElement(
                 TestUtils.randomByteArray(random, group2.getSeedSize()));
 
-        assertFalse(bilinearMap.comparePairing(null, group2Element, group1Element, group2Element),
+        assertThrows(IllegalArgumentException.class, () -> bilinearMap.comparePairing(
+                        null, group2Element, group1Element, group2Element),
                 "Pairing comparison should fail with a null element");
-        assertFalse(bilinearMap.comparePairing(group1Element, null, group1Element, group2Element),
+        assertThrows(IllegalArgumentException.class, () -> bilinearMap.comparePairing(
+                        group1Element, null, group1Element, group2Element),
                 "Pairing comparison should fail with a null element");
-        assertFalse(bilinearMap.comparePairing(group1Element, group2Element, null, group2Element),
+        assertThrows(IllegalArgumentException.class, () -> bilinearMap.comparePairing(
+                        group1Element, group2Element, null, group2Element),
                 "Pairing comparison should fail with a null element");
-        assertFalse(bilinearMap.comparePairing(group1Element, group2Element, group1Element, null),
+        assertThrows(IllegalArgumentException.class, () -> bilinearMap.comparePairing(
+                        group1Element, group2Element, group1Element, null),
                 "Pairing comparison should fail with a null element");
     }
 
@@ -150,9 +154,9 @@ class BLS12381PairingTests {
         final GroupElement group2Element = group2.randomElement(
                 TestUtils.randomByteArray(random, group2.getSeedSize()));
 
-        assertThrows(BLS12381Exception.class, () -> bilinearMap.displayPairing(null, group2Element),
+        assertThrows(IllegalArgumentException.class, () -> bilinearMap.displayPairing(null, group2Element),
                 "Pairing display should fail with a null element");
-        assertThrows(BLS12381Exception.class, () -> bilinearMap.displayPairing(group1Element, null),
+        assertThrows(IllegalArgumentException.class, () -> bilinearMap.displayPairing(group1Element, null),
                 "Pairing display should fail with a null element");
     }
 

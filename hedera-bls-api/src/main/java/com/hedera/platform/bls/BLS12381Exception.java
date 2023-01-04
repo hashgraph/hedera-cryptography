@@ -18,9 +18,6 @@ public class BLS12381Exception extends RuntimeException {
 		errorCodeMap.put(2, "TryFromSlice");
 		errorCodeMap.put(3, "TryInto");
 		errorCodeMap.put(4, "InputLength");
-		errorCodeMap.put(5, "Deserialization");
-		errorCodeMap.put(6, "Computation");
-		errorCodeMap.put(7, "ArraySize");
 	}
 
 	/**

@@ -29,6 +29,10 @@ public class BLS12381Group1Element implements GroupElement {
      * @param group        the group this element is in
      */
     BLS12381Group1Element(final byte[] groupElement, final BLS12381Group1 group) {
+        if (groupElement == null || group == null) {
+            throw new IllegalArgumentException("all arguments must be valid");
+        }
+
         this.groupElement = groupElement;
         this.group = group;
         this.compressed = groupElement.length == group.getCompressedSize();
@@ -40,6 +44,10 @@ public class BLS12381Group1Element implements GroupElement {
      * @param other the object being copied
      */
     public BLS12381Group1Element(final BLS12381Group1Element other) {
+        if (other == null) {
+            throw new IllegalArgumentException("other cannot be null");
+        }
+
         this.groupElement = Arrays.copyOf(other.groupElement, other.groupElement.length);
         this.group = other.group;
         this.compressed = other.compressed;
@@ -66,6 +74,10 @@ public class BLS12381Group1Element implements GroupElement {
      */
     @Override
     public GroupElement power(final FieldElement exponent) {
+        if (exponent == null) {
+            throw new IllegalArgumentException("exponent cannot be null");
+        }
+
         final byte[] output = new byte[group.getUncompressedSize()];
 
         final int errorCode;
@@ -81,6 +93,10 @@ public class BLS12381Group1Element implements GroupElement {
      */
     @Override
     public GroupElement multiply(final GroupElement other) {
+        if (other == null) {
+            throw new IllegalArgumentException("other cannot be null");
+        }
+
         final byte[] output = new byte[group.getUncompressedSize()];
 
         final int errorCode;
@@ -96,6 +112,10 @@ public class BLS12381Group1Element implements GroupElement {
      */
     @Override
     public GroupElement divide(final GroupElement other) {
+        if (other == null) {
+            throw new IllegalArgumentException("other cannot be null");
+        }
+
         final byte[] output = new byte[group.getUncompressedSize()];
 
         final int errorCode;
