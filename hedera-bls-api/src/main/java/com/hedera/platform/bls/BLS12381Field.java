@@ -85,7 +85,7 @@ public class BLS12381Field implements DistCryptField {
 	public DistCryptFieldElement newElementFromBytes(final byte[] bytes) {
 		final BLS12381FieldElement outputElement = new BLS12381FieldElement(bytes, this);
 
-		if (!outputElement.checkElementValidity()) {
+		if (!outputElement.isValid()) {
 			return null;
 		}
 

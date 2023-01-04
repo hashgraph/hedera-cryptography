@@ -46,8 +46,8 @@ class BLS12381ScalarTests {
         final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        assertTrue(randomScalar1.checkElementValidity(), "randomScalar1 should be valid");
-        assertTrue(randomScalar2.checkElementValidity(), "randomScalar2 should be valid");
+        assertTrue(randomScalar1.isValid(), "randomScalar1 should be valid");
+        assertTrue(randomScalar2.isValid(), "randomScalar2 should be valid");
         assertNotEquals(randomScalar1, randomScalar2, "random scalars shouldn't be equal");
         assertNotEquals(randomScalar1, field.newOneElement(), "random scalar shouldn't equal 1");
         assertNotEquals(randomScalar1, field.newZeroElement(), "random scalar shouldn't equal 0");
@@ -81,8 +81,8 @@ class BLS12381ScalarTests {
 
         assertNotEquals(scalar1, scalar2, "scalars shouldn't be equal");
 
-        assertTrue(scalar1.checkElementValidity(), "scalar1 should be valid");
-        assertTrue(scalar2.checkElementValidity(), "scalar2 should be valid");
+        assertTrue(scalar1.isValid(), "scalar1 should be valid");
+        assertTrue(scalar2.isValid(), "scalar2 should be valid");
         assertNotEquals(scalar1, field.newOneElement(), "scalar from int shouldn't equal 1");
         assertNotEquals(scalar1, field.newZeroElement(), "scalar from int shouldn't equal 0");
         assertNotEquals(scalar2, field.newOneElement(), "scalar from int shouldn't equal 1");
@@ -92,8 +92,8 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("newScalarFromInt succeeds with min and max int values")
     void newScalarFromIntExtremes() {
-        assertTrue(field.newElement(Integer.MAX_VALUE).checkElementValidity(), "max scalar should be valid");
-        assertTrue(field.newElement(Integer.MIN_VALUE).checkElementValidity(), "min scalar should be valid");
+        assertTrue(field.newElement(Integer.MAX_VALUE).isValid(), "max scalar should be valid");
+        assertTrue(field.newElement(Integer.MIN_VALUE).isValid(), "min scalar should be valid");
     }
 
     @Test
@@ -105,7 +105,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("newZeroScalar produces the same result every time")
     void newZeroScalarDeterministic() {
-        assertTrue(field.newZeroElement().checkElementValidity(), "0 scalar should be valid");
+        assertTrue(field.newZeroElement().isValid(), "0 scalar should be valid");
         assertEquals(field.newZeroElement(), field.newZeroElement(), "0 should equal 0");
         assertEquals(field.newZeroElement(), field.newElement(0), "0 should equal 0");
     }
@@ -580,7 +580,7 @@ class BLS12381ScalarTests {
     @DisplayName("checkScalarValidity valid")
     void checkScalarValidityValid() {
         assertTrue(field.newElementFromSeed(
-                        RandomUtils.randomByteArray(random, field.getSeedSize())).checkElementValidity(),
+                        RandomUtils.randomByteArray(random, field.getSeedSize())).isValid(),
                 "scalar should be valid");
     }
 
@@ -592,6 +592,6 @@ class BLS12381ScalarTests {
 
         final DistCryptFieldElement invalidElement = new BLS12381FieldElement(invalidElementBytes, new BLS12381Field());
 
-        assertFalse(invalidElement.checkElementValidity(), "scalar should be invalid");
+        assertFalse(invalidElement.isValid(), "scalar should be invalid");
     }
 }

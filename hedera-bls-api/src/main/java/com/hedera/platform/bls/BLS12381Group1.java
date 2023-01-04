@@ -98,7 +98,7 @@ public class BLS12381Group1 implements DistCryptGroup {
         // create the object, but check validity before returning
         final BLS12381Group1Element outputElement = new BLS12381Group1Element(inputBytes, this);
 
-        if (!outputElement.checkElementValidity()) {
+        if (!outputElement.isValid()) {
             return null;
         }
 

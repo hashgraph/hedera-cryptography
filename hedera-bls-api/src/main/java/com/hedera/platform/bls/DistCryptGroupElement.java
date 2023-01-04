@@ -66,5 +66,5 @@ public interface DistCryptGroupElement {
      *
      * @return true of the element bytes are valid, otherwise false
      */
-    boolean checkElementValidity();
+    boolean isValid();
 }

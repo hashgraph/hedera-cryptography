@@ -175,7 +175,7 @@ public class BLS12381Group2Element implements DistCryptGroupElement {
      * {@inheritDoc}
      */
     @Override
-    public boolean checkElementValidity() {
+    public boolean isValid() {
         return (groupElement.length == group.getCompressedSize() || groupElement.length == group.getUncompressedSize())
                 && BLS12381Bindings.checkG2Validity(this);
     }

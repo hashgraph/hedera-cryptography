@@ -144,7 +144,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean checkElementValidity() {
+	public boolean isValid() {
 		return fieldElement.length == field.getElementSize() && BLS12381Bindings.checkScalarValidity(this);
 	}
 
