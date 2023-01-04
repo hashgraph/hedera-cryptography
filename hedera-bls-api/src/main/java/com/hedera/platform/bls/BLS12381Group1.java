@@ -95,12 +95,6 @@ public class BLS12381Group1 implements DistCryptGroup {
      */
     @Override
     public DistCryptGroupElement newElementFromBytes(final byte[] inputBytes) {
-        if (inputBytes.length != COMPRESSED_SIZE && inputBytes.length != UNCOMPRESSED_SIZE) {
-            throw new IllegalArgumentException(
-                    String.format("Byte representation of a group 1 element should have compressed length %s, " +
-                            "or uncompressed length %s", COMPRESSED_SIZE, UNCOMPRESSED_SIZE));
-        }
-
         // create the object, but check validity before returning
         final BLS12381Group1Element outputElement = new BLS12381Group1Element(inputBytes, this);
 

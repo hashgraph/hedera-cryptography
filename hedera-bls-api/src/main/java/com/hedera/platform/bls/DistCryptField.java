@@ -43,9 +43,21 @@ public interface DistCryptField {
 	 *
 	 * @param bytes
 	 * 		serialized form
-	 * @return the new field element
-	 * @throws IOException
-	 * 		if the input bytes can't be deserialized into a valid element
+	 * @return the new field element, or null if construction fails
 	 */
-	DistCryptFieldElement newElementFromBytes(byte[] bytes) throws IOException;
+	DistCryptFieldElement newElementFromBytes(byte[] bytes);
+
+	/**
+	 * Gets the size in bytes of an element
+	 *
+	 * @return the size of an element
+	 */
+	int getElementSize();
+
+	/**
+	 * Gets the size in bytes of the seed necessary to generate a new element
+	 *
+	 * @return the size of a seed needed to generate a new element
+	 */
+	int getSeedSize();
 }

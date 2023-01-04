@@ -31,16 +31,7 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
     BLS12381Group1Element(final byte[] groupElement, final BLS12381Group1 group) {
         this.groupElement = groupElement;
         this.group = group;
-
-        if (groupElement.length == group.getCompressedSize()) {
-            this.compressed = true;
-        } else if (groupElement.length == group.getUncompressedSize()) {
-            this.compressed = false;
-        } else {
-            throw new IllegalArgumentException(String.format("Size of provided group element [%d] is neither the size" +
-                            " of a compressed element [%d], nor an uncompressed element [%d]",
-                    groupElement.length, group.getCompressedSize(), group.getUncompressedSize()));
-        }
+        this.compressed = groupElement.length == group.getCompressedSize();
     }
 
     /**
@@ -185,6 +176,7 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
      */
     @Override
     public boolean checkElementValidity() {
-        return BLS12381Bindings.checkG1Validity(this);
+        return (groupElement.length == group.getCompressedSize() || groupElement.length == group.getUncompressedSize())
+                && BLS12381Bindings.checkG1Validity(this);
     }
 }

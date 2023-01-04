@@ -115,10 +115,10 @@ class BLS12381GroupTests {
         Arrays.fill(wrongSizeCompressedElementBytes, (byte) 0xFF);
         Arrays.fill(wrongSizeUncompressedElementBytes, (byte) 0xFF);
 
-        assertThrows(IllegalArgumentException.class, () -> group.newElementFromBytes(wrongSizeCompressedElementBytes),
-                "Wrong byte size should throw illegal argument exception");
-        assertThrows(IllegalArgumentException.class, () -> group.newElementFromBytes(wrongSizeUncompressedElementBytes),
-                "Wrong byte size should throw illegal argument exception");
+        assertNull(group.newElementFromBytes(wrongSizeCompressedElementBytes),
+                "Wrong byte size should return null");
+        assertNull(group.newElementFromBytes(wrongSizeUncompressedElementBytes),
+                "Wrong byte size should return null");
     }
 
     @ParameterizedTest()

@@ -1,7 +1,5 @@
 package com.hedera.platform.bls;
 
-import java.io.IOException;
-
 /**
  * The finite field of the BLS 12-381 curve family
  */
@@ -84,18 +82,30 @@ public class BLS12381Field implements DistCryptField {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptFieldElement newElementFromBytes(final byte[] bytes) throws IOException {
-		if (bytes.length != ELEMENT_BYTE_SIZE) {
-			throw new IOException("input bytes are of wrong length");
-		}
-
+	public DistCryptFieldElement newElementFromBytes(final byte[] bytes) {
 		final BLS12381FieldElement outputElement = new BLS12381FieldElement(bytes, this);
 
-		if (!BLS12381Bindings.checkScalarValidity(outputElement)) {
-			throw new BLS12381Exception("checkScalarValidity", 1);
+		if (!outputElement.checkElementValidity()) {
+			return null;
 		}
 
 		return outputElement;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getElementSize() {
+		return ELEMENT_BYTE_SIZE;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getSeedSize() {
+		return SEED_SIZE;
 	}
 
 	@Override

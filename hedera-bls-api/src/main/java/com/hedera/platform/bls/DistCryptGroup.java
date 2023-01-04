@@ -1,6 +1,5 @@
 package com.hedera.platform.bls;
 
-import java.io.IOException;
 import java.util.Collection;
 
 public interface DistCryptGroup {

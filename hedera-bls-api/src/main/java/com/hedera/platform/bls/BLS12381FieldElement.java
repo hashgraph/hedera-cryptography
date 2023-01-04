@@ -50,6 +50,10 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 */
 	@Override
 	public DistCryptFieldElement add(final DistCryptFieldElement other) {
+		if (other == null) {
+			throw new IllegalArgumentException("other cannot be null");
+		}
+
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
@@ -65,6 +69,10 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 */
 	@Override
 	public DistCryptFieldElement subtract(final DistCryptFieldElement other) {
+		if (other == null) {
+			throw new IllegalArgumentException("other cannot be null");
+		}
+
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
@@ -80,6 +88,10 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 */
 	@Override
 	public DistCryptFieldElement multiply(final DistCryptFieldElement other) {
+		if (other == null) {
+			throw new IllegalArgumentException("other cannot be null");
+		}
+
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
@@ -95,6 +107,10 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 */
 	@Override
 	public DistCryptFieldElement divide(final DistCryptFieldElement other) {
+		if (other == null) {
+			throw new IllegalArgumentException("other cannot be null");
+		}
+
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
@@ -110,6 +126,10 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 */
 	@Override
 	public DistCryptFieldElement power(final BigInteger exponent) {
+		if (exponent == null) {
+			throw new IllegalArgumentException("exponent cannot be null");
+		}
+
 		final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
@@ -118,6 +138,14 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 		}
 
 		return new BLS12381FieldElement(output, field);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean checkElementValidity() {
+		return fieldElement.length == field.getElementSize() && BLS12381Bindings.checkScalarValidity(this);
 	}
 
 	@Override

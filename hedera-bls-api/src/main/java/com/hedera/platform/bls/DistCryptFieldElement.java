@@ -64,4 +64,11 @@ public interface DistCryptFieldElement {
 	 * @return a new field element which is the power
 	 */
 	DistCryptFieldElement power(final BigInteger e2);
+
+	/**
+	 * Checks whether the element bytes are valid
+	 *
+	 * @return true of the element bytes are valid, otherwise false
+	 */
+	boolean checkElementValidity();
 }
