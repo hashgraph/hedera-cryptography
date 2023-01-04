@@ -3,13 +3,13 @@ package com.hedera.platform.bls;
 /**
  * Interface representing a cryptographic group element
  */
-public interface DistCryptGroupElement {
+public interface GroupElement {
     /**
      * Gets the group of the element
      *
      * @return the element's group
      */
-    DistCryptGroup getGroup();
+    Group getGroup();
 
     /**
      * Serializes the group elements to a byte array
@@ -24,7 +24,7 @@ public interface DistCryptGroupElement {
      * @param exponent the field element exponent
      * @return a new group element which is this group element to the power of a field element
      */
-    DistCryptGroupElement power(final DistCryptFieldElement exponent);
+    GroupElement power(final FieldElement exponent);
 
     /**
      * Multiplies this group element with another
@@ -32,7 +32,7 @@ public interface DistCryptGroupElement {
      * @param other the other group element
      * @return a new group element which is the product of this element and another
      */
-    DistCryptGroupElement multiply(final DistCryptGroupElement other);
+    GroupElement multiply(final GroupElement other);
 
     /**
      * Divides this group element by another
@@ -40,14 +40,14 @@ public interface DistCryptGroupElement {
      * @param other the other group element
      * @return a new group element which is the quotient of this element and another
      */
-    DistCryptGroupElement divide(final DistCryptGroupElement other);
+    GroupElement divide(final GroupElement other);
 
     /**
      * Compresses the group element
      *
      * @return this object, compressed
      */
-    DistCryptGroupElement compress();
+    GroupElement compress();
 
     /**
      * Gets whether the group element is compressed
@@ -59,7 +59,7 @@ public interface DistCryptGroupElement {
     /**
      * {@inheritDoc}
      */
-    DistCryptGroupElement copy();
+    GroupElement copy();
 
     /**
      * Checks whether the element bytes are valid

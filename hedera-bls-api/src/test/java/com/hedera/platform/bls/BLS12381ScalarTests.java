@@ -27,7 +27,7 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("BLS12_381 Scalar Bindings Unit Tests")
+@DisplayName("BLS12_381 Scalar Unit Tests")
 class BLS12381ScalarTests {
     BLS12381Field field;
     Random random;
@@ -41,9 +41,9 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("newRandomScalar with unique seeds produces unique results")
     void newRandomScalarUnique() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertTrue(randomScalar1.isValid(), "randomScalar1 should be valid");
@@ -67,17 +67,20 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("newRandomScalar with bad seed returns error code")
     void newRandomScalarBadSeed() {
-        final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+        final byte[] smallSeed = RandomUtils.randomByteArray(random, field.getSeedSize() - 1);
+        final byte[] largeSeed = RandomUtils.randomByteArray(random, field.getSeedSize() + 1);
 
-        assertNotEquals(0, BLS12381Bindings.newRandomScalar(RandomUtils.randomByteArray(random, 31), output));
-        assertNotEquals(0, BLS12381Bindings.newRandomScalar(RandomUtils.randomByteArray(random, 33), output));
+        assertThrows(IllegalArgumentException.class, () -> field.newElementFromSeed(smallSeed),
+                "small seed should yield null");
+        assertThrows(IllegalArgumentException.class, () -> field.newElementFromSeed(largeSeed),
+                "large seed should yield null");
     }
 
     @Test
     @DisplayName("newScalarFromInt with different integers produces unique results")
     void newScalarFromIntUnique() {
-        final DistCryptFieldElement scalar1 = field.newElement(11);
-        final DistCryptFieldElement scalar2 = field.newElement(33);
+        final FieldElement scalar1 = field.newElement(11);
+        final FieldElement scalar2 = field.newElement(33);
 
         assertNotEquals(scalar1, scalar2, "scalars shouldn't be equal");
 
@@ -127,12 +130,12 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Add modifies scalar")
     void scalarAddSuccess() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement sum = randomScalar1.add(randomScalar2);
+        final FieldElement sum = randomScalar1.add(randomScalar2);
 
         assertNotEquals(null, sum, "sum should be valid");
         assertNotEquals(sum, randomScalar1, "sum shouldn't equal randomScalar1");
@@ -142,7 +145,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarAdd with null argument throws error")
     void scalarAddFailure() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertThrows(IllegalArgumentException.class, () -> randomScalar.add(null),
@@ -152,10 +155,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Adding 1 modifies scalar")
     void scalarAddOne() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement sum = randomScalar.add(field.newOneElement());
+        final FieldElement sum = randomScalar.add(field.newOneElement());
 
         assertNotEquals(null, sum, "sum should be valid");
         assertNotEquals(sum, randomScalar, "adding 1 should have an effect");
@@ -164,10 +167,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Adding 0 doesn't modify scalar")
     void scalarAddZero() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement sum = randomScalar.add(field.newZeroElement());
+        final FieldElement sum = randomScalar.add(field.newZeroElement());
 
         assertNotEquals(null, sum, "sum should be valid");
         assertEquals(sum, randomScalar, "adding 0 shouldn't have an effect");
@@ -176,13 +179,13 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarAdd produces the same result every time for identical inputs")
     void scalarAddDeterministic() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement sum1 = randomScalar1.add(randomScalar2);
-        final DistCryptFieldElement sum2 = randomScalar1.add(randomScalar2);
+        final FieldElement sum1 = randomScalar1.add(randomScalar2);
+        final FieldElement sum2 = randomScalar1.add(randomScalar2);
 
         assertNotEquals(null, sum1, "sum1 should be valid");
         assertNotEquals(null, sum2, "sum2 should be valid");
@@ -192,13 +195,13 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarAdd produces the same result when swapping operands")
     void scalarAddCommutative() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement sum1 = randomScalar1.add(randomScalar2);
-        final DistCryptFieldElement sum2 = randomScalar2.add(randomScalar1);
+        final FieldElement sum1 = randomScalar1.add(randomScalar2);
+        final FieldElement sum2 = randomScalar2.add(randomScalar1);
 
         assertNotEquals(null, sum1, "sum1 should be valid");
         assertNotEquals(null, sum2, "sum2 should be valid");
@@ -208,12 +211,12 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Subtract modifies scalar")
     void scalarSubtractSuccess() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement difference = randomScalar1.subtract(randomScalar2);
+        final FieldElement difference = randomScalar1.subtract(randomScalar2);
 
         assertNotEquals(null, difference, "difference should be valid");
         assertNotEquals(difference, randomScalar1, "difference shouldn't equal randomScalar1");
@@ -223,7 +226,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarSubtract with null arguments throws error")
     void scalarSubtractFailure() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertThrows(IllegalArgumentException.class, () -> randomScalar.subtract(null),
@@ -233,10 +236,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Subtracting 1 modifies scalar")
     void scalarSubtractOne() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement difference = randomScalar.subtract(field.newOneElement());
+        final FieldElement difference = randomScalar.subtract(field.newOneElement());
 
         assertNotEquals(null, difference, "difference should be valid");
         assertNotEquals(difference, randomScalar, "subtracting 1 should have an effect");
@@ -245,10 +248,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Subtracting 0 doesn't modify scalar")
     void scalarSubtractZero() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement difference = randomScalar.subtract(field.newZeroElement());
+        final FieldElement difference = randomScalar.subtract(field.newZeroElement());
 
         assertNotEquals(null, difference, "difference should be valid");
         assertEquals(difference, randomScalar, "subtracting 0 shouldn't have an effect");
@@ -257,13 +260,13 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarSubtract produces the same result every time for identical inputs")
     void scalarSubtractDeterministic() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement difference1 = randomScalar1.subtract(randomScalar2);
-        final DistCryptFieldElement difference2 = randomScalar1.subtract(randomScalar2);
+        final FieldElement difference1 = randomScalar1.subtract(randomScalar2);
+        final FieldElement difference2 = randomScalar1.subtract(randomScalar2);
 
         assertNotEquals(null, difference1, "difference1 should be valid");
         assertNotEquals(null, difference2, "difference2 should be valid");
@@ -273,12 +276,12 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Multiply modifies scalar")
     void scalarMultiplySuccess() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement product = randomScalar1.multiply(randomScalar2);
+        final FieldElement product = randomScalar1.multiply(randomScalar2);
 
         assertNotEquals(null, product, "product should be valid");
         assertNotEquals(product, randomScalar1, "product shouldn't equal randomScalar1");
@@ -288,7 +291,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarMultiply with null arguments throws error")
     void scalarMultiplyFailure() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertThrows(IllegalArgumentException.class, () -> randomScalar.multiply(null),
@@ -298,10 +301,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Multiplying by 1 doesn't modify scalar")
     void scalarMultiplyByOne() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement product = randomScalar.multiply(field.newOneElement());
+        final FieldElement product = randomScalar.multiply(field.newOneElement());
 
         assertNotEquals(null, product, "product should be valid");
         assertEquals(product, randomScalar, "multiplying by 1 shouldn't have an effect");
@@ -310,10 +313,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Multiplying by 0 produces 0")
     void scalarMultiplyByZero() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement product = randomScalar.multiply(field.newZeroElement());
+        final FieldElement product = randomScalar.multiply(field.newZeroElement());
 
         assertNotEquals(null, product, "product should be valid");
         assertEquals(product, field.newZeroElement(), "multiplying by 0 should produce 0");
@@ -322,13 +325,13 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarMultiply produces the same result every time for identical inputs")
     void scalarMultiplyDeterministic() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement product1 = randomScalar1.multiply(randomScalar2);
-        final DistCryptFieldElement product2 = randomScalar1.multiply(randomScalar2);
+        final FieldElement product1 = randomScalar1.multiply(randomScalar2);
+        final FieldElement product2 = randomScalar1.multiply(randomScalar2);
 
         assertNotEquals(null, product1, "product1 should be valid");
         assertNotEquals(null, product2, "product2 should be valid");
@@ -338,13 +341,13 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarMultiply produces the same result when swapping operands")
     void scalarMultiplyCommutative() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement product1 = randomScalar1.multiply(randomScalar2);
-        final DistCryptFieldElement product2 = randomScalar2.multiply(randomScalar1);
+        final FieldElement product1 = randomScalar1.multiply(randomScalar2);
+        final FieldElement product2 = randomScalar2.multiply(randomScalar1);
 
         assertNotEquals(null, product1, "product1 should be valid");
         assertNotEquals(null, product2, "product2 should be valid");
@@ -354,12 +357,12 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Divide modifies scalar")
     void scalarDivideSuccess() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement quotient = randomScalar1.divide(randomScalar2);
+        final FieldElement quotient = randomScalar1.divide(randomScalar2);
 
         assertNotEquals(null, quotient, "quotient should be valid");
         assertNotEquals(quotient, randomScalar1, "quotient shouldn't equal randomScalar1");
@@ -369,7 +372,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarDivide with null arguments throws error")
     void scalarDivideFailure() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertThrows(IllegalArgumentException.class, () -> randomScalar.divide(null),
@@ -379,10 +382,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Dividing by 1 doesn't modify scalar")
     void scalarDivideByOne() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement quotient = randomScalar.divide(field.newOneElement());
+        final FieldElement quotient = randomScalar.divide(field.newOneElement());
 
         assertNotEquals(null, quotient, "quotient should be valid");
         assertEquals(quotient, randomScalar, "dividing by 1 shouldn't have an effect");
@@ -391,7 +394,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Dividing by 0 causes error")
     void scalarDivideByZero() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertThrows(BLS12381Exception.class, () -> randomScalar.divide(field.newZeroElement()),
@@ -401,13 +404,13 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarDivide produces the same result every time for identical inputs")
     void scalarDivideDeterministic() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement quotient1 = randomScalar1.divide(randomScalar2);
-        final DistCryptFieldElement quotient2 = randomScalar1.divide(randomScalar2);
+        final FieldElement quotient1 = randomScalar1.divide(randomScalar2);
+        final FieldElement quotient2 = randomScalar1.divide(randomScalar2);
 
         assertNotEquals(null, quotient1, "quotient1 should be valid");
         assertNotEquals(null, quotient2, "quotient2 should be valid");
@@ -417,10 +420,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Power modifies scalar")
     void scalarPowerSuccess() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement result = randomScalar.power(new BigInteger("99"));
+        final FieldElement result = randomScalar.power(new BigInteger("99"));
 
         assertNotEquals(null, result, "result should be valid");
         assertNotEquals(result, randomScalar, "power shouldn't equal randomScalar");
@@ -429,7 +432,7 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarPower with null arguments throws error")
     void scalarPowerFailure() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         assertThrows(IllegalArgumentException.class, () ->
@@ -440,10 +443,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("A scalar to the power of 1 doesn't modify scalar")
     void scalarPowerByOne() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement result = randomScalar.power(new BigInteger("1"));
+        final FieldElement result = randomScalar.power(new BigInteger("1"));
 
         assertNotEquals(null, result, "result should be valid");
         assertEquals(result, randomScalar, "a scalar to the power of 1 shouldn't have an effect");
@@ -452,10 +455,10 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("A scalar to the power of 0 is 1")
     void scalarPowerByZero() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement result = randomScalar.power(new BigInteger("0"));
+        final FieldElement result = randomScalar.power(new BigInteger("0"));
 
         assertNotEquals(null, result, "result should be valid");
         assertEquals(result, field.newOneElement(), "a scalar to the power of 0 should equal 1");
@@ -464,12 +467,12 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("scalarPower produces the same result every time for identical inputs")
     void scalarPowerDeterministic() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
         final BigInteger bigInt = new BigInteger("77");
 
-        final DistCryptFieldElement result1 = randomScalar.power(bigInt);
-        final DistCryptFieldElement result2 = randomScalar.power(bigInt);
+        final FieldElement result1 = randomScalar.power(bigInt);
+        final FieldElement result2 = randomScalar.power(bigInt);
 
         assertNotEquals(null, result1, "result1 should be valid");
         assertNotEquals(null, result2, "result2 should be valid");
@@ -479,13 +482,13 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Subtract negates add")
     void subtractNegatesAdd() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement sum = randomScalar1.add(randomScalar2);
-        final DistCryptFieldElement difference = sum.subtract(randomScalar2);
+        final FieldElement sum = randomScalar1.add(randomScalar2);
+        final FieldElement difference = sum.subtract(randomScalar2);
 
         assertNotEquals(null, sum, "sum should be valid");
         assertNotEquals(null, difference, "difference should be valid");
@@ -495,13 +498,13 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Add negates subtract")
     void addNegatesSubtract() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement difference = randomScalar1.subtract(randomScalar2);
-        final DistCryptFieldElement sum = difference.add(randomScalar2);
+        final FieldElement difference = randomScalar1.subtract(randomScalar2);
+        final FieldElement sum = difference.add(randomScalar2);
 
         assertNotEquals(null, difference, "difference should be valid");
         assertNotEquals(null, sum, "sum should be valid");
@@ -511,13 +514,13 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("divide negates multiply")
     void divideNegatesMultiply() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement product = randomScalar1.multiply(randomScalar2);
-        final DistCryptFieldElement quotient = product.divide(randomScalar2);
+        final FieldElement product = randomScalar1.multiply(randomScalar2);
+        final FieldElement quotient = product.divide(randomScalar2);
 
         assertNotEquals(null, product, "product should be valid");
         assertNotEquals(null, quotient, "quotient should be valid");
@@ -527,13 +530,13 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Multiply negates divide")
     void multiplyNegatesDivide() {
-        final DistCryptFieldElement randomScalar1 = field.newElementFromSeed(
+        final FieldElement randomScalar1 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
-        final DistCryptFieldElement randomScalar2 = field.newElementFromSeed(
+        final FieldElement randomScalar2 = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement quotient = randomScalar1.divide(randomScalar2);
-        final DistCryptFieldElement product = quotient.multiply(randomScalar2);
+        final FieldElement quotient = randomScalar1.divide(randomScalar2);
+        final FieldElement product = quotient.multiply(randomScalar2);
 
         assertNotEquals(null, quotient, "quotient should be valid");
         assertNotEquals(null, product, "product should be valid");
@@ -543,12 +546,12 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Divide maps to power")
     void divideMapsToPower() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
         // Take scalar to a power of 2
-        final DistCryptFieldElement power = randomScalar.power(new BigInteger("2"));
-        final DistCryptFieldElement quotient = power.divide(randomScalar);
+        final FieldElement power = randomScalar.power(new BigInteger("2"));
+        final FieldElement quotient = power.divide(randomScalar);
 
         assertNotEquals(null, power, "power should be valid");
         assertNotEquals(null, quotient, "quotient should be valid");
@@ -558,11 +561,11 @@ class BLS12381ScalarTests {
     @Test
     @DisplayName("Add maps to multiply")
     void addMapsToMultiply() {
-        final DistCryptFieldElement randomScalar = field.newElementFromSeed(
+        final FieldElement randomScalar = field.newElementFromSeed(
                 RandomUtils.randomByteArray(random, field.getSeedSize()));
 
-        final DistCryptFieldElement sum = randomScalar.add(randomScalar);
-        final DistCryptFieldElement product = randomScalar.multiply(field.newElement(2));
+        final FieldElement sum = randomScalar.add(randomScalar);
+        final FieldElement product = randomScalar.multiply(field.newElement(2));
 
         assertNotEquals(null, sum, "sum should be valid");
         assertNotEquals(null, product, "product should be valid");
@@ -590,7 +593,7 @@ class BLS12381ScalarTests {
         final byte[] invalidElementBytes = new byte[32];
         Arrays.fill(invalidElementBytes, (byte) 0xFF);
 
-        final DistCryptFieldElement invalidElement = new BLS12381FieldElement(invalidElementBytes, new BLS12381Field());
+        final FieldElement invalidElement = new BLS12381FieldElement(invalidElementBytes, new BLS12381Field());
 
         assertFalse(invalidElement.isValid(), "scalar should be invalid");
     }

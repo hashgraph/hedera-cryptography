@@ -5,7 +5,7 @@ import java.util.Arrays;
 /**
  * An element in Group 1 of the BLS 12-381 curve family
  */
-public class BLS12381Group1Element implements DistCryptGroupElement {
+public class BLS12381Group1Element implements GroupElement {
     /**
      * The bytes representation of the element
      */
@@ -49,7 +49,7 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
      * {@inheritDoc}
      */
     @Override
-    public DistCryptGroup getGroup() {
+    public Group getGroup() {
         return group;
     }
 
@@ -65,7 +65,7 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
      * {@inheritDoc}
      */
     @Override
-    public DistCryptGroupElement power(final DistCryptFieldElement exponent) {
+    public GroupElement power(final FieldElement exponent) {
         final byte[] output = new byte[group.getUncompressedSize()];
 
         final int errorCode;
@@ -80,7 +80,7 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
      * {@inheritDoc}
      */
     @Override
-    public DistCryptGroupElement multiply(final DistCryptGroupElement other) {
+    public GroupElement multiply(final GroupElement other) {
         final byte[] output = new byte[group.getUncompressedSize()];
 
         final int errorCode;
@@ -95,7 +95,7 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
      * {@inheritDoc}
      */
     @Override
-    public DistCryptGroupElement divide(final DistCryptGroupElement other) {
+    public GroupElement divide(final GroupElement other) {
         final byte[] output = new byte[group.getUncompressedSize()];
 
         final int errorCode;
@@ -110,7 +110,7 @@ public class BLS12381Group1Element implements DistCryptGroupElement {
      * {@inheritDoc}
      */
     @Override
-    public DistCryptGroupElement compress() {
+    public GroupElement compress() {
         // Already compressed, no need to do anything
         if (compressed) {
             return this;

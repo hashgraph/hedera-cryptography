@@ -3,7 +3,7 @@ package com.hedera.platform.bls;
 /**
  * The finite field of the BLS 12-381 curve family
  */
-public class BLS12381Field implements DistCryptField {
+public class BLS12381Field implements Field {
 	/**
 	 * Required size of a seed to create a new field element
 	 */
@@ -18,7 +18,7 @@ public class BLS12381Field implements DistCryptField {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptFieldElement newElement(final int i) {
+	public FieldElement newElement(final int i) {
 		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
@@ -33,7 +33,7 @@ public class BLS12381Field implements DistCryptField {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptFieldElement newZeroElement() {
+	public FieldElement newZeroElement() {
 		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
@@ -48,7 +48,7 @@ public class BLS12381Field implements DistCryptField {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptFieldElement newOneElement() {
+	public FieldElement newOneElement() {
 		final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
 		final int errorCode;
@@ -63,7 +63,7 @@ public class BLS12381Field implements DistCryptField {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptFieldElement newElementFromSeed(final byte[] seed) {
+	public FieldElement newElementFromSeed(final byte[] seed) {
 		if (seed.length != SEED_SIZE) {
 			throw new IllegalArgumentException(String.format("seed must be %s bytes in length", SEED_SIZE));
 		}
@@ -82,7 +82,7 @@ public class BLS12381Field implements DistCryptField {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptFieldElement newElementFromBytes(final byte[] bytes) {
+	public FieldElement newElementFromBytes(final byte[] bytes) {
 		final BLS12381FieldElement outputElement = new BLS12381FieldElement(bytes, this);
 
 		if (!outputElement.isValid()) {

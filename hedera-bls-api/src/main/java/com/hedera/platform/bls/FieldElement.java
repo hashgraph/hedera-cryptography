@@ -5,13 +5,13 @@ import java.math.BigInteger;
 /**
  * An interface representing a generic field element
  */
-public interface DistCryptFieldElement {
+public interface FieldElement {
 	/**
 	 * Gets the field the element is in
 	 *
 	 * @return the field
 	 */
-	DistCryptField getField();
+	Field getField();
 
 	/**
 	 * Serializes the field element to bytes
@@ -27,7 +27,7 @@ public interface DistCryptFieldElement {
 	 * 		the other field element
 	 * @return a new field element which is the sum of this element and another
 	 */
-	DistCryptFieldElement add(final DistCryptFieldElement other);
+	FieldElement add(final FieldElement other);
 
 	/**
 	 * Subtracts another field element from this one
@@ -36,7 +36,7 @@ public interface DistCryptFieldElement {
 	 * 		the other field element
 	 * @return a new field element which is the difference of this element and another
 	 */
-	DistCryptFieldElement subtract(final DistCryptFieldElement other);
+	FieldElement subtract(final FieldElement other);
 
 	/**
 	 * Multiplies another field element with this one
@@ -45,7 +45,7 @@ public interface DistCryptFieldElement {
 	 * 		the other field element
 	 * @return a new field element which is the product of this element and another
 	 */
-	DistCryptFieldElement multiply(final DistCryptFieldElement other);
+	FieldElement multiply(final FieldElement other);
 
 	/**
 	 * Divides the field element by another
@@ -54,7 +54,7 @@ public interface DistCryptFieldElement {
 	 * 		the other field element
 	 * @return a new field element which is the quotient of this element and another
 	 */
-	DistCryptFieldElement divide(final DistCryptFieldElement other);
+	FieldElement divide(final FieldElement other);
 
 	/**
 	 * Takes the field element to the power of an integer
@@ -63,7 +63,7 @@ public interface DistCryptFieldElement {
 	 * 		the exponent integer
 	 * @return a new field element which is the power
 	 */
-	DistCryptFieldElement power(final BigInteger e2);
+	FieldElement power(final BigInteger e2);
 
 	/**
 	 * Checks whether the element bytes are valid

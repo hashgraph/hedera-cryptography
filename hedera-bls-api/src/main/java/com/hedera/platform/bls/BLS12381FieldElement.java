@@ -5,7 +5,7 @@ import java.math.BigInteger;
 /**
  * An element in {@link BLS12381Field}
  */
-public class BLS12381FieldElement implements DistCryptFieldElement {
+public class BLS12381FieldElement implements FieldElement {
 	/**
 	 * The byte representation of the element
 	 */
@@ -33,7 +33,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptField getField() {
+	public Field getField() {
 		return field;
 	}
 
@@ -49,7 +49,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptFieldElement add(final DistCryptFieldElement other) {
+	public FieldElement add(final FieldElement other) {
 		if (other == null) {
 			throw new IllegalArgumentException("other cannot be null");
 		}
@@ -68,7 +68,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptFieldElement subtract(final DistCryptFieldElement other) {
+	public FieldElement subtract(final FieldElement other) {
 		if (other == null) {
 			throw new IllegalArgumentException("other cannot be null");
 		}
@@ -87,7 +87,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptFieldElement multiply(final DistCryptFieldElement other) {
+	public FieldElement multiply(final FieldElement other) {
 		if (other == null) {
 			throw new IllegalArgumentException("other cannot be null");
 		}
@@ -106,7 +106,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptFieldElement divide(final DistCryptFieldElement other) {
+	public FieldElement divide(final FieldElement other) {
 		if (other == null) {
 			throw new IllegalArgumentException("other cannot be null");
 		}
@@ -125,7 +125,7 @@ public class BLS12381FieldElement implements DistCryptFieldElement {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptFieldElement power(final BigInteger exponent) {
+	public FieldElement power(final BigInteger exponent) {
 		if (exponent == null) {
 			throw new IllegalArgumentException("exponent cannot be null");
 		}

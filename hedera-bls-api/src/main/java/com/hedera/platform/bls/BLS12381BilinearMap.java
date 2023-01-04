@@ -3,12 +3,12 @@ package com.hedera.platform.bls;
 /**
  * A bilinear map in the BLS 12-381 family of curves
  */
-public final class BLS12381BilinearMap implements DistCryptBilinearMap {
+public final class BLS12381BilinearMap implements BilinearMap {
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptField getField() {
+	public Field getField() {
 		return new BLS12381Field();
 	}
 
@@ -19,7 +19,7 @@ public final class BLS12381BilinearMap implements DistCryptBilinearMap {
 	 * More operations are performed with signatures than with keys
 	 */
 	@Override
-	public DistCryptGroup getSignatureGroup() {
+	public Group getSignatureGroup() {
 		return new BLS12381Group1();
 	}
 
@@ -30,7 +30,7 @@ public final class BLS12381BilinearMap implements DistCryptBilinearMap {
 	 * operations are performed with keys than with signatures
 	 */
 	@Override
-	public DistCryptGroup getKeyGroup() {
+	public Group getKeyGroup() {
 		return new BLS12381Group2();
 	}
 
@@ -39,10 +39,10 @@ public final class BLS12381BilinearMap implements DistCryptBilinearMap {
 	 */
 	@Override
 	public boolean comparePairing(
-			final DistCryptGroupElement signatureElement1,
-			final DistCryptGroupElement keyElement1,
-			final DistCryptGroupElement signatureElement2,
-			final DistCryptGroupElement keyElement2) {
+			final GroupElement signatureElement1,
+			final GroupElement keyElement1,
+			final GroupElement signatureElement2,
+			final GroupElement keyElement2) {
 
 		final JNICallResult callResult = new JNICallResult(
 				BLS12381Bindings.comparePairing(
@@ -62,7 +62,7 @@ public final class BLS12381BilinearMap implements DistCryptBilinearMap {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public byte[] displayPairing(final DistCryptGroupElement signatureElement, final DistCryptGroupElement keyElement) {
+	public byte[] displayPairing(final GroupElement signatureElement, final GroupElement keyElement) {
 		final JNICallResult callResult = new JNICallResult(BLS12381Bindings.pairingDisplay(
 				(BLS12381Group1Element) signatureElement, (BLS12381Group2Element) keyElement));
 

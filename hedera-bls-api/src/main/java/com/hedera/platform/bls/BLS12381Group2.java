@@ -5,7 +5,7 @@ import java.util.Collection;
 /**
  * G2 of the BLS12-381 curve family
  */
-public class BLS12381Group2 implements DistCryptGroup {
+public class BLS12381Group2 implements Group {
 	/**
 	 * Length of a byte array representing a compressed element
 	 */
@@ -25,7 +25,7 @@ public class BLS12381Group2 implements DistCryptGroup {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptGroupElement newOneElement() {
+	public GroupElement newOneElement() {
 		final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
 		final int errorCode;
@@ -40,7 +40,7 @@ public class BLS12381Group2 implements DistCryptGroup {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptGroupElement newElementFromSeed(final byte[] seed) {
+	public GroupElement newElementFromSeed(final byte[] seed) {
 		if (seed.length != SEED_SIZE) {
 			throw new IllegalArgumentException(String.format("seed must be %d bytes in length", SEED_SIZE));
 		}
@@ -59,7 +59,7 @@ public class BLS12381Group2 implements DistCryptGroup {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptGroupElement hashToGroup(final byte[] input) {
+	public GroupElement hashToGroup(final byte[] input) {
 		return newElementFromSeed(Utils.computeSha256(input));
 	}
 
@@ -67,7 +67,7 @@ public class BLS12381Group2 implements DistCryptGroup {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptGroupElement batchMultiply(final Collection<DistCryptGroupElement> elements) {
+	public GroupElement batchMultiply(final Collection<GroupElement> elements) {
 		if (elements.isEmpty()) {
 			throw new IllegalArgumentException("Empty collection is invalid");
 		}
@@ -75,7 +75,7 @@ public class BLS12381Group2 implements DistCryptGroup {
 		final BLS12381Group2Element[] elementArray = new BLS12381Group2Element[elements.size()];
 
 		int count = 0;
-		for (final DistCryptGroupElement element : elements) {
+		for (final GroupElement element : elements) {
 			elementArray[count] = (BLS12381Group2Element) element;
 			++count;
 		}
@@ -94,7 +94,7 @@ public class BLS12381Group2 implements DistCryptGroup {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public DistCryptGroupElement newElementFromBytes(final byte[] inputBytes) {
+	public GroupElement newElementFromBytes(final byte[] inputBytes) {
 		// create the object, but check validity before returning
 		final BLS12381Group2Element outputElement = new BLS12381Group2Element(inputBytes, this);
 
