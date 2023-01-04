@@ -77,17 +77,13 @@ class BLS12381PairingTests {
         final GroupElement group2Element = group2.randomElement(
                 TestUtils.randomByteArray(random, group2.getSeedSize()));
 
-        assertThrows(BLS12381Exception.class, () -> bilinearMap.comparePairing(
-                        null, group2Element, group1Element, group2Element),
+        assertFalse(bilinearMap.comparePairing(null, group2Element, group1Element, group2Element),
                 "Pairing comparison should fail with a null element");
-        assertThrows(BLS12381Exception.class, () -> bilinearMap.comparePairing(
-                        group1Element, null, group1Element, group2Element),
+        assertFalse(bilinearMap.comparePairing(group1Element, null, group1Element, group2Element),
                 "Pairing comparison should fail with a null element");
-        assertThrows(BLS12381Exception.class, () -> bilinearMap.comparePairing(
-                        group1Element, group2Element, null, group2Element),
+        assertFalse(bilinearMap.comparePairing(group1Element, group2Element, null, group2Element),
                 "Pairing comparison should fail with a null element");
-        assertThrows(BLS12381Exception.class, () -> bilinearMap.comparePairing(
-                        group1Element, group2Element, group1Element, null),
+        assertFalse(bilinearMap.comparePairing(group1Element, group2Element, group1Element, null),
                 "Pairing comparison should fail with a null element");
     }
 

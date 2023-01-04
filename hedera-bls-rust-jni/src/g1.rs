@@ -48,7 +48,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newG1Identi
 
     return match env.set_byte_array_region(output, 0, element) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -96,12 +96,12 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newRandomG1
 ) -> jint {
     let seed_vector: Vec<u8> = match env.convert_byte_array(input_seed_bytes) {
         Ok(val) => val,
-        Err(_) => return 1
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let seed_array: [u8; 32] = match seed_vector.try_into() {
         Ok(val) => val,
-        Err(_) => return 1
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let element: &[jbyte; 96] = unsafe {
@@ -113,7 +113,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newRandomG1
 
     return match env.set_byte_array_region(output, 0, element) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -129,12 +129,12 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g1Divide(
 ) -> jint {
     let element1: G1Affine = match g1_from_jobject(&env, &g1_1_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let element2: G1Affine = match g1_from_jobject(&env, &g1_2_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     // BLS12_381 library defines math operations differently, hence the use of `-` here instead of `/`
@@ -146,7 +146,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g1Divide(
 
     return match env.set_byte_array_region(output, 0, quotient) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -162,12 +162,12 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g1Multiply(
 ) -> jint {
     let element1: G1Affine = match g1_from_jobject(&env, &g1_1_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let element2: G1Affine = match g1_from_jobject(&env, &g1_2_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     // BLS12_381 library defines math operations differently, hence the use of `+` here instead of `*`
@@ -179,7 +179,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g1Multiply(
 
     return match env.set_byte_array_region(output, 0, product) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -194,7 +194,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g1BatchMult
 ) -> jint {
     let element_batch_len: jsize = match env.get_array_length(element_batch) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     if element_batch_len < 1 {
@@ -206,12 +206,12 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g1BatchMult
     for index in 0..element_batch_len {
         let g1_object: JObject = match env.get_object_array_element(element_batch, index) {
             Ok(val) => val,
-            Err(_) => return 1,
+            Err(err) => return GenericError::from(err).get_error_code()
         };
 
         let g1: G1Affine = match g1_from_jobject(&env, &g1_object) {
             Ok(val) => val,
-            Err(_) => return 1,
+            Err(err) => return GenericError::from(err).get_error_code()
         };
 
         product = product + g1;
@@ -224,7 +224,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g1BatchMult
 
     return match env.set_byte_array_region(output, 0, product_array) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -240,12 +240,12 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g1PowZn(
 ) -> jint {
     let base: G1Affine = match g1_from_jobject(&env, &base_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let exponent: Scalar = match scalar_from_jobject(&env, &exponent_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     // BLS12_381 library defines math operations differently, hence the use of `*` here instead of `^`
@@ -257,7 +257,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g1PowZn(
 
     return match env.set_byte_array_region(output, 0, power) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -271,7 +271,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g1Compress(
 ) -> jint {
     let element: G1Affine = match g1_from_jobject(&env, &element_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let element_array: &[jbyte; 48] = unsafe {
@@ -280,6 +280,6 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g1Compress(
 
     return match env.set_byte_array_region(output, 0, element_array) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }

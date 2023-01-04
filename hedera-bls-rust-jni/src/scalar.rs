@@ -61,19 +61,19 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newRandomSc
 ) -> jint {
     let seed_vector = match env.convert_byte_array(input_seed_bytes) {
         Ok(val) => val,
-        Err(_) => return 1
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let seed_array: [u8; 32] = match seed_vector.try_into() {
         Ok(val) => val,
-        Err(_) => return 1
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let random_scalar: &[jbyte; 32] = unsafe { mem::transmute(&Scalar::random(ChaChaRng::from_seed(seed_array)).to_bytes()) };
 
     return match env.set_byte_array_region(output, 0, random_scalar) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -89,7 +89,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newScalarFr
 
     return match env.set_byte_array_region(output, 0, scalar) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -104,7 +104,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newZeroScal
 
     return match env.set_byte_array_region(output, 0, scalar) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -119,7 +119,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newOneScala
 
     return match env.set_byte_array_region(output, 0, scalar) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -154,7 +154,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_checkScalar
     return match scalar_from_jobject(&env, &scalar_object) {
         Ok(_) => jboolean::from(true),
         Err(_) => jboolean::from(false),
-    }
+    };
 }
 
 /// Computes the sum of 2 scalar values
@@ -169,19 +169,19 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarAdd(
 ) -> jint {
     let scalar1 = match scalar_from_jobject(&env, &scalar1_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let scalar2 = match scalar_from_jobject(&env, &scalar2_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(scalar1 + scalar2).to_bytes()) };
 
     return match env.set_byte_array_region(output, 0, scalar) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -197,19 +197,19 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarSubtr
 ) -> jint {
     let scalar1 = match scalar_from_jobject(&env, &scalar1_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let scalar2 = match scalar_from_jobject(&env, &scalar2_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(scalar1 - scalar2).to_bytes()) };
 
     return match env.set_byte_array_region(output, 0, scalar) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -225,19 +225,19 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarMulti
 ) -> jint {
     let scalar1 = match scalar_from_jobject(&env, &scalar1_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let scalar2 = match scalar_from_jobject(&env, &scalar2_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(scalar1 * scalar2).to_bytes()) };
 
     return match env.set_byte_array_region(output, 0, scalar) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -253,12 +253,12 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarDivid
 ) -> jint {
     let scalar1 = match scalar_from_jobject(&env, &scalar1_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let scalar2 = match scalar_from_jobject(&env, &scalar2_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let scalar2_inversion: Scalar = match Option::from(scalar2.invert()) {
@@ -270,7 +270,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarDivid
 
     return match env.set_byte_array_region(output, 0, scalar) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }
 
@@ -286,18 +286,18 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarPower
 ) -> jint {
     let base = match scalar_from_jobject(&env, &base_object) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let exponent = match bytes_to_big_int(&env, &exponent_bytes) {
         Ok(val) => val,
-        Err(_) => return 1,
+        Err(err) => return GenericError::from(err).get_error_code()
     };
 
     let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(base.pow(&exponent)).to_bytes()) };
 
     return match env.set_byte_array_region(output, 0, scalar) {
         Ok(_) => 0,
-        Err(_) => 1
+        Err(err) => GenericError::from(err).get_error_code()
     };
 }

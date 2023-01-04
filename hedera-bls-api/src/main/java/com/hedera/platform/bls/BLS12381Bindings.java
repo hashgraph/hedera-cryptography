@@ -36,8 +36,8 @@ public final class BLS12381Bindings {
      * @param element2 the second g1 group element
      * @return true if the elements are equal, otherwise false
      */
-    public static native boolean g1ElementEquals(
-            final BLS12381Group1Element element1, final BLS12381Group1Element element2);
+    public static native boolean g1ElementEquals(final BLS12381Group1Element element1,
+                                                 final BLS12381Group1Element element2);
 
     /**
      * Checks whether a g1 element is valid
@@ -55,9 +55,8 @@ public final class BLS12381Bindings {
      * @param output   the byte array that will be filled with the quotient group element
      * @return a non-zero error code if there was an error, otherwise 0
      */
-    public static native int g1Divide(
-            final BLS12381Group1Element element1, final BLS12381Group1Element element2,
-            final byte[] output);
+    public static native int g1Divide(final BLS12381Group1Element element1, final BLS12381Group1Element element2,
+                                      final byte[] output);
 
     /**
      * Computes the product of 2 elements of the g1 group
@@ -67,9 +66,8 @@ public final class BLS12381Bindings {
      * @param output   the byte array that will be filled with the product group element
      * @return a non-zero error code if there was an error, otherwise 0
      */
-    public static native int g1Multiply(
-            final BLS12381Group1Element element1, final BLS12381Group1Element element2,
-            final byte[] output);
+    public static native int g1Multiply(final BLS12381Group1Element element1, final BLS12381Group1Element element2,
+                                        final byte[] output);
 
     /**
      * Computes the product of a batch of elements
@@ -124,8 +122,8 @@ public final class BLS12381Bindings {
      * @param element2 the second g2 group element
      * @return true if the elements are equal, otherwise false
      */
-    public static native boolean g2ElementEquals(
-            final BLS12381Group2Element element1, final BLS12381Group2Element element2);
+    public static native boolean g2ElementEquals(final BLS12381Group2Element element1,
+                                                 final BLS12381Group2Element element2);
 
     /**
      * Checks whether a g2 element is valid
@@ -143,9 +141,8 @@ public final class BLS12381Bindings {
      * @param output   the byte array that will be filled with the quotient group element
      * @return a non-zero error code if there was an error, otherwise 0
      */
-    public static native int g2Divide(
-            final BLS12381Group2Element element1, final BLS12381Group2Element element2,
-            final byte[] output);
+    public static native int g2Divide(final BLS12381Group2Element element1, final BLS12381Group2Element element2,
+                                      final byte[] output);
 
     /**
      * Computes the product of 2 elements of the g2 group
@@ -155,9 +152,8 @@ public final class BLS12381Bindings {
      * @param output   the byte array that will be filled with the product group element
      * @return a non-zero error code if there was an error, otherwise 0
      */
-    public static native int g2Multiply(
-            final BLS12381Group2Element element1, final BLS12381Group2Element element2,
-            final byte[] output);
+    public static native int g2Multiply(final BLS12381Group2Element element1, final BLS12381Group2Element element2,
+                                        final byte[] output);
 
     /**
      * Computes the product of a batch of elements
@@ -191,10 +187,8 @@ public final class BLS12381Bindings {
     /**
      * Creates a new random scalar from a seed value
      *
-     * @param inputSeed
-     * 		the byte seed to be used to create the new scalar
-     * @param output
-     * 		the byte array that will be filled with the new scalar
+     * @param inputSeed the byte seed to be used to create the new scalar
+     * @param output    the byte array that will be filled with the new scalar
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int newRandomScalar(final byte[] inputSeed, final byte[] output);
@@ -202,10 +196,8 @@ public final class BLS12381Bindings {
     /**
      * Creates a new scalar from an integer
      *
-     * @param integer
-     * 		the integer to be used to create the new scalar
-     * @param output
-     * 		the byte array that will be filled with the new scalar
+     * @param integer the integer to be used to create the new scalar
+     * @param output  the byte array that will be filled with the new scalar
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int newScalarFromInt(final int integer, final byte[] output);
@@ -213,8 +205,7 @@ public final class BLS12381Bindings {
     /**
      * Creates a new zero value scalar
      *
-     * @param output
-     * 		the byte array that will be filled with the new scalar
+     * @param output the byte array that will be filled with the new scalar
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int newZeroScalar(final byte[] output);
@@ -222,8 +213,7 @@ public final class BLS12381Bindings {
     /**
      * Creates a new one value scalar
      *
-     * @param output
-     * 		the byte array that will be filled with the new scalar
+     * @param output the byte array that will be filled with the new scalar
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int newOneScalar(final byte[] output);
@@ -231,10 +221,8 @@ public final class BLS12381Bindings {
     /**
      * Checks whether 2 scalar values are equal
      *
-     * @param scalar1
-     * 		the first scalar value
-     * @param scalar2
-     * 		the second scalar value
+     * @param scalar1 the first scalar value
+     * @param scalar2 the second scalar value
      * @return true if the scalars are equal, otherwise false
      */
     public static native boolean scalarEquals(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2);
@@ -242,8 +230,7 @@ public final class BLS12381Bindings {
     /**
      * Checks whether a scalar is valid
      *
-     * @param scalar
-     * 		the scalar being checked for validity
+     * @param scalar the scalar being checked for validity
      * @return true if the scalar is valid, otherwise false
      */
     public static native boolean checkScalarValidity(final BLS12381FieldElement scalar);
@@ -251,12 +238,9 @@ public final class BLS12381Bindings {
     /**
      * Computes the sum of 2 scalar values
      *
-     * @param scalar1
-     * 		the first scalar value
-     * @param scalar2
-     * 		the second scalar value
-     * @param output
-     * 		the byte array that will be filled with the new scalar
+     * @param scalar1 the first scalar value
+     * @param scalar2 the second scalar value
+     * @param output  the byte array that will be filled with the new scalar
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int scalarAdd(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2,
@@ -265,12 +249,9 @@ public final class BLS12381Bindings {
     /**
      * Computes the difference between 2 scalar values
      *
-     * @param scalar1
-     * 		the first scalar value
-     * @param scalar2
-     * 		the second scalar value
-     * @param output
-     * 		the byte array that will be filled with the new scalar
+     * @param scalar1 the first scalar value
+     * @param scalar2 the second scalar value
+     * @param output  the byte array that will be filled with the new scalar
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int scalarSubtract(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2,
@@ -279,12 +260,9 @@ public final class BLS12381Bindings {
     /**
      * Computes the product of 2 scalar values
      *
-     * @param scalar1
-     * 		the first scalar value
-     * @param scalar2
-     * 		the second scalar value
-     * @param output
-     * 		the byte array that will be filled with the new scalar
+     * @param scalar1 the first scalar value
+     * @param scalar2 the second scalar value
+     * @param output  the byte array that will be filled with the new scalar
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int scalarMultiply(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2,
@@ -293,12 +271,9 @@ public final class BLS12381Bindings {
     /**
      * Computes the quotient of 2 scalar values
      *
-     * @param scalar1
-     * 		the first scalar value
-     * @param scalar2
-     * 		the second scalar value
-     * @param output
-     * 		the byte array that will be filled with the new scalar
+     * @param scalar1 the first scalar value
+     * @param scalar2 the second scalar value
+     * @param output  the byte array that will be filled with the new scalar
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int scalarDivide(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2,
@@ -307,12 +282,9 @@ public final class BLS12381Bindings {
     /**
      * Computes the value a scalar to the power of a big integer
      *
-     * @param base
-     * 		a scalar value
-     * @param exponent
-     * 		a big integer
-     * @param output
-     * 		the byte array that will be filled with the new scalar
+     * @param base     a scalar value
+     * @param exponent a big integer
+     * @param output   the byte array that will be filled with the new scalar
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int scalarPower(final BLS12381FieldElement base, final byte[] exponent, final byte[] output);
@@ -320,34 +292,25 @@ public final class BLS12381Bindings {
     /**
      * Computes 2 separate pairings, A and B, and checks the resulting elements for equality
      *
-     * @param g1a
-     * 		the g1 group element for pairing A
-     * @param g2a
-     * 		the g2 group element for pairing A
-     * @param g1b
-     * 		the g1 group element for pairing B
-     * @param g2b
-     * 		the g2 group element for pairing B
-     * @return a byte array with byte 0 being an error code, and the second byte representing the equality of the 2
-     * 		pairings, A and B. A value of 1 indicates equality, and a value of 0 indicates inequality
+     * @param g1a the g1 group element for pairing A
+     * @param g2a the g2 group element for pairing A
+     * @param g1b the g1 group element for pairing B
+     * @param g2b the g2 group element for pairing B
+     * @return true if the pairings are equal, otherwise false
      */
-    public static native byte[] comparePairing(
-            final BLS12381Group1Element g1a,
-            final BLS12381Group2Element g2a,
-            final BLS12381Group1Element g1b,
-            final BLS12381Group2Element g2b);
+    public static native boolean comparePairing(final BLS12381Group1Element g1a, final BLS12381Group2Element g2a,
+                                                final BLS12381Group1Element g1b, final BLS12381Group2Element g2b);
 
     /**
-     * Computes a pairing, and returns a byte representation of the result
+     * Computes a pairing, and gets a byte representation of the result
      *
-     * @param g1
-     * 		the g1 group element for the pairing
-     * @param g2
-     * 		the g2 group element for the pairing
-     * @return a byte array with byte 0 being an error code, and the remaining bytes representing a serialized
-     * 		version of the pairing result
+     * @param g1     the g1 group element for the pairing
+     * @param g2     the g2 group element for the pairing
+     * @param output the byte array that will be filled with the pairing byte representation
+     * @return a non-zero error code if there was an error, otherwise 0
      */
-    public static native byte[] pairingDisplay(final BLS12381Group1Element g1, final BLS12381Group2Element g2);
+    public static native int pairingDisplay(final BLS12381Group1Element g1, final BLS12381Group2Element g2,
+                                            final byte[] output);
 
     static {
         try {
