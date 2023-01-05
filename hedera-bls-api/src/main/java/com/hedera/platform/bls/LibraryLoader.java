@@ -1,12 +1,23 @@
+/*
+ * Copyright (C) 2022-2023 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.hedera.platform.bls;
 
 import com.goterl.resourceloader.ResourceLoader;
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
-import org.apache.commons.io.FileUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -16,17 +27,22 @@ import java.nio.file.Paths;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
- * A simple library class which helps with loading dynamic library stored in the JAR archive. Adapted from
- * <a href="https://github.com/terl/lazysodium-java/blob/master/src/main/java/com/goterl/lazysodium/utils/LibraryLoader.java">
+ * A simple library class which helps with loading dynamic library stored in the JAR archive.
+ * Adapted from <a
+ * href="https://github.com/terl/lazysodium-java/blob/master/src/main/java/com/goterl/lazysodium/utils/LibraryLoader.java">
  * https://github.com/terl/lazysodium-java/blob/master/src/main/java/com/goterl/lazysodium/utils/LibraryLoader.java
  * </a>
  *
  * @see <a
- * href="http://adamheinrich.com/blog/2012/how-to-load-native-jni-library-from-jar">http://adamheinrich
- * .com/blog/2012/how-to-load-native-jni-library-from-jar</a>
- * @see <a href="https://github.com/adamheinrich/native-utils">https://github.com/adamheinrich/native-utils</a>
+ *     href="http://adamheinrich.com/blog/2012/how-to-load-native-jni-library-from-jar">http://adamheinrich
+ *     .com/blog/2012/how-to-load-native-jni-library-from-jar</a>
+ * @see <a
+ *     href="https://github.com/adamheinrich/native-utils">https://github.com/adamheinrich/native-utils</a>
  */
 public final class LibraryLoader {
     private static final String LIBRARY_NAME = "libhedera_bls_jni";
@@ -34,11 +50,11 @@ public final class LibraryLoader {
     private final Logger logger = LogManager.getLogger(LibraryLoader.class);
 
     /**
-     * Loads library from the current JAR archive and registers the native methods of the provided class. The library
-     * will be loaded at most once.
+     * Loads library from the current JAR archive and registers the native methods of the provided
+     * class. The library will be loaded at most once.
      *
-     * <p>The file from JAR is copied into system temporary directory and then loaded.
-     * The temporary file is deleted after exiting.
+     * <p>The file from JAR is copied into system temporary directory and then loaded. The temporary
+     * file is deleted after exiting.
      */
     public void loadBundledLibrary(final Class<?> clazz) throws IOException {
         Path pathInJar = getLibraryPathInResources();
@@ -56,10 +72,11 @@ public final class LibraryLoader {
      *
      * @param relativePath A relative path to a file or directory, relative to the resources folder.
      * @return The file or directory you want to load.
-     * @throws IOException        If at any point processing of the resource file fails.
+     * @throws IOException If at any point processing of the resource file fails.
      * @throws URISyntaxException If resource file cannot be found
      */
-    public File copyToTempDirectory(Path relativePath, Class<?> outsideClass) throws IOException, URISyntaxException {
+    public File copyToTempDirectory(Path relativePath, Class<?> outsideClass)
+            throws IOException, URISyntaxException {
         // Create a "main" temporary directory everything can be thrown in
         File tempDirectory = ResourceLoader.createMainTempDirectory();
 
@@ -67,11 +84,13 @@ public final class LibraryLoader {
         tempDirectory.mkdirs();
 
         // Is the user loading resources that are from inside a JAR?
-        Path fullJarPathURL = Path.of(ResourceLoader.getThePathToTheJarWeAreIn(outsideClass).toURI());
+        Path fullJarPathURL =
+                Path.of(ResourceLoader.getThePathToTheJarWeAreIn(outsideClass).toURI());
 
         // Test if we are in a JAR
         if (isJarFile(fullJarPathURL)) {
-            File extracted = nestedExtract(tempDirectory, fullJarPathURL.resolve(relativePath).toString());
+            File extracted =
+                    nestedExtract(tempDirectory, fullJarPathURL.resolve(relativePath).toString());
 
             if (extracted != null) {
                 return extracted;
@@ -104,18 +123,21 @@ public final class LibraryLoader {
     }
 
     /**
-     * If we're not in a JAR, then we can load directly from the file system without all the unzipping fiasco present
-     * in {@see #getFileFromJar}.
+     * If we're not in a JAR, then we can load directly from the file system without all the
+     * unzipping fiasco present in {@see #getFileFromJar}.
      *
-     * @param relativePath    A relative path to a file or directory in the resources folder.
-     * @param outputDirectory A directory in which to store loaded files. Preferentially a temporary one.
+     * @param relativePath A relative path to a file or directory in the resources folder.
+     * @param outputDirectory A directory in which to store loaded files. Preferentially a temporary
+     *     one.
      * @return The file or directory that was requested.
      * @throws IOException Could not find requested file.
      */
-    private File getFileFromFileSystem(final Path relativePath, final File outputDirectory) throws IOException,
-            URISyntaxException {
+    private File getFileFromFileSystem(final Path relativePath, final File outputDirectory)
+            throws IOException, URISyntaxException {
 
-        final URL url = ResourceLoader.class.getResource(prefixStringWithSlashIfNotAlready(relativePath.toString()));
+        final URL url =
+                ResourceLoader.class.getResource(
+                        prefixStringWithSlashIfNotAlready(relativePath.toString()));
 
         if (url == null) {
             throw new IOException("unable to get resource");
@@ -153,16 +175,16 @@ public final class LibraryLoader {
     }
 
     /**
-     * A method that keeps extracting JAR files from within each other. This method only allows a maximum nested
-     * depth of 20.
+     * A method that keeps extracting JAR files from within each other. This method only allows a
+     * maximum nested depth of 20.
      *
      * @param extractTo Where shall we initially extract files to.
-     * @param fullPath  The full path to the initial
+     * @param fullPath The full path to the initial
      * @return The final extracted file.
      * @throws IOException
      * @throws URISyntaxException
      */
-    private File nestedExtract(File extractTo, String fullPath) throws IOException, URISyntaxException {
+    private File nestedExtract(File extractTo, String fullPath) throws IOException {
         final String JAR = ".jar";
 
         // After this line we have something like
@@ -226,18 +248,18 @@ public final class LibraryLoader {
     }
 
     /**
-     * Extracts a file/directory from a JAR. A JAR is simply
-     * a zip file. We can unzip it and get our file successfully.
+     * Extracts a file/directory from a JAR. A JAR is simply a zip file. We can unzip it and get our
+     * file successfully.
      *
-     * @param jarUrl    A JAR's URL.
+     * @param jarUrl A JAR's URL.
      * @param outputDir A directory of where to store our extracted files.
      * @param pathInJar A relative path to a file that is in our resources folder.
      * @return The file or directory that we requested.
      * @throws URISyntaxException If we could not ascertain our location.
-     * @throws IOException        If whilst unzipping we had some problems.
+     * @throws IOException If whilst unzipping we had some problems.
      */
-    private File extractFilesOrFoldersFromJar(File outputDir, URL jarUrl, String pathInJar) throws URISyntaxException,
-            IOException {
+    private File extractFilesOrFoldersFromJar(File outputDir, URL jarUrl, String pathInJar)
+            throws IOException {
         File jar = ResourceLoader.urlToFile(jarUrl);
         unzip(jar.getAbsolutePath(), outputDir.getAbsolutePath());
         String filePath = outputDir.getAbsolutePath() + pathInJar;
@@ -247,11 +269,12 @@ public final class LibraryLoader {
     /**
      * From https://www.javadevjournal.com/java/zipping-and-unzipping-in-java/
      *
-     * @param zipFilePath   An absolute path to a zip file
+     * @param zipFilePath An absolute path to a zip file
      * @param unzipLocation Where to unzip the zip file
      * @throws IOException If could not unzip.
      */
-    private static void unzip(final String zipFilePath, final String unzipLocation) throws IOException {
+    private static void unzip(final String zipFilePath, final String unzipLocation)
+            throws IOException {
         if (!(Files.exists(Paths.get(unzipLocation)))) {
             Files.createDirectories(Paths.get(unzipLocation));
         }
@@ -272,9 +295,11 @@ public final class LibraryLoader {
         }
     }
 
-    private static void unzipFiles(final ZipInputStream zipInputStream, final Path unzipFilePath) throws IOException {
-        try (BufferedOutputStream bos = new BufferedOutputStream(
-                new FileOutputStream(unzipFilePath.toAbsolutePath().toString()))) {
+    private static void unzipFiles(final ZipInputStream zipInputStream, final Path unzipFilePath)
+            throws IOException {
+        try (BufferedOutputStream bos =
+                new BufferedOutputStream(
+                        new FileOutputStream(unzipFilePath.toAbsolutePath().toString()))) {
             byte[] bytesIn = new byte[1024];
             int read = 0;
             while ((read = zipInputStream.read(bytesIn)) != -1) {
@@ -322,8 +347,10 @@ public final class LibraryLoader {
             }
         }
 
-        String message = String.format("Unsupported platform: %s/%s", System.getProperty("os.name"),
-                System.getProperty("os.arch"));
+        String message =
+                String.format(
+                        "Unsupported platform: %s/%s",
+                        System.getProperty("os.name"), System.getProperty("os.arch"));
 
         throw new LibraryLoadingException(message);
     }
