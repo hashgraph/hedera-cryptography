@@ -1,20 +1,24 @@
 /*
- * Copyright (c) Terl Tech Ltd • 01/04/2021, 12:31 • goterl.com
+ * Copyright (C) 2022-2023 Hedera Hashgraph, LLC
  *
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v2.0. If a copy of the MPL was not distributed with this
- * file, you can obtain one at http://mozilla.org/MPL/2.0/.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package com.hedera.platform.bls;
 
-
-/**
- * Indicates a failure to load the required library.
- */
+/** Indicates a failure to load the required library. */
 public class LibraryLoadingException extends RuntimeException {
 
-	public LibraryLoadingException(String message) {
-		super(message);
-	}
+    public LibraryLoadingException(String message) {
+        super(message);
+    }
 }
