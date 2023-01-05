@@ -5,11 +5,10 @@ plugins {
 }
 
 dependencies {
-    // Individual Dependencies
-    api(libs.commons.lang3)
-
     implementation(libs.resource.loader)
     implementation(libs.jna)
     implementation("net.java.dev.jna:jna:5.12.1")
     implementation(libs.bundles.logging.impl)
+    implementation(libs.commons.io)
+    implementation(libs.commons.lang3)
 }
