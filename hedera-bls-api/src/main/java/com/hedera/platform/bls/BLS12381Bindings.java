@@ -218,13 +218,13 @@ public final class BLS12381Bindings {
     public static native int newRandomScalar(final byte[] inputSeed, final byte[] output);
 
     /**
-     * Creates a new scalar from an integer
+     * Creates a new scalar from a long
      *
-     * @param integer the integer to be used to create the new scalar
+     * @param inputLong the long to be used to create the new scalar
      * @param output the byte array that will be filled with the new scalar
      * @return a non-zero error code if there was an error, otherwise 0
      */
-    public static native int newScalarFromInt(final int integer, final byte[] output);
+    public static native int newScalarFromLong(final long inputLong, final byte[] output);
 
     /**
      * Creates a new zero value scalar

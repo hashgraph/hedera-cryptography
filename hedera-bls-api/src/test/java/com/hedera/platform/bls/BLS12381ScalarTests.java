@@ -80,10 +80,10 @@ class BLS12381ScalarTests {
     }
 
     @Test
-    @DisplayName("newScalarFromInt with different integers produces unique results")
-    void newScalarFromIntUnique() {
-        final FieldElement scalar1 = field.elementFromInt(11);
-        final FieldElement scalar2 = field.elementFromInt(33);
+    @DisplayName("newScalarFromLong with different integers produces unique results")
+    void newScalarFromLongUnique() {
+        final FieldElement scalar1 = field.elementFromLong(11);
+        final FieldElement scalar2 = field.elementFromLong(33);
 
         assertNotEquals(scalar1, scalar2, "scalars shouldn't be equal");
 
@@ -96,19 +96,19 @@ class BLS12381ScalarTests {
     }
 
     @Test
-    @DisplayName("newScalarFromInt succeeds with min and max int values")
-    void newScalarFromIntExtremes() {
-        assertTrue(field.elementFromInt(Integer.MAX_VALUE).isValid(), "max scalar should be valid");
-        assertTrue(field.elementFromInt(Integer.MIN_VALUE).isValid(), "min scalar should be valid");
+    @DisplayName("newScalarFromLong succeeds with min and max long values")
+    void newScalarFromLongExtremes() {
+        assertTrue(field.elementFromLong(Long.MAX_VALUE).isValid(), "max scalar should be valid");
+        assertTrue(field.elementFromLong(Long.MIN_VALUE).isValid(), "min scalar should be valid");
     }
 
     @Test
-    @DisplayName("newScalarFromInt from same integer are equal")
-    void newScalarFromIntDeterministic() {
+    @DisplayName("newScalarFromLong from same integer are equal")
+    void newScalarFromLongDeterministic() {
         assertEquals(
-                field.elementFromInt(44),
-                field.elementFromInt(44),
-                "scalars from the same int should be equal");
+                field.elementFromLong(44),
+                field.elementFromLong(44),
+                "scalars from the same long should be equal");
     }
 
     @Test
@@ -116,7 +116,7 @@ class BLS12381ScalarTests {
     void newZeroScalarDeterministic() {
         assertTrue(field.zeroElement().isValid(), "0 scalar should be valid");
         assertEquals(field.zeroElement(), field.zeroElement(), "0 should equal 0");
-        assertEquals(field.zeroElement(), field.elementFromInt(0), "0 should equal 0");
+        assertEquals(field.zeroElement(), field.elementFromLong(0), "0 should equal 0");
     }
 
     @Test
@@ -124,7 +124,7 @@ class BLS12381ScalarTests {
     void newOneScalarDeterministic() {
         assertNotNull(field.oneElement(), "1 scalar should be valid");
         assertEquals(field.oneElement(), field.oneElement(), "1 should equal 1");
-        assertEquals(field.oneElement(), field.elementFromInt(1), "1 should equal 1");
+        assertEquals(field.oneElement(), field.elementFromLong(1), "1 should equal 1");
     }
 
     @Test
@@ -590,7 +590,7 @@ class BLS12381ScalarTests {
                 field.randomElement(TestUtils.randomByteArray(random, field.getSeedSize()));
 
         final FieldElement sum = randomScalar.add(randomScalar);
-        final FieldElement product = randomScalar.multiply(field.elementFromInt(2));
+        final FieldElement product = randomScalar.multiply(field.elementFromLong(2));
 
         assertNotEquals(null, sum, "sum should be valid");
         assertNotEquals(null, product, "product should be valid");

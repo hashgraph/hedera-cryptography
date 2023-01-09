@@ -18,12 +18,12 @@ package com.hedera.platform.bls;
 /** Interface representing a generic field */
 public interface Field {
     /**
-     * Creates a new field element from an integer
+     * Creates a new field element from a long
      *
-     * @param i the integer to use to create the field element
+     * @param inputLong the long to use to create the field element
      * @return the new field element
      */
-    FieldElement elementFromInt(final int i);
+    FieldElement elementFromLong(final long inputLong);
 
     /**
      * Creates a new field element with value 0

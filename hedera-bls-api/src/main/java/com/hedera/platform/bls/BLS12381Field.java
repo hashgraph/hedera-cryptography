@@ -25,12 +25,12 @@ public class BLS12381Field implements Field {
 
     /** {@inheritDoc} */
     @Override
-    public FieldElement elementFromInt(final int i) {
+    public FieldElement elementFromLong(final long inputLong) {
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.newScalarFromInt(i, output)) != 0) {
-            throw new BLS12381Exception("newScalarFromInt", errorCode);
+        if ((errorCode = BLS12381Bindings.newScalarFromLong(inputLong, output)) != 0) {
+            throw new BLS12381Exception("newScalarFromLong", errorCode);
         }
 
         return new BLS12381FieldElement(output, this);

@@ -5,7 +5,7 @@ use bls12_381::*;
 use ff::Field;
 use jni::JNIEnv;
 use jni::objects::{JClass, JObject};
-use jni::sys::{jboolean, jbyte, jbyteArray, jint};
+use jni::sys::{jboolean, jbyte, jbyteArray, jint, jlong};
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 
@@ -77,15 +77,15 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newRandomSc
     };
 }
 
-/// Creates a new scalar from an integer
+/// Creates a new scalar from a long
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newScalarFromInt(
+pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newScalarFromLong(
     env: JNIEnv,
     _class: JClass,
-    input_int: jint,
+    input_long: jlong,
     output: jbyteArray,
 ) -> jint {
-    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&Scalar::from(input_int as u64).to_bytes()) };
+    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&Scalar::from(input_long as u64).to_bytes()) };
 
     return match env.set_byte_array_region(output, 0, scalar) {
         Ok(_) => 0,
