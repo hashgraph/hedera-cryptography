@@ -17,18 +17,30 @@ package com.hedera.platform.bls;
 
 import java.util.Collection;
 
-/** G1 of the BLS12-381 curve family */
+/**
+ * G1 of the BLS12-381 curve family
+ * <p>
+ * This class functions as a {@link BLS12381Group1Element} factory
+ */
 public class BLS12381Group1 implements Group {
-    /** Length of a byte array representing a compressed element */
+    /**
+     * Length of a byte array representing a compressed element
+     */
     private static final int COMPRESSED_SIZE = 48;
 
-    /** Length of a byte array representing an uncompressed element */
+    /**
+     * Length of a byte array representing an uncompressed element
+     */
     private static final int UNCOMPRESSED_SIZE = 96;
 
-    /** Required size of a seed to create a new group element */
+    /**
+     * Required size of a seed to create a new group element
+     */
     private static final int SEED_SIZE = 32;
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GroupElement oneElement() {
         final byte[] output = new byte[UNCOMPRESSED_SIZE];
@@ -38,10 +50,12 @@ public class BLS12381Group1 implements Group {
             throw new BLS12381Exception("newG1Identity", errorCode);
         }
 
-        return new BLS12381Group1Element(output, this);
+        return new BLS12381Group1Element(output);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GroupElement randomElement(final byte[] seed) {
         if (seed.length != SEED_SIZE) {
@@ -56,16 +70,20 @@ public class BLS12381Group1 implements Group {
             throw new BLS12381Exception("newRandomG1", errorCode);
         }
 
-        return new BLS12381Group1Element(output, this);
+        return new BLS12381Group1Element(output);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GroupElement hashToGroup(final byte[] input) {
         return randomElement(Utils.computeSha256(input));
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GroupElement batchMultiply(final Collection<GroupElement> elements) {
         if (elements.isEmpty()) {
@@ -91,14 +109,16 @@ public class BLS12381Group1 implements Group {
             throw new BLS12381Exception("g1BatchMultiply", errorCode);
         }
 
-        return new BLS12381Group1Element(output, this);
+        return new BLS12381Group1Element(output);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GroupElement deserializeElementFromBytes(final byte[] inputBytes) {
         // create the object, but check validity before returning
-        final BLS12381Group1Element outputElement = new BLS12381Group1Element(inputBytes, this);
+        final BLS12381Group1Element outputElement = new BLS12381Group1Element(inputBytes);
 
         if (!outputElement.isValid()) {
             return null;
@@ -107,19 +127,25 @@ public class BLS12381Group1 implements Group {
         return outputElement;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getCompressedSize() {
         return COMPRESSED_SIZE;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getUncompressedSize() {
         return UNCOMPRESSED_SIZE;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getSeedSize() {
         return SEED_SIZE;

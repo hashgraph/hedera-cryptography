@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Random;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -621,8 +622,7 @@ class BLS12381ScalarTests {
         final byte[] invalidElementBytes = new byte[32];
         Arrays.fill(invalidElementBytes, (byte) 0xFF);
 
-        final FieldElement invalidElement =
-                new BLS12381FieldElement(invalidElementBytes, new BLS12381Field());
+        final FieldElement invalidElement = new BLS12381FieldElement(invalidElementBytes);
 
         assertFalse(invalidElement.isValid(), "scalar should be invalid");
     }

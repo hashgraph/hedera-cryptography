@@ -15,12 +15,40 @@
  */
 package com.hedera.platform.bls;
 
-/** A bilinear map in the BLS 12-381 family of curves */
+/**
+ * A bilinear map in the BLS 12-381 family of curves
+ */
 public final class BLS12381BilinearMap implements BilinearMap {
-    /** {@inheritDoc} */
+    /**
+     * The field of the bilinear map
+     */
+    private final Field field;
+
+    /**
+     * The group of the bilinear map where BLS signatures reside
+     */
+    private final Group signatureGroup;
+
+    /**
+     * The group of the bilinear map where BLS public keys reside
+     */
+    private final Group keyGroup;
+
+    /**
+     * Constructor
+     */
+    public BLS12381BilinearMap() {
+        this.field = new BLS12381Field();
+        this.signatureGroup = new BLS12381Group1();
+        this.keyGroup = new BLS12381Group2();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Field getField() {
-        return new BLS12381Field();
+        return field;
     }
 
     /**
@@ -31,7 +59,7 @@ public final class BLS12381BilinearMap implements BilinearMap {
      */
     @Override
     public Group getSignatureGroup() {
-        return new BLS12381Group1();
+        return signatureGroup;
     }
 
     /**
@@ -42,10 +70,12 @@ public final class BLS12381BilinearMap implements BilinearMap {
      */
     @Override
     public Group getKeyGroup() {
-        return new BLS12381Group2();
+        return keyGroup;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean comparePairing(
             final GroupElement signatureElement1,
@@ -53,39 +83,43 @@ public final class BLS12381BilinearMap implements BilinearMap {
             final GroupElement signatureElement2,
             final GroupElement keyElement2) {
 
-        if (signatureElement1 == null
-                || keyElement1 == null
-                || signatureElement2 == null
-                || keyElement2 == null) {
-            throw new IllegalArgumentException("all arguments must be valid");
+        if (!(signatureElement1 instanceof final BLS12381Group1Element signature1)) {
+            throw new IllegalArgumentException("signatureElement1 must be a BLS12381Group1Element");
         }
 
-        return BLS12381Bindings.comparePairing(
-                (BLS12381Group1Element) signatureElement1,
-                (BLS12381Group2Element) keyElement1,
-                (BLS12381Group1Element) signatureElement2,
-                (BLS12381Group2Element) keyElement2);
+        if (!(keyElement1 instanceof final BLS12381Group2Element key1)) {
+            throw new IllegalArgumentException("keyElement1 must be a BLS12381Group2Element");
+        }
+
+        if (!(signatureElement2 instanceof final BLS12381Group1Element signature2)) {
+            throw new IllegalArgumentException("signatureElement2 must be a BLS12381Group1Element");
+        }
+
+        if (!(keyElement2 instanceof final BLS12381Group2Element key2)) {
+            throw new IllegalArgumentException("keyElement2 must be a BLS12381Group2Element");
+        }
+
+        return BLS12381Bindings.comparePairing(signature1, key1, signature2, key2);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public byte[] displayPairing(
-            final GroupElement signatureElement, final GroupElement keyElement) {
-        if (signatureElement == null || keyElement == null) {
-            throw new IllegalArgumentException("all arguments must be valid");
+    public byte[] displayPairing(final GroupElement signatureElement, final GroupElement keyElement) {
+        if (!(signatureElement instanceof final BLS12381Group1Element signature)) {
+            throw new IllegalArgumentException("signatureElement must be a BLS12381Group1Element");
+        }
+
+        if (!(keyElement instanceof final BLS12381Group2Element key)) {
+            throw new IllegalArgumentException("keyElement must be a BLS12381Group2Element");
         }
 
         // display output is always this size
         final byte[] output = new byte[1249];
 
         final int errorCode;
-        if ((errorCode =
-                        BLS12381Bindings.pairingDisplay(
-                                (BLS12381Group1Element) signatureElement,
-                                (BLS12381Group2Element) keyElement,
-                                output))
-                != 0) {
-
+        if ((errorCode = BLS12381Bindings.pairingDisplay(signature, key, output)) != 0) {
             throw new BLS12381Exception("pairingDisplay", errorCode);
         }
 

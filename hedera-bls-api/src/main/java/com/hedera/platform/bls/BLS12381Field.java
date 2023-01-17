@@ -15,15 +15,25 @@
  */
 package com.hedera.platform.bls;
 
-/** The finite field of the BLS 12-381 curve family */
+/**
+ * The finite field of the BLS 12-381 curve family
+ * <p>
+ * This class functions as a {@link BLS12381FieldElement} factory
+ */
 public class BLS12381Field implements Field {
-    /** Required size of a seed to create a new field element */
+    /**
+     * Required size of a seed to create a new field element
+     */
     public static final int SEED_SIZE = 32;
 
-    /** Length of a byte array representing a field element */
+    /**
+     * Length of a byte array representing a field element
+     */
     public static final int ELEMENT_BYTE_SIZE = 32;
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FieldElement elementFromLong(final long inputLong) {
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
@@ -33,10 +43,12 @@ public class BLS12381Field implements Field {
             throw new BLS12381Exception("newScalarFromLong", errorCode);
         }
 
-        return new BLS12381FieldElement(output, this);
+        return new BLS12381FieldElement(output);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FieldElement zeroElement() {
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
@@ -46,10 +58,12 @@ public class BLS12381Field implements Field {
             throw new BLS12381Exception("newZeroScalar", errorCode);
         }
 
-        return new BLS12381FieldElement(output, this);
+        return new BLS12381FieldElement(output);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FieldElement oneElement() {
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
@@ -59,10 +73,12 @@ public class BLS12381Field implements Field {
             throw new BLS12381Exception("newOneScalar", errorCode);
         }
 
-        return new BLS12381FieldElement(output, this);
+        return new BLS12381FieldElement(output);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FieldElement randomElement(final byte[] seed) {
         if (seed.length != SEED_SIZE) {
@@ -77,13 +93,15 @@ public class BLS12381Field implements Field {
             throw new BLS12381Exception("newRandomScalar", errorCode);
         }
 
-        return new BLS12381FieldElement(output, this);
+        return new BLS12381FieldElement(output);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FieldElement deserializeElementFromBytes(final byte[] bytes) {
-        final BLS12381FieldElement outputElement = new BLS12381FieldElement(bytes, this);
+        final BLS12381FieldElement outputElement = new BLS12381FieldElement(bytes);
 
         if (!outputElement.isValid()) {
             return null;
@@ -92,13 +110,17 @@ public class BLS12381Field implements Field {
         return outputElement;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getElementSize() {
         return ELEMENT_BYTE_SIZE;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getSeedSize() {
         return SEED_SIZE;

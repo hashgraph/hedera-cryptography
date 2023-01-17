@@ -16,17 +16,26 @@
 package com.hedera.platform.bls;
 
 import java.util.Arrays;
+
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-/** An element in Group 1 of the BLS 12-381 curve family */
+/**
+ * An element in Group 1 of the BLS 12-381 curve family
+ */
 public class BLS12381Group1Element implements GroupElement {
-    /** The bytes representation of the element */
+    /**
+     * The bytes representation of the element
+     */
     private byte[] groupElement;
 
-    /** The group this element is part of */
+    /**
+     * The group this element is part of
+     */
     private final BLS12381Group1 group;
 
-    /** True if the {@link #groupElement} bytes are in a compressed form, otherwise false */
+    /**
+     * True if the {@link #groupElement} bytes are in a compressed form, otherwise false
+     */
     private boolean compressed;
 
     /**
@@ -34,15 +43,14 @@ public class BLS12381Group1Element implements GroupElement {
      * directly by anyone else
      *
      * @param groupElement a byte array representing this group element
-     * @param group the group this element is in
      */
-    BLS12381Group1Element(final byte[] groupElement, final BLS12381Group1 group) {
-        if (groupElement == null || group == null) {
-            throw new IllegalArgumentException("all arguments must be valid");
+    BLS12381Group1Element(final byte[] groupElement) {
+        if (groupElement == null) {
+            throw new IllegalArgumentException("groupElement parameter must not be null");
         }
 
         this.groupElement = groupElement;
-        this.group = group;
+        this.group = new BLS12381Group1();
         this.compressed = groupElement.length == group.getCompressedSize();
     }
 
@@ -61,73 +69,82 @@ public class BLS12381Group1Element implements GroupElement {
         this.compressed = other.compressed;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Group getGroup() {
         return group;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public byte[] toBytes() {
         return groupElement;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GroupElement power(final FieldElement exponent) {
-        if (exponent == null) {
-            throw new IllegalArgumentException("exponent cannot be null");
+        if (!(exponent instanceof final BLS12381FieldElement exponentElement)) {
+            throw new IllegalArgumentException("exponent must be a valid BLS12381FieldElement");
         }
 
         final byte[] output = new byte[group.getUncompressedSize()];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.g1PowZn(this, (BLS12381FieldElement) exponent, output))
-                != 0) {
+        if ((errorCode = BLS12381Bindings.g1PowZn(this, exponentElement, output)) != 0) {
             throw new BLS12381Exception("g1PowZn", errorCode);
         }
 
-        return new BLS12381Group1Element(output, group);
+        return new BLS12381Group1Element(output);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GroupElement multiply(final GroupElement other) {
-        if (other == null) {
-            throw new IllegalArgumentException("other cannot be null");
+        if (!(other instanceof final BLS12381Group1Element otherElement)) {
+            throw new IllegalArgumentException("other must be a valid BLS12381Group1Element");
         }
 
         final byte[] output = new byte[group.getUncompressedSize()];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.g1Multiply(this, (BLS12381Group1Element) other, output))
-                != 0) {
+        if ((errorCode = BLS12381Bindings.g1Multiply(this, otherElement, output)) != 0) {
             throw new BLS12381Exception("g1Multiply", errorCode);
         }
 
-        return new BLS12381Group1Element(output, group);
+        return new BLS12381Group1Element(output);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GroupElement divide(final GroupElement other) {
-        if (other == null) {
-            throw new IllegalArgumentException("other cannot be null");
+        if (!(other instanceof final BLS12381Group1Element otherElement)) {
+            throw new IllegalArgumentException("other must be a valid BLS12381Group1Element");
         }
 
         final byte[] output = new byte[group.getUncompressedSize()];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.g1Divide(this, (BLS12381Group1Element) other, output))
-                != 0) {
+        if ((errorCode = BLS12381Bindings.g1Divide(this, otherElement, output)) != 0) {
             throw new BLS12381Exception("g1Divide", errorCode);
         }
 
-        return new BLS12381Group1Element(output, group);
+        return new BLS12381Group1Element(output);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public GroupElement compress() {
         // Already compressed, no need to do anything
@@ -148,7 +165,9 @@ public class BLS12381Group1Element implements GroupElement {
         return this;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isCompressed() {
         return compressed;
@@ -164,11 +183,11 @@ public class BLS12381Group1Element implements GroupElement {
             return false;
         }
 
-        if (o instanceof BLS12381Group1Element element) {
-            return group.equals(element.group) && BLS12381Bindings.g1ElementEquals(this, element);
+        if (!(o instanceof final BLS12381Group1Element element)) {
+            return false;
         }
 
-        return false;
+        return group.equals(element.group) && BLS12381Bindings.g1ElementEquals(this, element);
     }
 
     @Override
@@ -178,27 +197,24 @@ public class BLS12381Group1Element implements GroupElement {
 
     @Override
     public String toString() {
-        return "BLS12381Group1Element{"
-                + "bytes="
-                + (groupElement == null ? null : Arrays.toString(groupElement))
-                + ", group="
-                + group
-                + ", compressed="
-                + compressed
-                + '}';
+        return Arrays.toString(groupElement);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BLS12381Group1Element copy() {
         return new BLS12381Group1Element(this);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isValid() {
         return (groupElement.length == group.getCompressedSize()
-                        || groupElement.length == group.getUncompressedSize())
+                || groupElement.length == group.getUncompressedSize())
                 && BLS12381Bindings.checkG1Validity(this);
     }
 }
