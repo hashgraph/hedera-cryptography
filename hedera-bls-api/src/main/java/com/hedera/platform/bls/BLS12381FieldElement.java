@@ -24,14 +24,14 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  */
 public class BLS12381FieldElement implements FieldElement {
     /**
+     * The field the element is in
+     */
+    private static final BLS12381Field FIELD = new BLS12381Field();
+
+    /**
      * The byte representation of the element
      */
     private final byte[] fieldElement;
-
-    /**
-     * The field the element is in
-     */
-    private final BLS12381Field field;
 
     /**
      * Constructor
@@ -44,7 +44,6 @@ public class BLS12381FieldElement implements FieldElement {
         }
 
         this.fieldElement = fieldElement;
-        this.field = new BLS12381Field();
     }
 
     /**
@@ -52,7 +51,7 @@ public class BLS12381FieldElement implements FieldElement {
      */
     @Override
     public Field getField() {
-        return field;
+        return FIELD;
     }
 
     /**
@@ -163,7 +162,7 @@ public class BLS12381FieldElement implements FieldElement {
      */
     @Override
     public boolean isValid() {
-        return fieldElement.length == field.getElementSize() && BLS12381Bindings.checkScalarValidity(this);
+        return fieldElement.length == FIELD.getElementSize() && BLS12381Bindings.checkScalarValidity(this);
     }
 
     @Override
@@ -180,11 +179,11 @@ public class BLS12381FieldElement implements FieldElement {
             return false;
         }
 
-        return field.equals(element.field) && BLS12381Bindings.scalarEquals(this, element);
+        return BLS12381Bindings.scalarEquals(this, element);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(fieldElement).append(field).build();
+        return new HashCodeBuilder().append(fieldElement).append(FIELD).build();
     }
 }

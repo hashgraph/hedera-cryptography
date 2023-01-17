@@ -24,14 +24,14 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  */
 public class BLS12381Group1Element implements GroupElement {
     /**
+     * The group this element is part of
+     */
+    private static final BLS12381Group1 GROUP = new BLS12381Group1();
+
+    /**
      * The bytes representation of the element
      */
     private byte[] groupElement;
-
-    /**
-     * The group this element is part of
-     */
-    private final BLS12381Group1 group;
 
     /**
      * True if the {@link #groupElement} bytes are in a compressed form, otherwise false
@@ -50,8 +50,7 @@ public class BLS12381Group1Element implements GroupElement {
         }
 
         this.groupElement = groupElement;
-        this.group = new BLS12381Group1();
-        this.compressed = groupElement.length == group.getCompressedSize();
+        this.compressed = groupElement.length == GROUP.getCompressedSize();
     }
 
     /**
@@ -65,7 +64,6 @@ public class BLS12381Group1Element implements GroupElement {
         }
 
         this.groupElement = Arrays.copyOf(other.groupElement, other.groupElement.length);
-        this.group = other.group;
         this.compressed = other.compressed;
     }
 
@@ -74,7 +72,7 @@ public class BLS12381Group1Element implements GroupElement {
      */
     @Override
     public Group getGroup() {
-        return group;
+        return GROUP;
     }
 
     /**
@@ -94,7 +92,7 @@ public class BLS12381Group1Element implements GroupElement {
             throw new IllegalArgumentException("exponent must be a valid BLS12381FieldElement");
         }
 
-        final byte[] output = new byte[group.getUncompressedSize()];
+        final byte[] output = new byte[GROUP.getUncompressedSize()];
 
         final int errorCode;
         if ((errorCode = BLS12381Bindings.g1PowZn(this, exponentElement, output)) != 0) {
@@ -113,7 +111,7 @@ public class BLS12381Group1Element implements GroupElement {
             throw new IllegalArgumentException("other must be a valid BLS12381Group1Element");
         }
 
-        final byte[] output = new byte[group.getUncompressedSize()];
+        final byte[] output = new byte[GROUP.getUncompressedSize()];
 
         final int errorCode;
         if ((errorCode = BLS12381Bindings.g1Multiply(this, otherElement, output)) != 0) {
@@ -132,7 +130,7 @@ public class BLS12381Group1Element implements GroupElement {
             throw new IllegalArgumentException("other must be a valid BLS12381Group1Element");
         }
 
-        final byte[] output = new byte[group.getUncompressedSize()];
+        final byte[] output = new byte[GROUP.getUncompressedSize()];
 
         final int errorCode;
         if ((errorCode = BLS12381Bindings.g1Divide(this, otherElement, output)) != 0) {
@@ -152,7 +150,7 @@ public class BLS12381Group1Element implements GroupElement {
             return this;
         }
 
-        byte[] newGroupElement = new byte[group.getCompressedSize()];
+        byte[] newGroupElement = new byte[GROUP.getCompressedSize()];
 
         final int errorCode;
         if ((errorCode = BLS12381Bindings.g1Compress(this, newGroupElement)) != 0) {
@@ -187,12 +185,12 @@ public class BLS12381Group1Element implements GroupElement {
             return false;
         }
 
-        return group.equals(element.group) && BLS12381Bindings.g1ElementEquals(this, element);
+        return BLS12381Bindings.g1ElementEquals(this, element);
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(groupElement).append(group).append(compressed).build();
+        return new HashCodeBuilder().append(groupElement).append(GROUP).append(compressed).build();
     }
 
     @Override
@@ -213,8 +211,8 @@ public class BLS12381Group1Element implements GroupElement {
      */
     @Override
     public boolean isValid() {
-        return (groupElement.length == group.getCompressedSize()
-                || groupElement.length == group.getUncompressedSize())
+        return (groupElement.length == GROUP.getCompressedSize()
+                || groupElement.length == GROUP.getUncompressedSize())
                 && BLS12381Bindings.checkG1Validity(this);
     }
 }

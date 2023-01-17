@@ -22,33 +22,24 @@ public final class BLS12381BilinearMap implements BilinearMap {
     /**
      * The field of the bilinear map
      */
-    private final Field field;
+    private static final Field FIELD = new BLS12381Field();
 
     /**
      * The group of the bilinear map where BLS signatures reside
      */
-    private final Group signatureGroup;
+    private static final Group SIGNATURE_GROUP = new BLS12381Group1();
 
     /**
      * The group of the bilinear map where BLS public keys reside
      */
-    private final Group keyGroup;
-
-    /**
-     * Constructor
-     */
-    public BLS12381BilinearMap() {
-        this.field = new BLS12381Field();
-        this.signatureGroup = new BLS12381Group1();
-        this.keyGroup = new BLS12381Group2();
-    }
+    private static final Group KEY_GROUP = new BLS12381Group2();
 
     /**
      * {@inheritDoc}
      */
     @Override
     public Field getField() {
-        return field;
+        return FIELD;
     }
 
     /**
@@ -59,7 +50,7 @@ public final class BLS12381BilinearMap implements BilinearMap {
      */
     @Override
     public Group getSignatureGroup() {
-        return signatureGroup;
+        return SIGNATURE_GROUP;
     }
 
     /**
@@ -70,7 +61,7 @@ public final class BLS12381BilinearMap implements BilinearMap {
      */
     @Override
     public Group getKeyGroup() {
-        return keyGroup;
+        return KEY_GROUP;
     }
 
     /**
