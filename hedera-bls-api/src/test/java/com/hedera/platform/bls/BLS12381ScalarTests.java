@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Random;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

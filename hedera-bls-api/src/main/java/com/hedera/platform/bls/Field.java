@@ -17,8 +17,8 @@ package com.hedera.platform.bls;
 
 /**
  * Interface representing a generic field
- * <p>
- * This is a factory interface, responsible for creating {@link FieldElement field elements}
+ *
+ * <p>This is a factory interface, responsible for creating {@link FieldElement field elements}
  */
 public interface Field {
     /**

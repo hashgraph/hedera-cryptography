@@ -15,28 +15,18 @@
  */
 package com.hedera.platform.bls;
 
-/**
- * A bilinear map in the BLS 12-381 family of curves
- */
+/** A bilinear map in the BLS 12-381 family of curves */
 public final class BLS12381BilinearMap implements BilinearMap {
-    /**
-     * The field of the bilinear map
-     */
+    /** The field of the bilinear map */
     private static final Field FIELD = new BLS12381Field();
 
-    /**
-     * The group of the bilinear map where BLS signatures reside
-     */
+    /** The group of the bilinear map where BLS signatures reside */
     private static final Group SIGNATURE_GROUP = new BLS12381Group1();
 
-    /**
-     * The group of the bilinear map where BLS public keys reside
-     */
+    /** The group of the bilinear map where BLS public keys reside */
     private static final Group KEY_GROUP = new BLS12381Group2();
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public Field getField() {
         return FIELD;
@@ -64,9 +54,7 @@ public final class BLS12381BilinearMap implements BilinearMap {
         return KEY_GROUP;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean comparePairing(
             final GroupElement signatureElement1,
@@ -93,11 +81,10 @@ public final class BLS12381BilinearMap implements BilinearMap {
         return BLS12381Bindings.comparePairing(signature1, key1, signature2, key2);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public byte[] displayPairing(final GroupElement signatureElement, final GroupElement keyElement) {
+    public byte[] displayPairing(
+            final GroupElement signatureElement, final GroupElement keyElement) {
         if (!(signatureElement instanceof final BLS12381Group1Element signature)) {
             throw new IllegalArgumentException("signatureElement must be a BLS12381Group1Element");
         }

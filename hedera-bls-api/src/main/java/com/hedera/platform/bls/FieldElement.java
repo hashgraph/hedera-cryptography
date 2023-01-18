@@ -17,9 +17,7 @@ package com.hedera.platform.bls;
 
 import java.math.BigInteger;
 
-/**
- * An interface representing a generic field element
- */
+/** An interface representing a generic field element */
 public interface FieldElement {
     /**
      * Gets the field the element is in

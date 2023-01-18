@@ -19,8 +19,8 @@ import java.util.Collection;
 
 /**
  * Interface representing a generic group
- * <p>
- * This is a factory interface, responsible for creating {@link GroupElement group elements}
+ *
+ * <p>This is a factory interface, responsible for creating {@link GroupElement group elements}
  */
 public interface Group {
     /**
@@ -30,9 +30,7 @@ public interface Group {
      */
     GroupElement oneElement();
 
-    /**
-     * Creates a group element from a seed (256 bits)
-     */
+    /** Creates a group element from a seed (256 bits) */
     GroupElement randomElement(final byte[] seed);
 
     /**

@@ -16,21 +16,14 @@
 package com.hedera.platform.bls;
 
 import java.math.BigInteger;
-
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-/**
- * An element in {@link BLS12381Field}
- */
+/** An element in {@link BLS12381Field} */
 public class BLS12381FieldElement implements FieldElement {
-    /**
-     * The field the element is in
-     */
+    /** The field the element is in */
     private static final BLS12381Field FIELD = new BLS12381Field();
 
-    /**
-     * The byte representation of the element
-     */
+    /** The byte representation of the element */
     private final byte[] fieldElement;
 
     /**
@@ -46,25 +39,19 @@ public class BLS12381FieldElement implements FieldElement {
         this.fieldElement = fieldElement;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public Field getField() {
         return FIELD;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public byte[] toBytes() {
         return fieldElement;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public FieldElement add(final FieldElement other) {
         if (!(other instanceof final BLS12381FieldElement otherElement)) {
@@ -81,9 +68,7 @@ public class BLS12381FieldElement implements FieldElement {
         return new BLS12381FieldElement(output);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public FieldElement subtract(final FieldElement other) {
         if (!(other instanceof final BLS12381FieldElement otherElement)) {
@@ -100,9 +85,7 @@ public class BLS12381FieldElement implements FieldElement {
         return new BLS12381FieldElement(output);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public FieldElement multiply(final FieldElement other) {
         if (!(other instanceof final BLS12381FieldElement otherElement)) {
@@ -119,9 +102,7 @@ public class BLS12381FieldElement implements FieldElement {
         return new BLS12381FieldElement(output);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public FieldElement divide(final FieldElement other) {
         if (!(other instanceof final BLS12381FieldElement otherElement)) {
@@ -138,9 +119,7 @@ public class BLS12381FieldElement implements FieldElement {
         return new BLS12381FieldElement(output);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public FieldElement power(final BigInteger exponent) {
         if (exponent == null) {
@@ -157,12 +136,11 @@ public class BLS12381FieldElement implements FieldElement {
         return new BLS12381FieldElement(output);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean isValid() {
-        return fieldElement.length == FIELD.getElementSize() && BLS12381Bindings.checkScalarValidity(this);
+        return fieldElement.length == FIELD.getElementSize()
+                && BLS12381Bindings.checkScalarValidity(this);
     }
 
     @Override
