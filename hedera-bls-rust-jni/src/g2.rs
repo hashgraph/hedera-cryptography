@@ -42,11 +42,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newG2Identi
     _class: JClass,
     output: jbyteArray,
 ) -> jint {
-    let new_identity: G2Affine = Default::default();
+    let new_identity_bytes: [u8; 192] = G2Affine::default().to_uncompressed();
 
-    let element: &[jbyte; 192] = unsafe { mem::transmute(&new_identity.to_uncompressed()) };
+    let new_identity_jbytes: &[jbyte; 192] = unsafe { mem::transmute(&new_identity_bytes) };
 
-    return match env.set_byte_array_region(output, 0, element) {
+    return match env.set_byte_array_region(output, 0, new_identity_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -104,14 +104,12 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newRandomG2
         Err(err) => return GenericError::from(err).get_error_code()
     };
 
-    let element: &[jbyte; 192] = unsafe {
-        mem::transmute(
-            &G2Affine::from(
-                G2Projective::random(
-                    ChaChaRng::from_seed(seed_array))).to_uncompressed())
-    };
+    let random_g2_bytes: [u8; 192] = G2Affine::from(
+        G2Projective::random(ChaChaRng::from_seed(seed_array))).to_uncompressed();
 
-    return match env.set_byte_array_region(output, 0, element) {
+    let random_g2_jbytes: &[jbyte; 192] = unsafe { mem::transmute(&random_g2_bytes) };
+
+    return match env.set_byte_array_region(output, 0, random_g2_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -139,12 +137,12 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g2Divide(
 
     // BLS12_381 library defines math operations differently, hence the use of `-` here instead of `/`
     // The name of this function was chosen to maintain consistency with terminology used in javaland
-    let quotient: &[jbyte; 192] = unsafe {
-        mem::transmute(
-            &G2Affine::from(element1 - G2Projective::from(element2)).to_uncompressed())
-    };
+    let quotient_bytes: [u8; 192] = G2Affine::from(
+        element1 - G2Projective::from(element2)).to_uncompressed();
 
-    return match env.set_byte_array_region(output, 0, quotient) {
+    let quotient_jbytes: &[jbyte; 192] = unsafe { mem::transmute(&quotient_bytes) };
+
+    return match env.set_byte_array_region(output, 0, quotient_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -172,12 +170,12 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g2Multiply(
 
     // BLS12_381 library defines math operations differently, hence the use of `+` here instead of `*`
     // The name of this function was chosen to maintain consistency with terminology used in javaland
-    let product: &[jbyte; 192] = unsafe {
-        mem::transmute(
-            &G2Affine::from(element1 + G2Projective::from(element2)).to_uncompressed())
-    };
+    let product_bytes: [u8; 192] = G2Affine::from(
+        element1 + G2Projective::from(element2)).to_uncompressed();
 
-    return match env.set_byte_array_region(output, 0, product) {
+    let product_jbytes: &[jbyte; 192] = unsafe { mem::transmute(&product_bytes) };
+
+    return match env.set_byte_array_region(output, 0, product_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -217,12 +215,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g2BatchMult
         product = product + g2;
     }
 
-    let product_array: &[jbyte; 192] = unsafe {
-        mem::transmute(
-            &G2Affine::from(product).to_uncompressed())
-    };
+    let product_bytes: [u8; 192] = G2Affine::from(product).to_uncompressed();
 
-    return match env.set_byte_array_region(output, 0, product_array) {
+    let product_jbytes: &[jbyte; 192] = unsafe { mem::transmute(&product_bytes) };
+
+    return match env.set_byte_array_region(output, 0, product_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -250,12 +247,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g2PowZn(
 
     // BLS12_381 library defines math operations differently, hence the use of `*` here instead of `^`
     // The name of this function was chosen to maintain consistency with terminology used in javaland
-    let power: &[jbyte; 192] = unsafe {
-        mem::transmute(
-            &G2Affine::from(base * exponent).to_uncompressed())
-    };
+    let power_bytes: [u8; 192] = G2Affine::from(base * exponent).to_uncompressed();
 
-    return match env.set_byte_array_region(output, 0, power) {
+    let power_jbytes: &[jbyte; 192] = unsafe { mem::transmute(&power_bytes) };
+
+    return match env.set_byte_array_region(output, 0, power_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -274,11 +270,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_g2Compress(
         Err(err) => return GenericError::from(err).get_error_code()
     };
 
-    let element_array: &[jbyte; 96] = unsafe {
-        mem::transmute(&(element.to_compressed()))
-    };
+    let compressed_bytes: [u8; 96] = element.to_compressed();
 
-    return match env.set_byte_array_region(output, 0, element_array) {
+    let compressed_jbytes: &[jbyte; 96] = unsafe { mem::transmute(&compressed_bytes) };
+
+    return match env.set_byte_array_region(output, 0, compressed_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };

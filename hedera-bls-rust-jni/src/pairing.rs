@@ -63,11 +63,12 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_pairingDisp
         Err(err) => return GenericError::from(err).get_error_code()
     };
 
-    let pairing: &[jbyte] = unsafe {
-        mem::transmute(format!("{}", pairing(&g1, &g2)).as_bytes())
-    };
+    let pairing_string: String = format!("{}", pairing(&g1, &g2)).to_owned();
+    let pairing_bytes: &[u8] = pairing_string.as_bytes();
 
-    return match env.set_byte_array_region(output, 0, pairing) {
+    let pairing_jbytes: &[jbyte] = unsafe { mem::transmute(pairing_bytes) };
+
+    return match env.set_byte_array_region(output, 0, pairing_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };

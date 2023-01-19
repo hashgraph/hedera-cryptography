@@ -69,9 +69,12 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newRandomSc
         Err(err) => return GenericError::from(err).get_error_code()
     };
 
-    let random_scalar: &[jbyte; 32] = unsafe { mem::transmute(&Scalar::random(ChaChaRng::from_seed(seed_array)).to_bytes()) };
+    let random_scalar_bytes: [u8; 32] = Scalar::random(
+        ChaChaRng::from_seed(seed_array)).to_bytes();
 
-    return match env.set_byte_array_region(output, 0, random_scalar) {
+    let random_scalar_jbytes: &[jbyte; 32] = unsafe { mem::transmute(&random_scalar_bytes) };
+
+    return match env.set_byte_array_region(output, 0, random_scalar_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -85,9 +88,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newScalarFr
     input_long: jlong,
     output: jbyteArray,
 ) -> jint {
-    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&Scalar::from(input_long as u64).to_bytes()) };
+    let new_scalar_bytes: [u8; 32] = Scalar::from(input_long as u64).to_bytes();
 
-    return match env.set_byte_array_region(output, 0, scalar) {
+    let new_scalar_jbytes: &[jbyte; 32] = unsafe { mem::transmute(&new_scalar_bytes) };
+
+    return match env.set_byte_array_region(output, 0, new_scalar_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -100,9 +105,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newZeroScal
     _class: JClass,
     output: jbyteArray,
 ) -> jint {
-    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&Scalar::zero().to_bytes()) };
+    let new_zero_bytes: [u8; 32] = Scalar::zero().to_bytes();
 
-    return match env.set_byte_array_region(output, 0, scalar) {
+    let new_zero_jbytes: &[jbyte; 32] = unsafe { mem::transmute(&new_zero_bytes) };
+
+    return match env.set_byte_array_region(output, 0, new_zero_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -115,9 +122,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newOneScala
     _class: JClass,
     output: jbyteArray,
 ) -> jint {
-    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&Scalar::one().to_bytes()) };
+    let new_one_bytes: [u8; 32] = Scalar::one().to_bytes();
 
-    return match env.set_byte_array_region(output, 0, scalar) {
+    let new_one_jbytes: &[jbyte; 32] = unsafe { mem::transmute(&new_one_bytes) };
+
+    return match env.set_byte_array_region(output, 0, new_one_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -177,9 +186,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarAdd(
         Err(err) => return GenericError::from(err).get_error_code()
     };
 
-    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(scalar1 + scalar2).to_bytes()) };
+    let sum_bytes: [u8; 32] = (scalar1 + scalar2).to_bytes();
 
-    return match env.set_byte_array_region(output, 0, scalar) {
+    let sum_jbytes: &[jbyte; 32] = unsafe { mem::transmute(&sum_bytes) };
+
+    return match env.set_byte_array_region(output, 0, sum_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -205,9 +216,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarSubtr
         Err(err) => return GenericError::from(err).get_error_code()
     };
 
-    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(scalar1 - scalar2).to_bytes()) };
+    let difference_bytes: [u8; 32] = (scalar1 - scalar2).to_bytes();
 
-    return match env.set_byte_array_region(output, 0, scalar) {
+    let difference_jbytes: &[jbyte; 32] = unsafe { mem::transmute(&difference_bytes) };
+
+    return match env.set_byte_array_region(output, 0, difference_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -233,9 +246,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarMulti
         Err(err) => return GenericError::from(err).get_error_code()
     };
 
-    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(scalar1 * scalar2).to_bytes()) };
+    let product_bytes: [u8; 32] = (scalar1 * scalar2).to_bytes();
 
-    return match env.set_byte_array_region(output, 0, scalar) {
+    let product_jbytes: &[jbyte; 32] = unsafe { mem::transmute(&product_bytes) };
+
+    return match env.set_byte_array_region(output, 0, product_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -266,9 +281,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarDivid
         None => return 1,
     };
 
-    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(scalar1 * scalar2_inversion).to_bytes()) };
+    let quotient_bytes: [u8; 32] = (scalar1 * scalar2_inversion).to_bytes();
 
-    return match env.set_byte_array_region(output, 0, scalar) {
+    let quotient_jbytes: &[jbyte; 32] = unsafe { mem::transmute(&quotient_bytes) };
+
+    return match env.set_byte_array_region(output, 0, quotient_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
@@ -294,9 +311,11 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarPower
         Err(err) => return GenericError::from(err).get_error_code()
     };
 
-    let scalar: &[jbyte; 32] = unsafe { mem::transmute(&(base.pow(&exponent)).to_bytes()) };
+    let power_bytes: [u8; 32] = (base.pow(&exponent)).to_bytes();
 
-    return match env.set_byte_array_region(output, 0, scalar) {
+    let power_jbytes: &[jbyte; 32] = unsafe { mem::transmute(&power_bytes) };
+
+    return match env.set_byte_array_region(output, 0, power_jbytes) {
         Ok(_) => 0,
         Err(err) => GenericError::from(err).get_error_code()
     };
