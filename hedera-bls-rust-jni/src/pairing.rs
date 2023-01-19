@@ -66,6 +66,12 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_pairingDisp
     let pairing_string: String = format!("{}", pairing(&g1, &g2)).to_owned();
     let pairing_bytes: &[u8] = pairing_string.as_bytes();
 
+    // this should never happen, but check just in case (since we are using format instead of a
+    // purpose build serialization function)
+    if pairing_bytes.len() != 1249 {
+        return GenericError::OutputLength().get_error_code();
+    }
+
     let pairing_jbytes: &[jbyte] = unsafe { mem::transmute(pairing_bytes) };
 
     return match env.set_byte_array_region(output, 0, pairing_jbytes) {

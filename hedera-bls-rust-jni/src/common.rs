@@ -16,6 +16,8 @@ pub(crate) enum GenericError {
     TryInto(usize),
     // function input had unexpected length
     InputLength(String),
+    // underlying library returned an unexpected number of bytes
+    OutputLength(),
 }
 
 impl fmt::Display for GenericError {
@@ -27,6 +29,9 @@ impl fmt::Display for GenericError {
                 write!(f, "try_input failed for vector of size {}", size)
             }
             GenericError::InputLength(ref string) => write!(f, "Input Length error: {}", string),
+            GenericError::OutputLength() => {
+                write!(f, "Underlying library returned unexpected number of bytes")
+            }
         }
     }
 }
@@ -59,6 +64,7 @@ impl GenericError {
             GenericError::TryFromSlice(_) => 2,
             GenericError::TryInto(_) => 3,
             GenericError::InputLength(_) => 4,
+            GenericError::OutputLength() => 5,
         }
     }
 }
