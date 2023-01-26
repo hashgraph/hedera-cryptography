@@ -20,6 +20,7 @@ plugins {
 rootProject.name = "hedera-bls-cryptography"
 
 include(":hedera-bls-api")
+include(":hedera-bls-impl")
 include(":hedera-bls-rust-jni")
 
 dependencyResolutionManagement {
