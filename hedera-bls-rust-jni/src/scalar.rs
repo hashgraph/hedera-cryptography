@@ -53,7 +53,7 @@ fn bytes_to_big_int(env: &JNIEnv, bytes: &jbyteArray) -> Result<[u64; 4], Generi
 
 /// Creates a new scalar, based on input seed
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newRandomScalar(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_newRandomScalar(
     env: JNIEnv,
     _class: JClass,
     input_seed_bytes: jbyteArray,
@@ -82,7 +82,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newRandomSc
 
 /// Creates a new scalar from a long
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newScalarFromLong(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_newScalarFromLong(
     env: JNIEnv,
     _class: JClass,
     input_long: jlong,
@@ -100,7 +100,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newScalarFr
 
 /// Creates a new 0 value scalar
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newZeroScalar(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_newZeroScalar(
     env: JNIEnv,
     _class: JClass,
     output: jbyteArray,
@@ -117,7 +117,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newZeroScal
 
 /// Creates a new 1 value scalar
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newOneScalar(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_newOneScalar(
     env: JNIEnv,
     _class: JClass,
     output: jbyteArray,
@@ -134,7 +134,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_newOneScala
 
 /// Checks if 2 scalar values are equal
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarEquals(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_scalarEquals(
     env: JNIEnv,
     _class: JClass,
     scalar1_object: JObject,
@@ -155,7 +155,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarEqual
 
 /// Checks if a scalar is valid
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_checkScalarValidity(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_checkScalarValidity(
     env: JNIEnv,
     _class: JClass,
     scalar_object: JObject,
@@ -169,7 +169,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_checkScalar
 /// Computes the sum of 2 scalar values
 /// Result is a scalar
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarAdd(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_scalarAdd(
     env: JNIEnv,
     _class: JClass,
     scalar1_object: JObject,
@@ -199,7 +199,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarAdd(
 /// Computes the difference between 2 scalar values
 /// Result is a scalar
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarSubtract(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_scalarSubtract(
     env: JNIEnv,
     _class: JClass,
     scalar1_object: JObject,
@@ -229,7 +229,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarSubtr
 /// Computes the product of 2 scalar values
 /// Result is a scalar
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarMultiply(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_scalarMultiply(
     env: JNIEnv,
     _class: JClass,
     scalar1_object: JObject,
@@ -259,7 +259,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarMulti
 /// Computes the quotient of 2 scalar values
 /// Result is a scalar
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarDivide(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_scalarDivide(
     env: JNIEnv,
     _class: JClass,
     scalar1_object: JObject,
@@ -294,7 +294,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarDivid
 /// Computes the value of a scalar taken to the power of a big integer
 /// Result is a scalar value
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_BLS12381Bindings_scalarPower(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_scalarPower(
     env: JNIEnv,
     _class: JClass,
     base_object: JObject,       // scalar

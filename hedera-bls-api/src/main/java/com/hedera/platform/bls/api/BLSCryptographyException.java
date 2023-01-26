@@ -15,9 +15,7 @@
  */
 package com.hedera.platform.bls.api;
 
-/**
- * An exception that occurs in a BLS cryptography implementation
- */
+/** An exception that occurs in a BLS cryptography implementation */
 public class BLSCryptographyException extends RuntimeException {
 
     /**

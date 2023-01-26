@@ -59,7 +59,8 @@ class BLS12381GroupTests {
 
         Assertions.assertTrue(randomElement1.isValid(), "randomElement1 should be valid");
         Assertions.assertTrue(randomElement2.isValid(), "randomElement2 should be valid");
-        Assertions.assertNotEquals(randomElement1, randomElement2, "random elements shouldn't be equal");
+        Assertions.assertNotEquals(
+                randomElement1, randomElement2, "random elements shouldn't be equal");
         Assertions.assertNotEquals(
                 randomElement1, group.oneElement(), "random element 1 shouldn't equal identity");
         Assertions.assertNotEquals(
@@ -160,7 +161,8 @@ class BLS12381GroupTests {
     @DisplayName("newOneElement produces the same result every time")
     void newOneElementDeterministic(final Group group) {
         Assertions.assertTrue(group.oneElement().isValid(), "identity should be valid");
-        Assertions.assertEquals(group.oneElement(), group.oneElement(), "identity should equal identity");
+        Assertions.assertEquals(
+                group.oneElement(), group.oneElement(), "identity should equal identity");
     }
 
     @ParameterizedTest()
@@ -175,8 +177,10 @@ class BLS12381GroupTests {
         final GroupElement quotient = randomElement1.divide(randomElement2);
 
         Assertions.assertTrue(quotient.isValid(), "quotient should be valid");
-        Assertions.assertNotEquals(quotient, randomElement1, "quotient shouldn't equal randomElement1");
-        Assertions.assertNotEquals(quotient, randomElement2, "quotient shouldn't equal randomElement2");
+        Assertions.assertNotEquals(
+                quotient, randomElement1, "quotient shouldn't equal randomElement1");
+        Assertions.assertNotEquals(
+                quotient, randomElement2, "quotient shouldn't equal randomElement2");
     }
 
     @ParameterizedTest()
@@ -203,7 +207,8 @@ class BLS12381GroupTests {
         Assertions.assertTrue(quotientMixed1.isValid(), "quotientMixed1 should be valid");
         Assertions.assertTrue(quotientMixed2.isValid(), "quotientMixed2 should be valid");
 
-        Assertions.assertEquals(quotient, quotientCompressed, "compression shouldn't affect result");
+        Assertions.assertEquals(
+                quotient, quotientCompressed, "compression shouldn't affect result");
         Assertions.assertEquals(quotient, quotientMixed1, "compression shouldn't affect result");
         Assertions.assertEquals(quotient, quotientMixed2, "compression shouldn't affect result");
     }
@@ -230,7 +235,8 @@ class BLS12381GroupTests {
         final GroupElement quotient = randomElement.divide(group.oneElement());
 
         Assertions.assertTrue(quotient.isValid(), "quotient should be valid");
-        Assertions.assertEquals(randomElement, quotient, "dividing by identity shouldn't have an effect");
+        Assertions.assertEquals(
+                randomElement, quotient, "dividing by identity shouldn't have an effect");
     }
 
     @ParameterizedTest()
@@ -247,7 +253,8 @@ class BLS12381GroupTests {
 
         Assertions.assertTrue(quotient1.isValid(), "quotient1 should be valid");
         Assertions.assertTrue(quotient2.isValid(), "quotient2 should be valid");
-        Assertions.assertEquals(quotient1, quotient2, "division with same inputs should produce same result");
+        Assertions.assertEquals(
+                quotient1, quotient2, "division with same inputs should produce same result");
     }
 
     @ParameterizedTest()
@@ -262,8 +269,10 @@ class BLS12381GroupTests {
         final GroupElement product = randomElement1.multiply(randomElement2);
 
         Assertions.assertTrue(product.isValid(), "product should be valid");
-        Assertions.assertNotEquals(randomElement1, product, "product shouldn't equal randomElement1");
-        Assertions.assertNotEquals(randomElement2, product, "product shouldn't equal randomElement2");
+        Assertions.assertNotEquals(
+                randomElement1, product, "product shouldn't equal randomElement1");
+        Assertions.assertNotEquals(
+                randomElement2, product, "product shouldn't equal randomElement2");
     }
 
     @ParameterizedTest()
@@ -317,7 +326,8 @@ class BLS12381GroupTests {
         final GroupElement product = randomElement.multiply(group.oneElement());
 
         Assertions.assertTrue(product.isValid(), "product should be valid");
-        Assertions.assertEquals(randomElement, product, "multiplying by identity shouldn't have an effect");
+        Assertions.assertEquals(
+                randomElement, product, "multiplying by identity shouldn't have an effect");
     }
 
     @ParameterizedTest()
@@ -411,7 +421,8 @@ class BLS12381GroupTests {
 
         Assertions.assertTrue(batchProduct.isValid(), "batchProduct should be valid");
         for (final GroupElement element : elements) {
-            Assertions.assertNotEquals(element, batchProduct, "product shouldn't equal random element");
+            Assertions.assertNotEquals(
+                    element, batchProduct, "product shouldn't equal random element");
         }
 
         Assertions.assertEquals(
@@ -583,7 +594,8 @@ class BLS12381GroupTests {
         final GroupElement power = randomElement.power(field.oneElement());
 
         Assertions.assertTrue(power.isValid(), "power should be valid");
-        Assertions.assertEquals(randomElement, power, "element to the power of 1 should equal itself");
+        Assertions.assertEquals(
+                randomElement, power, "element to the power of 1 should equal itself");
     }
 
     @ParameterizedTest()
@@ -595,7 +607,8 @@ class BLS12381GroupTests {
                         .power(field.zeroElement());
 
         Assertions.assertTrue(power.isValid(), "power should be valid");
-        Assertions.assertEquals(group.oneElement(), power, "element to the power of 0 should equal identity");
+        Assertions.assertEquals(
+                group.oneElement(), power, "element to the power of 0 should equal identity");
     }
 
     @ParameterizedTest()
@@ -612,7 +625,8 @@ class BLS12381GroupTests {
 
         Assertions.assertTrue(power1.isValid(), "power1 should be valid");
         Assertions.assertTrue(power2.isValid(), "power2 should be valid");
-        Assertions.assertEquals(power1, power2, "power with same inputs should produce same result");
+        Assertions.assertEquals(
+                power1, power2, "power with same inputs should produce same result");
     }
 
     @Test()
@@ -624,9 +638,12 @@ class BLS12381GroupTests {
         Group group2A = new BLS12381Group2();
         Group group2B = new BLS12381Group2();
 
-        Assertions.assertEquals(group1A, group1B, "Group objects of the same class should equal each other");
-        Assertions.assertEquals(group2A, group2B, "Group objects of the same class should equal each other");
-        Assertions.assertNotEquals(group1A, group2A, "Group objects of different classes shouldn't be equal");
+        Assertions.assertEquals(
+                group1A, group1B, "Group objects of the same class should equal each other");
+        Assertions.assertEquals(
+                group2A, group2B, "Group objects of the same class should equal each other");
+        Assertions.assertNotEquals(
+                group1A, group2A, "Group objects of different classes shouldn't be equal");
     }
 
     @ParameterizedTest()
@@ -686,7 +703,8 @@ class BLS12381GroupTests {
         final GroupElement randomElement = group.randomElement(seed);
         final GroupElement randomElementCompressed = group.randomElement(seed).compress();
 
-        Assertions.assertTrue(randomElementCompressed.isValid(), "randomElementCompressed should be valid");
+        Assertions.assertTrue(
+                randomElementCompressed.isValid(), "randomElementCompressed should be valid");
         Assertions.assertEquals(
                 randomElement,
                 randomElementCompressed,
@@ -706,7 +724,8 @@ class BLS12381GroupTests {
                 randomElement.toBytes().length,
                 "uncompressed element is of unexpected length");
 
-        Assertions.assertTrue(randomElementCompressed.isValid(), "randomElementCompressed should be valid");
+        Assertions.assertTrue(
+                randomElementCompressed.isValid(), "randomElementCompressed should be valid");
         Assertions.assertEquals(
                 group.getCompressedSize(),
                 randomElementCompressed.toBytes().length,
@@ -722,7 +741,8 @@ class BLS12381GroupTests {
                         .compress()
                         .compress();
 
-        Assertions.assertTrue(doubleCompressedElement.isValid(), "doubleCompressedElement should be valid");
+        Assertions.assertTrue(
+                doubleCompressedElement.isValid(), "doubleCompressedElement should be valid");
         Assertions.assertEquals(
                 group.getCompressedSize(),
                 doubleCompressedElement.toBytes().length,
@@ -737,7 +757,9 @@ class BLS12381GroupTests {
                 group.randomElement(TestUtils.randomByteArray(random, group.getSeedSize()));
         final GroupElement copiedElement = randomElement.copy();
 
-        Assertions.assertEquals(randomElement, copiedElement, "A copied element should equal the original");
-        Assertions.assertNotSame(randomElement, copiedElement, "There should be 2 separate objects");
+        Assertions.assertEquals(
+                randomElement, copiedElement, "A copied element should equal the original");
+        Assertions.assertNotSame(
+                randomElement, copiedElement, "There should be 2 separate objects");
     }
 }

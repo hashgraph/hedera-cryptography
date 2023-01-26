@@ -18,12 +18,3 @@ plugins {
     id("com.hedera.platform.library")
     id("com.hedera.platform.maven-publish")
 }
-
-dependencies {
-    implementation(libs.resource.loader)
-    implementation(libs.jna)
-    implementation("net.java.dev.jna:jna:5.12.1")
-    implementation(libs.bundles.logging.impl)
-    implementation(libs.commons.io)
-    implementation(libs.commons.lang3)
-}

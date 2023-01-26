@@ -47,7 +47,8 @@ class BLS12381ScalarTests {
 
         Assertions.assertTrue(randomScalar1.isValid(), "randomScalar1 should be valid");
         Assertions.assertTrue(randomScalar2.isValid(), "randomScalar2 should be valid");
-        Assertions.assertNotEquals(randomScalar1, randomScalar2, "random scalars shouldn't be equal");
+        Assertions.assertNotEquals(
+                randomScalar1, randomScalar2, "random scalars shouldn't be equal");
         assertNotEquals(randomScalar1, field.oneElement(), "random scalar shouldn't equal 1");
         assertNotEquals(randomScalar1, field.zeroElement(), "random scalar shouldn't equal 0");
         assertNotEquals(randomScalar2, field.oneElement(), "random scalar shouldn't equal 1");
@@ -215,7 +216,8 @@ class BLS12381ScalarTests {
 
         Assertions.assertNotEquals(null, sum1, "sum1 should be valid");
         Assertions.assertNotEquals(null, sum2, "sum2 should be valid");
-        Assertions.assertEquals(sum1, sum2, "addition with swapped inputs should produce same result");
+        Assertions.assertEquals(
+                sum1, sum2, "addition with swapped inputs should produce same result");
     }
 
     @Test
@@ -229,8 +231,10 @@ class BLS12381ScalarTests {
         final FieldElement difference = randomScalar1.subtract(randomScalar2);
 
         Assertions.assertNotEquals(null, difference, "difference should be valid");
-        Assertions.assertNotEquals(difference, randomScalar1, "difference shouldn't equal randomScalar1");
-        Assertions.assertNotEquals(difference, randomScalar2, "difference shouldn't equal randomScalar2");
+        Assertions.assertNotEquals(
+                difference, randomScalar1, "difference shouldn't equal randomScalar1");
+        Assertions.assertNotEquals(
+                difference, randomScalar2, "difference shouldn't equal randomScalar2");
     }
 
     @Test
@@ -386,8 +390,10 @@ class BLS12381ScalarTests {
         final FieldElement quotient = randomScalar1.divide(randomScalar2);
 
         Assertions.assertNotEquals(null, quotient, "quotient should be valid");
-        Assertions.assertNotEquals(quotient, randomScalar1, "quotient shouldn't equal randomScalar1");
-        Assertions.assertNotEquals(quotient, randomScalar2, "quotient shouldn't equal randomScalar2");
+        Assertions.assertNotEquals(
+                quotient, randomScalar1, "quotient shouldn't equal randomScalar1");
+        Assertions.assertNotEquals(
+                quotient, randomScalar2, "quotient shouldn't equal randomScalar2");
     }
 
     @Test
@@ -440,7 +446,8 @@ class BLS12381ScalarTests {
 
         Assertions.assertNotEquals(null, quotient1, "quotient1 should be valid");
         Assertions.assertNotEquals(null, quotient2, "quotient2 should be valid");
-        Assertions.assertEquals(quotient1, quotient2, "division with same inputs should produce same result");
+        Assertions.assertEquals(
+                quotient1, quotient2, "division with same inputs should produce same result");
     }
 
     @Test
@@ -476,7 +483,8 @@ class BLS12381ScalarTests {
         final FieldElement result = randomScalar.power(new BigInteger("1"));
 
         Assertions.assertNotEquals(null, result, "result should be valid");
-        Assertions.assertEquals(result, randomScalar, "a scalar to the power of 1 shouldn't have an effect");
+        Assertions.assertEquals(
+                result, randomScalar, "a scalar to the power of 1 shouldn't have an effect");
     }
 
     @Test
@@ -503,7 +511,8 @@ class BLS12381ScalarTests {
 
         Assertions.assertNotEquals(null, result1, "result1 should be valid");
         Assertions.assertNotEquals(null, result2, "result2 should be valid");
-        Assertions.assertEquals(result1, result2, "power with same inputs should produce same result");
+        Assertions.assertEquals(
+                result1, result2, "power with same inputs should produce same result");
     }
 
     @Test
