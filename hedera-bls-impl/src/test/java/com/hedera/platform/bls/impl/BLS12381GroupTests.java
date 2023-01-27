@@ -631,37 +631,6 @@ class BLS12381GroupTests {
                 power1, power2, "power with same inputs should produce same result");
     }
 
-    @Test()
-    @DisplayName("group equality success")
-    void groupEqualsSuccess() {
-        Group group1A = BLS12381Group1.getInstance();
-        Group group1B = BLS12381Group1.getInstance();
-
-        Group group2A = BLS12381Group2.getInstance();
-        Group group2B = BLS12381Group2.getInstance();
-
-        Assertions.assertEquals(
-                group1A, group1B, "Group objects of the same class should equal each other");
-        Assertions.assertEquals(
-                group2A, group2B, "Group objects of the same class should equal each other");
-        Assertions.assertNotEquals(
-                group1A, group2A, "Group objects of different classes shouldn't be equal");
-    }
-
-    @ParameterizedTest()
-    @MethodSource("groups")
-    @DisplayName("group equality with null argument returns false")
-    void groupEqualsInvalid(final Group group) {
-        Assertions.assertNotEquals(null, group, "One value being null should return false");
-    }
-
-    @ParameterizedTest()
-    @MethodSource("groups")
-    @DisplayName("a group equals itself")
-    void groupEqualsSelf(final Group group) {
-        Assertions.assertEquals(group, group, "A group should equal itself");
-    }
-
     @ParameterizedTest()
     @MethodSource("groups")
     @DisplayName("element equality with null argument returns false")

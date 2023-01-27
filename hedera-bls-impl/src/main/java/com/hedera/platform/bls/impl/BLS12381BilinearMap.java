@@ -113,27 +113,4 @@ public final class BLS12381BilinearMap implements BilinearMap {
 
         return output;
     }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-
-        if (o == null) {
-            return false;
-        }
-
-        return getClass() == o.getClass();
-    }
-
-    @Override
-    public int hashCode() {
-        return this.getClass().getCanonicalName().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return this.getClass().getCanonicalName();
-    }
 }

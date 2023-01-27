@@ -136,22 +136,4 @@ public class BLS12381Field implements Field {
     public int getSeedSize() {
         return SEED_SIZE;
     }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-
-        if (o == null) {
-            return false;
-        }
-
-        return getClass() == o.getClass();
-    }
-
-    @Override
-    public int hashCode() {
-        return this.getClass().getCanonicalName().hashCode();
-    }
 }
