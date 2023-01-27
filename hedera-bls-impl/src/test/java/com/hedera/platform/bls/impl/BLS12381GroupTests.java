@@ -40,12 +40,14 @@ class BLS12381GroupTests {
 
     @BeforeEach
     public void init() {
-        field = new BLS12381Field();
+        field = BLS12381Field.getInstance();
         random = TestUtils.getRandomPrintSeed();
     }
 
     static Stream<Arguments> groups() {
-        return Stream.of(Arguments.of(new BLS12381Group1()), Arguments.of(new BLS12381Group2()));
+        return Stream.of(
+                Arguments.of(BLS12381Group1.getInstance()),
+                Arguments.of(BLS12381Group2.getInstance()));
     }
 
     @ParameterizedTest()
@@ -632,11 +634,11 @@ class BLS12381GroupTests {
     @Test()
     @DisplayName("group equality success")
     void groupEqualsSuccess() {
-        Group group1A = new BLS12381Group1();
-        Group group1B = new BLS12381Group1();
+        Group group1A = BLS12381Group1.getInstance();
+        Group group1B = BLS12381Group1.getInstance();
 
-        Group group2A = new BLS12381Group2();
-        Group group2B = new BLS12381Group2();
+        Group group2A = BLS12381Group2.getInstance();
+        Group group2B = BLS12381Group2.getInstance();
 
         Assertions.assertEquals(
                 group1A, group1B, "Group objects of the same class should equal each other");
@@ -673,8 +675,8 @@ class BLS12381GroupTests {
     @Test()
     @DisplayName("element equality between different groups returns false")
     void elementEqualsWrongGroup() {
-        Group group1 = new BLS12381Group1();
-        Group group2 = new BLS12381Group2();
+        Group group1 = BLS12381Group1.getInstance();
+        Group group2 = BLS12381Group2.getInstance();
         GroupElement group1Element =
                 group1.randomElement(TestUtils.randomByteArray(random, group1.getSeedSize()));
         GroupElement group2Element =

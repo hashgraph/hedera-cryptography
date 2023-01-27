@@ -30,6 +30,31 @@ public class BLS12381Field implements Field {
     /** Length of a byte array representing a field element */
     public static final int ELEMENT_BYTE_SIZE = 32;
 
+    /** The singleton instance */
+    private static BLS12381Field instance;
+
+    /** Hidden constructor */
+    private BLS12381Field() {}
+
+    /**
+     * Returns the singleton
+     *
+     * @return the singleton
+     */
+    public static BLS12381Field getInstance() {
+        if (instance == null) {
+            synchronized (BLS12381Field.class) {
+                if (instance != null) {
+                    return instance;
+                }
+
+                instance = new BLS12381Field();
+            }
+        }
+
+        return instance;
+    }
+
     /** {@inheritDoc} */
     @Override
     public FieldElement elementFromLong(final long inputLong) {

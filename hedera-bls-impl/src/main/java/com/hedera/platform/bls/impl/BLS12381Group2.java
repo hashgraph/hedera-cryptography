@@ -34,6 +34,31 @@ public class BLS12381Group2 implements Group {
     /** Required size of a seed to create a new group element */
     private static final int SEED_SIZE = 32;
 
+    /** The singleton instance */
+    private static BLS12381Group2 instance;
+
+    /** Hidden constructor */
+    private BLS12381Group2() {}
+
+    /**
+     * Returns the singleton
+     *
+     * @return the singleton
+     */
+    public static BLS12381Group2 getInstance() {
+        if (instance == null) {
+            synchronized (BLS12381Group2.class) {
+                if (instance != null) {
+                    return instance;
+                }
+
+                instance = new BLS12381Group2();
+            }
+        }
+
+        return instance;
+    }
+
     /** {@inheritDoc} */
     @Override
     public GroupElement oneElement() {

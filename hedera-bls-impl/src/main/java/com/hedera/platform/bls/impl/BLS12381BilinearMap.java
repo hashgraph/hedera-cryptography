@@ -24,13 +24,13 @@ import com.hedera.platform.bls.api.GroupElement;
 public final class BLS12381BilinearMap implements BilinearMap {
 
     /** The field of the bilinear map */
-    private static final Field FIELD = new BLS12381Field();
+    private static final Field FIELD = BLS12381Field.getInstance();
 
     /** The group of the bilinear map where BLS signatures reside */
-    private static final Group SIGNATURE_GROUP = new BLS12381Group1();
+    private static final Group SIGNATURE_GROUP = BLS12381Group1.getInstance();
 
     /** The group of the bilinear map where BLS public keys reside */
-    private static final Group KEY_GROUP = new BLS12381Group2();
+    private static final Group KEY_GROUP = BLS12381Group2.getInstance();
 
     /** {@inheritDoc} */
     @Override

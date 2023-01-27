@@ -33,7 +33,7 @@ class BLS12381ScalarTests {
 
     @BeforeEach
     public void init() {
-        field = new BLS12381Field();
+        field = BLS12381Field.getInstance();
         random = TestUtils.getRandomPrintSeed();
     }
 

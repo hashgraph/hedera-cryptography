@@ -23,7 +23,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 /** An element in {@link BLS12381Field} */
 public class BLS12381FieldElement implements FieldElement {
     /** The field the element is in */
-    private static final BLS12381Field FIELD = new BLS12381Field();
+    private static final BLS12381Field FIELD = BLS12381Field.getInstance();
 
     /** The byte representation of the element */
     private final byte[] fieldElement;

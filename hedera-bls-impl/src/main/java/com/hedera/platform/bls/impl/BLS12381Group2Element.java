@@ -24,7 +24,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 /** An element in Group 2 of the BLS 12-381 curve family */
 public class BLS12381Group2Element implements GroupElement {
     /** The group this element is part of */
-    private static final BLS12381Group2 GROUP = new BLS12381Group2();
+    private static final BLS12381Group2 GROUP = BLS12381Group2.getInstance();
 
     /** The bytes representation of the element */
     private byte[] groupElement;
