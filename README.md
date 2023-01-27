@@ -1,14 +1,20 @@
 # Hedera BLS Cryptography
 
-This repository is a Java wrapper around the [zkcrypto](https://github.com/zkcrypto/bls12_381) Rust implementation of
-the BLS12-381 pairing-friendly elliptic curve construction.
-<p>
-This repository is separated into two main parts:
+This repository is separated into three main parts:
 
-1. An interface between Java and Rust, to be able to access the underlying implementation in the zkcrypto library
-    - The Rust side of the interface can be found in the `hedera-bls-rust-jni` module
-    - The Java side of the interface can be found in `BLS12381Bindings` in the `hedera-bls-api` module
-    - The `LibraryLoader` class is responsible for loading the rust library and setting up the bindings
-2. A set of Java objects representing the BLS cryptographic primitives needed by Hedera
-    - These primitives are in the `hedera-bls-api` module
-    - These objects call into the Java/Rust interface to perform their function
+1. A set of public interfaces representing BLS concepts, in the `hedera-bls-api` module
+    - The `BLSLoader` in this module allows an implementation of `BilinearMap` to be loaded from the
+      java classpath
+    - The `BilinearMap` returned from `BLSLoader` provides an entry point to a complete BLS
+      signature scheme
+2. An implementation of these public interfaces, in the `hedera-bls-impl` module
+    - This implementation is exported so that consumers can have it in their java classpath, but it
+      should only be interacted with via the public interface
+    - The `BLS12381Bindings` class forms the java side of a JNI interface, to access the underlying
+      cryptography implementation
+    - The `LibraryLoader` utility class is responsible for loading compiled native code, produced in
+      the `hedera-bls-rust-jni` module
+3. A rust JNI interface, in the `hedera-bls-rust-jni` module
+    - This module includes the rust side of a JNI interface
+    - It serves to allow the `hedera-bls-impl` module to interact with
+      the [zkcrypto BLS12_381](https://github.com/zkcrypto/bls12_381) rust library
