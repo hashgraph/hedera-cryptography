@@ -18,7 +18,7 @@ package com.hedera.platform.bls.impl;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class Utils {
+public final class Utils {
     private Utils() {}
 
     /**

@@ -15,6 +15,8 @@
  */
 package com.hedera.platform.bls.impl;
 
+import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
+
 import com.hedera.platform.bls.api.Field;
 import com.hedera.platform.bls.api.FieldElement;
 
@@ -62,7 +64,7 @@ public class BLS12381Field implements Field {
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.newScalarFromLong(inputLong, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.newScalarFromLong(inputLong, output)) != SUCCESS) {
             throw new BLS12381Exception("newScalarFromLong", errorCode);
         }
 
@@ -75,7 +77,7 @@ public class BLS12381Field implements Field {
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.newZeroScalar(output)) != 0) {
+        if ((errorCode = BLS12381Bindings.newZeroScalar(output)) != SUCCESS) {
             throw new BLS12381Exception("newZeroScalar", errorCode);
         }
 
@@ -88,7 +90,7 @@ public class BLS12381Field implements Field {
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.newOneScalar(output)) != 0) {
+        if ((errorCode = BLS12381Bindings.newOneScalar(output)) != SUCCESS) {
             throw new BLS12381Exception("newOneScalar", errorCode);
         }
 
@@ -106,7 +108,7 @@ public class BLS12381Field implements Field {
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.newRandomScalar(seed, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.newRandomScalar(seed, output)) != SUCCESS) {
             throw new BLS12381Exception("newRandomScalar", errorCode);
         }
 

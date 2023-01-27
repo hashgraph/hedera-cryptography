@@ -15,6 +15,8 @@
  */
 package com.hedera.platform.bls.impl;
 
+import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
+
 import com.hedera.platform.bls.api.FieldElement;
 import com.hedera.platform.bls.api.Group;
 import com.hedera.platform.bls.api.GroupElement;
@@ -83,7 +85,7 @@ public class BLS12381Group1Element implements GroupElement {
         final byte[] output = new byte[GROUP.getUncompressedSize()];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.g1PowZn(this, exponentElement, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.g1PowZn(this, exponentElement, output)) != SUCCESS) {
             throw new BLS12381Exception("g1PowZn", errorCode);
         }
 
@@ -100,7 +102,7 @@ public class BLS12381Group1Element implements GroupElement {
         final byte[] output = new byte[GROUP.getUncompressedSize()];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.g1Multiply(this, otherElement, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.g1Multiply(this, otherElement, output)) != SUCCESS) {
             throw new BLS12381Exception("g1Multiply", errorCode);
         }
 
@@ -117,7 +119,7 @@ public class BLS12381Group1Element implements GroupElement {
         final byte[] output = new byte[GROUP.getUncompressedSize()];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.g1Divide(this, otherElement, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.g1Divide(this, otherElement, output)) != SUCCESS) {
             throw new BLS12381Exception("g1Divide", errorCode);
         }
 
@@ -135,7 +137,7 @@ public class BLS12381Group1Element implements GroupElement {
         byte[] newGroupElement = new byte[GROUP.getCompressedSize()];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.g1Compress(this, newGroupElement)) != 0) {
+        if ((errorCode = BLS12381Bindings.g1Compress(this, newGroupElement)) != SUCCESS) {
             throw new BLS12381Exception("g1Compress", errorCode);
         }
 

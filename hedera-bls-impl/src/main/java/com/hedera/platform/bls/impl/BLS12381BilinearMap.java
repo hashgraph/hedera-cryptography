@@ -15,6 +15,8 @@
  */
 package com.hedera.platform.bls.impl;
 
+import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
+
 import com.hedera.platform.bls.api.BilinearMap;
 import com.hedera.platform.bls.api.Field;
 import com.hedera.platform.bls.api.Group;
@@ -107,7 +109,7 @@ public final class BLS12381BilinearMap implements BilinearMap {
         final byte[] output = new byte[1249];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.pairingDisplay(signature, key, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.pairingDisplay(signature, key, output)) != SUCCESS) {
             throw new BLS12381Exception("pairingDisplay", errorCode);
         }
 

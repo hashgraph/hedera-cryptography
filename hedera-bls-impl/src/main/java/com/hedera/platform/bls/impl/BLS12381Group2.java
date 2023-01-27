@@ -15,6 +15,8 @@
  */
 package com.hedera.platform.bls.impl;
 
+import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
+
 import com.hedera.platform.bls.api.Group;
 import com.hedera.platform.bls.api.GroupElement;
 import java.util.Collection;
@@ -65,7 +67,7 @@ public class BLS12381Group2 implements Group {
         final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.newG2Identity(output)) != 0) {
+        if ((errorCode = BLS12381Bindings.newG2Identity(output)) != SUCCESS) {
             throw new BLS12381Exception("newG2Identity", errorCode);
         }
 
@@ -83,7 +85,7 @@ public class BLS12381Group2 implements Group {
         final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.newRandomG2(seed, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.newRandomG2(seed, output)) != SUCCESS) {
             throw new BLS12381Exception("newRandomG2", errorCode);
         }
 
@@ -104,7 +106,7 @@ public class BLS12381Group2 implements Group {
         }
 
         if (elements.contains(null)) {
-            throw new IllegalArgumentException("invalid element in collection");
+            throw new IllegalArgumentException("invalid element (null) in collection");
         }
 
         final BLS12381Group2Element[] elementArray = new BLS12381Group2Element[elements.size()];
@@ -118,7 +120,7 @@ public class BLS12381Group2 implements Group {
         final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.g2BatchMultiply(elementArray, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.g2BatchMultiply(elementArray, output)) != SUCCESS) {
             throw new BLS12381Exception("g2BatchMultiply", errorCode);
         }
 

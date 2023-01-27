@@ -15,6 +15,8 @@
  */
 package com.hedera.platform.bls.impl;
 
+import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
+
 import com.hedera.platform.bls.api.Field;
 import com.hedera.platform.bls.api.FieldElement;
 import java.math.BigInteger;
@@ -63,7 +65,7 @@ public class BLS12381FieldElement implements FieldElement {
         final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.scalarAdd(this, otherElement, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.scalarAdd(this, otherElement, output)) != SUCCESS) {
             throw new BLS12381Exception("scalarAdd", errorCode);
         }
 
@@ -80,7 +82,7 @@ public class BLS12381FieldElement implements FieldElement {
         final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.scalarSubtract(this, otherElement, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.scalarSubtract(this, otherElement, output)) != SUCCESS) {
             throw new BLS12381Exception("scalarSubtract", errorCode);
         }
 
@@ -97,7 +99,7 @@ public class BLS12381FieldElement implements FieldElement {
         final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.scalarMultiply(this, otherElement, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.scalarMultiply(this, otherElement, output)) != SUCCESS) {
             throw new BLS12381Exception("scalarMultiply", errorCode);
         }
 
@@ -114,7 +116,7 @@ public class BLS12381FieldElement implements FieldElement {
         final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.scalarDivide(this, otherElement, output)) != 0) {
+        if ((errorCode = BLS12381Bindings.scalarDivide(this, otherElement, output)) != SUCCESS) {
             throw new BLS12381Exception("scalarDivide", errorCode);
         }
 
@@ -131,7 +133,8 @@ public class BLS12381FieldElement implements FieldElement {
         final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
 
         final int errorCode;
-        if ((errorCode = BLS12381Bindings.scalarPower(this, exponent.toByteArray(), output)) != 0) {
+        if ((errorCode = BLS12381Bindings.scalarPower(this, exponent.toByteArray(), output))
+                != SUCCESS) {
             throw new BLS12381Exception("scalarPower", errorCode);
         }
 

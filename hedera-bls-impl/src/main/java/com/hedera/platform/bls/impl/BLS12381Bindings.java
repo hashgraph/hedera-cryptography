@@ -20,6 +20,10 @@ import java.io.IOException;
 
 /** Class containing definitions for native rust functions that operate on the g1 group */
 public final class BLS12381Bindings {
+
+    /** The code returned from the rust interface if a call succeeds */
+    public static final int SUCCESS = 0;
+
     /** Hidden constructor */
     private BLS12381Bindings() {}
 
