@@ -22,7 +22,7 @@ import java.util.Collection;
 /**
  * G1 of the BLS12-381 curve family
  *
- * <p>This class functions as a {@link BLS12381Group1Element} factory
+ * <p>This class functions as a {@link BLS12381Group1Element} factory. It is defined as a singleton.
  */
 public class BLS12381Group1 implements Group {
     /** Length of a byte array representing a compressed element */

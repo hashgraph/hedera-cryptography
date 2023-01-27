@@ -21,9 +21,10 @@ import com.hedera.platform.bls.api.FieldElement;
 /**
  * The finite field of the BLS 12-381 curve family
  *
- * <p>This class functions as a {@link BLS12381FieldElement} factory
+ * <p>This class functions as a {@link BLS12381FieldElement} factory. It is defined as a singleton.
  */
 public class BLS12381Field implements Field {
+
     /** Required size of a seed to create a new field element */
     public static final int SEED_SIZE = 32;
 

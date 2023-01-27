@@ -20,7 +20,11 @@ import com.hedera.platform.bls.api.Field;
 import com.hedera.platform.bls.api.Group;
 import com.hedera.platform.bls.api.GroupElement;
 
-/** A bilinear map in the BLS 12-381 family of curves */
+/**
+ * A bilinear map in the BLS 12-381 family of curves. The underlying cryptography implementation for
+ * this class is provided by the <a href="https://github.com/zkcrypto/bls12_381">zkcrypto bls12_381
+ * rust library</a>
+ */
 public final class BLS12381BilinearMap implements BilinearMap {
 
     /** The field of the bilinear map */

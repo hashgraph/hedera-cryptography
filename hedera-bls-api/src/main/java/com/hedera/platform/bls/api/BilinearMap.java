@@ -15,8 +15,15 @@
  */
 package com.hedera.platform.bls.api;
 
-/** An object for computing bilinear pairings */
+/**
+ * An object for computing bilinear pairings
+ *
+ * <p>This interface provides the single entry point into a BLS encryption scheme: all necessary
+ * elements and operations can be reached through it. An instance of a bilinear map can be obtained
+ * through the {@link BLSLoader}
+ */
 public interface BilinearMap {
+
     /**
      * Gets the field of the bilinear map
      *
