@@ -48,11 +48,11 @@ public class BLS12381Group1Element implements GroupElement {
     }
 
     /**
-     * Copy constructor
+     * Package private copy constructor
      *
      * @param other the object being copied
      */
-    public BLS12381Group1Element(final BLS12381Group1Element other) {
+    BLS12381Group1Element(final BLS12381Group1Element other) {
         if (other == null) {
             throw new IllegalArgumentException("other cannot be null");
         }

@@ -29,11 +29,11 @@ public class BLS12381FieldElement implements FieldElement {
     private final byte[] fieldElement;
 
     /**
-     * Constructor
+     * Package Private Constructor
      *
      * @param fieldElement an array of bytes representing this field element
      */
-    public BLS12381FieldElement(final byte[] fieldElement) {
+    BLS12381FieldElement(final byte[] fieldElement) {
         if (fieldElement == null) {
             throw new IllegalArgumentException("fieldElement parameter must not be null");
         }
