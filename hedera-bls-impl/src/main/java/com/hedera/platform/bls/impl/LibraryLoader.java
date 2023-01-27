@@ -46,6 +46,11 @@ import org.apache.logging.log4j.Logger;
  *     href="https://github.com/adamheinrich/native-utils">https://github.com/adamheinrich/native-utils</a>
  */
 public final class LibraryLoader {
+
+    /** Hidden constructor */
+    private LibraryLoader() {}
+
+    /** The name of the compiled BLS library */
     private static final String LIBRARY_NAME = "libhedera_bls_jni";
 
     private static final Logger logger = LogManager.getLogger(LibraryLoader.class);
