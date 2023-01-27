@@ -18,11 +18,11 @@ package com.hedera.platform.bls.api;
 /** Interface representing a cryptographic group element */
 public interface GroupElement {
     /**
-     * Gets the group of the element
+     * Returns the group of the element
      *
      * @return the element's group
      */
-    Group getGroup();
+    Group group();
 
     /**
      * Serializes the group elements to a byte array

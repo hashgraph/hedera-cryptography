@@ -42,16 +42,16 @@ class BLS12381PairingTests {
     void equalPairings() {
         final GroupElement signatureElement =
                 bilinearMap
-                        .getSignatureGroup()
+                        .signatureGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getSignatureGroup().getSeedSize()));
+                                        random, bilinearMap.signatureGroup().getSeedSize()));
         final GroupElement keyElement =
                 bilinearMap
-                        .getKeyGroup()
+                        .keyGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getKeyGroup().getSeedSize()));
+                                        random, bilinearMap.keyGroup().getSeedSize()));
 
         Assertions.assertTrue(
                 bilinearMap.comparePairing(
@@ -64,29 +64,29 @@ class BLS12381PairingTests {
     void unequalPairings() {
         final GroupElement signatureElementA =
                 bilinearMap
-                        .getSignatureGroup()
+                        .signatureGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getSignatureGroup().getSeedSize()));
+                                        random, bilinearMap.signatureGroup().getSeedSize()));
         final GroupElement keyElementA =
                 bilinearMap
-                        .getKeyGroup()
+                        .keyGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getKeyGroup().getSeedSize()));
+                                        random, bilinearMap.keyGroup().getSeedSize()));
 
         final GroupElement signatureElementB =
                 bilinearMap
-                        .getSignatureGroup()
+                        .signatureGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getSignatureGroup().getSeedSize()));
+                                        random, bilinearMap.signatureGroup().getSeedSize()));
         final GroupElement keyElementB =
                 bilinearMap
-                        .getKeyGroup()
+                        .keyGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getKeyGroup().getSeedSize()));
+                                        random, bilinearMap.keyGroup().getSeedSize()));
 
         Assertions.assertFalse(
                 bilinearMap.comparePairing(
@@ -99,16 +99,16 @@ class BLS12381PairingTests {
     void comparePairingFailure() {
         final GroupElement signatureElement =
                 bilinearMap
-                        .getSignatureGroup()
+                        .signatureGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getSignatureGroup().getSeedSize()));
+                                        random, bilinearMap.signatureGroup().getSeedSize()));
         final GroupElement keyElement =
                 bilinearMap
-                        .getKeyGroup()
+                        .keyGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getKeyGroup().getSeedSize()));
+                                        random, bilinearMap.keyGroup().getSeedSize()));
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -136,17 +136,17 @@ class BLS12381PairingTests {
     @DisplayName("comparePairing with compression")
     void comparePairingCompressed() {
         final byte[] seed1 =
-                TestUtils.randomByteArray(random, bilinearMap.getSignatureGroup().getSeedSize());
+                TestUtils.randomByteArray(random, bilinearMap.signatureGroup().getSeedSize());
         final byte[] seed2 =
-                TestUtils.randomByteArray(random, bilinearMap.getKeyGroup().getSeedSize());
+                TestUtils.randomByteArray(random, bilinearMap.keyGroup().getSeedSize());
 
-        final GroupElement signatureElement = bilinearMap.getSignatureGroup().randomElement(seed1);
-        final GroupElement keyElement = bilinearMap.getKeyGroup().randomElement(seed2);
+        final GroupElement signatureElement = bilinearMap.signatureGroup().randomElement(seed1);
+        final GroupElement keyElement = bilinearMap.keyGroup().randomElement(seed2);
 
         final GroupElement signatureElementCompressed =
-                bilinearMap.getSignatureGroup().randomElement(seed1).compress();
+                bilinearMap.signatureGroup().randomElement(seed1).compress();
         final GroupElement keyElementCompressed =
-                bilinearMap.getKeyGroup().randomElement(seed2).compress();
+                bilinearMap.keyGroup().randomElement(seed2).compress();
 
         Assertions.assertTrue(
                 bilinearMap.comparePairing(
@@ -171,29 +171,29 @@ class BLS12381PairingTests {
     void pairingDisplayUnique() {
         final GroupElement signatureElementA =
                 bilinearMap
-                        .getSignatureGroup()
+                        .signatureGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getSignatureGroup().getSeedSize()));
+                                        random, bilinearMap.signatureGroup().getSeedSize()));
         final GroupElement keyElementA =
                 bilinearMap
-                        .getKeyGroup()
+                        .keyGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getKeyGroup().getSeedSize()));
+                                        random, bilinearMap.keyGroup().getSeedSize()));
 
         final GroupElement signatureElementB =
                 bilinearMap
-                        .getSignatureGroup()
+                        .signatureGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getSignatureGroup().getSeedSize()));
+                                        random, bilinearMap.signatureGroup().getSeedSize()));
         final GroupElement keyElementB =
                 bilinearMap
-                        .getKeyGroup()
+                        .keyGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getKeyGroup().getSeedSize()));
+                                        random, bilinearMap.keyGroup().getSeedSize()));
 
         assertNotEquals(
                 bytesToHex(bilinearMap.displayPairing(signatureElementA, keyElementA)),
@@ -206,16 +206,16 @@ class BLS12381PairingTests {
     void pairingDisplayDeterministic() {
         final GroupElement signatureElement =
                 bilinearMap
-                        .getSignatureGroup()
+                        .signatureGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getSignatureGroup().getSeedSize()));
+                                        random, bilinearMap.signatureGroup().getSeedSize()));
         final GroupElement keyElement =
                 bilinearMap
-                        .getKeyGroup()
+                        .keyGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getKeyGroup().getSeedSize()));
+                                        random, bilinearMap.keyGroup().getSeedSize()));
 
         Assertions.assertArrayEquals(
                 bilinearMap.displayPairing(signatureElement, keyElement),
@@ -228,16 +228,16 @@ class BLS12381PairingTests {
     void pairingDisplayFailure() {
         final GroupElement signatureElement =
                 bilinearMap
-                        .getSignatureGroup()
+                        .signatureGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getSignatureGroup().getSeedSize()));
+                                        random, bilinearMap.signatureGroup().getSeedSize()));
         final GroupElement keyElement =
                 bilinearMap
-                        .getKeyGroup()
+                        .keyGroup()
                         .randomElement(
                                 TestUtils.randomByteArray(
-                                        random, bilinearMap.getKeyGroup().getSeedSize()));
+                                        random, bilinearMap.keyGroup().getSeedSize()));
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -253,17 +253,17 @@ class BLS12381PairingTests {
     @DisplayName("pairingDisplay with compression")
     void pairingDisplayCompressed() {
         final byte[] seed1 =
-                TestUtils.randomByteArray(random, bilinearMap.getSignatureGroup().getSeedSize());
+                TestUtils.randomByteArray(random, bilinearMap.signatureGroup().getSeedSize());
         final byte[] seed2 =
-                TestUtils.randomByteArray(random, bilinearMap.getKeyGroup().getSeedSize());
+                TestUtils.randomByteArray(random, bilinearMap.keyGroup().getSeedSize());
 
-        final GroupElement signatureElement = bilinearMap.getSignatureGroup().randomElement(seed1);
-        final GroupElement keyElement = bilinearMap.getKeyGroup().randomElement(seed2);
+        final GroupElement signatureElement = bilinearMap.signatureGroup().randomElement(seed1);
+        final GroupElement keyElement = bilinearMap.keyGroup().randomElement(seed2);
 
         final GroupElement signatureElementCompressed =
-                bilinearMap.getSignatureGroup().randomElement(seed1).compress();
+                bilinearMap.signatureGroup().randomElement(seed1).compress();
         final GroupElement keyElementCompressed =
-                bilinearMap.getKeyGroup().randomElement(seed2).compress();
+                bilinearMap.keyGroup().randomElement(seed2).compress();
 
         final byte[] uncompressedDisplay = bilinearMap.displayPairing(signatureElement, keyElement);
 

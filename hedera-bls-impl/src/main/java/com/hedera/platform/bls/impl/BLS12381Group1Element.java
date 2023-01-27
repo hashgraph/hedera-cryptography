@@ -63,7 +63,7 @@ public class BLS12381Group1Element implements GroupElement {
 
     /** {@inheritDoc} */
     @Override
-    public Group getGroup() {
+    public Group group() {
         return GROUP;
     }
 

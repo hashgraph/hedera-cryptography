@@ -38,7 +38,7 @@ public final class BLS12381BilinearMap implements BilinearMap {
 
     /** {@inheritDoc} */
     @Override
-    public Field getField() {
+    public Field field() {
         return FIELD;
     }
 
@@ -49,7 +49,7 @@ public final class BLS12381BilinearMap implements BilinearMap {
      * as our signature group. More operations are performed with signatures than with keys
      */
     @Override
-    public Group getSignatureGroup() {
+    public Group signatureGroup() {
         return SIGNATURE_GROUP;
     }
 
@@ -60,7 +60,7 @@ public final class BLS12381BilinearMap implements BilinearMap {
      * our key group. Fewer operations are performed with keys than with signatures
      */
     @Override
-    public Group getKeyGroup() {
+    public Group keyGroup() {
         return KEY_GROUP;
     }
 

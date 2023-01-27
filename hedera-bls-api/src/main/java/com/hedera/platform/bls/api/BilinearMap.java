@@ -25,26 +25,27 @@ package com.hedera.platform.bls.api;
 public interface BilinearMap {
 
     /**
-     * Gets the field of the bilinear map
+     * Returns the field of the bilinear map
      *
      * @return the field
      */
-    Field getField();
+    Field field();
 
     /**
-     * Gets the signature group of the map. BLS signatures will be represented as elements of this
-     * group
+     * Returns the signature group of the map. BLS signatures will be represented as elements of
+     * this group
      *
      * @return the signature group of the pairing
      */
-    Group getSignatureGroup();
+    Group signatureGroup();
 
     /**
-     * Gets the key group of the map. BLS public keys will be represented as elements of this group
+     * Returns the key group of the map. BLS public keys will be represented as elements of this
+     * group
      *
      * @return the key group of the pairing
      */
-    Group getKeyGroup();
+    Group keyGroup();
 
     /**
      * Computes 2 pairings, and then checks the equality of the result

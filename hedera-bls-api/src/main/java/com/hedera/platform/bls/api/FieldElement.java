@@ -20,11 +20,11 @@ import java.math.BigInteger;
 /** An interface representing a generic field element */
 public interface FieldElement {
     /**
-     * Gets the field the element is in
+     * Returns the field the element is in
      *
      * @return the field
      */
-    Field getField();
+    Field field();
 
     /**
      * Serializes the field element to bytes

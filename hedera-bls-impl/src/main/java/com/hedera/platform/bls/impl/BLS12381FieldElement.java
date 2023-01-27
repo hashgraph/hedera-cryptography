@@ -29,7 +29,7 @@ public class BLS12381FieldElement implements FieldElement {
     private final byte[] fieldElement;
 
     /**
-     * Package Private Constructor
+     * Package private constructor
      *
      * @param fieldElement an array of bytes representing this field element
      */
@@ -43,7 +43,7 @@ public class BLS12381FieldElement implements FieldElement {
 
     /** {@inheritDoc} */
     @Override
-    public Field getField() {
+    public Field field() {
         return FIELD;
     }
 
