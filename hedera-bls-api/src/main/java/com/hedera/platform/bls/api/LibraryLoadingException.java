@@ -18,7 +18,7 @@ package com.hedera.platform.bls.api;
 /** Indicates a failure to load the required library. */
 public class LibraryLoadingException extends RuntimeException {
 
-    public LibraryLoadingException(String message) {
+    public LibraryLoadingException(final String message) {
         super(message);
     }
 }

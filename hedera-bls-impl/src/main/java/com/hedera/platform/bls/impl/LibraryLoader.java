@@ -48,7 +48,7 @@ import org.apache.logging.log4j.Logger;
 public final class LibraryLoader {
     private static final String LIBRARY_NAME = "libhedera_bls_jni";
 
-    private final Logger logger = LogManager.getLogger(LibraryLoader.class);
+    private static final Logger logger = LogManager.getLogger(LibraryLoader.class);
 
     /**
      * Loads library from the current JAR archive and registers the native methods of the provided
@@ -57,7 +57,7 @@ public final class LibraryLoader {
      * <p>The file from JAR is copied into system temporary directory and then loaded. The temporary
      * file is deleted after exiting.
      */
-    public void loadBundledLibrary(final Class<?> clazz) throws IOException {
+    public static void loadBundledLibrary(final Class<?> clazz) throws IOException {
         Path pathInJar = getLibraryPathInResources();
 
         try {
@@ -76,7 +76,7 @@ public final class LibraryLoader {
      * @throws IOException If at any point processing of the resource file fails.
      * @throws URISyntaxException If resource file cannot be found
      */
-    public File copyToTempDirectory(Path relativePath, Class<?> outsideClass)
+    private static File copyToTempDirectory(Path relativePath, Class<?> outsideClass)
             throws IOException, URISyntaxException {
         // Create a "main" temporary directory everything can be thrown in
         File tempDirectory = ResourceLoader.createMainTempDirectory();
@@ -108,7 +108,7 @@ public final class LibraryLoader {
      * @param jarPath the path of the potential jar
      * @return true if the provided path is a jar file, otherwise false
      */
-    private boolean isJarFile(final Path jarPath) {
+    private static boolean isJarFile(final Path jarPath) {
         if (jarPath == null) {
             return false;
         }
@@ -133,7 +133,7 @@ public final class LibraryLoader {
      * @return The file or directory that was requested.
      * @throws IOException Could not find requested file.
      */
-    private File getFileFromFileSystem(final Path relativePath, final File outputDirectory)
+    private static File getFileFromFileSystem(final Path relativePath, final File outputDirectory)
             throws IOException, URISyntaxException {
 
         final URL url =
@@ -168,7 +168,7 @@ public final class LibraryLoader {
      * @param s A string to prefix
      * @return A string with a slash prefixed
      */
-    private String prefixStringWithSlashIfNotAlready(String s) {
+    private static String prefixStringWithSlashIfNotAlready(String s) {
         if (!s.startsWith("/")) {
             s = "/" + s;
         }
@@ -185,7 +185,7 @@ public final class LibraryLoader {
      * @throws IOException
      * @throws URISyntaxException
      */
-    private File nestedExtract(File extractTo, String fullPath) throws IOException {
+    private static File nestedExtract(File extractTo, String fullPath) throws IOException {
         final String JAR = ".jar";
 
         // After this line we have something like
@@ -259,7 +259,7 @@ public final class LibraryLoader {
      * @throws URISyntaxException If we could not ascertain our location.
      * @throws IOException If whilst unzipping we had some problems.
      */
-    private File extractFilesOrFoldersFromJar(File outputDir, URL jarUrl, String pathInJar)
+    private static File extractFilesOrFoldersFromJar(File outputDir, URL jarUrl, String pathInJar)
             throws IOException {
         File jar = ResourceLoader.urlToFile(jarUrl);
         unzip(jar.getAbsolutePath(), outputDir.getAbsolutePath());
@@ -314,7 +314,7 @@ public final class LibraryLoader {
      *
      * @return The path to the library binary
      */
-    public static Path getLibraryPathInResources() {
+    private static Path getLibraryPathInResources() {
         boolean is64Bit = Native.POINTER_SIZE == 8;
 
         if (Platform.isWindows()) {
