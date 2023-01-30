@@ -26,9 +26,18 @@ import org.junit.jupiter.api.Test;
 class BLSLoaderTests {
 
     @Test
-    @DisplayName("Equal pairing results")
+    @DisplayName("Get bilinear map instance")
     void getBilinearMapInstance() {
         final BilinearMap bilinearMap = BLSLoader.instance();
+
+        assertNotNull(bilinearMap, "Returned bilinear map should not be null");
+    }
+
+    @Test
+    @DisplayName("Get bilinear map instance multiple times")
+    void getBilinearMapInstanceMultiple() {
+        BilinearMap bilinearMap = BLSLoader.instance();
+        bilinearMap = BLSLoader.instance();
 
         assertNotNull(bilinearMap, "Returned bilinear map should not be null");
     }
