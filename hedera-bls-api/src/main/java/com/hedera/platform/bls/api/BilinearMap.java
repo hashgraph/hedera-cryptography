@@ -57,13 +57,13 @@ public interface BilinearMap {
      * @return true if the 2 pairings have the same result, otherwise false
      */
     boolean comparePairing(
-            final GroupElement signatureElement1,
-            final GroupElement keyElement1,
-            final GroupElement signatureElement2,
-            final GroupElement keyElement2);
+            GroupElement signatureElement1,
+            GroupElement keyElement1,
+            GroupElement signatureElement2,
+            GroupElement keyElement2);
 
     /**
-     * Computes a pairing, and returns a string representing the result
+     * Computes a pairing, and returns a byte array representing the result
      *
      * @param signatureElement the element in the signature group of the pairing
      * @param keyElement the element in the key group of the pairing

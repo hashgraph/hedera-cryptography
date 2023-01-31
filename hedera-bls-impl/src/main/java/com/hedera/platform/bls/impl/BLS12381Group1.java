@@ -16,6 +16,10 @@
 package com.hedera.platform.bls.impl;
 
 import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.g1BatchMultiply;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.newG1Identity;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.newRandomG1;
+import static com.hedera.platform.bls.impl.Utils.computeSha256;
 
 import com.hedera.platform.bls.api.Group;
 import com.hedera.platform.bls.api.GroupElement;
@@ -66,8 +70,8 @@ public class BLS12381Group1 implements Group {
     public GroupElement oneElement() {
         final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.newG1Identity(output)) != SUCCESS) {
+        final int errorCode = newG1Identity(output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("newG1Identity", errorCode);
         }
 
@@ -84,8 +88,8 @@ public class BLS12381Group1 implements Group {
 
         final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.newRandomG1(seed, output)) != SUCCESS) {
+        final int errorCode = newRandomG1(seed, output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("newRandomG1", errorCode);
         }
 
@@ -95,7 +99,7 @@ public class BLS12381Group1 implements Group {
     /** {@inheritDoc} */
     @Override
     public GroupElement hashToGroup(final byte[] input) {
-        return randomElement(Utils.computeSha256(input));
+        return randomElement(computeSha256(input));
     }
 
     /** {@inheritDoc} */
@@ -119,8 +123,8 @@ public class BLS12381Group1 implements Group {
 
         final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.g1BatchMultiply(elementArray, output)) != SUCCESS) {
+        final int errorCode = g1BatchMultiply(elementArray, output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("g1BatchMultiply", errorCode);
         }
 

@@ -16,6 +16,10 @@
 package com.hedera.platform.bls.impl;
 
 import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.newOneScalar;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.newRandomScalar;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.newScalarFromLong;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.newZeroScalar;
 
 import com.hedera.platform.bls.api.Field;
 import com.hedera.platform.bls.api.FieldElement;
@@ -63,8 +67,8 @@ public class BLS12381Field implements Field {
     public FieldElement elementFromLong(final long inputLong) {
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.newScalarFromLong(inputLong, output)) != SUCCESS) {
+        final int errorCode = newScalarFromLong(inputLong, output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("newScalarFromLong", errorCode);
         }
 
@@ -76,8 +80,8 @@ public class BLS12381Field implements Field {
     public FieldElement zeroElement() {
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.newZeroScalar(output)) != SUCCESS) {
+        final int errorCode = newZeroScalar(output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("newZeroScalar", errorCode);
         }
 
@@ -89,8 +93,8 @@ public class BLS12381Field implements Field {
     public FieldElement oneElement() {
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.newOneScalar(output)) != SUCCESS) {
+        final int errorCode = newOneScalar(output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("newOneScalar", errorCode);
         }
 
@@ -107,8 +111,8 @@ public class BLS12381Field implements Field {
 
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.newRandomScalar(seed, output)) != SUCCESS) {
+        final int errorCode = newRandomScalar(seed, output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("newRandomScalar", errorCode);
         }
 

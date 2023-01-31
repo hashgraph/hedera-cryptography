@@ -16,6 +16,12 @@
 package com.hedera.platform.bls.impl;
 
 import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.checkG1Validity;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.g1Compress;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.g1Divide;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.g1ElementEquals;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.g1Multiply;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.g1PowZn;
 
 import com.hedera.platform.bls.api.FieldElement;
 import com.hedera.platform.bls.api.Group;
@@ -84,8 +90,8 @@ public class BLS12381Group1Element implements GroupElement {
 
         final byte[] output = new byte[GROUP.getUncompressedSize()];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.g1PowZn(this, exponentElement, output)) != SUCCESS) {
+        final int errorCode = g1PowZn(this, exponentElement, output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("g1PowZn", errorCode);
         }
 
@@ -101,8 +107,8 @@ public class BLS12381Group1Element implements GroupElement {
 
         final byte[] output = new byte[GROUP.getUncompressedSize()];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.g1Multiply(this, otherElement, output)) != SUCCESS) {
+        final int errorCode = g1Multiply(this, otherElement, output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("g1Multiply", errorCode);
         }
 
@@ -118,8 +124,8 @@ public class BLS12381Group1Element implements GroupElement {
 
         final byte[] output = new byte[GROUP.getUncompressedSize()];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.g1Divide(this, otherElement, output)) != SUCCESS) {
+        final int errorCode = g1Divide(this, otherElement, output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("g1Divide", errorCode);
         }
 
@@ -134,10 +140,10 @@ public class BLS12381Group1Element implements GroupElement {
             return this;
         }
 
-        byte[] newGroupElement = new byte[GROUP.getCompressedSize()];
+        final byte[] newGroupElement = new byte[GROUP.getCompressedSize()];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.g1Compress(this, newGroupElement)) != SUCCESS) {
+        final int errorCode = g1Compress(this, newGroupElement);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("g1Compress", errorCode);
         }
 
@@ -167,7 +173,7 @@ public class BLS12381Group1Element implements GroupElement {
             return false;
         }
 
-        return BLS12381Bindings.g1ElementEquals(this, element);
+        return g1ElementEquals(this, element);
     }
 
     @Override
@@ -191,6 +197,6 @@ public class BLS12381Group1Element implements GroupElement {
     public boolean isValid() {
         return (groupElement.length == GROUP.getCompressedSize()
                         || groupElement.length == GROUP.getUncompressedSize())
-                && BLS12381Bindings.checkG1Validity(this);
+                && checkG1Validity(this);
     }
 }

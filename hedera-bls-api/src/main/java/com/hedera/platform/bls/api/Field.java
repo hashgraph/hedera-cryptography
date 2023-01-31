@@ -27,7 +27,7 @@ public interface Field {
      * @param inputLong the long to use to create the field element
      * @return the new field element
      */
-    FieldElement elementFromLong(final long inputLong);
+    FieldElement elementFromLong(long inputLong);
 
     /**
      * Creates a new field element with value 0
@@ -44,12 +44,12 @@ public interface Field {
     FieldElement oneElement();
 
     /**
-     * Creates a field element from a seed (256 bits)
+     * Creates a field element from a seed (32 bytes)
      *
      * @param seed a seed to use to generate randomness
      * @return the new field element
      */
-    FieldElement randomElement(final byte[] seed);
+    FieldElement randomElement(byte[] seed);
 
     /**
      * Creates a field element from its serialized encoding

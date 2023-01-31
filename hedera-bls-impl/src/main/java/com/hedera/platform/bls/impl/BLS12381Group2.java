@@ -16,6 +16,10 @@
 package com.hedera.platform.bls.impl;
 
 import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.g2BatchMultiply;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.newG2Identity;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.newRandomG2;
+import static com.hedera.platform.bls.impl.Utils.computeSha256;
 
 import com.hedera.platform.bls.api.Group;
 import com.hedera.platform.bls.api.GroupElement;
@@ -66,8 +70,8 @@ public class BLS12381Group2 implements Group {
     public GroupElement oneElement() {
         final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.newG2Identity(output)) != SUCCESS) {
+        final int errorCode = newG2Identity(output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("newG2Identity", errorCode);
         }
 
@@ -84,8 +88,8 @@ public class BLS12381Group2 implements Group {
 
         final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.newRandomG2(seed, output)) != SUCCESS) {
+        final int errorCode = newRandomG2(seed, output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("newRandomG2", errorCode);
         }
 
@@ -95,7 +99,7 @@ public class BLS12381Group2 implements Group {
     /** {@inheritDoc} */
     @Override
     public GroupElement hashToGroup(final byte[] input) {
-        return randomElement(Utils.computeSha256(input));
+        return randomElement(computeSha256(input));
     }
 
     /** {@inheritDoc} */
@@ -119,8 +123,8 @@ public class BLS12381Group2 implements Group {
 
         final byte[] output = new byte[UNCOMPRESSED_SIZE];
 
-        final int errorCode;
-        if ((errorCode = BLS12381Bindings.g2BatchMultiply(elementArray, output)) != SUCCESS) {
+        final int errorCode = g2BatchMultiply(elementArray, output);
+        if (errorCode != SUCCESS) {
             throw new BLS12381Exception("g2BatchMultiply", errorCode);
         }
 

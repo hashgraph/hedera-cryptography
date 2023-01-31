@@ -30,8 +30,8 @@ public interface Group {
      */
     GroupElement oneElement();
 
-    /** Creates a group element from a seed (256 bits) */
-    GroupElement randomElement(final byte[] seed);
+    /** Creates a group element from a seed (32 bytes) */
+    GroupElement randomElement(byte[] seed);
 
     /**
      * Hashes an unbounded length input to a group element
@@ -39,7 +39,7 @@ public interface Group {
      * @param input the input to be hashes
      * @return the new group element
      */
-    GroupElement hashToGroup(final byte[] input);
+    GroupElement hashToGroup(byte[] input);
 
     /**
      * Multiplies a collection of group elements together
@@ -47,7 +47,7 @@ public interface Group {
      * @param elements the collection of elements to multiply together
      * @return a new group element which is the product the collection of elements
      */
-    GroupElement batchMultiply(final Collection<GroupElement> elements);
+    GroupElement batchMultiply(Collection<GroupElement> elements);
 
     /**
      * Creates a group element from its serialized encoding

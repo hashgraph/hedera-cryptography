@@ -37,7 +37,7 @@ public interface GroupElement {
      * @param exponent the field element exponent
      * @return a new group element which is this group element to the power of a field element
      */
-    GroupElement power(final FieldElement exponent);
+    GroupElement power(FieldElement exponent);
 
     /**
      * Multiplies this group element with another
@@ -45,7 +45,7 @@ public interface GroupElement {
      * @param other the other group element
      * @return a new group element which is the product of this element and another
      */
-    GroupElement multiply(final GroupElement other);
+    GroupElement multiply(GroupElement other);
 
     /**
      * Divides this group element by another
@@ -53,7 +53,7 @@ public interface GroupElement {
      * @param other the other group element
      * @return a new group element which is the quotient of this element and another
      */
-    GroupElement divide(final GroupElement other);
+    GroupElement divide(GroupElement other);
 
     /**
      * Compresses the group element

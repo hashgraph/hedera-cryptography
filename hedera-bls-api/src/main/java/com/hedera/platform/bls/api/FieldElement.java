@@ -39,7 +39,7 @@ public interface FieldElement {
      * @param other the other field element
      * @return a new field element which is the sum of this element and another
      */
-    FieldElement add(final FieldElement other);
+    FieldElement add(FieldElement other);
 
     /**
      * Subtracts another field element from this one
@@ -47,7 +47,7 @@ public interface FieldElement {
      * @param other the other field element
      * @return a new field element which is the difference of this element and another
      */
-    FieldElement subtract(final FieldElement other);
+    FieldElement subtract(FieldElement other);
 
     /**
      * Multiplies another field element with this one
@@ -55,7 +55,7 @@ public interface FieldElement {
      * @param other the other field element
      * @return a new field element which is the product of this element and another
      */
-    FieldElement multiply(final FieldElement other);
+    FieldElement multiply(FieldElement other);
 
     /**
      * Divides the field element by another
@@ -63,15 +63,15 @@ public interface FieldElement {
      * @param other the other field element
      * @return a new field element which is the quotient of this element and another
      */
-    FieldElement divide(final FieldElement other);
+    FieldElement divide(FieldElement other);
 
     /**
      * Takes the field element to the power of an integer
      *
-     * @param e2 the exponent integer
+     * @param exponent the exponent integer
      * @return a new field element which is the power
      */
-    FieldElement power(final BigInteger e2);
+    FieldElement power(BigInteger exponent);
 
     /**
      * Checks whether the element bytes are valid
