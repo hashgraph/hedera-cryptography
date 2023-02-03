@@ -273,4 +273,14 @@ class BilinearMapServiceTests {
                 Arguments.of(ProviderType.STUB, BLS12381StubProvider.class),
                 Arguments.of(ProviderType.EXPERIMENTAL, BLS12381ExperimentalProvider.class));
     }
+
+    /*
+    Example usage with a builder model:
+
+    final Platform platform = new PlatformBuilder()
+            .withConsensus(new SomeConsensusImpl())
+            .withBilinearMap(BilinearMapService.runtimeProviderOf(WellKnownAlgorithms.BLS12_381))
+            .........
+            .build();
+     */
 }
