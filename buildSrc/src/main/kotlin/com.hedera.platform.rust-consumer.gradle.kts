@@ -1,3 +1,5 @@
+import gradle.kotlin.dsl.accessors._6b5a012da99913209253918e0907799b.sourceSets
+
 /*
  * Copyright 2016-2022 Hedera Hashgraph, LLC
  *
@@ -15,9 +17,6 @@
  * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
  */
 
-import gradle.kotlin.dsl.accessors._6ca76b4a0a5e09fb29b07b0b7dae9905.processResources
-import org.gradle.kotlin.dsl.creating
-
 plugins {
     base
 }
@@ -34,8 +33,9 @@ val rustLibrary by configurations.creating {
 
 val rustLibraryPackaging = tasks.create<RustLibraryPackagingTask>("rustLibraryPackaging") {
     configuration.from(rustLibrary)
+    resourceFolder.set(project.sourceSets["main"].resources.sourceDirectories.first())
 }
 
-tasks.processResources {
+tasks.named("processResources") {
     dependsOn(rustLibraryPackaging)
 }

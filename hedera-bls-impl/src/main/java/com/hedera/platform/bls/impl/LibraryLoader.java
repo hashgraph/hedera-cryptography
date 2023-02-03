@@ -323,7 +323,7 @@ public final class LibraryLoader {
         final String x64 = "x86_64";
         final String i686 = "i686";
         final String aarch64 = "aarch64";
-        
+
         if (Platform.isWindows()) {
             final String platformFolder = "windows";
             final String fileName = LIBRARY_NAME.substring(3) .concat(".dll");
