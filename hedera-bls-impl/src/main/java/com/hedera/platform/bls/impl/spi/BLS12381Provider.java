@@ -22,7 +22,7 @@ import com.hedera.platform.bls.spi.ProviderType;
 import com.hedera.platform.bls.spi.WellKnownAlgorithms;
 
 public class BLS12381Provider implements BilinearMapProvider {
-    private final BilinearMap map = new BLS12381BilinearMap();
+    private static final BilinearMap map = new BLS12381BilinearMap();
 
     @Override
     public String algorithm() {
