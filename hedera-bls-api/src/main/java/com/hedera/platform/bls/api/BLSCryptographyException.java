@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-plugins {
-    id("com.hedera.platform.aggregate-reports")
-    id("com.hedera.platform.spotless-conventions")
-    id("com.hedera.platform.spotless-kotlin-conventions")
-}
+package com.hedera.platform.bls.api;
 
-group = "com.hedera.platform"
+/** An exception that occurs in a BLS cryptography implementation */
+public class BLSCryptographyException extends RuntimeException {
 
-repositories {
-    mavenCentral()
+    /**
+     * String constructor
+     *
+     * @param description description of the exception which occurred
+     */
+    public BLSCryptographyException(final String description) {
+        super(description);
+    }
 }

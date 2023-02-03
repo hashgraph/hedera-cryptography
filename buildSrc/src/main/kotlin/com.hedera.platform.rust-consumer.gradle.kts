@@ -1,0 +1,41 @@
+import gradle.kotlin.dsl.accessors._6b5a012da99913209253918e0907799b.sourceSets
+
+/*
+ * Copyright 2016-2022 Hedera Hashgraph, LLC
+ *
+ * This software is the confidential and proprietary information of
+ * Hedera Hashgraph, LLC. ("Confidential Information"). You shall not
+ * disclose such Confidential Information and shall use it only in
+ * accordance with the terms of the license agreement you entered into
+ * with Hedera Hashgraph.
+ *
+ * HEDERA HASHGRAPH MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
+ * THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+ * TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE, OR NON-INFRINGEMENT. HEDERA HASHGRAPH SHALL NOT BE LIABLE FOR
+ * ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
+ * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+ */
+
+plugins {
+    base
+}
+
+val rustLibrary by configurations.creating {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+    isVisible = true
+
+    attributes {
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, project.objects.named("rust-library"))
+    }
+}
+
+val rustLibraryPackaging = tasks.create<RustLibraryPackagingTask>("rustLibraryPackaging") {
+    configuration.from(rustLibrary)
+    resourceFolder.set(project.sourceSets["main"].resources.sourceDirectories.first())
+}
+
+tasks.named("processResources") {
+    dependsOn(rustLibraryPackaging)
+}
