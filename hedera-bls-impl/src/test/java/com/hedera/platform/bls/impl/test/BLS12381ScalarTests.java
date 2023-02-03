@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hedera.platform.bls.impl;
+package com.hedera.platform.bls.impl.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.platform.bls.api.FieldElement;
+import com.hedera.platform.bls.impl.BLS12381Exception;
+import com.hedera.platform.bls.impl.BLS12381Field;
+import com.hedera.platform.bls.impl.BLS12381FieldElement;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Random;
@@ -365,7 +368,8 @@ class BLS12381ScalarTests {
         final FieldElement randomScalar = field.randomElement(TestUtils.randomByteArray(random, field.getSeedSize()));
         final FieldElement zero = field.zeroElement();
 
-        assertThrows(BLS12381Exception.class, () -> randomScalar.divide(zero), "Dividing by zero should cause error");
+        Assertions.assertThrows(
+                BLS12381Exception.class, () -> randomScalar.divide(zero), "Dividing by zero should cause error");
     }
 
     @Test

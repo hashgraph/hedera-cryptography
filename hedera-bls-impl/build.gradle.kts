@@ -28,5 +28,10 @@ dependencies {
   implementation(libs.commons.io)
   implementation(libs.commons.lang3)
   implementation(project(":hedera-bls-api"))
+
   rustLibrary(project(path = ":hedera-bls-rust-jni", configuration = "rustLibrary"))
+
+  testImplementation(testLibs.bundles.junit)
+  testImplementation(testLibs.bundles.mockito)
+  testImplementation(testLibs.bundles.assertj)
 }

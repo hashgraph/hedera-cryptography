@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hedera.platform.bls.impl;
+package com.hedera.platform.bls.impl.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.platform.bls.api.FieldElement;
 import com.hedera.platform.bls.api.Group;
 import com.hedera.platform.bls.api.GroupElement;
+import com.hedera.platform.bls.impl.BLS12381Field;
+import com.hedera.platform.bls.impl.BLS12381Group1;
+import com.hedera.platform.bls.impl.BLS12381Group2;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
