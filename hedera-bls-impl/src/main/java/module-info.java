@@ -1,7 +1,6 @@
 module com.hedera.platform.bls.impl {
     exports com.hedera.platform.bls.impl.spi;
-    exports com.hedera.platform.bls.impl to
-            com.hedera.platform.bls.impl.test;
+    exports com.hedera.platform.bls.impl;
 
     requires resource.loader;
     requires com.sun.jna;
