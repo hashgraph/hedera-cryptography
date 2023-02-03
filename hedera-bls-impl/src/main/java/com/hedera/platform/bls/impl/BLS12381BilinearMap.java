@@ -1,0 +1,119 @@
+/*
+ * Copyright (C) 2022-2023 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.hedera.platform.bls.impl;
+
+import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
+import static com.hedera.platform.bls.impl.BLS12381Bindings.pairingDisplay;
+
+import com.hedera.platform.bls.api.BilinearMap;
+import com.hedera.platform.bls.api.Field;
+import com.hedera.platform.bls.api.Group;
+import com.hedera.platform.bls.api.GroupElement;
+
+/**
+ * A bilinear map in the BLS 12-381 family of curves. The underlying cryptography implementation for
+ * this class is provided by the <a href="https://github.com/zkcrypto/bls12_381">zkcrypto bls12_381
+ * rust library</a>
+ */
+public final class BLS12381BilinearMap implements BilinearMap {
+
+    /** The field of the bilinear map */
+    private static final Field FIELD = BLS12381Field.getInstance();
+
+    /** The group of the bilinear map where BLS signatures reside */
+    private static final Group SIGNATURE_GROUP = BLS12381Group1.getInstance();
+
+    /** The group of the bilinear map where BLS public keys reside */
+    private static final Group KEY_GROUP = BLS12381Group2.getInstance();
+
+    /** {@inheritDoc} */
+    @Override
+    public Field field() {
+        return FIELD;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Since elements are smaller and faster to operate on, we are using {@link BLS12381Group1}
+     * as our signature group. More operations are performed with signatures than with keys
+     */
+    @Override
+    public Group signatureGroup() {
+        return SIGNATURE_GROUP;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Since elements are larger and slower to operate on, we are using {@link BLS12381Group2} as
+     * our key group. Fewer operations are performed with keys than with signatures
+     */
+    @Override
+    public Group keyGroup() {
+        return KEY_GROUP;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean comparePairing(
+            final GroupElement signatureElement1,
+            final GroupElement keyElement1,
+            final GroupElement signatureElement2,
+            final GroupElement keyElement2) {
+
+        if (!(signatureElement1 instanceof final BLS12381Group1Element signature1)) {
+            throw new IllegalArgumentException("signatureElement1 must be a BLS12381Group1Element");
+        }
+
+        if (!(keyElement1 instanceof final BLS12381Group2Element key1)) {
+            throw new IllegalArgumentException("keyElement1 must be a BLS12381Group2Element");
+        }
+
+        if (!(signatureElement2 instanceof final BLS12381Group1Element signature2)) {
+            throw new IllegalArgumentException("signatureElement2 must be a BLS12381Group1Element");
+        }
+
+        if (!(keyElement2 instanceof final BLS12381Group2Element key2)) {
+            throw new IllegalArgumentException("keyElement2 must be a BLS12381Group2Element");
+        }
+
+        return BLS12381Bindings.comparePairing(signature1, key1, signature2, key2);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public byte[] displayPairing(
+            final GroupElement signatureElement, final GroupElement keyElement) {
+        if (!(signatureElement instanceof final BLS12381Group1Element signature)) {
+            throw new IllegalArgumentException("signatureElement must be a BLS12381Group1Element");
+        }
+
+        if (!(keyElement instanceof final BLS12381Group2Element key)) {
+            throw new IllegalArgumentException("keyElement must be a BLS12381Group2Element");
+        }
+
+        // display output is always this size
+        final byte[] output = new byte[1249];
+
+        final int errorCode = pairingDisplay(signature, key, output);
+        if (errorCode != SUCCESS) {
+            throw new BLS12381Exception("pairingDisplay", errorCode);
+        }
+
+        return output;
+    }
+}

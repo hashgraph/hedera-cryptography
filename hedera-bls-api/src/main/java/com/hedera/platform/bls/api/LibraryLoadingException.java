@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-plugins {
-    id("com.hedera.platform.aggregate-reports")
-    id("com.hedera.platform.spotless-conventions")
-    id("com.hedera.platform.spotless-kotlin-conventions")
-}
+package com.hedera.platform.bls.api;
 
-group = "com.hedera.platform"
+/** Indicates a failure to load the required library. */
+public class LibraryLoadingException extends RuntimeException {
 
-repositories {
-    mavenCentral()
+    public LibraryLoadingException(final String message) {
+        super(message);
+    }
 }

@@ -14,13 +14,7 @@
  * limitations under the License.
  */
 plugins {
-    id("com.hedera.platform.aggregate-reports")
-    id("com.hedera.platform.spotless-conventions")
-    id("com.hedera.platform.spotless-kotlin-conventions")
-}
-
-group = "com.hedera.platform"
-
-repositories {
-    mavenCentral()
+    id("com.hedera.platform.conventions")
+    id("com.hedera.platform.library")
+    id("com.hedera.platform.maven-publish")
 }
