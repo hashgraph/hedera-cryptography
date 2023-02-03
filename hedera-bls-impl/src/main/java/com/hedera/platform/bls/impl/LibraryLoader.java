@@ -17,7 +17,6 @@ package com.hedera.platform.bls.impl;
 
 import com.goterl.resourceloader.ResourceLoader;
 import com.hedera.platform.bls.api.LibraryLoadingException;
-import com.sun.jna.Native;
 import com.sun.jna.Platform;
 import java.io.*;
 import java.net.URISyntaxException;
@@ -95,8 +94,8 @@ public final class LibraryLoader {
 
         // Test if we are in a JAR
         if (isJarFile(fullJarPathURL)) {
-            File extracted =
-                    nestedExtract(tempDirectory, fullJarPathURL.resolve(relativePath).toString());
+            File extracted = nestedExtract(
+                    tempDirectory, fullJarPathURL.resolve(relativePath).toString());
 
             if (extracted != null) {
                 return extracted;
@@ -141,9 +140,7 @@ public final class LibraryLoader {
     private static File getFileFromFileSystem(final Path relativePath, final File outputDirectory)
             throws IOException, URISyntaxException {
 
-        final URL url =
-                ResourceLoader.class.getResource(
-                        prefixStringWithSlashIfNotAlready(relativePath.toString()));
+        final URL url = ResourceLoader.class.getResource(prefixStringWithSlashIfNotAlready(relativePath.toString()));
 
         if (url == null) {
             throw new IOException("unable to get resource");
@@ -264,8 +261,7 @@ public final class LibraryLoader {
      * @throws URISyntaxException If we could not ascertain our location.
      * @throws IOException If whilst unzipping we had some problems.
      */
-    private static File extractFilesOrFoldersFromJar(File outputDir, URL jarUrl, String pathInJar)
-            throws IOException {
+    private static File extractFilesOrFoldersFromJar(File outputDir, URL jarUrl, String pathInJar) throws IOException {
         File jar = ResourceLoader.urlToFile(jarUrl);
         unzip(jar.getAbsolutePath(), outputDir.getAbsolutePath());
         String filePath = outputDir.getAbsolutePath() + pathInJar;
@@ -279,8 +275,7 @@ public final class LibraryLoader {
      * @param unzipLocation Where to unzip the zip file
      * @throws IOException If could not unzip.
      */
-    private static void unzip(final String zipFilePath, final String unzipLocation)
-            throws IOException {
+    private static void unzip(final String zipFilePath, final String unzipLocation) throws IOException {
         if (!(Files.exists(Paths.get(unzipLocation)))) {
             Files.createDirectories(Paths.get(unzipLocation));
         }
@@ -301,11 +296,9 @@ public final class LibraryLoader {
         }
     }
 
-    private static void unzipFiles(final ZipInputStream zipInputStream, final Path unzipFilePath)
-            throws IOException {
-        try (BufferedOutputStream bos =
-                new BufferedOutputStream(
-                        new FileOutputStream(unzipFilePath.toAbsolutePath().toString()))) {
+    private static void unzipFiles(final ZipInputStream zipInputStream, final Path unzipFilePath) throws IOException {
+        try (BufferedOutputStream bos = new BufferedOutputStream(
+                new FileOutputStream(unzipFilePath.toAbsolutePath().toString()))) {
             byte[] bytesIn = new byte[1024];
             int read = 0;
             while ((read = zipInputStream.read(bytesIn)) != -1) {
@@ -326,7 +319,7 @@ public final class LibraryLoader {
 
         if (Platform.isWindows()) {
             final String platformFolder = "windows";
-            final String fileName = LIBRARY_NAME.substring(3) .concat(".dll");
+            final String fileName = LIBRARY_NAME.substring(3).concat(".dll");
 
             if (Platform.is64Bit()) {
                 return Path.of(platformFolder, x64, fileName);
@@ -358,10 +351,8 @@ public final class LibraryLoader {
             }
         }
 
-        String message =
-                String.format(
-                        "Unsupported platform: %s/%s",
-                        System.getProperty("os.name"), System.getProperty("os.arch"));
+        String message = String.format(
+                "Unsupported platform: %s/%s", System.getProperty("os.name"), System.getProperty("os.arch"));
 
         throw new LibraryLoadingException(message);
     }

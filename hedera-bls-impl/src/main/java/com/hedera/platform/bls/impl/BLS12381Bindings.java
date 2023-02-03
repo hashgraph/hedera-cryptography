@@ -71,9 +71,7 @@ public final class BLS12381Bindings {
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int g1Divide(
-            final BLS12381Group1Element element1,
-            final BLS12381Group1Element element2,
-            final byte[] output);
+            final BLS12381Group1Element element1, final BLS12381Group1Element element2, final byte[] output);
 
     /**
      * Computes the product of 2 elements of the g1 group
@@ -84,9 +82,7 @@ public final class BLS12381Bindings {
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int g1Multiply(
-            final BLS12381Group1Element element1,
-            final BLS12381Group1Element element2,
-            final byte[] output);
+            final BLS12381Group1Element element1, final BLS12381Group1Element element2, final byte[] output);
 
     /**
      * Computes the product of a batch of elements
@@ -95,8 +91,7 @@ public final class BLS12381Bindings {
      * @param output the byte array that will be filled with the product group element
      * @return a non-zero error code if there was an error, otherwise 0
      */
-    public static native int g1BatchMultiply(
-            final BLS12381Group1Element[] elementBatch, final byte[] output);
+    public static native int g1BatchMultiply(final BLS12381Group1Element[] elementBatch, final byte[] output);
 
     /**
      * Computes the value of a g1 group element, taken to the power of a scalar
@@ -107,9 +102,7 @@ public final class BLS12381Bindings {
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int g1PowZn(
-            final BLS12381Group1Element base,
-            final BLS12381FieldElement exponent,
-            final byte[] output);
+            final BLS12381Group1Element base, final BLS12381FieldElement exponent, final byte[] output);
 
     /**
      * Compresses a g1 element
@@ -164,9 +157,7 @@ public final class BLS12381Bindings {
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int g2Divide(
-            final BLS12381Group2Element element1,
-            final BLS12381Group2Element element2,
-            final byte[] output);
+            final BLS12381Group2Element element1, final BLS12381Group2Element element2, final byte[] output);
 
     /**
      * Computes the product of 2 elements of the g2 group
@@ -177,9 +168,7 @@ public final class BLS12381Bindings {
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int g2Multiply(
-            final BLS12381Group2Element element1,
-            final BLS12381Group2Element element2,
-            final byte[] output);
+            final BLS12381Group2Element element1, final BLS12381Group2Element element2, final byte[] output);
 
     /**
      * Computes the product of a batch of elements
@@ -188,8 +177,7 @@ public final class BLS12381Bindings {
      * @param output the byte array that will be filled with the product group element
      * @return a non-zero error code if there was an error, otherwise 0
      */
-    public static native int g2BatchMultiply(
-            final BLS12381Group2Element[] elementBatch, final byte[] output);
+    public static native int g2BatchMultiply(final BLS12381Group2Element[] elementBatch, final byte[] output);
 
     /**
      * Computes the value of a g2 group element, taken to the power of a scalar
@@ -200,9 +188,7 @@ public final class BLS12381Bindings {
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int g2PowZn(
-            final BLS12381Group2Element base,
-            final BLS12381FieldElement exponent,
-            final byte[] output);
+            final BLS12381Group2Element base, final BLS12381FieldElement exponent, final byte[] output);
 
     /**
      * Compresses a g2 element
@@ -254,8 +240,7 @@ public final class BLS12381Bindings {
      * @param scalar2 the second scalar value
      * @return true if the scalars are equal, otherwise false
      */
-    public static native boolean scalarEquals(
-            final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2);
+    public static native boolean scalarEquals(final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2);
 
     /**
      * Checks whether a scalar is valid
@@ -274,9 +259,7 @@ public final class BLS12381Bindings {
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int scalarAdd(
-            final BLS12381FieldElement scalar1,
-            final BLS12381FieldElement scalar2,
-            final byte[] output);
+            final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2, final byte[] output);
 
     /**
      * Computes the difference between 2 scalar values
@@ -287,9 +270,7 @@ public final class BLS12381Bindings {
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int scalarSubtract(
-            final BLS12381FieldElement scalar1,
-            final BLS12381FieldElement scalar2,
-            final byte[] output);
+            final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2, final byte[] output);
 
     /**
      * Computes the product of 2 scalar values
@@ -300,9 +281,7 @@ public final class BLS12381Bindings {
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int scalarMultiply(
-            final BLS12381FieldElement scalar1,
-            final BLS12381FieldElement scalar2,
-            final byte[] output);
+            final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2, final byte[] output);
 
     /**
      * Computes the quotient of 2 scalar values
@@ -313,9 +292,7 @@ public final class BLS12381Bindings {
      * @return a non-zero error code if there was an error, otherwise 0
      */
     public static native int scalarDivide(
-            final BLS12381FieldElement scalar1,
-            final BLS12381FieldElement scalar2,
-            final byte[] output);
+            final BLS12381FieldElement scalar1, final BLS12381FieldElement scalar2, final byte[] output);
 
     /**
      * Computes the value a scalar to the power of a big integer
@@ -325,8 +302,7 @@ public final class BLS12381Bindings {
      * @param output the byte array that will be filled with the new scalar
      * @return a non-zero error code if there was an error, otherwise 0
      */
-    public static native int scalarPower(
-            final BLS12381FieldElement base, final byte[] exponent, final byte[] output);
+    public static native int scalarPower(final BLS12381FieldElement base, final byte[] exponent, final byte[] output);
 
     /**
      * Computes 2 separate pairings, A and B, and checks the resulting elements for equality

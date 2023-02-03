@@ -82,8 +82,7 @@ public class BLS12381Group1 implements Group {
     @Override
     public GroupElement randomElement(final byte[] seed) {
         if (seed.length != SEED_SIZE) {
-            throw new IllegalArgumentException(
-                    String.format("seed must be %d bytes in length", SEED_SIZE));
+            throw new IllegalArgumentException(String.format("seed must be %d bytes in length", SEED_SIZE));
         }
 
         final byte[] output = new byte[UNCOMPRESSED_SIZE];

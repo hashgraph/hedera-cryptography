@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 plugins {
-    id("com.hedera.platform.conventions")
-    id("com.hedera.platform.library")
-    id("com.hedera.platform.maven-publish")
-    id("com.hedera.platform.rust-consumer")
+  id("com.hedera.platform.conventions")
+  id("com.hedera.platform.library")
+  id("com.hedera.platform.maven-publish")
+  id("com.hedera.platform.rust-consumer")
 }
 
 dependencies {
-    implementation(libs.resource.loader)
-    implementation(libs.jna)
-    implementation("net.java.dev.jna:jna:5.12.1")
-    implementation(libs.bundles.logging.impl)
-    implementation(libs.commons.io)
-    implementation(libs.commons.lang3)
-    implementation(project(":hedera-bls-api"))
-    rustLibrary(project(path = ":hedera-bls-rust-jni", configuration = "rustLibrary"))
+  implementation(libs.resource.loader)
+  implementation(libs.jna)
+  implementation("net.java.dev.jna:jna:5.12.1")
+  implementation(libs.bundles.logging.impl)
+  implementation(libs.commons.io)
+  implementation(libs.commons.lang3)
+  implementation(project(":hedera-bls-api"))
+  rustLibrary(project(path = ":hedera-bls-rust-jni", configuration = "rustLibrary"))
 }
