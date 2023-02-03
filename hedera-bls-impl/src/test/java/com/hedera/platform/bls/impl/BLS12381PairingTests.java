@@ -41,71 +41,53 @@ class BLS12381PairingTests {
     @Test
     @DisplayName("Equal pairing results")
     void equalPairings() {
-        final GroupElement signatureElement =
-                bilinearMap
-                        .signatureGroup()
-                        .randomElement(
-                                randomByteArray(
-                                        random, bilinearMap.signatureGroup().getSeedSize()));
-        final GroupElement keyElement =
-                bilinearMap
-                        .keyGroup()
-                        .randomElement(
-                                randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
+        final GroupElement signatureElement = bilinearMap
+                .signatureGroup()
+                .randomElement(
+                        randomByteArray(random, bilinearMap.signatureGroup().getSeedSize()));
+        final GroupElement keyElement = bilinearMap
+                .keyGroup()
+                .randomElement(randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
 
         Assertions.assertTrue(
-                bilinearMap.comparePairing(
-                        signatureElement, keyElement, signatureElement, keyElement),
+                bilinearMap.comparePairing(signatureElement, keyElement, signatureElement, keyElement),
                 "pairings should be recognized as equal");
     }
 
     @Test
     @DisplayName("Unequal pairing results")
     void unequalPairings() {
-        final GroupElement signatureElementA =
-                bilinearMap
-                        .signatureGroup()
-                        .randomElement(
-                                randomByteArray(
-                                        random, bilinearMap.signatureGroup().getSeedSize()));
-        final GroupElement keyElementA =
-                bilinearMap
-                        .keyGroup()
-                        .randomElement(
-                                randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
+        final GroupElement signatureElementA = bilinearMap
+                .signatureGroup()
+                .randomElement(
+                        randomByteArray(random, bilinearMap.signatureGroup().getSeedSize()));
+        final GroupElement keyElementA = bilinearMap
+                .keyGroup()
+                .randomElement(randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
 
-        final GroupElement signatureElementB =
-                bilinearMap
-                        .signatureGroup()
-                        .randomElement(
-                                randomByteArray(
-                                        random, bilinearMap.signatureGroup().getSeedSize()));
-        final GroupElement keyElementB =
-                bilinearMap
-                        .keyGroup()
-                        .randomElement(
-                                randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
+        final GroupElement signatureElementB = bilinearMap
+                .signatureGroup()
+                .randomElement(
+                        randomByteArray(random, bilinearMap.signatureGroup().getSeedSize()));
+        final GroupElement keyElementB = bilinearMap
+                .keyGroup()
+                .randomElement(randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
 
         Assertions.assertFalse(
-                bilinearMap.comparePairing(
-                        signatureElementA, keyElementA, signatureElementB, keyElementB),
+                bilinearMap.comparePairing(signatureElementA, keyElementA, signatureElementB, keyElementB),
                 "pairings should be recognized as equal");
     }
 
     @Test
     @DisplayName("comparePairing failure")
     void comparePairingFailure() {
-        final GroupElement signatureElement =
-                bilinearMap
-                        .signatureGroup()
-                        .randomElement(
-                                randomByteArray(
-                                        random, bilinearMap.signatureGroup().getSeedSize()));
-        final GroupElement keyElement =
-                bilinearMap
-                        .keyGroup()
-                        .randomElement(
-                                randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
+        final GroupElement signatureElement = bilinearMap
+                .signatureGroup()
+                .randomElement(
+                        randomByteArray(random, bilinearMap.signatureGroup().getSeedSize()));
+        final GroupElement keyElement = bilinearMap
+                .keyGroup()
+                .randomElement(randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -113,9 +95,7 @@ class BLS12381PairingTests {
                 "Pairing comparison should fail with a null element");
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        bilinearMap.comparePairing(
-                                signatureElement, null, signatureElement, keyElement),
+                () -> bilinearMap.comparePairing(signatureElement, null, signatureElement, keyElement),
                 "Pairing comparison should fail with a null element");
         assertThrows(
                 IllegalArgumentException.class,
@@ -123,16 +103,15 @@ class BLS12381PairingTests {
                 "Pairing comparison should fail with a null element");
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        bilinearMap.comparePairing(
-                                signatureElement, keyElement, signatureElement, null),
+                () -> bilinearMap.comparePairing(signatureElement, keyElement, signatureElement, null),
                 "Pairing comparison should fail with a null element");
     }
 
     @Test
     @DisplayName("comparePairing with compression")
     void comparePairingCompressed() {
-        final byte[] seed1 = randomByteArray(random, bilinearMap.signatureGroup().getSeedSize());
+        final byte[] seed1 =
+                randomByteArray(random, bilinearMap.signatureGroup().getSeedSize());
         final byte[] seed2 = randomByteArray(random, bilinearMap.keyGroup().getSeedSize());
 
         final GroupElement signatureElement = bilinearMap.signatureGroup().randomElement(seed1);
@@ -144,49 +123,37 @@ class BLS12381PairingTests {
                 bilinearMap.keyGroup().randomElement(seed2).compress();
 
         Assertions.assertTrue(
-                bilinearMap.comparePairing(
-                        signatureElementCompressed, keyElement, signatureElement, keyElement),
+                bilinearMap.comparePairing(signatureElementCompressed, keyElement, signatureElement, keyElement),
                 "compression shouldn't affect pairing equality");
         Assertions.assertTrue(
-                bilinearMap.comparePairing(
-                        signatureElement, keyElementCompressed, signatureElement, keyElement),
+                bilinearMap.comparePairing(signatureElement, keyElementCompressed, signatureElement, keyElement),
                 "compression shouldn't affect pairing equality");
         Assertions.assertTrue(
-                bilinearMap.comparePairing(
-                        signatureElement, keyElement, signatureElementCompressed, keyElement),
+                bilinearMap.comparePairing(signatureElement, keyElement, signatureElementCompressed, keyElement),
                 "compression shouldn't affect pairing equality");
         Assertions.assertTrue(
-                bilinearMap.comparePairing(
-                        signatureElement, keyElement, signatureElement, keyElementCompressed),
+                bilinearMap.comparePairing(signatureElement, keyElement, signatureElement, keyElementCompressed),
                 "compression shouldn't affect pairing equality");
     }
 
     @Test
     @DisplayName("Different pairings produce unique display strings")
     void pairingDisplayUnique() {
-        final GroupElement signatureElementA =
-                bilinearMap
-                        .signatureGroup()
-                        .randomElement(
-                                randomByteArray(
-                                        random, bilinearMap.signatureGroup().getSeedSize()));
-        final GroupElement keyElementA =
-                bilinearMap
-                        .keyGroup()
-                        .randomElement(
-                                randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
+        final GroupElement signatureElementA = bilinearMap
+                .signatureGroup()
+                .randomElement(
+                        randomByteArray(random, bilinearMap.signatureGroup().getSeedSize()));
+        final GroupElement keyElementA = bilinearMap
+                .keyGroup()
+                .randomElement(randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
 
-        final GroupElement signatureElementB =
-                bilinearMap
-                        .signatureGroup()
-                        .randomElement(
-                                randomByteArray(
-                                        random, bilinearMap.signatureGroup().getSeedSize()));
-        final GroupElement keyElementB =
-                bilinearMap
-                        .keyGroup()
-                        .randomElement(
-                                randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
+        final GroupElement signatureElementB = bilinearMap
+                .signatureGroup()
+                .randomElement(
+                        randomByteArray(random, bilinearMap.signatureGroup().getSeedSize()));
+        final GroupElement keyElementB = bilinearMap
+                .keyGroup()
+                .randomElement(randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
 
         assertNotEquals(
                 bytesToHex(bilinearMap.displayPairing(signatureElementA, keyElementA)),
@@ -197,17 +164,13 @@ class BLS12381PairingTests {
     @Test
     @DisplayName("Identical pairings produce identical display strings")
     void pairingDisplayDeterministic() {
-        final GroupElement signatureElement =
-                bilinearMap
-                        .signatureGroup()
-                        .randomElement(
-                                randomByteArray(
-                                        random, bilinearMap.signatureGroup().getSeedSize()));
-        final GroupElement keyElement =
-                bilinearMap
-                        .keyGroup()
-                        .randomElement(
-                                randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
+        final GroupElement signatureElement = bilinearMap
+                .signatureGroup()
+                .randomElement(
+                        randomByteArray(random, bilinearMap.signatureGroup().getSeedSize()));
+        final GroupElement keyElement = bilinearMap
+                .keyGroup()
+                .randomElement(randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
 
         Assertions.assertArrayEquals(
                 bilinearMap.displayPairing(signatureElement, keyElement),
@@ -218,17 +181,13 @@ class BLS12381PairingTests {
     @Test
     @DisplayName("pairingDisplay failure")
     void pairingDisplayFailure() {
-        final GroupElement signatureElement =
-                bilinearMap
-                        .signatureGroup()
-                        .randomElement(
-                                randomByteArray(
-                                        random, bilinearMap.signatureGroup().getSeedSize()));
-        final GroupElement keyElement =
-                bilinearMap
-                        .keyGroup()
-                        .randomElement(
-                                randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
+        final GroupElement signatureElement = bilinearMap
+                .signatureGroup()
+                .randomElement(
+                        randomByteArray(random, bilinearMap.signatureGroup().getSeedSize()));
+        final GroupElement keyElement = bilinearMap
+                .keyGroup()
+                .randomElement(randomByteArray(random, bilinearMap.keyGroup().getSeedSize()));
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -243,7 +202,8 @@ class BLS12381PairingTests {
     @Test
     @DisplayName("pairingDisplay with compression")
     void pairingDisplayCompressed() {
-        final byte[] seed1 = randomByteArray(random, bilinearMap.signatureGroup().getSeedSize());
+        final byte[] seed1 =
+                randomByteArray(random, bilinearMap.signatureGroup().getSeedSize());
         final byte[] seed2 = randomByteArray(random, bilinearMap.keyGroup().getSeedSize());
 
         final GroupElement signatureElement = bilinearMap.signatureGroup().randomElement(seed1);

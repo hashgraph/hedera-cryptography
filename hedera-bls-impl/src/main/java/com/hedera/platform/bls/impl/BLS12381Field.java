@@ -105,8 +105,7 @@ public class BLS12381Field implements Field {
     @Override
     public FieldElement randomElement(final byte[] seed) {
         if (seed.length != SEED_SIZE) {
-            throw new IllegalArgumentException(
-                    String.format("seed must be %s bytes in length", SEED_SIZE));
+            throw new IllegalArgumentException(String.format("seed must be %s bytes in length", SEED_SIZE));
         }
 
         final byte[] output = new byte[ELEMENT_BYTE_SIZE];
