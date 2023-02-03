@@ -17,6 +17,7 @@ plugins {
     id("com.hedera.platform.conventions")
     id("com.hedera.platform.library")
     id("com.hedera.platform.maven-publish")
+    id("com.hedera.platform.rust-consumer")
 }
 
 dependencies {
@@ -26,5 +27,6 @@ dependencies {
     implementation(libs.bundles.logging.impl)
     implementation(libs.commons.io)
     implementation(libs.commons.lang3)
-    implementation(project(mapOf("path" to ":hedera-bls-api")))
+    implementation(project(":hedera-bls-api"))
+    rustLibrary(project(path = ":hedera-bls-rust-jni", configuration = "rustLibrary"))
 }

@@ -320,16 +320,18 @@ public final class LibraryLoader {
      * @return The path to the library binary
      */
     private static Path getLibraryPathInResources() {
-        boolean is64Bit = Native.POINTER_SIZE == 8;
-
+        final String x64 = "x86_64";
+        final String i686 = "i686";
+        final String aarch64 = "aarch64";
+        
         if (Platform.isWindows()) {
             final String platformFolder = "windows";
-            final String fileName = LIBRARY_NAME + ".dll";
+            final String fileName = LIBRARY_NAME.substring(3) .concat(".dll");
 
-            if (is64Bit) {
-                return Path.of(platformFolder, "windows64", fileName);
+            if (Platform.is64Bit()) {
+                return Path.of(platformFolder, x64, fileName);
             } else {
-                return Path.of(platformFolder, "windows", fileName);
+                return Path.of(platformFolder, i686, fileName);
             }
         }
         if (Platform.isMac()) {
@@ -337,19 +339,22 @@ public final class LibraryLoader {
             final String fileName = LIBRARY_NAME + ".dylib";
 
             if (Platform.isARM()) {
-                return Path.of(platformFolder, "aarch64", fileName);
+                return Path.of(platformFolder, aarch64, fileName);
             } else {
-                return Path.of(platformFolder, "intel", fileName);
+                return Path.of(platformFolder, x64, fileName);
             }
         }
         if (Platform.isLinux()) {
             final String platformFolder = "linux";
             final String fileName = LIBRARY_NAME + ".so";
 
-            if (is64Bit) {
-                return Path.of(platformFolder, "linux64", fileName);
+            if (Platform.is64Bit()) {
+                if (Platform.isARM()) {
+                    return Path.of(platformFolder, aarch64, fileName);
+                }
+                return Path.of(platformFolder, x64, fileName);
             } else {
-                return Path.of(platformFolder, "linux", fileName);
+                return Path.of(platformFolder, i686, fileName);
             }
         }
 

@@ -30,7 +30,7 @@ spotless {
         toggleOffOn()
         // don't need to set target, it is inferred from java
         // apply a specific flavor of google-java-format
-        googleJavaFormat("1.15.0").aosp().reflowLongStrings()
+        palantirJavaFormat()
         // make sure every file has the following copyright header.
         // optionally, Spotless can set copyright years by digging
         // through git history (see "license" section below).
@@ -54,6 +54,6 @@ spotless {
             * limitations under the License.
             */
         """.trimIndent(), "(package|import)"
-        )
+        ).updateYearWithLatest(true)
     })
 }

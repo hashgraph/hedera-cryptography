@@ -426,31 +426,8 @@ cython_debug/
 
 
 ########################################################################################################################
-# Swirlds, Hedera, & JRS Specific Ignores
+# Custom Ignore Definitions
 ########################################################################################################################
 
-# Swirlds Files
-*.swh
-*.evts
-sdk/data/saved
-sdk/data/lib
-sdk/data/repos
-sdk/data/apps
-sdk/data/stats
-sdk/*.csv
-sdk/settingsUsed.txt
-
-# Hedera Files
-*.rcd
-
-# Keys
-*.pub
-*.pem
-*.pfx
-
-# Temporary Test Folders (Poorly Behaved Tests)
-**/swirlds-tmp
-
-# Test Files (Poorly Behaved Tests)
-*.json.gz
-saved.txt
+# All IntelliJ Files
+.idea

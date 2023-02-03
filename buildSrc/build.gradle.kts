@@ -14,6 +14,6 @@ dependencies {
     implementation("com.gorylenko.gradle-git-properties:gradle-git-properties:2.4.1")
     implementation("gradle.plugin.lazy.zoo.gradle:git-data-plugin:1.2.2")
     implementation("com.adarshr:gradle-test-logger-plugin:3.2.0")
-    implementation("fr.stardustenterprises.rust:gradle-rust:3.2.5")
-    implementation("fr.stardustenterprises:stargrad:0.5.2")
+
+    implementation("com.moandjiezana.toml:toml4j:0.7.2")
 }

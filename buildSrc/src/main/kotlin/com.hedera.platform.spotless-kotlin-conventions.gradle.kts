@@ -20,7 +20,7 @@ plugins {
 
 spotless {
     kotlinGradle({
-        ktlint().editorConfigOverride(mapOf("disabled_rules" to "no-wildcard-imports"))
+        ktfmt()
 
         licenseHeader(
             """
@@ -40,6 +40,6 @@ spotless {
             * limitations under the License.
             */
         """.trimIndent(), "(import|plugins)"
-        )
+        ).updateYearWithLatest(true)
     })
 }

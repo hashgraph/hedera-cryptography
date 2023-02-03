@@ -1,6 +1,3 @@
-import gradle.kotlin.dsl.accessors._01a7fddcf81aa279b379d6fe3cb64505.build
-import gradle.kotlin.dsl.accessors._01a7fddcf81aa279b379d6fe3cb64505.clean
-
 /*
  * Copyright 2016-2022 Hedera Hashgraph, LLC
  *
@@ -18,13 +15,16 @@ import gradle.kotlin.dsl.accessors._01a7fddcf81aa279b379d6fe3cb64505.clean
  * DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
  */
 
+import gradle.kotlin.dsl.accessors._6ca76b4a0a5e09fb29b07b0b7dae9905.processResources
+import org.gradle.kotlin.dsl.creating
+
 plugins {
     base
 }
 
 val rustLibrary by configurations.creating {
-    isCanBeResolved = false
-    isCanBeConsumed = true
+    isCanBeResolved = true
+    isCanBeConsumed = false
     isVisible = true
 
     attributes {
@@ -32,20 +32,10 @@ val rustLibrary by configurations.creating {
     }
 }
 
-val compileRust = tasks.create<RustCompileTask>("compileRust")
-val cleanRust = tasks.create<RustCleanTask>("cleanRust")
-
-tasks.assemble {
-    dependsOn(compileRust)
+val rustLibraryPackaging = tasks.create<RustLibraryPackagingTask>("rustLibraryPackaging") {
+    configuration.from(rustLibrary)
 }
 
-tasks.clean {
-    dependsOn(cleanRust)
+tasks.processResources {
+    dependsOn(rustLibraryPackaging)
 }
-
-artifacts {
-    add(rustLibrary.name, compileRust.outputFile) {
-        builtBy(compileRust)
-    }
-}
-
