@@ -178,7 +178,11 @@ public class BLS12381Group2Element implements GroupElement {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(groupElement).append(GROUP).append(compressed).build();
+        return new HashCodeBuilder()
+                .append(groupElement)
+                .append(GROUP)
+                .append(compressed)
+                .build();
     }
 
     @Override
@@ -195,8 +199,7 @@ public class BLS12381Group2Element implements GroupElement {
     /** {@inheritDoc} */
     @Override
     public boolean isValid() {
-        return (groupElement.length == GROUP.getCompressedSize()
-                        || groupElement.length == GROUP.getUncompressedSize())
+        return (groupElement.length == GROUP.getCompressedSize() || groupElement.length == GROUP.getUncompressedSize())
                 && checkG2Validity(this);
     }
 }

@@ -40,12 +40,11 @@ public class BLS12381Exception extends BLSCryptographyException {
      * @param errorCode the error code that was returned
      */
     public BLS12381Exception(final String functionName, final int errorCode) {
-        super(
-                functionName
-                        + " returned error ["
-                        + errorCode
-                        + ": "
-                        + errorCodeMap.getOrDefault(errorCode, "unknown")
-                        + "]");
+        super(functionName
+                + " returned error ["
+                + errorCode
+                + ": "
+                + errorCodeMap.getOrDefault(errorCode, "unknown")
+                + "]");
     }
 }

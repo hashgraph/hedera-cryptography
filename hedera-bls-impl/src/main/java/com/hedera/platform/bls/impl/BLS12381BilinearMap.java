@@ -96,8 +96,7 @@ public final class BLS12381BilinearMap implements BilinearMap {
 
     /** {@inheritDoc} */
     @Override
-    public byte[] displayPairing(
-            final GroupElement signatureElement, final GroupElement keyElement) {
+    public byte[] displayPairing(final GroupElement signatureElement, final GroupElement keyElement) {
         if (!(signatureElement instanceof final BLS12381Group1Element signature)) {
             throw new IllegalArgumentException("signatureElement must be a BLS12381Group1Element");
         }

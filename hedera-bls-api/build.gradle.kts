@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 plugins {
-    id("com.hedera.platform.conventions")
-    id("com.hedera.platform.library")
-    id("com.hedera.platform.maven-publish")
+  id("com.hedera.platform.conventions")
+  id("com.hedera.platform.library")
+  id("com.hedera.platform.maven-publish")
 }
