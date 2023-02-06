@@ -15,9 +15,24 @@
  */
 package com.hedera.platform.bls.spi;
 
+/**
+ * The different possible types of {@link BilinearMapProvider}
+ */
 public enum ProviderType {
+    /**
+     * A provider capable of providing an implementation suitable for production runtime usage
+     */
     RUNTIME,
+    /**
+     * A provider for an experimental implementation
+     */
     EXPERIMENTAL,
+    /**
+     * A provider which returns an implementation with mocked behavior
+     */
     MOCK,
+    /**
+     * A provider which returns a simple stubbed implementation
+     */
     STUB
 }

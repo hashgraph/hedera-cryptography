@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Loader for accessing an implementation of the {@link BilinearMapProvider} SPI.
  */
 public final class BilinearMapService {
+
     /**
      * The service loader instance.
      */
@@ -38,64 +39,72 @@ public final class BilinearMapService {
     /**
      * Private Constructor since this class should not be instantiated.
      */
-    private BilinearMapService() {}
+    private BilinearMapService() {
+    }
 
     /**
-     * Obtain an instance of a {@link BilinearMapProvider} implementation. This function returns the first {@link ProviderType#RUNTIME}
-     * implementation found via service discovery.
+     * Obtain an instance of a {@link BilinearMapProvider} implementation. This function returns the first
+     * {@link ProviderType#RUNTIME} implementation found via service discovery.
      *
      * @return an instance of the first {@link BilinearMapProvider} found via the {@link ServiceLoader} scan.
-     * @throws java.util.NoSuchElementException if no {@link BilinearMapProvider} implementation was found
-     *                                          via the {@link ServiceLoader} mechanism.
+     * @throws java.util.NoSuchElementException if no {@link BilinearMapProvider} implementation was found via the
+     *                                          {@link ServiceLoader} mechanism.
      */
     public static BilinearMapProvider defaultProvider() {
         initialize();
         return loader.stream()
-                .filter(p -> ProviderType.RUNTIME.equals(p.get().providerType()))
-                .map(ServiceLoader.Provider::get)
-                .findFirst()
-                .orElseThrow();
+            .filter(p -> ProviderType.RUNTIME.equals(p.get().providerType()))
+            .map(ServiceLoader.Provider::get)
+            .findFirst()
+            .orElseThrow();
     }
 
     /**
-     * Obtain an instance of a {@link BilinearMapProvider} implementation which provides the given algorithm name/identifier.
-     * This version of the method disregards the {@link ProviderType} and will select the first implementation matching the algorithm name.
+     * Obtain an instance of a {@link BilinearMapProvider} implementation which provides the given algorithm
+     * name/identifier. This version of the method disregards the {@link ProviderType} and will select the first
+     * implementation matching the algorithm name.
      *
      * @param algorithm the algorithm name for which to locate an implementation.
-     * @return an instance of the {@link BilinearMapProvider} implementing the requested {@code algorithm} which was found via the {@link ServiceLoader} scan.
+     * @return an instance of the {@link BilinearMapProvider} implementing the requested {@code algorithm} which was
+     * found via the {@link ServiceLoader} scan.
      */
     public static BilinearMapProvider providerOf(final String algorithm) {
         return findInstance(algorithm, null);
     }
 
     /**
-     * Obtain an instance of a {@link BilinearMapProvider} implementation which provides the given algorithm name/identifier.
-     * This version of the method will only return a {@link ProviderType#RUNTIME} type of the requested algorithm.
+     * Obtain an instance of a {@link BilinearMapProvider} implementation which provides the given algorithm
+     * name/identifier. This version of the method will only return a {@link ProviderType#RUNTIME} type of the requested
+     * algorithm.
      *
      * @param algorithm the algorithm name for which to locate an implementation.
-     * @return an instance of the {@link BilinearMapProvider} implementing the requested {@code algorithm} which was found via the {@link ServiceLoader} scan.
+     * @return an instance of the {@link BilinearMapProvider} implementing the requested {@code algorithm} which was
+     * found via the {@link ServiceLoader} scan.
      */
     public static BilinearMapProvider runtimeProviderOf(final String algorithm) {
         return findInstance(algorithm, ProviderType.RUNTIME);
     }
 
     /**
-     * Obtain an instance of a {@link BilinearMapProvider} implementation which provides the given algorithm name/identifier and is of the specified provider type.
+     * Obtain an instance of a {@link BilinearMapProvider} implementation which provides the given algorithm
+     * name/identifier and is of the specified provider type.
      *
-     * @param algorithm the algorithm name for which to locate an implementation.
-     * @return an instance of the {@link BilinearMapProvider} implementing the requested {@code algorithm} which was found via the {@link ServiceLoader} scan.
+     * @param algorithm    the algorithm name for which to locate an implementation.
+     * @param providerType the type of provider to return
+     * @return an instance of the {@link BilinearMapProvider} implementing the requested {@code algorithm} which was
+     * found via the {@link ServiceLoader} scan.
      */
     public static BilinearMapProvider providerOf(final String algorithm, final ProviderType providerType) {
         return findInstance(algorithm, providerType);
     }
 
     /**
-     * Obtain an instance of a {@link BilinearMap} implementation. This function returns the first {@link ProviderType#RUNTIME}
-     * implementation found via service discovery.
+     * Obtain an instance of a {@link BilinearMap} implementation. This function returns the first
+     * {@link ProviderType#RUNTIME} implementation found via service discovery.
      *
      * @return an instance of the first {@link BilinearMap} found via the {@link ServiceLoader} scan.
-     * @throws java.util.NoSuchElementException if no {@link BilinearMap} implementation was found
-     *                                          via the {@link ServiceLoader} mechanism.
+     * @throws java.util.NoSuchElementException if no {@link BilinearMap} implementation was found via the
+     *                                          {@link ServiceLoader} mechanism.
      */
     public static BilinearMap defaultInstance() {
         return defaultProvider().map();
@@ -103,10 +112,12 @@ public final class BilinearMapService {
 
     /**
      * Obtain an instance of a {@link BilinearMap} implementation which provides the given algorithm name/identifier.
-     * This version of the method disregards the {@link ProviderType} and will select the first implementation matching the algorithm name.
+     * This version of the method disregards the {@link ProviderType} and will select the first implementation matching
+     * the algorithm name.
      *
      * @param algorithm the algorithm name for which to locate an implementation.
-     * @return an instance of the {@link BilinearMap} implementing the requested {@code algorithm} which was found via the {@link ServiceLoader} scan.
+     * @return an instance of the {@link BilinearMap} implementing the requested {@code algorithm} which was found via
+     * the {@link ServiceLoader} scan.
      */
     public static BilinearMap instanceOf(final String algorithm) {
         return findInstance(algorithm, null).map();
@@ -117,24 +128,29 @@ public final class BilinearMapService {
      * This version of the method will only return a {@link ProviderType#RUNTIME} type of the requested algorithm.
      *
      * @param algorithm the algorithm name for which to locate an implementation.
-     * @return an instance of the {@link BilinearMap} implementing the requested {@code algorithm} which was found via the {@link ServiceLoader} scan.
+     * @return an instance of the {@link BilinearMap} implementing the requested {@code algorithm} which was found via
+     * the {@link ServiceLoader} scan.
      */
     public static BilinearMap runtimeInstanceOf(final String algorithm) {
         return findInstance(algorithm, ProviderType.RUNTIME).map();
     }
 
     /**
-     * Obtain an instance of a {@link BilinearMap} implementation which provides the given algorithm name/identifier and is of the specified provider type.
+     * Obtain an instance of a {@link BilinearMap} implementation which provides the given algorithm name/identifier and
+     * is of the specified provider type.
      *
-     * @param algorithm the algorithm name for which to locate an implementation.
-     * @return an instance of the {@link BilinearMap} implementing the requested {@code algorithm} which was found via the {@link ServiceLoader} scan.
+     * @param algorithm    the algorithm name for which to locate an implementation.
+     * @param providerType the type of provider to find
+     * @return an instance of the {@link BilinearMap} implementing the requested {@code algorithm} which was found via
+     * the {@link ServiceLoader} scan.
      */
     public static BilinearMap instanceOf(final String algorithm, final ProviderType providerType) {
         return findInstance(algorithm, providerType).map();
     }
 
     /**
-     * Forces a service loader refresh and causes the {@link ServiceLoader} implementation to evict the internal cache and lazily rescan.
+     * Forces a service loader refresh and causes the {@link ServiceLoader} implementation to evict the internal cache
+     * and lazily rescan.
      */
     public static void refresh() {
         loader.reload();
@@ -157,8 +173,8 @@ public final class BilinearMapService {
      * @param providerType an optional {@link ProviderType} used to filter multiple versions of the same algorithm.
      * @throws NullPointerException     if the {@code algorithm} argument is a {@code null} reference.
      * @throws IllegalArgumentException if the {@code algorithm} argument is a blank or empty string.
-     * @throws NoSuchElementException   if no {@link BilinearMap} implementation was found
-     *                                  via the {@link ServiceLoader} mechanism.
+     * @throws NoSuchElementException   if no {@link BilinearMap} implementation was found via the {@link ServiceLoader}
+     *                                  mechanism.
      */
     private static BilinearMapProvider findInstance(final String algorithm, final ProviderType providerType) {
         Objects.requireNonNull(algorithm, "The algorithm argument must not be a null reference.");

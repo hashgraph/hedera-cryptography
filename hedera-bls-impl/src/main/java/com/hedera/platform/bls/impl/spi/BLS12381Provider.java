@@ -21,19 +21,31 @@ import com.hedera.platform.bls.spi.BilinearMapProvider;
 import com.hedera.platform.bls.spi.ProviderType;
 import com.hedera.platform.bls.spi.WellKnownAlgorithms;
 
+/**
+ * An implementation of {@link BilinearMapProvider} which returns an instance of {@link BLS12381BilinearMap}
+ */
 public class BLS12381Provider implements BilinearMapProvider {
     private static final BilinearMap map = new BLS12381BilinearMap();
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String algorithm() {
         return WellKnownAlgorithms.BLS12_381;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ProviderType providerType() {
         return ProviderType.RUNTIME;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public BilinearMap map() {
         return map;

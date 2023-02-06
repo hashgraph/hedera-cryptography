@@ -17,11 +17,29 @@ package com.hedera.platform.bls.spi;
 
 import com.hedera.platform.bls.api.BilinearMap;
 
+/**
+ * A provider to facilitate fetching of a {@link BilinearMap} instance
+ */
 public interface BilinearMapProvider {
 
+    /**
+     * Gets a string representing which algorithm is implemented by the provided bilinear map object
+     *
+     * @return a string representing the algorithm
+     */
     String algorithm();
 
+    /**
+     * Gets the type of provider this is
+     *
+     * @return the type of provider
+     */
     ProviderType providerType();
 
+    /**
+     * Returns a static instance of the bilinear map
+     *
+     * @return the bilinear map instance
+     */
     BilinearMap map();
 }
