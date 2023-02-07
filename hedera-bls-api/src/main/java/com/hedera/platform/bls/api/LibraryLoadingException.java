@@ -21,4 +21,8 @@ public class LibraryLoadingException extends RuntimeException {
     public LibraryLoadingException(final String message) {
         super(message);
     }
+
+    public LibraryLoadingException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

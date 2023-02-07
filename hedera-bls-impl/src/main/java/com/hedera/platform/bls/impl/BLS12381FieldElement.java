@@ -42,7 +42,7 @@ public class BLS12381FieldElement implements FieldElement {
      *
      * @param fieldElement an array of bytes representing this field element
      */
-    BLS12381FieldElement(final byte[] fieldElement) {
+    public BLS12381FieldElement(final byte[] fieldElement) {
         if (fieldElement == null) {
             throw new IllegalArgumentException("fieldElement parameter must not be null");
         }

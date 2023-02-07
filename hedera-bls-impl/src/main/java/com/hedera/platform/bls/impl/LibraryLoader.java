@@ -39,17 +39,21 @@ import org.apache.logging.log4j.Logger;
  * </a>
  *
  * @see <a
- *     href="http://adamheinrich.com/blog/2012/how-to-load-native-jni-library-from-jar">http://adamheinrich
- *     .com/blog/2012/how-to-load-native-jni-library-from-jar</a>
+ * href="http://adamheinrich.com/blog/2012/how-to-load-native-jni-library-from-jar">http://adamheinrich
+ * .com/blog/2012/how-to-load-native-jni-library-from-jar</a>
  * @see <a
- *     href="https://github.com/adamheinrich/native-utils">https://github.com/adamheinrich/native-utils</a>
+ * href="https://github.com/adamheinrich/native-utils">https://github.com/adamheinrich/native-utils</a>
  */
 public final class LibraryLoader {
 
-    /** Hidden constructor */
+    /**
+     * Hidden constructor
+     */
     private LibraryLoader() {}
 
-    /** The name of the compiled BLS library */
+    /**
+     * The name of the compiled BLS library
+     */
     private static final String LIBRARY_NAME = "libhedera_bls_jni";
 
     private static final Logger logger = LogManager.getLogger(LibraryLoader.class);
@@ -77,7 +81,7 @@ public final class LibraryLoader {
      *
      * @param relativePath A relative path to a file or directory, relative to the resources folder.
      * @return The file or directory you want to load.
-     * @throws IOException If at any point processing of the resource file fails.
+     * @throws IOException        If at any point processing of the resource file fails.
      * @throws URISyntaxException If resource file cannot be found
      */
     private static File copyToTempDirectory(Path relativePath, Class<?> outsideClass)
@@ -131,16 +135,16 @@ public final class LibraryLoader {
      * If we're not in a JAR, then we can load directly from the file system without all the
      * unzipping fiasco present in {@see #getFileFromJar}.
      *
-     * @param relativePath A relative path to a file or directory in the resources folder.
+     * @param relativePath    A relative path to a file or directory in the resources folder.
      * @param outputDirectory A directory in which to store loaded files. Preferentially a temporary
-     *     one.
+     *                        one.
      * @return The file or directory that was requested.
      * @throws IOException Could not find requested file.
      */
     private static File getFileFromFileSystem(final Path relativePath, final File outputDirectory)
             throws IOException, URISyntaxException {
 
-        final URL url = ResourceLoader.class.getResource(prefixStringWithSlashIfNotAlready(relativePath.toString()));
+        final URL url = LibraryLoader.class.getClassLoader().getResource(relativePath.toString());
 
         if (url == null) {
             throw new IOException("unable to get resource");
@@ -165,24 +169,11 @@ public final class LibraryLoader {
     }
 
     /**
-     * If the string does not start with a slash, then make sure it does.
-     *
-     * @param s A string to prefix
-     * @return A string with a slash prefixed
-     */
-    private static String prefixStringWithSlashIfNotAlready(String s) {
-        if (!s.startsWith("/")) {
-            s = "/" + s;
-        }
-        return s;
-    }
-
-    /**
      * A method that keeps extracting JAR files from within each other. This method only allows a
      * maximum nested depth of 20.
      *
      * @param extractTo Where shall we initially extract files to.
-     * @param fullPath The full path to the initial
+     * @param fullPath  The full path to the initial
      * @return The final extracted file.
      * @throws IOException
      * @throws URISyntaxException
@@ -254,12 +245,12 @@ public final class LibraryLoader {
      * Extracts a file/directory from a JAR. A JAR is simply a zip file. We can unzip it and get our
      * file successfully.
      *
-     * @param jarUrl A JAR's URL.
+     * @param jarUrl    A JAR's URL.
      * @param outputDir A directory of where to store our extracted files.
      * @param pathInJar A relative path to a file that is in our resources folder.
      * @return The file or directory that we requested.
      * @throws URISyntaxException If we could not ascertain our location.
-     * @throws IOException If whilst unzipping we had some problems.
+     * @throws IOException        If whilst unzipping we had some problems.
      */
     private static File extractFilesOrFoldersFromJar(File outputDir, URL jarUrl, String pathInJar) throws IOException {
         File jar = ResourceLoader.urlToFile(jarUrl);
@@ -271,7 +262,7 @@ public final class LibraryLoader {
     /**
      * From https://www.javadevjournal.com/java/zipping-and-unzipping-in-java/
      *
-     * @param zipFilePath An absolute path to a zip file
+     * @param zipFilePath   An absolute path to a zip file
      * @param unzipLocation Where to unzip the zip file
      * @throws IOException If could not unzip.
      */
@@ -328,7 +319,7 @@ public final class LibraryLoader {
             }
         }
         if (Platform.isMac()) {
-            final String platformFolder = "mac";
+            final String platformFolder = "darwin";
             final String fileName = LIBRARY_NAME + ".dylib";
 
             if (Platform.isARM()) {
