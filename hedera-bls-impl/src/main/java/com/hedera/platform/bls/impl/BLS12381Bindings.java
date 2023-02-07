@@ -334,7 +334,7 @@ public final class BLS12381Bindings {
         try {
             LibraryLoader.loadBundledLibrary(BLS12381Bindings.class);
         } catch (final IOException e) {
-            throw new LibraryLoadingException("error finding library");
+            throw new LibraryLoadingException("error finding library", e);
         }
     }
 }

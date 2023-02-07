@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hedera.platform.bls.impl;
+package com.hedera.platform.bls.impl.test;
 
-import static com.hedera.platform.bls.impl.TestUtils.bytesToHex;
-import static com.hedera.platform.bls.impl.TestUtils.randomByteArray;
+import static com.hedera.platform.bls.impl.test.TestUtils.bytesToHex;
+import static com.hedera.platform.bls.impl.test.TestUtils.randomByteArray;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.platform.bls.api.BilinearMap;
 import com.hedera.platform.bls.api.GroupElement;
+import com.hedera.platform.bls.impl.BLS12381BilinearMap;
 import java.util.Random;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

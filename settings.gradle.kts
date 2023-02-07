@@ -59,6 +59,29 @@ dependencyResolutionManagement {
       bundle("logging-api", listOf("log4j-api", "slf4j-api"))
       bundle("logging-impl", listOf("log4j-core", "slf4j-nop"))
     }
+
+    create("testLibs") {
+      version("junit-jupiter-version", "5.9.2")
+      version("mockito-version", "5.1.1")
+      version("assertj-version", "3.24.2")
+
+      library("junit-jupiter-api", "org.junit.jupiter", "junit-jupiter-api")
+          .versionRef("junit-jupiter-version")
+      library("junit-jupiter-params", "org.junit.jupiter", "junit-jupiter-params")
+          .versionRef("junit-jupiter-version")
+      library("junit-jupiter-engine", "org.junit.jupiter", "junit-jupiter-engine")
+          .versionRef("junit-jupiter-version")
+
+      library("mockito-core", "org.mockito", "mockito-core").versionRef("mockito-version")
+      library("mockito-junit-jupiter", "org.mockito", "mockito-junit-jupiter")
+          .versionRef("mockito-version")
+
+      library("assertj-core", "org.assertj", "assertj-core").versionRef("assertj-version")
+
+      bundle("junit", listOf("junit-jupiter-api", "junit-jupiter-params", "junit-jupiter-engine"))
+      bundle("mockito", listOf("mockito-core", "mockito-junit-jupiter"))
+      bundle("assertj", listOf("assertj-core"))
+    }
   }
 }
 
