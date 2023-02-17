@@ -11,7 +11,7 @@ use crate::g2::g2_from_jobject;
 
 /// Computes 2 pairings, A and B, and checks for equality of the pairing outputs
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_comparePairing(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_Bls12381Bindings_comparePairing(
     env: JNIEnv,
     _class: JClass,
     g1_a_object: JObject,
@@ -46,7 +46,7 @@ pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_compar
 /// Computes the pairing of the two group elements
 /// Returns a string (as a byte array) representing the resulting group element
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_platform_bls_impl_BLS12381Bindings_pairingDisplay(
+pub extern "system" fn Java_com_hedera_platform_bls_impl_Bls12381Bindings_pairingDisplay(
     env: JNIEnv,
     _class: JClass,
     g1_object: JObject,

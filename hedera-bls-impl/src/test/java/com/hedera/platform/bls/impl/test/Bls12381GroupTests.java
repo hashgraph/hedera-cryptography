@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.hedera.platform.bls.api.FieldElement;
 import com.hedera.platform.bls.api.Group;
 import com.hedera.platform.bls.api.GroupElement;
-import com.hedera.platform.bls.impl.BLS12381Field;
-import com.hedera.platform.bls.impl.BLS12381Group1;
-import com.hedera.platform.bls.impl.BLS12381Group2;
+import com.hedera.platform.bls.impl.Bls12381Field;
+import com.hedera.platform.bls.impl.Bls12381Group1;
+import com.hedera.platform.bls.impl.Bls12381Group2;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,18 +37,18 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @DisplayName("BLS12_381 Group Unit Tests")
-class BLS12381GroupTests {
-    BLS12381Field field;
+class Bls12381GroupTests {
+    Bls12381Field field;
     Random random;
 
     @BeforeEach
     public void init() {
-        field = BLS12381Field.getInstance();
+        field = Bls12381Field.getInstance();
         random = TestUtils.getRandomPrintSeed();
     }
 
     static Stream<Arguments> groups() {
-        return Stream.of(Arguments.of(BLS12381Group1.getInstance()), Arguments.of(BLS12381Group2.getInstance()));
+        return Stream.of(Arguments.of(Bls12381Group1.getInstance()), Arguments.of(Bls12381Group2.getInstance()));
     }
 
     @ParameterizedTest()
@@ -569,8 +569,8 @@ class BLS12381GroupTests {
     @Test()
     @DisplayName("element equality between different groups returns false")
     void elementEqualsWrongGroup() {
-        Group group1 = BLS12381Group1.getInstance();
-        Group group2 = BLS12381Group2.getInstance();
+        Group group1 = Bls12381Group1.getInstance();
+        Group group2 = Bls12381Group2.getInstance();
         GroupElement group1Element = group1.randomElement(TestUtils.randomByteArray(random, group1.getSeedSize()));
         GroupElement group2Element = group2.randomElement(TestUtils.randomByteArray(random, group2.getSeedSize()));
 

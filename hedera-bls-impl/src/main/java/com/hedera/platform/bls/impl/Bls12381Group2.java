@@ -15,10 +15,10 @@
  */
 package com.hedera.platform.bls.impl;
 
-import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.g2BatchMultiply;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.newG2Identity;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.newRandomG2;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.SUCCESS;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.g2BatchMultiply;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.newG2Identity;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.newRandomG2;
 import static com.hedera.platform.bls.impl.Utils.computeSha256;
 
 import com.hedera.platform.bls.api.Group;
@@ -28,9 +28,9 @@ import java.util.Collection;
 /**
  * G2 of the BLS12-381 curve family
  *
- * <p>This class functions as a {@link BLS12381Group2Element} factory. It is defined as a singleton.
+ * <p>This class functions as a {@link Bls12381Group2Element} factory. It is defined as a singleton.
  */
-public class BLS12381Group2 implements Group {
+public class Bls12381Group2 implements Group {
     /** Length of a byte array representing a compressed element */
     private static final int COMPRESSED_SIZE = 96;
 
@@ -41,24 +41,24 @@ public class BLS12381Group2 implements Group {
     private static final int SEED_SIZE = 32;
 
     /** The singleton instance */
-    private static BLS12381Group2 instance;
+    private static Bls12381Group2 instance;
 
     /** Hidden constructor */
-    private BLS12381Group2() {}
+    private Bls12381Group2() {}
 
     /**
      * Returns the singleton
      *
      * @return the singleton
      */
-    public static BLS12381Group2 getInstance() {
+    public static Bls12381Group2 getInstance() {
         if (instance == null) {
-            synchronized (BLS12381Group2.class) {
+            synchronized (Bls12381Group2.class) {
                 if (instance != null) {
                     return instance;
                 }
 
-                instance = new BLS12381Group2();
+                instance = new Bls12381Group2();
             }
         }
 
@@ -72,10 +72,10 @@ public class BLS12381Group2 implements Group {
 
         final int errorCode = newG2Identity(output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("newG2Identity", errorCode);
+            throw new Bls12381Exception("newG2Identity", errorCode);
         }
 
-        return new BLS12381Group2Element(output);
+        return new Bls12381Group2Element(output);
     }
 
     /** {@inheritDoc} */
@@ -89,10 +89,10 @@ public class BLS12381Group2 implements Group {
 
         final int errorCode = newRandomG2(seed, output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("newRandomG2", errorCode);
+            throw new Bls12381Exception("newRandomG2", errorCode);
         }
 
-        return new BLS12381Group2Element(output);
+        return new Bls12381Group2Element(output);
     }
 
     /** {@inheritDoc} */
@@ -112,11 +112,11 @@ public class BLS12381Group2 implements Group {
             throw new IllegalArgumentException("invalid element (null) in collection");
         }
 
-        final BLS12381Group2Element[] elementArray = new BLS12381Group2Element[elements.size()];
+        final Bls12381Group2Element[] elementArray = new Bls12381Group2Element[elements.size()];
 
         int count = 0;
         for (final GroupElement element : elements) {
-            elementArray[count] = (BLS12381Group2Element) element;
+            elementArray[count] = (Bls12381Group2Element) element;
             ++count;
         }
 
@@ -124,17 +124,17 @@ public class BLS12381Group2 implements Group {
 
         final int errorCode = g2BatchMultiply(elementArray, output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("g2BatchMultiply", errorCode);
+            throw new Bls12381Exception("g2BatchMultiply", errorCode);
         }
 
-        return new BLS12381Group2Element(output);
+        return new Bls12381Group2Element(output);
     }
 
     /** {@inheritDoc} */
     @Override
     public GroupElement deserializeElementFromBytes(final byte[] inputBytes) {
         // create the object, but check validity before returning
-        final BLS12381Group2Element outputElement = new BLS12381Group2Element(inputBytes);
+        final Bls12381Group2Element outputElement = new Bls12381Group2Element(inputBytes);
 
         if (!outputElement.isValid()) {
             return null;

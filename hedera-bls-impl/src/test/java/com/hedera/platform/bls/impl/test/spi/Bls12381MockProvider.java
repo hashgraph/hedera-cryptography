@@ -24,10 +24,10 @@ import com.hedera.platform.bls.spi.ProviderType;
 import com.hedera.platform.bls.spi.WellKnownAlgorithms;
 import org.mockito.Mockito;
 
-public class BLS12381MockProvider implements BilinearMapProvider {
+public class Bls12381MockProvider implements BilinearMapProvider {
     @Override
     public String algorithm() {
-        return WellKnownAlgorithms.BLS12_381;
+        return WellKnownAlgorithms.Bls12_381;
     }
 
     @Override

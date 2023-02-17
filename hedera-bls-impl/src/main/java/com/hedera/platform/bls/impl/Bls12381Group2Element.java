@@ -15,13 +15,13 @@
  */
 package com.hedera.platform.bls.impl;
 
-import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.checkG2Validity;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.g2Compress;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.g2Divide;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.g2ElementEquals;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.g2Multiply;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.g2PowZn;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.SUCCESS;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.checkG2Validity;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.g2Compress;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.g2Divide;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.g2ElementEquals;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.g2Multiply;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.g2PowZn;
 
 import com.hedera.platform.bls.api.FieldElement;
 import com.hedera.platform.bls.api.Group;
@@ -30,9 +30,9 @@ import java.util.Arrays;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /** An element in Group 2 of the BLS 12-381 curve family */
-public class BLS12381Group2Element implements GroupElement {
+public class Bls12381Group2Element implements GroupElement {
     /** The group this element is part of */
-    private static final BLS12381Group2 GROUP = BLS12381Group2.getInstance();
+    private static final Bls12381Group2 GROUP = Bls12381Group2.getInstance();
 
     /** The bytes representation of the element */
     private byte[] groupElement;
@@ -41,12 +41,12 @@ public class BLS12381Group2Element implements GroupElement {
     private boolean compressed;
 
     /**
-     * Package private constructor. This is used by {@link BLS12381Group2}, but shouldn't be called
+     * Package private constructor. This is used by {@link Bls12381Group2}, but shouldn't be called
      * directly by anyone else
      *
      * @param groupElement a byte array representing this group element
      */
-    BLS12381Group2Element(final byte[] groupElement) {
+    Bls12381Group2Element(final byte[] groupElement) {
         if (groupElement == null) {
             throw new IllegalArgumentException("groupElement parameter must not be null");
         }
@@ -60,7 +60,7 @@ public class BLS12381Group2Element implements GroupElement {
      *
      * @param other the object being copied
      */
-    BLS12381Group2Element(final BLS12381Group2Element other) {
+    Bls12381Group2Element(final Bls12381Group2Element other) {
         if (other == null) {
             throw new IllegalArgumentException("other cannot be null");
         }
@@ -84,52 +84,52 @@ public class BLS12381Group2Element implements GroupElement {
     /** {@inheritDoc} */
     @Override
     public GroupElement power(final FieldElement exponent) {
-        if (!(exponent instanceof final BLS12381FieldElement exponentElement)) {
-            throw new IllegalArgumentException("exponent must be a valid BLS12381FieldElement");
+        if (!(exponent instanceof final Bls12381FieldElement exponentElement)) {
+            throw new IllegalArgumentException("exponent must be a valid Bls12381FieldElement");
         }
 
         final byte[] output = new byte[GROUP.getUncompressedSize()];
 
         final int errorCode = g2PowZn(this, exponentElement, output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("g2PowZn", errorCode);
+            throw new Bls12381Exception("g2PowZn", errorCode);
         }
 
-        return new BLS12381Group2Element(output);
+        return new Bls12381Group2Element(output);
     }
 
     /** {@inheritDoc} */
     @Override
     public GroupElement multiply(final GroupElement other) {
-        if (!(other instanceof final BLS12381Group2Element otherElement)) {
-            throw new IllegalArgumentException("other must be a valid BLS12381Group2Element");
+        if (!(other instanceof final Bls12381Group2Element otherElement)) {
+            throw new IllegalArgumentException("other must be a valid Bls12381Group2Element");
         }
 
         final byte[] output = new byte[GROUP.getUncompressedSize()];
 
         final int errorCode = g2Multiply(this, otherElement, output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("g2Multiply", errorCode);
+            throw new Bls12381Exception("g2Multiply", errorCode);
         }
 
-        return new BLS12381Group2Element(output);
+        return new Bls12381Group2Element(output);
     }
 
     /** {@inheritDoc} */
     @Override
     public GroupElement divide(final GroupElement other) {
-        if (!(other instanceof final BLS12381Group2Element otherElement)) {
-            throw new IllegalArgumentException("other must be a valid BLS12381Group2Element");
+        if (!(other instanceof final Bls12381Group2Element otherElement)) {
+            throw new IllegalArgumentException("other must be a valid Bls12381Group2Element");
         }
 
         final byte[] output = new byte[GROUP.getUncompressedSize()];
 
         final int errorCode = g2Divide(this, otherElement, output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("g2Divide", errorCode);
+            throw new Bls12381Exception("g2Divide", errorCode);
         }
 
-        return new BLS12381Group2Element(output);
+        return new Bls12381Group2Element(output);
     }
 
     /** {@inheritDoc} */
@@ -144,7 +144,7 @@ public class BLS12381Group2Element implements GroupElement {
 
         final int errorCode = g2Compress(this, newGroupElement);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("g2Compress", errorCode);
+            throw new Bls12381Exception("g2Compress", errorCode);
         }
 
         groupElement = newGroupElement;
@@ -169,7 +169,7 @@ public class BLS12381Group2Element implements GroupElement {
             return false;
         }
 
-        if (!(o instanceof final BLS12381Group2Element element)) {
+        if (!(o instanceof final Bls12381Group2Element element)) {
             return false;
         }
 
@@ -192,8 +192,8 @@ public class BLS12381Group2Element implements GroupElement {
 
     /** {@inheritDoc} */
     @Override
-    public BLS12381Group2Element copy() {
-        return new BLS12381Group2Element(this);
+    public Bls12381Group2Element copy() {
+        return new Bls12381Group2Element(this);
     }
 
     /** {@inheritDoc} */

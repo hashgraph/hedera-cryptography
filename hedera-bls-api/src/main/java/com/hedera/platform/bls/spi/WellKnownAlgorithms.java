@@ -25,24 +25,24 @@ public final class WellKnownAlgorithms {
      * This is the standard adopted by Ethereum and per the IETF standards this algorithm provides about 128-bits
      * of security.
      */
-    public static final String BLS12_381 = "bls12-381";
+    public static final String Bls12_381 = "bls12-381";
 
     /**
      * The custom bls12-381 algorithm variant which uses the SHA-384 hashing algorithm.
      */
-    public static final String BLS12_381_SHA384 = "bls12-381/sha384";
+    public static final String Bls12_381_SHA384 = "bls12-381/sha384";
 
     /**
      * The standard bls24-477 algorithm which uses the SHA-256 hashing algorithm.
      * Per the IETF standards this algorithm provides about 192-bits of security.
      */
-    public static final String BLS24_477 = "bls24-477";
+    public static final String Bls24_477 = "bls24-477";
 
     /**
      * The standard bls48-581 algorithm which uses the SHA-256 hashing algorithm.
      * Per the IETF standards this algorithm provides about 256-bits of security.
      */
-    public static final String BLS48_581 = "bls48-581";
+    public static final String Bls48_581 = "bls48-581";
 
     /**
      * Private Constructor since this class should not be instantiated.

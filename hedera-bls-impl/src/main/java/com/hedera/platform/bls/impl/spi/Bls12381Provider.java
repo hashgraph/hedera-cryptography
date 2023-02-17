@@ -16,23 +16,23 @@
 package com.hedera.platform.bls.impl.spi;
 
 import com.hedera.platform.bls.api.BilinearMap;
-import com.hedera.platform.bls.impl.BLS12381BilinearMap;
+import com.hedera.platform.bls.impl.Bls12381BilinearMap;
 import com.hedera.platform.bls.spi.BilinearMapProvider;
 import com.hedera.platform.bls.spi.ProviderType;
 import com.hedera.platform.bls.spi.WellKnownAlgorithms;
 
 /**
- * An implementation of {@link BilinearMapProvider} which returns an instance of {@link BLS12381BilinearMap}
+ * An implementation of {@link BilinearMapProvider} which returns an instance of {@link Bls12381BilinearMap}
  */
-public class BLS12381Provider implements BilinearMapProvider {
-    private static final BilinearMap map = new BLS12381BilinearMap();
+public class Bls12381Provider implements BilinearMapProvider {
+    private static final BilinearMap map = new Bls12381BilinearMap();
 
     /**
      * {@inheritDoc}
      */
     @Override
     public String algorithm() {
-        return WellKnownAlgorithms.BLS12_381;
+        return WellKnownAlgorithms.Bls12_381;
     }
 
     /**

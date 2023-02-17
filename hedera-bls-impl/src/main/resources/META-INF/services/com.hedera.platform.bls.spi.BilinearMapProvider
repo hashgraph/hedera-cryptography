@@ -1,1 +1,1 @@
-com.hedera.platform.bls.impl.spi.BLS12381Provider
+com.hedera.platform.bls.impl.spi.Bls12381Provider
