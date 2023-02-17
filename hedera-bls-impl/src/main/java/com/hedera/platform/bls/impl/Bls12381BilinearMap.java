@@ -15,8 +15,8 @@
  */
 package com.hedera.platform.bls.impl;
 
-import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.pairingDisplay;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.SUCCESS;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.pairingDisplay;
 
 import com.hedera.platform.bls.api.BilinearMap;
 import com.hedera.platform.bls.api.Field;
@@ -28,16 +28,16 @@ import com.hedera.platform.bls.api.GroupElement;
  * this class is provided by the <a href="https://github.com/zkcrypto/bls12_381">zkcrypto bls12_381
  * rust library</a>
  */
-public final class BLS12381BilinearMap implements BilinearMap {
+public final class Bls12381BilinearMap implements BilinearMap {
 
     /** The field of the bilinear map */
-    private static final Field FIELD = BLS12381Field.getInstance();
+    private static final Field FIELD = Bls12381Field.getInstance();
 
     /** The group of the bilinear map where BLS signatures reside */
-    private static final Group SIGNATURE_GROUP = BLS12381Group1.getInstance();
+    private static final Group SIGNATURE_GROUP = Bls12381Group1.getInstance();
 
     /** The group of the bilinear map where BLS public keys reside */
-    private static final Group KEY_GROUP = BLS12381Group2.getInstance();
+    private static final Group KEY_GROUP = Bls12381Group2.getInstance();
 
     /** {@inheritDoc} */
     @Override
@@ -48,7 +48,7 @@ public final class BLS12381BilinearMap implements BilinearMap {
     /**
      * {@inheritDoc}
      *
-     * <p>Since elements are smaller and faster to operate on, we are using {@link BLS12381Group1}
+     * <p>Since elements are smaller and faster to operate on, we are using {@link Bls12381Group1}
      * as our signature group. More operations are performed with signatures than with keys
      */
     @Override
@@ -59,7 +59,7 @@ public final class BLS12381BilinearMap implements BilinearMap {
     /**
      * {@inheritDoc}
      *
-     * <p>Since elements are larger and slower to operate on, we are using {@link BLS12381Group2} as
+     * <p>Since elements are larger and slower to operate on, we are using {@link Bls12381Group2} as
      * our key group. Fewer operations are performed with keys than with signatures
      */
     @Override
@@ -75,34 +75,34 @@ public final class BLS12381BilinearMap implements BilinearMap {
             final GroupElement signatureElement2,
             final GroupElement keyElement2) {
 
-        if (!(signatureElement1 instanceof final BLS12381Group1Element signature1)) {
-            throw new IllegalArgumentException("signatureElement1 must be a BLS12381Group1Element");
+        if (!(signatureElement1 instanceof final Bls12381Group1Element signature1)) {
+            throw new IllegalArgumentException("signatureElement1 must be a Bls12381Group1Element");
         }
 
-        if (!(keyElement1 instanceof final BLS12381Group2Element key1)) {
-            throw new IllegalArgumentException("keyElement1 must be a BLS12381Group2Element");
+        if (!(keyElement1 instanceof final Bls12381Group2Element key1)) {
+            throw new IllegalArgumentException("keyElement1 must be a Bls12381Group2Element");
         }
 
-        if (!(signatureElement2 instanceof final BLS12381Group1Element signature2)) {
-            throw new IllegalArgumentException("signatureElement2 must be a BLS12381Group1Element");
+        if (!(signatureElement2 instanceof final Bls12381Group1Element signature2)) {
+            throw new IllegalArgumentException("signatureElement2 must be a Bls12381Group1Element");
         }
 
-        if (!(keyElement2 instanceof final BLS12381Group2Element key2)) {
-            throw new IllegalArgumentException("keyElement2 must be a BLS12381Group2Element");
+        if (!(keyElement2 instanceof final Bls12381Group2Element key2)) {
+            throw new IllegalArgumentException("keyElement2 must be a Bls12381Group2Element");
         }
 
-        return BLS12381Bindings.comparePairing(signature1, key1, signature2, key2);
+        return Bls12381Bindings.comparePairing(signature1, key1, signature2, key2);
     }
 
     /** {@inheritDoc} */
     @Override
     public byte[] displayPairing(final GroupElement signatureElement, final GroupElement keyElement) {
-        if (!(signatureElement instanceof final BLS12381Group1Element signature)) {
-            throw new IllegalArgumentException("signatureElement must be a BLS12381Group1Element");
+        if (!(signatureElement instanceof final Bls12381Group1Element signature)) {
+            throw new IllegalArgumentException("signatureElement must be a Bls12381Group1Element");
         }
 
-        if (!(keyElement instanceof final BLS12381Group2Element key)) {
-            throw new IllegalArgumentException("keyElement must be a BLS12381Group2Element");
+        if (!(keyElement instanceof final Bls12381Group2Element key)) {
+            throw new IllegalArgumentException("keyElement must be a Bls12381Group2Element");
         }
 
         // display output is always this size
@@ -110,7 +110,7 @@ public final class BLS12381BilinearMap implements BilinearMap {
 
         final int errorCode = pairingDisplay(signature, key, output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("pairingDisplay", errorCode);
+            throw new Bls12381Exception("pairingDisplay", errorCode);
         }
 
         return output;

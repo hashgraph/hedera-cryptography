@@ -16,14 +16,14 @@
 package com.hedera.platform.bls.api;
 
 /** An exception that occurs in a BLS cryptography implementation */
-public class BLSCryptographyException extends RuntimeException {
+public class BlsCryptographyException extends RuntimeException {
 
     /**
      * String constructor
      *
      * @param description description of the exception which occurred
      */
-    public BLSCryptographyException(final String description) {
+    public BlsCryptographyException(final String description) {
         super(description);
     }
 }

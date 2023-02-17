@@ -18,9 +18,9 @@ package com.hedera.platform.bls.impl.test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.platform.bls.api.FieldElement;
-import com.hedera.platform.bls.impl.BLS12381Exception;
-import com.hedera.platform.bls.impl.BLS12381Field;
-import com.hedera.platform.bls.impl.BLS12381FieldElement;
+import com.hedera.platform.bls.impl.Bls12381Exception;
+import com.hedera.platform.bls.impl.Bls12381Field;
+import com.hedera.platform.bls.impl.Bls12381FieldElement;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Random;
@@ -30,13 +30,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("BLS12_381 Scalar Unit Tests")
-class BLS12381ScalarTests {
-    BLS12381Field field;
+class Bls12381ScalarTests {
+    Bls12381Field field;
     Random random;
 
     @BeforeEach
     public void init() {
-        field = BLS12381Field.getInstance();
+        field = Bls12381Field.getInstance();
         random = TestUtils.getRandomPrintSeed();
     }
 
@@ -369,7 +369,7 @@ class BLS12381ScalarTests {
         final FieldElement zero = field.zeroElement();
 
         Assertions.assertThrows(
-                BLS12381Exception.class, () -> randomScalar.divide(zero), "Dividing by zero should cause error");
+                Bls12381Exception.class, () -> randomScalar.divide(zero), "Dividing by zero should cause error");
     }
 
     @Test
@@ -549,7 +549,7 @@ class BLS12381ScalarTests {
         final byte[] invalidElementBytes = new byte[32];
         Arrays.fill(invalidElementBytes, (byte) 0xFF);
 
-        final FieldElement invalidElement = new BLS12381FieldElement(invalidElementBytes);
+        final FieldElement invalidElement = new Bls12381FieldElement(invalidElementBytes);
 
         Assertions.assertFalse(invalidElement.isValid(), "scalar should be invalid");
     }
