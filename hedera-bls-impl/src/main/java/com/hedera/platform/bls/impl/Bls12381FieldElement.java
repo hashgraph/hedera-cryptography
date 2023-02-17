@@ -15,24 +15,24 @@
  */
 package com.hedera.platform.bls.impl;
 
-import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.checkScalarValidity;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.scalarAdd;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.scalarDivide;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.scalarEquals;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.scalarMultiply;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.scalarPower;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.scalarSubtract;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.SUCCESS;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.checkScalarValidity;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.scalarAdd;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.scalarDivide;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.scalarEquals;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.scalarMultiply;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.scalarPower;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.scalarSubtract;
 
 import com.hedera.platform.bls.api.Field;
 import com.hedera.platform.bls.api.FieldElement;
 import java.math.BigInteger;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-/** An element in {@link BLS12381Field} */
-public class BLS12381FieldElement implements FieldElement {
+/** An element in {@link Bls12381Field} */
+public class Bls12381FieldElement implements FieldElement {
     /** The field the element is in */
-    private static final BLS12381Field FIELD = BLS12381Field.getInstance();
+    private static final Bls12381Field FIELD = Bls12381Field.getInstance();
 
     /** The byte representation of the element */
     private final byte[] fieldElement;
@@ -42,7 +42,7 @@ public class BLS12381FieldElement implements FieldElement {
      *
      * @param fieldElement an array of bytes representing this field element
      */
-    public BLS12381FieldElement(final byte[] fieldElement) {
+    public Bls12381FieldElement(final byte[] fieldElement) {
         if (fieldElement == null) {
             throw new IllegalArgumentException("fieldElement parameter must not be null");
         }
@@ -65,69 +65,69 @@ public class BLS12381FieldElement implements FieldElement {
     /** {@inheritDoc} */
     @Override
     public FieldElement add(final FieldElement other) {
-        if (!(other instanceof final BLS12381FieldElement otherElement)) {
-            throw new IllegalArgumentException("other must be a valid BLS12381FieldElement");
+        if (!(other instanceof final Bls12381FieldElement otherElement)) {
+            throw new IllegalArgumentException("other must be a valid Bls12381FieldElement");
         }
 
-        final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+        final byte[] output = new byte[Bls12381Field.ELEMENT_BYTE_SIZE];
 
         final int errorCode = scalarAdd(this, otherElement, output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("scalarAdd", errorCode);
+            throw new Bls12381Exception("scalarAdd", errorCode);
         }
 
-        return new BLS12381FieldElement(output);
+        return new Bls12381FieldElement(output);
     }
 
     /** {@inheritDoc} */
     @Override
     public FieldElement subtract(final FieldElement other) {
-        if (!(other instanceof final BLS12381FieldElement otherElement)) {
-            throw new IllegalArgumentException("other must be a valid BLS12381FieldElement");
+        if (!(other instanceof final Bls12381FieldElement otherElement)) {
+            throw new IllegalArgumentException("other must be a valid Bls12381FieldElement");
         }
 
-        final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+        final byte[] output = new byte[Bls12381Field.ELEMENT_BYTE_SIZE];
 
         final int errorCode = scalarSubtract(this, otherElement, output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("scalarSubtract", errorCode);
+            throw new Bls12381Exception("scalarSubtract", errorCode);
         }
 
-        return new BLS12381FieldElement(output);
+        return new Bls12381FieldElement(output);
     }
 
     /** {@inheritDoc} */
     @Override
     public FieldElement multiply(final FieldElement other) {
-        if (!(other instanceof final BLS12381FieldElement otherElement)) {
-            throw new IllegalArgumentException("other must be a valid BLS12381FieldElement");
+        if (!(other instanceof final Bls12381FieldElement otherElement)) {
+            throw new IllegalArgumentException("other must be a valid Bls12381FieldElement");
         }
 
-        final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+        final byte[] output = new byte[Bls12381Field.ELEMENT_BYTE_SIZE];
 
         final int errorCode = scalarMultiply(this, otherElement, output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("scalarMultiply", errorCode);
+            throw new Bls12381Exception("scalarMultiply", errorCode);
         }
 
-        return new BLS12381FieldElement(output);
+        return new Bls12381FieldElement(output);
     }
 
     /** {@inheritDoc} */
     @Override
     public FieldElement divide(final FieldElement other) {
-        if (!(other instanceof final BLS12381FieldElement otherElement)) {
-            throw new IllegalArgumentException("other must be a valid BLS12381FieldElement");
+        if (!(other instanceof final Bls12381FieldElement otherElement)) {
+            throw new IllegalArgumentException("other must be a valid Bls12381FieldElement");
         }
 
-        final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+        final byte[] output = new byte[Bls12381Field.ELEMENT_BYTE_SIZE];
 
         final int errorCode = scalarDivide(this, otherElement, output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("scalarDivide", errorCode);
+            throw new Bls12381Exception("scalarDivide", errorCode);
         }
 
-        return new BLS12381FieldElement(output);
+        return new Bls12381FieldElement(output);
     }
 
     /** {@inheritDoc} */
@@ -137,14 +137,14 @@ public class BLS12381FieldElement implements FieldElement {
             throw new IllegalArgumentException("exponent cannot be null");
         }
 
-        final byte[] output = new byte[BLS12381Field.ELEMENT_BYTE_SIZE];
+        final byte[] output = new byte[Bls12381Field.ELEMENT_BYTE_SIZE];
 
         final int errorCode = scalarPower(this, exponent.toByteArray(), output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("scalarPower", errorCode);
+            throw new Bls12381Exception("scalarPower", errorCode);
         }
 
-        return new BLS12381FieldElement(output);
+        return new Bls12381FieldElement(output);
     }
 
     /** {@inheritDoc} */
@@ -163,7 +163,7 @@ public class BLS12381FieldElement implements FieldElement {
             return false;
         }
 
-        if (!(o instanceof final BLS12381FieldElement element)) {
+        if (!(o instanceof final Bls12381FieldElement element)) {
             return false;
         }
 

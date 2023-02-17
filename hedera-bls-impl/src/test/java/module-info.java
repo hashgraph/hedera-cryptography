@@ -1,6 +1,6 @@
-import com.hedera.platform.bls.impl.test.spi.BLS12381ExperimentalProvider;
-import com.hedera.platform.bls.impl.test.spi.BLS12381MockProvider;
-import com.hedera.platform.bls.impl.test.spi.BLS12381StubProvider;
+import com.hedera.platform.bls.impl.test.spi.Bls12381ExperimentalProvider;
+import com.hedera.platform.bls.impl.test.spi.Bls12381MockProvider;
+import com.hedera.platform.bls.impl.test.spi.Bls12381StubProvider;
 
 open module com.hedera.platform.bls.impl.test {
     // BLS Modules
@@ -19,7 +19,7 @@ open module com.hedera.platform.bls.impl.test {
     requires org.assertj.core;
 
     provides com.hedera.platform.bls.spi.BilinearMapProvider with
-            BLS12381MockProvider,
-            BLS12381ExperimentalProvider,
-            BLS12381StubProvider;
+            Bls12381MockProvider,
+            Bls12381ExperimentalProvider,
+            Bls12381StubProvider;
 }

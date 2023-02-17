@@ -23,23 +23,25 @@ import com.hedera.platform.bls.spi.BilinearMapProvider;
 import com.hedera.platform.bls.spi.ProviderType;
 import com.hedera.platform.bls.spi.WellKnownAlgorithms;
 
-public class BLS12381ExperimentalProvider implements BilinearMapProvider {
+public class Bls12381StubProvider implements BilinearMapProvider {
     @Override
     public String algorithm() {
-        return WellKnownAlgorithms.BLS12_381;
+        return WellKnownAlgorithms.Bls12_381;
     }
 
     @Override
     public ProviderType providerType() {
-        return ProviderType.EXPERIMENTAL;
+        return ProviderType.STUB;
     }
 
     @Override
     public BilinearMap map() {
-        return new Experimental();
+        return new Stub();
     }
 
-    public static class Experimental implements BilinearMap {
+    public static class Stub implements BilinearMap {
+        private Stub() {}
+
         @Override
         public Field field() {
             return null;

@@ -15,11 +15,11 @@
  */
 package com.hedera.platform.bls.impl;
 
-import static com.hedera.platform.bls.impl.BLS12381Bindings.SUCCESS;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.newOneScalar;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.newRandomScalar;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.newScalarFromLong;
-import static com.hedera.platform.bls.impl.BLS12381Bindings.newZeroScalar;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.SUCCESS;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.newOneScalar;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.newRandomScalar;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.newScalarFromLong;
+import static com.hedera.platform.bls.impl.Bls12381Bindings.newZeroScalar;
 
 import com.hedera.platform.bls.api.Field;
 import com.hedera.platform.bls.api.FieldElement;
@@ -27,9 +27,9 @@ import com.hedera.platform.bls.api.FieldElement;
 /**
  * The finite field of the BLS 12-381 curve family
  *
- * <p>This class functions as a {@link BLS12381FieldElement} factory. It is defined as a singleton.
+ * <p>This class functions as a {@link Bls12381FieldElement} factory. It is defined as a singleton.
  */
-public class BLS12381Field implements Field {
+public class Bls12381Field implements Field {
 
     /** Required size of a seed to create a new field element */
     public static final int SEED_SIZE = 32;
@@ -38,24 +38,24 @@ public class BLS12381Field implements Field {
     public static final int ELEMENT_BYTE_SIZE = 32;
 
     /** The singleton instance */
-    private static BLS12381Field instance;
+    private static Bls12381Field instance;
 
     /** Hidden constructor */
-    private BLS12381Field() {}
+    private Bls12381Field() {}
 
     /**
      * Returns the singleton
      *
      * @return the singleton
      */
-    public static BLS12381Field getInstance() {
+    public static Bls12381Field getInstance() {
         if (instance == null) {
-            synchronized (BLS12381Field.class) {
+            synchronized (Bls12381Field.class) {
                 if (instance != null) {
                     return instance;
                 }
 
-                instance = new BLS12381Field();
+                instance = new Bls12381Field();
             }
         }
 
@@ -69,10 +69,10 @@ public class BLS12381Field implements Field {
 
         final int errorCode = newScalarFromLong(inputLong, output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("newScalarFromLong", errorCode);
+            throw new Bls12381Exception("newScalarFromLong", errorCode);
         }
 
-        return new BLS12381FieldElement(output);
+        return new Bls12381FieldElement(output);
     }
 
     /** {@inheritDoc} */
@@ -82,10 +82,10 @@ public class BLS12381Field implements Field {
 
         final int errorCode = newZeroScalar(output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("newZeroScalar", errorCode);
+            throw new Bls12381Exception("newZeroScalar", errorCode);
         }
 
-        return new BLS12381FieldElement(output);
+        return new Bls12381FieldElement(output);
     }
 
     /** {@inheritDoc} */
@@ -95,10 +95,10 @@ public class BLS12381Field implements Field {
 
         final int errorCode = newOneScalar(output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("newOneScalar", errorCode);
+            throw new Bls12381Exception("newOneScalar", errorCode);
         }
 
-        return new BLS12381FieldElement(output);
+        return new Bls12381FieldElement(output);
     }
 
     /** {@inheritDoc} */
@@ -112,16 +112,16 @@ public class BLS12381Field implements Field {
 
         final int errorCode = newRandomScalar(seed, output);
         if (errorCode != SUCCESS) {
-            throw new BLS12381Exception("newRandomScalar", errorCode);
+            throw new Bls12381Exception("newRandomScalar", errorCode);
         }
 
-        return new BLS12381FieldElement(output);
+        return new Bls12381FieldElement(output);
     }
 
     /** {@inheritDoc} */
     @Override
     public FieldElement deserializeElementFromBytes(final byte[] bytes) {
-        final BLS12381FieldElement outputElement = new BLS12381FieldElement(bytes);
+        final Bls12381FieldElement outputElement = new Bls12381FieldElement(bytes);
 
         if (!outputElement.isValid()) {
             return null;

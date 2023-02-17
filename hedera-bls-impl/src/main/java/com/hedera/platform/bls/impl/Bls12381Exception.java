@@ -15,12 +15,12 @@
  */
 package com.hedera.platform.bls.impl;
 
-import com.hedera.platform.bls.api.BLSCryptographyException;
+import com.hedera.platform.bls.api.BlsCryptographyException;
 import java.util.HashMap;
 import java.util.Map;
 
 /** Exception thrown when the BLS12_381 library encounters an unexpected error */
-public class BLS12381Exception extends BLSCryptographyException {
+public class Bls12381Exception extends BlsCryptographyException {
     /** A static map between error code and error string */
     private static final Map<Integer, String> errorCodeMap;
 
@@ -39,7 +39,7 @@ public class BLS12381Exception extends BLSCryptographyException {
      * @param functionName the name of the library function where the error occurred
      * @param errorCode the error code that was returned
      */
-    public BLS12381Exception(final String functionName, final int errorCode) {
+    public Bls12381Exception(final String functionName, final int errorCode) {
         super(functionName
                 + " returned error ["
                 + errorCode

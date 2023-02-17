@@ -22,26 +22,24 @@ import com.hedera.platform.bls.api.GroupElement;
 import com.hedera.platform.bls.spi.BilinearMapProvider;
 import com.hedera.platform.bls.spi.ProviderType;
 import com.hedera.platform.bls.spi.WellKnownAlgorithms;
-import org.mockito.Mockito;
 
-public class BLS12381MockProvider implements BilinearMapProvider {
+public class Bls12381ExperimentalProvider implements BilinearMapProvider {
     @Override
     public String algorithm() {
-        return WellKnownAlgorithms.BLS12_381;
+        return WellKnownAlgorithms.Bls12_381;
     }
 
     @Override
     public ProviderType providerType() {
-        return ProviderType.MOCK;
+        return ProviderType.EXPERIMENTAL;
     }
 
     @Override
     public BilinearMap map() {
-        return Mockito.mock(Mock.class);
+        return new Experimental();
     }
 
-    public static class Mock implements BilinearMap {
-
+    public static class Experimental implements BilinearMap {
         @Override
         public Field field() {
             return null;

@@ -18,11 +18,11 @@ package com.hedera.platform.bls.impl.test;
 import static org.assertj.core.api.Assertions.*;
 
 import com.hedera.platform.bls.api.BilinearMap;
-import com.hedera.platform.bls.impl.BLS12381BilinearMap;
-import com.hedera.platform.bls.impl.spi.BLS12381Provider;
-import com.hedera.platform.bls.impl.test.spi.BLS12381ExperimentalProvider;
-import com.hedera.platform.bls.impl.test.spi.BLS12381MockProvider;
-import com.hedera.platform.bls.impl.test.spi.BLS12381StubProvider;
+import com.hedera.platform.bls.impl.Bls12381BilinearMap;
+import com.hedera.platform.bls.impl.spi.Bls12381Provider;
+import com.hedera.platform.bls.impl.test.spi.Bls12381ExperimentalProvider;
+import com.hedera.platform.bls.impl.test.spi.Bls12381MockProvider;
+import com.hedera.platform.bls.impl.test.spi.Bls12381StubProvider;
 import com.hedera.platform.bls.spi.BilinearMapProvider;
 import com.hedera.platform.bls.spi.BilinearMapService;
 import com.hedera.platform.bls.spi.ProviderType;
@@ -52,7 +52,7 @@ class BilinearMapServiceTests {
     @DisplayName("defaultInstance(): Verify Basic Behaviors")
     void defaultInstanceBasic() {
         final BilinearMap bilinearMap = BilinearMapService.defaultInstance();
-        assertThat(bilinearMap).isNotNull().isInstanceOf(BLS12381BilinearMap.class);
+        assertThat(bilinearMap).isNotNull().isInstanceOf(Bls12381BilinearMap.class);
     }
 
     @Test
@@ -60,7 +60,7 @@ class BilinearMapServiceTests {
     void defaultInstanceRepeatedInvocations() {
         for (int i = 0; i < MAX_INVOCATIONS; i++) {
             BilinearMap bilinearMap = BilinearMapService.defaultInstance();
-            assertThat(bilinearMap).isNotNull().isInstanceOf(BLS12381BilinearMap.class);
+            assertThat(bilinearMap).isNotNull().isInstanceOf(Bls12381BilinearMap.class);
         }
     }
 
@@ -68,7 +68,7 @@ class BilinearMapServiceTests {
     @MethodSource("instanceOfArguments")
     @DisplayName("instanceOf(ProviderType): Verify Basic Behaviors")
     void instanceOfBasic(ProviderType providerType, Class<?> instanceCheck) {
-        final BilinearMap bilinearMap = BilinearMapService.instanceOf(WellKnownAlgorithms.BLS12_381, providerType);
+        final BilinearMap bilinearMap = BilinearMapService.instanceOf(WellKnownAlgorithms.Bls12_381, providerType);
         assertThat(bilinearMap).isNotNull().isInstanceOf(instanceCheck);
     }
 
@@ -77,7 +77,7 @@ class BilinearMapServiceTests {
     @DisplayName("instanceOf(ProviderType): Verify Repeated Invocations")
     void instanceOfRepeatedInvocations(ProviderType providerType, Class<?> instanceCheck) {
         for (int i = 0; i < MAX_INVOCATIONS; i++) {
-            BilinearMap bilinearMap = BilinearMapService.instanceOf(WellKnownAlgorithms.BLS12_381, providerType);
+            BilinearMap bilinearMap = BilinearMapService.instanceOf(WellKnownAlgorithms.Bls12_381, providerType);
             assertThat(bilinearMap).isNotNull().isInstanceOf(instanceCheck);
         }
     }
@@ -86,7 +86,7 @@ class BilinearMapServiceTests {
     @MethodSource("providerOfArguments")
     @DisplayName("providerOf(ProviderType): Verify Basic Behaviors")
     void providerOfBasic(ProviderType providerType, Class<?> providerCheck) {
-        final BilinearMapProvider provider = BilinearMapService.providerOf(WellKnownAlgorithms.BLS12_381, providerType);
+        final BilinearMapProvider provider = BilinearMapService.providerOf(WellKnownAlgorithms.Bls12_381, providerType);
         assertThat(provider)
                 .isNotNull()
                 .isInstanceOf(providerCheck)
@@ -99,7 +99,7 @@ class BilinearMapServiceTests {
     @DisplayName("providerOf(ProviderType): Verify Repeated Invocations")
     void providerOfRepeatedInvocations(ProviderType providerType, Class<?> providerCheck) {
         for (int i = 0; i < MAX_INVOCATIONS; i++) {
-            BilinearMapProvider provider = BilinearMapService.providerOf(WellKnownAlgorithms.BLS12_381, providerType);
+            BilinearMapProvider provider = BilinearMapService.providerOf(WellKnownAlgorithms.Bls12_381, providerType);
             assertThat(provider)
                     .isNotNull()
                     .isInstanceOf(providerCheck)
@@ -111,16 +111,16 @@ class BilinearMapServiceTests {
     @Test
     @DisplayName("runtimeInstanceOf(): Verify Basic Behaviors")
     void runtimeInstanceOfBasic() {
-        final BilinearMap bilinearMap = BilinearMapService.runtimeInstanceOf(WellKnownAlgorithms.BLS12_381);
-        assertThat(bilinearMap).isNotNull().isInstanceOf(BLS12381BilinearMap.class);
+        final BilinearMap bilinearMap = BilinearMapService.runtimeInstanceOf(WellKnownAlgorithms.Bls12_381);
+        assertThat(bilinearMap).isNotNull().isInstanceOf(Bls12381BilinearMap.class);
     }
 
     @Test
     @DisplayName("runtimeInstanceOf(): Verify Repeated Invocations")
     void runtimeInstanceOfRepeatedInvocations() {
         for (int i = 0; i < MAX_INVOCATIONS; i++) {
-            BilinearMap bilinearMap = BilinearMapService.runtimeInstanceOf(WellKnownAlgorithms.BLS12_381);
-            assertThat(bilinearMap).isNotNull().isInstanceOf(BLS12381BilinearMap.class);
+            BilinearMap bilinearMap = BilinearMapService.runtimeInstanceOf(WellKnownAlgorithms.Bls12_381);
+            assertThat(bilinearMap).isNotNull().isInstanceOf(Bls12381BilinearMap.class);
         }
     }
 
@@ -214,16 +214,16 @@ class BilinearMapServiceTests {
     @Test
     @DisplayName("runtimeProviderOf(): Verify Basic Behaviors")
     void runtimeProviderOfBasic() {
-        final BilinearMapProvider provider = BilinearMapService.runtimeProviderOf(WellKnownAlgorithms.BLS12_381);
-        assertThat(provider).isNotNull().isInstanceOf(BLS12381Provider.class);
+        final BilinearMapProvider provider = BilinearMapService.runtimeProviderOf(WellKnownAlgorithms.Bls12_381);
+        assertThat(provider).isNotNull().isInstanceOf(Bls12381Provider.class);
     }
 
     @Test
     @DisplayName("runtimeProviderOf(): Verify Repeated Invocations")
     void runtimeProviderOfRepeatedInvocations() {
         for (int i = 0; i < MAX_INVOCATIONS; i++) {
-            BilinearMapProvider provider = BilinearMapService.runtimeProviderOf(WellKnownAlgorithms.BLS12_381);
-            assertThat(provider).isNotNull().isInstanceOf(BLS12381Provider.class);
+            BilinearMapProvider provider = BilinearMapService.runtimeProviderOf(WellKnownAlgorithms.Bls12_381);
+            assertThat(provider).isNotNull().isInstanceOf(Bls12381Provider.class);
         }
     }
 
@@ -260,18 +260,18 @@ class BilinearMapServiceTests {
 
     static Stream<Arguments> instanceOfArguments() {
         return Stream.of(
-                Arguments.of(ProviderType.RUNTIME, BLS12381BilinearMap.class),
-                Arguments.of(ProviderType.MOCK, BLS12381MockProvider.Mock.class),
-                Arguments.of(ProviderType.STUB, BLS12381StubProvider.Stub.class),
-                Arguments.of(ProviderType.EXPERIMENTAL, BLS12381ExperimentalProvider.Experimental.class));
+                Arguments.of(ProviderType.RUNTIME, Bls12381BilinearMap.class),
+                Arguments.of(ProviderType.MOCK, Bls12381MockProvider.Mock.class),
+                Arguments.of(ProviderType.STUB, Bls12381StubProvider.Stub.class),
+                Arguments.of(ProviderType.EXPERIMENTAL, Bls12381ExperimentalProvider.Experimental.class));
     }
 
     static Stream<Arguments> providerOfArguments() {
         return Stream.of(
-                Arguments.of(ProviderType.RUNTIME, BLS12381Provider.class),
-                Arguments.of(ProviderType.MOCK, BLS12381MockProvider.class),
-                Arguments.of(ProviderType.STUB, BLS12381StubProvider.class),
-                Arguments.of(ProviderType.EXPERIMENTAL, BLS12381ExperimentalProvider.class));
+                Arguments.of(ProviderType.RUNTIME, Bls12381Provider.class),
+                Arguments.of(ProviderType.MOCK, Bls12381MockProvider.class),
+                Arguments.of(ProviderType.STUB, Bls12381StubProvider.class),
+                Arguments.of(ProviderType.EXPERIMENTAL, Bls12381ExperimentalProvider.class));
     }
 
     /*
@@ -279,7 +279,7 @@ class BilinearMapServiceTests {
 
     final Platform platform = new PlatformBuilder()
             .withConsensus(new SomeConsensusImpl())
-            .withBilinearMap(BilinearMapService.runtimeProviderOf(WellKnownAlgorithms.BLS12_381))
+            .withBilinearMap(BilinearMapService.runtimeProviderOf(WellKnownAlgorithms.Bls12_381))
             .........
             .build();
      */

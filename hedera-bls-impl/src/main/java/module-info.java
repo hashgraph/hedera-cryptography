@@ -1,3 +1,5 @@
+import com.hedera.platform.bls.impl.spi.Bls12381Provider;
+
 module com.hedera.platform.bls.impl {
     exports com.hedera.platform.bls.impl.spi;
     exports com.hedera.platform.bls.impl to
@@ -11,5 +13,5 @@ module com.hedera.platform.bls.impl {
     requires com.hedera.platform.bls.api;
 
     provides com.hedera.platform.bls.spi.BilinearMapProvider with
-            com.hedera.platform.bls.impl.spi.BLS12381Provider;
+            Bls12381Provider;
 }

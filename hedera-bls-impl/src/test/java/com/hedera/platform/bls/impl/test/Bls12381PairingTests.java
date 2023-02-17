@@ -21,14 +21,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.platform.bls.api.BilinearMap;
 import com.hedera.platform.bls.api.GroupElement;
-import com.hedera.platform.bls.impl.BLS12381BilinearMap;
+import com.hedera.platform.bls.impl.Bls12381BilinearMap;
 import java.util.Random;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class BLS12381PairingTests {
+class Bls12381PairingTests {
     Random random;
     BilinearMap bilinearMap;
 
@@ -36,7 +36,7 @@ class BLS12381PairingTests {
     public void init() {
         random = TestUtils.getRandomPrintSeed();
 
-        bilinearMap = new BLS12381BilinearMap();
+        bilinearMap = new Bls12381BilinearMap();
     }
 
     @Test
