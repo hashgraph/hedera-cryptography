@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Hedera Hashgraph, LLC
+ * Copyright (C) 2016-2024 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,26 @@
  * limitations under the License.
  */
 
-/*
 plugins {
-  id("com.hedera.platform.aggregate-reports")
-  id("com.hedera.platform.spotless-conventions")
-  id("com.hedera.platform.spotless-kotlin-conventions")
+    id("base")
+    id("com.diffplug.spotless")
 }
 
-group = "com.hedera.platform"
+// Convenience for local development: when running './gradlew' without any parameters just show the
+// tasks from the 'build' group
+defaultTasks("tasks")
 
-repositories { mavenCentral() }
-*/
+tasks.named<TaskReportTask>("tasks") {
+    if (!isDetail) {
+        displayGroup = "build"
+    }
+}
 
-plugins { id("com.hedera.gradle.root") }
+tasks.register("qualityGate") {
+    group = "build"
+    description = "Apply spotless rules and run all quality checks."
+    dependsOn(tasks.spotlessApply)
+    dependsOn(tasks.assemble)
+}
+
+tasks.register("releaseMavenCentral")

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Hedera Hashgraph, LLC
+ * Copyright (C) 2023-2024 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-pluginManagement { includeBuild("gradle/plugins") }
+plugins {
+    id("java-platform")
+    id("com.hedera.gradle.jpms-modules")
+    id("com.hedera.gradle.jpms-module-dependencies")
+    id("org.gradlex.java-module-versions")
+}
 
-plugins { id("com.hedera.gradle.settings") }
+group = "com.hedera.hashgraph"
 
-// "BOM" with versions of 3rd party dependencies
-include("hedera-dependency-versions")
+javaPlatform { allowDependencies() }
 
-// Project to aggregate code coverage data for the whole repository into one report
-include(":reports", "gradle/reports")
+tasks.register("releaseMavenCentral")

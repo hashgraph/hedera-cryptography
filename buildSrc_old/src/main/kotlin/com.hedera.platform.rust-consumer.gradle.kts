@@ -1,5 +1,3 @@
-import gradle.kotlin.dsl.accessors._6b5a012da99913209253918e0907799b.sourceSets
-
 /*
  * Copyright 2016-2022 Hedera Hashgraph, LLC
  *
