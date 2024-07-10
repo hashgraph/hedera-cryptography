@@ -23,3 +23,8 @@ include("hedera-dependency-versions")
 
 // Project to aggregate code coverage data for the whole repository into one report
 include(":reports", "gradle/reports")
+
+fun include(name: String, path: String) {
+    include(name)
+    project(name).projectDir = File(rootDir, path)
+}
