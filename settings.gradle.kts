@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 
+
 pluginManagement { includeBuild("gradle/plugins") }
 
 plugins { id("com.hedera.gradle.settings") }
+
+rootProject.name = "hedera-cryptography"
 
 // "BOM" with versions of 3rd party dependencies
 include("hedera-dependency-versions")
 
 // Project to aggregate code coverage data for the whole repository into one report
 include(":reports", "gradle/reports")
+include("swirlds-nativesupport")
+include("swirlds-crypto-pairings-api")
+include("swirlds-crypto-pairings-signatures")
+include("swirlds-crypto-altbn128")
 
 fun include(name: String, path: String) {
     include(name)

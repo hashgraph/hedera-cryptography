@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Hedera Hashgraph, LLC
+ * Copyright (C) 2016-2024 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-// Note: Need to maintain 3rd party versions between hedera-cryptography and hedera-services repository
-
 plugins {
-    id("com.hedera.gradle.versions")
+    id("com.hedera.gradle.platform")
+    id("com.hedera.gradle.platform-publish")
 }
 
-dependencies {
-    // forward logging from modules using SLF4J (e.g. 'org.hyperledger.besu.evm') to Log4J
-    // runtime(javaModuleDependencies.gav("org.apache.logging.log4j.slf4j2.impl"))
-}
-
-// define versions for gradle to grab dependencies
-dependencies.constraints {
-
+testModuleInfo {
+    // requires("org.junit.jupiter.api")
+    // requires("org.assertj.core")
 }

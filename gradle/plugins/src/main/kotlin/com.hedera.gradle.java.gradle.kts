@@ -69,7 +69,7 @@ configurations.all {
 
 @Suppress("UnstableApiUsage") val internal = configurations.dependencyScope("internal")
 
-javaModuleDependencies { versionsFromConsistentResolution(":app") }
+javaModuleDependencies { versionsFromConsistentResolution(":swirlds-nativesupport") }
 
 configurations.getByName("mainRuntimeClasspath") { extendsFrom(internal.get()) }
 
