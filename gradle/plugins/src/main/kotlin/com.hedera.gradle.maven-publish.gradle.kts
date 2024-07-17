@@ -21,7 +21,7 @@ plugins {
 }
 
 java {
-    withJavadocJar()
+    //withJavadocJar()
     withSourcesJar()
 }
 
