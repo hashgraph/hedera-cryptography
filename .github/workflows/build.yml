@@ -50,14 +50,14 @@ jobs:
         with:
           cache-read-only: false
 
-      - name: Build Swirlds-NativeSupport
-        run: ./gradlew :swirlds-nativesupport:assemble --scan
+      - name: Build software
+        run: ./gradlew assemble --scan
 
-      - name: Build swirlds-crypto-altbn128
-        run: ./gradlew :swirlds-crypto-altbn128:assemble --scan
+      - name: Spotless Check
+        run: ./gradlew spotlessCheck --scan --continue
 
-      - name: Build swirlds-crypto-pairings-api
-        run: ./gradlew :swirlds-crypto-pairings-api:assemble --scan
+      - name: Dependency Scopes Check
+        run: ./gradlew checkAllModuleInfo --scan --continue
 
-      - name: Build swirlds-crypto-pairings-signatures
-        run: ./gradlew :swirlds-crypto-pairings-signatures:assemble --scan
+      - name: Gradle Unit Test
+        run: ./gradlew :reports:testCodeCoverageReport --scan --continue

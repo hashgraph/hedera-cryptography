@@ -27,12 +27,11 @@ dependencies {
     rootProject.subprojects
         // exclude the 'reports' project itself
         .filter { prj -> prj != project }
-        // exclude 'test-clients' as it contains test sources in 'main'
         // see also 'codecov.yml'
-        .filter { prj -> prj.name != "test-clients" }
+
         .forEach {
             if (it.name == "hedera-dependency-versions") {
-                jacocoAggregation(platform(project(it.path)))
+                //jacocoAggregation(platform(project(it.path)))
             } else {
                 jacocoAggregation(project(it.path))
             }
