@@ -61,3 +61,9 @@ jobs:
 
       - name: Gradle Unit Test
         run: ./gradlew :reports:testCodeCoverageReport --scan --continue
+
+      - name: Publish Maven Central
+        env:
+          NEXUS_USERNAME: ${{ secrets.PLATFORM_OSSRH_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.PLATFORM_OSSRH_PASSWORD }}
+        run: "releaseMavenCentralSnapshot -PpublishingPackageGroup=com.swirlds --scan -PpublishSigningEnabled=true --no-configuration-cache"
