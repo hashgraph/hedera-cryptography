@@ -214,6 +214,7 @@ tasks.withType<Javadoc>().configureEach {
         )
         options.windowTitle = "Hedera Consensus Node"
         options.memberLevel = JavadocMemberLevel.PACKAGE
+        addStringOption("Xdoclint:all,-missing", "-Xwerror")
     }
 }
 
