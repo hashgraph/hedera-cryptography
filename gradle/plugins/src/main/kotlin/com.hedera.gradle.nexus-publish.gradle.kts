@@ -1,3 +1,5 @@
+import com.hedera.gradle.utils.Utils.versionTxt
+
 /*
  * Copyright (C) 2023-2024 Hedera Hashgraph, LLC
  *
@@ -21,6 +23,9 @@ plugins {
 
 val publishingPackageGroup = providers.gradleProperty("publishingPackageGroup").getOrElse("")
 val isPlatformPublish = publishingPackageGroup == "com.swirlds"
+
+version =
+    providers.fileContents(rootProject.layout.projectDirectory.versionTxt()).asText.get().trim()
 
 nexusPublishing {
     packageGroup = publishingPackageGroup
