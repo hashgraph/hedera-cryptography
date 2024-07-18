@@ -1,2 +1,1 @@
-module com.swirlds.crypto.pairings.api {
-}
+module com.swirlds.crypto.pairings.api {}

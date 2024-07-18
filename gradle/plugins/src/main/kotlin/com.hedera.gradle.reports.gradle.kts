@@ -31,7 +31,7 @@ dependencies {
 
         .forEach {
             if (it.name == "hedera-dependency-versions") {
-                //jacocoAggregation(platform(project(it.path)))
+                // jacocoAggregation(platform(project(it.path)))
             } else {
                 jacocoAggregation(project(it.path))
             }

@@ -1,2 +1,1 @@
-module com.swirlds.nativesupport {
-}
+module com.swirlds.nativesupport {}

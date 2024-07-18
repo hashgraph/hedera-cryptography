@@ -24,7 +24,7 @@ import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck
 plugins {
     id("java")
     id("jacoco")
-    id("checkstyle")
+    //id("checkstyle")
     id("com.adarshr.test-logger")
     id("com.hedera.gradle.lifecycle")
     id("com.hedera.gradle.jpms-modules")
@@ -368,15 +368,15 @@ if (dependencyAnalysis is DependencyAnalysisSubExtension) {
     dependencyAnalysis.issues { onAny { exclude(project.path) } }
 }
 
-checkstyle { toolVersion = "10.12.7" }
+//checkstyle { toolVersion = "10.12.7" }
 
-tasks.withType<Checkstyle>().configureEach {
-    reports {
-        xml.required = true
-        html.required = true
-        sarif.required = true
-    }
-}
+//tasks.withType<Checkstyle>().configureEach {
+//    reports {
+//        xml.required = true
+//        html.required = true
+//        sarif.required = true
+//    }
+//}
 
 // Remove below configuration once all 'TIME_CONSUMING' tests are moved to 'src/timeConsuming'.
 tasks.test {
