@@ -68,4 +68,4 @@ jobs:
         env:
           NEXUS_USERNAME: ${{ secrets.PLATFORM_OSSRH_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.PLATFORM_OSSRH_PASSWORD }}
-        run: "releaseMavenCentralSnapshot -PpublishingPackageGroup=com.swirlds --scan -PpublishSigningEnabled=true --no-configuration-cache"
+        run: ./gradlew releaseMavenCentralSnapshot -PpublishingPackageGroup=com.swirlds --scan -PpublishSigningEnabled=true --no-configuration-cache
