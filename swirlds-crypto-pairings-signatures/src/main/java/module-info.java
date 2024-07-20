@@ -1,3 +1,3 @@
-module com.swirlds.crypto.pairings.signatures {
-    requires transitive com.swirlds.crypto.pairings.api;
+module com.hedera.crypto.pairings.signatures {
+    requires transitive com.hedera.crypto.pairings.api;
 }

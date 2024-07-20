@@ -19,7 +19,7 @@ plugins {
     id("com.hedera.gradle.java")
 }
 
-group = "com.swirlds"
+group = "com.hedera"
 
 // Module Names of 'demo' projects do not always fit the expected pattern.
 // Which is ok for the independent 'demo' projects that only consist of one project.

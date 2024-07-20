@@ -1,5 +1,5 @@
-module com.swirlds.crypto.altbn128 {
-    requires com.swirlds.nativesupport;
+module com.hedera.crypto.altbn128 {
+    requires com.hedera.nativesupport;
 
-// provides com.swirlds.crypto.pairings.api with *;
+// provides com.hedera.crypto.pairings.api with *;
 }

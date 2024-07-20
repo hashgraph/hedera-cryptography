@@ -1,3 +1,3 @@
-module com.swirlds.crypto.pairings.api {
-    exports com.swirlds.crypto.pairings.api;
+module com.hedera.crypto.pairings.api {
+    exports com.hedera.crypto.pairings.api;
 }

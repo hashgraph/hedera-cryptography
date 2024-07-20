@@ -19,4 +19,4 @@ plugins {
     id("com.hedera.gradle.java")
 }
 
-group = "com.hedera.hashgraph"
+group = "com.hedera"

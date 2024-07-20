@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-package com.swirlds.nativesupport;
+package com.hedera.nativesupport;
 
 public class Foo {}

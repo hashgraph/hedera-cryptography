@@ -75,7 +75,7 @@ configurations.getByName("mainRuntimeClasspath") { extendsFrom(internal.get()) }
 
 configurations.javaModulesMergeJars { extendsFrom(internal.get()) }
 
-dependencies { "internal"(platform("com.hedera.hashgraph:hedera-dependency-versions")) }
+dependencies { "internal"(platform("com.hedera:hedera-dependency-versions")) }
 
 tasks.buildDependents { setGroup(null) }
 
@@ -97,7 +97,7 @@ sourceSets.all {
     dependencies {
         // For dependencies of annotation processors use versions from 'hedera-dependency-versions',
         // but not 'runtime' dependencies of the platform (JAVA_API instead of JAVA_RUNTIME).
-        annotationProcessorConfigurationName("com.hedera.hashgraph:hedera-dependency-versions") {
+        annotationProcessorConfigurationName("com.hedera:hedera-dependency-versions") {
             attributes {
                 attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_API))
                 attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.REGULAR_PLATFORM))

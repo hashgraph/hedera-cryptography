@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-package com.swirlds.crypto.altbn128;
+package com.hedera.crypto.altbn128;
 
 public class Foo {
-    private com.swirlds.nativesupport.Foo foo;
+    private com.hedera.nativesupport.Foo foo;
 }

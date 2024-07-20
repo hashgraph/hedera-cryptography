@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-package com.swirlds.crypto.pairings.signatures;
+package com.hedera.crypto.pairings.signatures;
 
 public class Foo {
-    public com.swirlds.crypto.pairings.api.Foo foo;
+    public com.hedera.crypto.pairings.api.Foo foo;
 }

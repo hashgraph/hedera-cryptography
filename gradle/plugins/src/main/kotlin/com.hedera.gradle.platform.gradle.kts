@@ -19,7 +19,7 @@ plugins {
     id("com.hedera.gradle.java")
 }
 
-group = "com.swirlds"
+group = "com.hedera"
 
 // All below configuration should eventually be removed once all 'sdk' tests in 'src/test'
 // are able to run in parallel without restrictions.
