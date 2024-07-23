@@ -79,7 +79,9 @@ if (publishSigningEnabled) {
     signing {
         sign(maven)
         useGpgCmd()
-        useInMemoryPgpKeys(providers.environmentVariable("SIGNING_KEY").get(),
-        providers.environmentVariable("SIGNING_PASSPHRASE").get())
+        useInMemoryPgpKeys(
+            providers.environmentVariable("SIGNING_KEY").get(),
+            providers.environmentVariable("SIGNING_PASSPHRASE").get()
+        )
     }
 }
