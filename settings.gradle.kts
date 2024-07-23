@@ -26,10 +26,10 @@ include("hedera-dependency-versions")
 
 // Project to aggregate code coverage data for the whole repository into one report
 include(":reports", "gradle/reports")
-include("swirlds-nativesupport")
-include("swirlds-crypto-pairings-api")
-include("swirlds-crypto-pairings-signatures")
-include("swirlds-crypto-altbn128")
+include("hedera-nativesupport")
+include("hedera-cryptography-pairings-api")
+include("hedera-cryptography-pairings-signatures")
+include("hedera-cryptography-altbn128")
 
 fun include(name: String, path: String) {
     include(name)
