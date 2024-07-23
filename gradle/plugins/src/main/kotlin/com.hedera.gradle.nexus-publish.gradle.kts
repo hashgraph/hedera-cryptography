@@ -50,9 +50,9 @@ nexusPublishing {
             username = System.getenv("NEXUS_USERNAME")
             password = System.getenv("NEXUS_PASSWORD")
             if (isPlatformPublish) {
-                nexusUrl = uri("https://s01.oss.sonatype.org/service/local/")
+                nexusUrl = uri("https://oss.sonatype.org/service/local/")
                 snapshotRepositoryUrl =
-                    uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+                    uri("https://oss.sonatype.org/content/repositories/snapshots/")
             }
         }
     }
@@ -60,9 +60,9 @@ nexusPublishing {
 
 // 'platform' and 'services' need to be published separately as they use different credentials
 val platformPublishTasks =
-    subprojects.filter { it.name.startsWith("swirlds") }.map { ":${it.name}:releaseMavenCentral" }
+    subprojects.filter { it.name.startsWith("hedera") }.map { ":${it.name}:releaseMavenCentral" }
 val servicesPublishTasks =
-    subprojects.filter { !it.name.startsWith("swirlds") }.map { ":${it.name}:releaseMavenCentral" }
+    subprojects.filter { !it.name.startsWith("hedera") }.map { ":${it.name}:releaseMavenCentral" }
 
 tasks.named("closeSonatypeStagingRepository") {
     // The publishing of all components to Maven Central is automatically done before close
