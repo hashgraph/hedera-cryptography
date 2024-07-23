@@ -38,7 +38,7 @@ plugins {
 }
 
 val publishingPackageGroup = providers.gradleProperty("publishingPackageGroup").getOrElse("")
-val isPlatformPublish = publishingPackageGroup == "com.hedera"
+val isPlatformPublish = publishingPackageGroup == "com.hedera.cryptography"
 
 version =
     providers.fileContents(rootProject.layout.projectDirectory.versionTxt()).asText.get().trim()
