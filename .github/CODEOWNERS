@@ -10,7 +10,7 @@
 /hedera-cryptography-altbn128/                  @hashgraph/platform-hashgraph @hashgraph/platform-base
 /hedera-cryptography-pairings-api/              @hashgraph/platform-hashgraph @hashgraph/platform-base
 /hedera-cryptography-pairings-signatures/       @hashgraph/platform-hashgraph @hashgraph/platform-base
-/hedera-common-nativesupport/                          @hashgraph/platform-hashgraph @hashgraph/platform-base
+/hedera-common-nativesupport/                   @hashgraph/platform-hashgraph @hashgraph/platform-base
 
 #########################
 #####  Core Files  ######
