@@ -38,7 +38,6 @@ plugins {
 }
 
 val publishingPackageGroup = providers.gradleProperty("publishingPackageGroup").getOrElse("")
-val isPlatformPublish = publishingPackageGroup == "com.hedera.cryptography"
 
 version =
     providers.fileContents(rootProject.layout.projectDirectory.versionTxt()).asText.get().trim()
@@ -49,29 +48,20 @@ nexusPublishing {
         sonatype {
             username = System.getenv("NEXUS_USERNAME")
             password = System.getenv("NEXUS_PASSWORD")
-            if (isPlatformPublish) {
-                nexusUrl = uri("https://oss.sonatype.org/service/local/")
-                snapshotRepositoryUrl =
-                    uri("https://oss.sonatype.org/content/repositories/snapshots/")
-            }
+            nexusUrl = uri("https://oss.sonatype.org/service/local/")
+            snapshotRepositoryUrl = uri("https://oss.sonatype.org/content/repositories/snapshots/")
         }
     }
 }
 
 // 'platform' and 'services' need to be published separately as they use different credentials
-val platformPublishTasks =
+val publishTasks =
     subprojects.filter { it.name.startsWith("hedera") }.map { ":${it.name}:releaseMavenCentral" }
-val servicesPublishTasks =
-    subprojects.filter { !it.name.startsWith("hedera") }.map { ":${it.name}:releaseMavenCentral" }
 
 tasks.named("closeSonatypeStagingRepository") {
     // The publishing of all components to Maven Central is automatically done before close
     // (which is done before release).
-    if (isPlatformPublish) {
-        dependsOn(platformPublishTasks)
-    } else {
-        dependsOn(servicesPublishTasks)
-    }
+    dependsOn(publishTasks)
 }
 
 tasks.named("releaseMavenCentral") {
@@ -81,9 +71,5 @@ tasks.named("releaseMavenCentral") {
 
 tasks.register("releaseMavenCentralSnapshot") {
     group = "release"
-    if (isPlatformPublish) {
-        dependsOn(platformPublishTasks)
-    } else {
-        dependsOn(servicesPublishTasks)
-    }
+    dependsOn(publishTasks)
 }
