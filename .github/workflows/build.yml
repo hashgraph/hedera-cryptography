@@ -68,6 +68,6 @@ jobs:
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_PASSWORD }}
-          #SIGNING_KEY: ${{ secrets.PLATFORM_GPG_KEY_CONTENTS }}
-          #SIGNING_PASSPHRASE: ${{ secrets.PLATFORM_GPG_KEY_PASSPHRASE }}
-        run: ./gradlew releaseMavenCentralSnapshot -PpublishingPackageGroup=com.hedera.cryptography --scan -PpublishSigningEnabled=false --no-configuration-cache
+          SIGNING_KEY: ${{ secrets.GPG_KEY_CONTENTS }}
+          SIGNING_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        run: ./gradlew releaseMavenCentralSnapshot -PpublishingPackageGroup=com.hedera.cryptography --scan -PpublishSigningEnabled=true --no-configuration-cache
