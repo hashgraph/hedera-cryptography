@@ -5,6 +5,14 @@
 *                                               @hashgraph/devops-ci @hashgraph/release-engineering-managers
 
 #########################
+####   Java Modules  ####
+#########################
+/hedera-cryptography-altbn128/                  @hashgraph/platform-hashgraph @hashgraph/platform-base
+/hedera-cryptography-pairings-api/              @hashgraph/platform-hashgraph @hashgraph/platform-base
+/hedera-cryptography-pairings-signatures/       @hashgraph/platform-hashgraph @hashgraph/platform-base
+/hedera-nativesupport/                          @hashgraph/platform-hashgraph @hashgraph/platform-base
+
+#########################
 #####  Core Files  ######
 #########################
 
