@@ -26,7 +26,7 @@ include("hedera-dependency-versions")
 
 // Project to aggregate code coverage data for the whole repository into one report
 include(":reports", "gradle/reports")
-include("hedera-nativesupport")
+include("hedera-common-nativesupport")
 include("hedera-cryptography-pairings-api")
 include("hedera-cryptography-pairings-signatures")
 include("hedera-cryptography-altbn128")

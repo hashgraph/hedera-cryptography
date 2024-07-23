@@ -17,5 +17,5 @@
 package com.hedera.cryptography.altbn128;
 
 public class Foo {
-    private com.hedera.nativesupport.Foo foo;
+    private com.hedera.common.nativesupport.Foo foo;
 }

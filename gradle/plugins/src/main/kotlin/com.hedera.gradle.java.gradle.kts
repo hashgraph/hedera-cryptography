@@ -69,7 +69,7 @@ configurations.all {
 
 @Suppress("UnstableApiUsage") val internal = configurations.dependencyScope("internal")
 
-javaModuleDependencies { versionsFromConsistentResolution(":hedera-nativesupport") }
+javaModuleDependencies { versionsFromConsistentResolution(":hedera-common-nativesupport") }
 
 configurations.getByName("mainRuntimeClasspath") { extendsFrom(internal.get()) }
 
