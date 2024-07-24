@@ -20,12 +20,9 @@ plugins {
     id("com.hedera.gradle.versions")
 }
 
-dependencies {
-    // forward logging from modules using SLF4J (e.g. 'org.hyperledger.besu.evm') to Log4J
-    // runtime(javaModuleDependencies.gav("org.apache.logging.log4j.slf4j2.impl"))
-}
-
 // define versions for gradle to grab dependencies
 dependencies.constraints {
-
+    api("com.github.spotbugs:spotbugs-annotations:4.7.3") {
+        because("com.github.spotbugs.annotations")
+    }
 }

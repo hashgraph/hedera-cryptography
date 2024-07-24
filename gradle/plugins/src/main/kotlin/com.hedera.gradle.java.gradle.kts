@@ -28,7 +28,6 @@ plugins {
     id("com.adarshr.test-logger")
     id("com.hedera.gradle.lifecycle")
     id("com.hedera.gradle.jpms-modules")
-    id("com.hedera.gradle.jpms-module-dependencies")
     id("com.hedera.gradle.repositories")
     id("com.hedera.gradle.spotless-java")
     id("com.hedera.gradle.spotless-kotlin")
@@ -60,11 +59,6 @@ if (currentJavaVersion != expectedJavaVersion) {
 java {
     sourceCompatibility = javaVersionMajor
     targetCompatibility = javaVersionMajor
-}
-
-configurations.all {
-    // In case published versions of a module are also available, always prefer the local one
-    resolutionStrategy.preferProjectModules()
 }
 
 jvmDependencyConflicts { consistentResolution { platform(":hedera-dependency-versions") } }
@@ -323,7 +317,7 @@ tasks.assemble {
 
 tasks.check { dependsOn(tasks.jacocoTestReport) }
 
-tasks.named("qualityGate") { tasks.withType<ModuleDirectivesScopeCheck>() }
+tasks.named("qualityGate") { dependsOn(tasks.withType<ModuleDirectivesScopeCheck>()) }
 
 // ordering check is done by SortModuleInfoRequiresStep
 tasks.withType<ModuleDirectivesOrderingCheck> { enabled = false }
