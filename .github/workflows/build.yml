@@ -71,5 +71,7 @@ jobs:
           files: |
             test-results/**/*.xml:
 
+      # only publish on merge to main
       - name: Publish release
+        #if: ${{ github.ref == 'refs/heads/main' }}
         uses: publish_release.yml
