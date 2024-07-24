@@ -16,7 +16,6 @@
 
 import com.hedera.gradle.spotless.RepairDashedCommentsFormatterStep
 import com.hedera.gradle.spotless.SortModuleInfoRequiresStep
-import com.hedera.gradle.spotless.StripOldLicenseFormatterStep
 
 plugins { id("com.hedera.gradle.spotless") }
 
@@ -26,9 +25,7 @@ spotless {
 
         // fix errors due to dashed comment blocks (eg: /*-, /*--, etc)
         addStep(RepairDashedCommentsFormatterStep.create())
-        // Remove the old license headers as the spotless licenseHeader formatter
-        // cannot find them if they are located between the package and import statements.
-        addStep(StripOldLicenseFormatterStep.create())
+
         // Sort the 'requires' entries in Module Info files
         addStep(SortModuleInfoRequiresStep.create())
         // enable toggle comment support

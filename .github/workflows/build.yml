@@ -60,9 +60,14 @@ jobs:
         run: ./gradlew checkAllModuleInfo --scan --continue
 
       - name: Gradle Unit Test
-        run: ./gradlew :reports:testCodeCoverageReport --scan --continue
+        run: ./gradlew :reports:testCodeCoverageReport test --scan --continue
 
+      - name: Publish Unit Test Results
+        uses: step-security/publish-unit-test-result-action@8ff54943859826014432b8e0271908538b272bc1 # v2.12.0
+
+      # only publish on merge to main
       - name: Publish Maven Central
+        if: ${{ github.ref == 'refs/heads/main' }}
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_PASSWORD }}
