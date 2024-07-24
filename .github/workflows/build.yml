@@ -78,4 +78,4 @@ jobs:
           SIGNING_KEY: ${{ secrets.GPG_KEY_CONTENTS }}
           SIGNING_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
         run: |
-          ./gradlew releaseMavenCentralSnapshot -PpublishingPackageGroup=com.hedera.cryptography --scan -PpublishSigningEnabled=true --no-configuration-cache
+          ./gradlew releaseMavenCentralSnapshot -PpublishingPackageGroup=com.hedera.common --scan -PpublishSigningEnabled=true --no-configuration-cache
