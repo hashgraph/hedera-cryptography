@@ -24,7 +24,7 @@ plugins {
 val publishingPackageGroup = providers.gradleProperty("publishingPackageGroup").getOrElse("")
 
 tasks.withType<PublishToMavenRepository>().configureEach {
-    enabled = publishingPackageGroup == "com.hedera.common"
+    enabled = publishingPackageGroup == "com.hedera.cryptography"
 }
 
 publishing {
