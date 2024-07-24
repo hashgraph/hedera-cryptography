@@ -26,8 +26,9 @@ env:
 
 jobs:
   publish:
-    name: Build TSS Crypto Library
+    name: Publish To Maven Central
     runs-on: [ self-hosted, Linux, medium, ephemeral ]
+    needs: "Build TSS Crypto Library"
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
