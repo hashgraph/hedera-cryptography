@@ -73,4 +73,4 @@ jobs:
 
       # only publish on merge to main
       - name: Publish release
-        uses: publish_release.yml
+        uses: ./publish_release.yml
