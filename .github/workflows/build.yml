@@ -66,8 +66,8 @@ jobs:
         uses: step-security/publish-unit-test-result-action@8ff54943859826014432b8e0271908538b272bc1 # v2.12.0
         with:
           files: |
-            **/build/reports/**/*.xml
-            **/build/reports/**/*.json
+            test-results/**/*.xml:
+
 
       # only publish on merge to main
       - name: Publish Maven Central
