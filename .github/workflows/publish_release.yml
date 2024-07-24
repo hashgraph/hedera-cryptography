@@ -52,7 +52,7 @@ jobs:
 
       # only publish on merge to main
       - name: Publish Maven Central
-        if: ${{ github.ref == 'refs/heads/main' }}
+        #if: ${{ github.ref == 'refs/heads/main' }}
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_PASSWORD }}
