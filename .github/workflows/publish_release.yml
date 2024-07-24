@@ -4,11 +4,6 @@ on:
   push:
     branches:
       - main
-      - release/*
-  pull_request:
-    branches:
-      - main
-      - release/*
   workflow_dispatch:
 
 defaults:
@@ -53,20 +48,12 @@ jobs:
         with:
           cache-read-only: false
 
-      - name: Build software
-        run: ./gradlew assemble --scan
-
-      - name: Spotless Check
-        run: ./gradlew spotlessCheck --scan --continue
-
-      - name: Dependency Scopes Check
-        run: ./gradlew checkAllModuleInfo --scan --continue
-
-      - name: Gradle Unit Test
-        run: ./gradlew :reports:testCodeCoverageReport test --scan --continue
-
-      - name: Publish Unit Test Results
-        uses: step-security/publish-unit-test-result-action@8ff54943859826014432b8e0271908538b272bc1 # v2.12.0
-        with:
-          files: |
-            test-results/**/*.xml:
+      - name: Publish Maven Central
+        env:
+          NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.GPG_KEY_CONTENTS }}
+          SIGNING_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        run: |
+          ./gradlew releaseMavenCentralSnapshot -PpublishingPackageGroup=com.hedera.common --scan -PpublishSigningEnabled=true --no-configuration-cache
+          ./gradlew releaseMavenCentralSnapshot -PpublishingPackageGroup=com.hedera.cryptography --scan -PpublishSigningEnabled=true --no-configuration-cache
