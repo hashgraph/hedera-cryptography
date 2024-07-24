@@ -26,6 +26,13 @@ jobs:
         with:
           egress-policy: audit
 
+      - name: Checkout Code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Expand Shallow Clone for and Spotless
+        if: ${{ (inputs.enable-unit-tests || inputs.enable-spotless-check) && !cancelled() }}
+        run: git fetch --unshallow --no-recurse-submodules
+
       - name: Publish Maven Central
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USERNAME }}
