@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2016-2024 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,11 @@
  */
 
 plugins {
-    id("java")
-    id("com.hedera.gradle.maven-publish")
+    id("com.hedera.gradle.java-module")
+    id("com.hedera.gradle.java-module-publish")
 }
 
-publishing {
-    publications {
-        named<MavenPublication>("maven") {
-            pom.developers {
-                developer {
-                    name = "Release Engineering Team"
-                    email = "release-engineering@swirldslabs.com"
-                    organization = "Hedera Hashgraph"
-                    organizationUrl = "https://www.hedera.com"
-                }
-            }
-        }
-    }
+testModuleInfo {
+    // requires("org.junit.jupiter.api")
+    // requires("org.assertj.core")
 }

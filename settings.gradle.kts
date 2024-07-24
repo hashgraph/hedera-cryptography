@@ -21,17 +21,14 @@ plugins { id("com.hedera.gradle.settings") }
 
 rootProject.name = "hedera-cryptography"
 
-// "BOM" with versions of 3rd party dependencies
-include("hedera-dependency-versions")
+javaModules {
+    directory("common") {
+        group ="com.hedera.common"
+    }
+    directory("cryptography") {
+        group = "com.hedera.cryptography"
+    }
 
-// Project to aggregate code coverage data for the whole repository into one report
-include(":reports", "gradle/reports")
-include("hedera-common-nativesupport")
-include("hedera-cryptography-pairings-api")
-include("hedera-cryptography-pairings-signatures")
-include("hedera-cryptography-altbn128")
-
-fun include(name: String, path: String) {
-    include(name)
-    project(name).projectDir = File(rootDir, path)
+    // "BOM" with versions of 3rd party dependencies
+    versions("hedera-dependency-versions")
 }

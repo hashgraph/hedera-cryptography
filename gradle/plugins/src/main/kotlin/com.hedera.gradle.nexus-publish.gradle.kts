@@ -37,7 +37,8 @@ plugins {
     id("io.github.gradle-nexus.publish-plugin")
 }
 
-val publishingPackageGroup = providers.gradleProperty("publishingPackageGroup").getOrElse("")
+val publishingPackageGroup =
+    providers.gradleProperty("publishingPackageGroup").getOrElse("org.hedera")
 
 version =
     providers.fileContents(rootProject.layout.projectDirectory.versionTxt()).asText.get().trim()
@@ -54,9 +55,7 @@ nexusPublishing {
     }
 }
 
-// 'platform' and 'services' need to be published separately as they use different credentials
-val publishTasks =
-    subprojects.filter { it.name.startsWith("hedera") }.map { ":${it.name}:releaseMavenCentral" }
+val publishTasks = subprojects.map { ":${it.name}:releaseMavenCentral" }
 
 tasks.named("closeSonatypeStagingRepository") {
     // The publishing of all components to Maven Central is automatically done before close

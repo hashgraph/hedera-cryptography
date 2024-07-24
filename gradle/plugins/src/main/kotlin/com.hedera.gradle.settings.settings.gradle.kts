@@ -22,7 +22,14 @@ pluginManagement {
     }
 }
 
-plugins { id("com.gradle.develocity") }
+plugins {
+    id("com.gradle.develocity")
+    id("org.gradlex.java-module-dependencies")
+}
+
+include(":reports")
+
+project(":reports").projectDir = File(rootDir, "gradle/reports")
 
 // Enable Gradle Build Scan
 develocity {

@@ -14,19 +14,7 @@
  * limitations under the License.
  */
 
-import org.owasp.dependencycheck.reporting.ReportGenerator
-
-plugins { id("org.owasp.dependencycheck") }
-
-dependencyCheck {
-    autoUpdate = true
-    formats =
-        listOf(
-            ReportGenerator.Format.HTML.name,
-            ReportGenerator.Format.XML.name,
-            ReportGenerator.Format.JUNIT.name
-        )
-    junitFailOnCVSS = 7.0f
-    failBuildOnCVSS = 11.0f
-    outputDirectory = layout.buildDirectory.dir("reports/dependency-check").get().asFile.toString()
+plugins {
+    id("java-library")
+    id("com.hedera.gradle.java")
 }

@@ -15,11 +15,9 @@
  */
 
 plugins {
-    id("com.hedera.gradle.platform")
-    id("com.hedera.gradle.platform-publish")
+    id("com.hedera.gradle.java-module")
+    id("com.hedera.gradle.java-module-publish")
 }
-
-group = "com.hedera.common"
 
 testModuleInfo {
     // requires("org.junit.jupiter.api")

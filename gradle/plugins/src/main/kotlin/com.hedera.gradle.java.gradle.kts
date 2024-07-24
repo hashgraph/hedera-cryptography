@@ -20,11 +20,11 @@ import com.autonomousapps.DependencyAnalysisSubExtension
 import com.hedera.gradle.services.TaskLockService
 import com.hedera.gradle.utils.Utils.versionTxt
 import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesOrderingCheck
+import org.gradlex.javamodule.dependencies.tasks.ModuleDirectivesScopeCheck
 
 plugins {
     id("java")
     id("jacoco")
-    // id("checkstyle")
     id("com.adarshr.test-logger")
     id("com.hedera.gradle.lifecycle")
     id("com.hedera.gradle.jpms-modules")
@@ -67,15 +67,9 @@ configurations.all {
     resolutionStrategy.preferProjectModules()
 }
 
-@Suppress("UnstableApiUsage") val internal = configurations.dependencyScope("internal")
+jvmDependencyConflicts { consistentResolution { platform(":hedera-dependency-versions") } }
 
-javaModuleDependencies { versionsFromConsistentResolution(":hedera-common-nativesupport") }
-
-configurations.getByName("mainRuntimeClasspath") { extendsFrom(internal.get()) }
-
-configurations.javaModulesMergeJars { extendsFrom(internal.get()) }
-
-dependencies { "internal"(platform("com.hedera:hedera-dependency-versions")) }
+configurations.javaModulesMergeJars { extendsFrom(configurations["internal"]) }
 
 tasks.buildDependents { setGroup(null) }
 
@@ -86,24 +80,6 @@ tasks.jar { setGroup(null) }
 sourceSets.all {
     // Remove 'classes' tasks from 'build' group to keep it cleaned up
     tasks.named(classesTaskName) { group = null }
-
-    configurations.getByName(compileClasspathConfigurationName) {
-        extendsFrom(internal.get())
-        @Suppress("UnstableApiUsage")
-        shouldResolveConsistentlyWith(configurations.getByName(runtimeClasspathConfigurationName))
-    }
-    configurations.getByName(runtimeClasspathConfigurationName) { extendsFrom(internal.get()) }
-
-    dependencies {
-        // For dependencies of annotation processors use versions from 'hedera-dependency-versions',
-        // but not 'runtime' dependencies of the platform (JAVA_API instead of JAVA_RUNTIME).
-        annotationProcessorConfigurationName("com.hedera:hedera-dependency-versions") {
-            attributes {
-                attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_API))
-                attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.REGULAR_PLATFORM))
-            }
-        }
-    }
 }
 
 val writeGitProperties =
@@ -347,13 +323,13 @@ tasks.assemble {
 
 tasks.check { dependsOn(tasks.jacocoTestReport) }
 
-tasks.named("qualityGate") { dependsOn(tasks.checkAllModuleInfo) }
+tasks.named("qualityGate") { tasks.withType<ModuleDirectivesScopeCheck>() }
 
 // ordering check is done by SortModuleInfoRequiresStep
 tasks.withType<ModuleDirectivesOrderingCheck> { enabled = false }
 
-tasks.withType<JavaCompile>() {
-    // When ding a 'qualityGate' run, make sure spotlessApply is done before doing compilation and
+tasks.withType<JavaCompile>().configureEach {
+    // When doing a 'qualityGate' run, make sure spotlessApply is done before doing compilation and
     // other checks based on compiled code
     mustRunAfter(tasks.spotlessApply)
 }
@@ -368,16 +344,6 @@ val dependencyAnalysis = extensions.findByType<AbstractExtension>()
 if (dependencyAnalysis is DependencyAnalysisSubExtension) {
     dependencyAnalysis.issues { onAny { exclude(project.path) } }
 }
-
-// checkstyle { toolVersion = "10.12.7" }
-
-// tasks.withType<Checkstyle>().configureEach {
-//    reports {
-//        xml.required = true
-//        html.required = true
-//        sarif.required = true
-//    }
-// }
 
 // Remove below configuration once all 'TIME_CONSUMING' tests are moved to 'src/timeConsuming'.
 tasks.test {

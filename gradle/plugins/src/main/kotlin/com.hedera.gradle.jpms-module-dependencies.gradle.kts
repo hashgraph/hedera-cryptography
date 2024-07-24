@@ -23,9 +23,6 @@ plugins { id("org.gradlex.java-module-dependencies") }
 // If one of the module groups has 'requires' to modules of another group, we need to register
 // that module group here.
 javaModuleDependencies {
-    moduleNamePrefixToGroup.put("com.", "com.hedera.cryptography")
-    moduleNamePrefixToGroup.put("com.hedera.node.", "com.hedera")
-    moduleNamePrefixToGroup.put("com.hedera.storage.", "com.hedera.storage.blocknode")
-    moduleNameToGA.put("com.hedera.evm", "com.hedera.evm:hedera-evm")
-    moduleNameToGA.put("com.hedera.evm.impl", "com.hedera:hedera-evm-impl")
+    moduleNamePrefixToGroup.put("com.hedera.cryptography", "com.hedera.cryptography")
+    moduleNamePrefixToGroup.put("com.hedera.cryptography", "com.hedera.cryptography")
 }
