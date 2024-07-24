@@ -1,0 +1,72 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+      - release/*
+  pull_request:
+    branches:
+      - main
+      - release/*
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  packages: write
+  contents: read
+  issues: read
+  checks: write
+  pull-requests: write
+
+env:
+  LC_ALL: C.UTF-8
+  GRADLE_CACHE_USERNAME: ${{ secrets.GRADLE_CACHE_USERNAME }}
+  GRADLE_CACHE_PASSWORD: ${{ secrets.GRADLE_CACHE_PASSWORD }}
+
+jobs:
+  build:
+    name: Build TSS Crypto Library
+    runs-on: [ self-hosted, Linux, medium, ephemeral ]
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
+        with:
+          distribution: temurin
+          java-version: 21.0.1
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@dbbdc275be76ac10734476cc723d82dfe7ec6eda # v3.4.2
+        with:
+          cache-read-only: false
+
+      - name: Build software
+        run: ./gradlew assemble --scan
+
+      - name: Spotless Check
+        run: ./gradlew spotlessCheck --scan --continue
+
+      - name: Dependency Scopes Check
+        run: ./gradlew checkAllModuleInfo --scan --continue
+
+      - name: Gradle Unit Test
+        run: ./gradlew :reports:testCodeCoverageReport test --scan --continue
+
+      - name: Publish Unit Test Results
+        uses: step-security/publish-unit-test-result-action@8ff54943859826014432b8e0271908538b272bc1 # v2.12.0
+        with:
+          files: |
+            test-results/**/*.xml:
