@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.altbn128;
+package com.hedera.common.nativesupport.jni;
 
-public class Foo {
-    private com.hedera.common.nativesupport.Architecture foo;
+public class Greeter {
+
+    // Declare a native method
+    public native String getGreeting();
 }

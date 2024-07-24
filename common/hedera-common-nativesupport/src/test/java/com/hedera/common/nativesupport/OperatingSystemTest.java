@@ -14,8 +14,16 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.altbn128;
+package com.hedera.common.nativesupport;
 
-public class Foo {
-    private com.hedera.common.nativesupport.Architecture foo;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import org.junit.jupiter.api.Test;
+
+class OperatingSystemTest {
+
+    @Test
+    void testCurrent() {
+        assertNotNull(OperatingSystem.current());
+    }
 }
