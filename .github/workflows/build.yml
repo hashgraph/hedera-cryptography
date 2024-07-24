@@ -16,8 +16,11 @@ defaults:
     shell: bash
 
 permissions:
-  contents: read
   packages: write
+  contents: read
+  issues: read
+  checks: write
+  pull-requests: write
 
 env:
   LC_ALL: C.UTF-8
