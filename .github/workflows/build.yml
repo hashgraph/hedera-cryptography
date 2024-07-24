@@ -71,6 +71,12 @@ jobs:
           files: |
             test-results/**/*.xml:
 
-      # only publish on merge to main
-      - name: Publish release
-        uses: ./.github/workflows/publish_release.yml
+      - name: Publish Maven Central
+        env:
+          NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.GPG_KEY_CONTENTS }}
+          SIGNING_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
+        run: |
+          ./gradlew releaseMavenCentralSnapshot -PpublishingPackageGroup=com.hedera.cryptography --scan -PpublishSigningEnabled=true --no-configuration-cache
+          ./gradlew releaseMavenCentralSnapshot -PpublishingPackageGroup=com.hedera.common --scan -PpublishSigningEnabled=true --no-configuration-cache
