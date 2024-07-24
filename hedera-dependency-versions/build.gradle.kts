@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Hedera Hashgraph, LLC
+ * Copyright (C) 2023 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,15 @@
  * limitations under the License.
  */
 
+// Note: Need to maintain 3rd party versions between hedera-cryptography and hedera-services repository
 
-pluginManagement { includeBuild("gradle/plugins") }
+plugins {
+    id("com.hedera.gradle.versions")
+}
 
-plugins { id("com.hedera.gradle.settings") }
-
-rootProject.name = "hedera-cryptography"
-
-javaModules {
-    directory("common") {
-        group ="com.hedera.common"
+// define versions for gradle to grab dependencies
+dependencies.constraints {
+    api("com.github.spotbugs:spotbugs-annotations:4.7.3") {
+        because("com.github.spotbugs.annotations")
     }
-    directory("cryptography") {
-        group = "com.hedera.cryptography"
-    }
-
-    // "BOM" with versions of 3rd party dependencies
-    versions("hedera-dependency-versions")
 }
