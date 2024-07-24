@@ -70,3 +70,6 @@ jobs:
         with:
           files: |
             test-results/**/*.xml:
+
+      - name: Publish release
+        uses: publish_release.yml

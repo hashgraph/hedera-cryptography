@@ -28,28 +28,11 @@ jobs:
   publish:
     name: Publish To Maven Central
     runs-on: [ self-hosted, Linux, medium, ephemeral ]
-    needs: "Build TSS Crypto Library"
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
         with:
           egress-policy: audit
-
-      - name: Checkout Code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-        with:
-          fetch-depth: 0
-
-      - name: Setup Java
-        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
-        with:
-          distribution: temurin
-          java-version: 21.0.1
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@dbbdc275be76ac10734476cc723d82dfe7ec6eda # v3.4.2
-        with:
-          cache-read-only: false
 
       # only publish on merge to main
       - name: Publish Maven Central
