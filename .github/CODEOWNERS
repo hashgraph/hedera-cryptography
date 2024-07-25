@@ -7,12 +7,12 @@
 #########################
 ####   Java Modules  ####
 #########################
-/cryptography/                                          @hashgraph/hedera-cryptography-maintainer
-/common/                                                @hashgraph/hedera-cryptography-maintainer
+/cryptography/                                          @hashgraph/hedera-cryptography-maintainers
+/common/                                                @hashgraph/hedera-cryptography-maintainers
 
-/hedera-bls-api                                         @hashgraph/hedera-cryptography-maintainer
-/hedera-bls-impl                                        @hashgraph/hedera-cryptography-maintainer
-/hedera-bls-rust-jni                                    @hashgraph/hedera-cryptography-maintainer
+/hedera-bls-api                                         @hashgraph/hedera-cryptography-maintainers
+/hedera-bls-impl                                        @hashgraph/hedera-cryptography-maintainers
+/hedera-bls-rust-jni                                    @hashgraph/hedera-cryptography-maintainers
 
 #########################
 #####  Core Files  ######
