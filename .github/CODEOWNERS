@@ -7,9 +7,7 @@
 #########################
 ####   Java Modules  ####
 #########################
-/cryptography/hedera-cryptography-altbn128/             @hashgraph/platform-hashgraph @hashgraph/platform-data @hashgraph/platform-base @hashgraph/platform-architects
-/cryptography/hedera-cryptography-pairings-api/         @hashgraph/platform-hashgraph @hashgraph/platform-data @hashgraph/platform-base @hashgraph/platform-architects
-/cryptography/hedera-cryptography-pairings-signatures/  @hashgraph/platform-hashgraph @hashgraph/platform-data @hashgraph/platform-base @hashgraph/platform-architects
+/cryptography/         @hashgraph/platform-hashgraph @hashgraph/platform-data @hashgraph/platform-base @hashgraph/platform-architects
 /common/hedera-common-nativesupport/                    @hashgraph/platform-hashgraph @hashgraph/platform-data @hashgraph/platform-base @hashgraph/platform-architects
 
 /hedera-bls-api                                         @hashgraph/platform-hashgraph @hashgraph/platform-data @hashgraph/platform-base @hashgraph/platform-architects
