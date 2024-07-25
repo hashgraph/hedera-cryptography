@@ -7,12 +7,12 @@
 #########################
 ####   Java Modules  ####
 #########################
-/cryptography/                                          @hashgraph/platform-hashgraph @hashgraph/platform-data @hashgraph/platform-base @hashgraph/platform-architects
-/common/hedera-common-nativesupport/                    @hashgraph/platform-hashgraph @hashgraph/platform-data @hashgraph/platform-base @hashgraph/platform-architects
+/cryptography/                                          @hashgraph/hedera-cryptography-maintainer
+/common/                                                @hashgraph/hedera-cryptography-maintainer
 
-/hedera-bls-api                                         @hashgraph/platform-hashgraph @hashgraph/platform-data @hashgraph/platform-base @hashgraph/platform-architects
-/hedera-bls-impl                                        @hashgraph/platform-hashgraph @hashgraph/platform-data @hashgraph/platform-base @hashgraph/platform-architects
-/hedera-bls-rust-jni                                    @hashgraph/platform-hashgraph @hashgraph/platform-data @hashgraph/platform-base @hashgraph/platform-architects
+/hedera-bls-api                                         @hashgraph/hedera-cryptography-maintainer
+/hedera-bls-impl                                        @hashgraph/hedera-cryptography-maintainer
+/hedera-bls-rust-jni                                    @hashgraph/hedera-cryptography-maintainer
 
 #########################
 #####  Core Files  ######
