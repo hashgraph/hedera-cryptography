@@ -25,7 +25,7 @@ import java.util.Objects;
  */
 public final class SignatureSchema {
     private final GroupAssignment groupAssignment;
-    private final Curve cure;
+    private final Curve curve;
 
     /**
      * Constructor
@@ -35,7 +35,7 @@ public final class SignatureSchema {
      */
     private SignatureSchema(@NonNull final GroupAssignment groupAssignment, @NonNull final Curve curve) {
         this.groupAssignment = Objects.requireNonNull(groupAssignment, "groupAssignment must not be null");
-        this.cure = Objects.requireNonNull(curve, "curve must not be null");
+        this.curve = Objects.requireNonNull(curve, "curve must not be null");
     }
 
     /**
@@ -54,8 +54,8 @@ public final class SignatureSchema {
      * @return the curve
      */
     @NonNull
-    public Curve getCure() {
-        return cure;
+    public Curve getCurve() {
+        return curve;
     }
 
     /**
