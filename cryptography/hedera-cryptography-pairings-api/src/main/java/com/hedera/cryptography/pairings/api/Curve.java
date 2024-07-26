@@ -16,4 +16,19 @@
 
 package com.hedera.cryptography.pairings.api;
 
-public class Foo {}
+/**
+ * An enumeration of supported pairing curves.
+ *   @implNote Given that we pack the type of the curve in serialized forms in 1 byte alongside other information
+ *   we can only support a limited amount of curves (128).
+ */
+public enum Curve {
+    /**
+     * Alt-BN128
+     * Also known as BN254.
+     * r=21888242871839275222246405745257275088548364400416034343698204186575808495617
+     * p=21888242871839275222246405745257275088548364400416034343698204186575808495617
+     * q=21888242871839275222246405745257275088696311157297823662689037894645226208583
+     * Generator 5.
+     */
+    ALT_BN128,
+}

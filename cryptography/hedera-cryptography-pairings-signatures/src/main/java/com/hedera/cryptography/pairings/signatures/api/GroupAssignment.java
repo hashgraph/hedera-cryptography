@@ -14,8 +14,19 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.pairings.signatures;
+package com.hedera.cryptography.pairings.signatures.api;
 
-public class Foo {
-    public com.hedera.cryptography.pairings.api.Foo foo;
+/**
+ * An enum to clarify which group public keys and signatures are in, for a given
+ * {@link SignatureSchema SignatureSchema}
+ */
+public enum GroupAssignment {
+    /**
+     * The group for signatures is the first group in the pairing, and the group for public keys is the second group.
+     */
+    GROUP1_FOR_SIGNING,
+    /**
+     * The group for signatures is the second group in the pairing, and the group for public keys is the first group.
+     */
+    GROUP1_FOR_PUBLIC_KEY;
 }
