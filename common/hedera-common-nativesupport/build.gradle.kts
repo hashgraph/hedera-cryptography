@@ -19,7 +19,4 @@ plugins {
     id("com.hedera.gradle.hedera-common-publish")
 }
 
-testModuleInfo {
-    // requires("org.junit.jupiter.api")
-    // requires("org.assertj.core")
-}
+testModuleInfo { requires("org.junit.jupiter.api") }

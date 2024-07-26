@@ -16,4 +16,14 @@
 
 package com.hedera.common.nativesupport;
 
-public class Foo {}
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import org.junit.jupiter.api.Test;
+
+class ArchitectureTest {
+
+    @Test
+    void testCurrent() {
+        assertNotNull(Architecture.current());
+    }
+}
