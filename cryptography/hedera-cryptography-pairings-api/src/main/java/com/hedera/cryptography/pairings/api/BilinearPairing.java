@@ -35,6 +35,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * </ul>
  * <p>This class provides access to each of the groups (G₁, G₂) for a specific Pairing and the FiniteField associated
  * with the curves.</p>
+ *
  * @see Group
  * @see Field
  */

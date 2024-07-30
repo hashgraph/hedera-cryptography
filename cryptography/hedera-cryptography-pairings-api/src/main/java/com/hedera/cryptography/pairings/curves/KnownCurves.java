@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.pairings.api;
+package com.hedera.cryptography.pairings.curves;
 
-import com.hedera.cryptography.pairings.curves.KnownCurves;
+import com.hedera.cryptography.pairings.api.Curve;
 
 /**
  * An enumeration of supported pairing curves.
  *   @implNote Given that we pack the type of the curve in serialized forms in 1 byte alongside other information
  *   we can only support a limited amount of curves (128).
  */
-public interface Curve {
+public enum KnownCurves implements Curve {
+
     /**
      * Alt-BN128
      * Also known as BN254.
@@ -32,5 +33,5 @@ public interface Curve {
      * q=21888242871839275222246405745257275088696311157297823662689037894645226208583
      * Generator 5.
      */
-    Curve ALT_BN128 = KnownCurves.ALT_BN128;
+    ALT_BN128
 }

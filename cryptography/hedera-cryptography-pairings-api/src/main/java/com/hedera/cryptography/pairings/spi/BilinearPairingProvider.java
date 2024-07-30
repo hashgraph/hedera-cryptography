@@ -21,19 +21,35 @@ import com.hedera.cryptography.pairings.api.Curve;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Implementations of this API should provide a unique instance of this class.
  * This should return a {@link BilinearPairing} for a given {@link Curve} the implementation supports.
- * Initialization will be requested before providing the {@link BilinearPairing} instace,
- * Implementations should handle any necessary step (such as loading native libraries) during that process.
- * This class handles parallelism by synchronizing the method init method.
- * Implementations should consider that the Init method will be called only once
+ * Spi will return a new instance of this class everytime is requested with {@link java.util.ServiceLoader}
  */
 public abstract class BilinearPairingProvider {
-
     /**
      * Atomic boolean to avoid repeated attempts to reload the resource.
      */
     private final AtomicBoolean initialized = new AtomicBoolean(false);
+
+    /**
+     * Implementations should include here all the steps necessary to load the library, e.g.,
+     * perform native library loads.
+     * This method will be called only once per instance and thread-safe guaranteed invocation.
+     */
+    protected abstract void doInit();
+
+    /**
+     * Performs any initialization steps.
+     * Implementations should consider that the Init method will be every time the instance is requested.
+     * @return the same instance that received the call but after being initialized if applicable.
+     */
+    public BilinearPairingProvider init() {
+        if (initialized.compareAndSet(false, true)) {
+            synchronized (this) {
+                this.doInit();
+            }
+        }
+        return this;
+    }
 
     /**
      * Returns the {@link Curve} supported by the Pairing API implementation
@@ -48,25 +64,4 @@ public abstract class BilinearPairingProvider {
      * @return the instance of the {@link BilinearPairing}
      */
     public abstract BilinearPairing pairing();
-
-    /**
-     * Implementations should include here all the steps necessary to load the library, e.g.,
-     * perform native library loads.
-     * This method will be called only once per instance and thread-safe guaranteed invocation.
-     */
-    protected abstract void doInit();
-
-    /**
-     * Performs the initialization steps of the library.
-     */
-    public BilinearPairingProvider init() {
-        if (!initialized.getAndSet(true)) {
-            synchronized (this) {
-                if (!initialized.getAndSet(true)) {
-                    this.doInit();
-                }
-            }
-        }
-        return this;
-    }
 }

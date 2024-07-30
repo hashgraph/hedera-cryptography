@@ -16,6 +16,8 @@
 
 package com.hedera.cryptography.pairings.api;
 
+import static com.hedera.cryptography.pairings.api.BilinearPairings.InstanceHolder.LOADER;
+
 import com.hedera.cryptography.pairings.spi.BilinearPairingProvider;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.NoSuchElementException;
@@ -27,6 +29,12 @@ import java.util.ServiceLoader;
  */
 public final class BilinearPairings {
 
+    static class InstanceHolder {
+        // lazy initialize a loader and hold the instance so that BilinearPairings returns the same instance of
+        // BilinearPairingProvider
+        // every time findInstance is called
+        static final ServiceLoader<BilinearPairingProvider> LOADER = ServiceLoader.load(BilinearPairingProvider.class);
+    }
     /**
      * Private Constructor since this class should not be instantiated.
      */
@@ -53,13 +61,11 @@ public final class BilinearPairings {
      * @throws NoSuchElementException if no {@link BilinearPairing} implementation was found via the {@link ServiceLoader}
      *                                  mechanism.
      * @throws IllegalStateException if there was a problem initializing the provider.
-     * @throws NullPointerException if the curve is null.
      */
     @NonNull
-    private static BilinearPairingProvider findInstance(@NonNull final Curve curve) {
+    public static BilinearPairingProvider findInstance(@NonNull final Curve curve) {
         Objects.requireNonNull(curve, "curve must not be null");
-        final ServiceLoader<BilinearPairingProvider> serviceLoader = ServiceLoader.load(BilinearPairingProvider.class);
-        for (BilinearPairingProvider provider : serviceLoader) {
+        for (BilinearPairingProvider provider : LOADER) {
             if (curve == provider.curve()) {
                 try {
                     return provider.init();
