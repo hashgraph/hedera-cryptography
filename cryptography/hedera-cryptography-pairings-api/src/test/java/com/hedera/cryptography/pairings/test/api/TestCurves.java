@@ -18,7 +18,10 @@ package com.hedera.cryptography.pairings.test.api;
 
 import com.hedera.cryptography.pairings.api.Curve;
 
-public enum TestCurve implements Curve {
+/**
+ * List of Curves supported for this test
+ */
+public enum TestCurves implements Curve {
     NON_EXISTENT_CURVE,
     FAIL_CURVE;
 }

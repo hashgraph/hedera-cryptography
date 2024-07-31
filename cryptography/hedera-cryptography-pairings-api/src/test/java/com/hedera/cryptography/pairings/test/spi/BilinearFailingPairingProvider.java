@@ -19,8 +19,11 @@ package com.hedera.cryptography.pairings.test.spi;
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.spi.BilinearPairingProvider;
-import com.hedera.cryptography.pairings.test.api.TestCurve;
+import com.hedera.cryptography.pairings.test.api.TestCurves;
 
+/**
+ * A {@link BilinearPairingProvider} implementation that will always fail the initialization process.
+ */
 public class BilinearFailingPairingProvider extends BilinearPairingProvider {
     @Override
     protected void doInit() {
@@ -29,7 +32,7 @@ public class BilinearFailingPairingProvider extends BilinearPairingProvider {
 
     @Override
     public Curve curve() {
-        return TestCurve.FAIL_CURVE;
+        return TestCurves.FAIL_CURVE;
     }
 
     @Override

@@ -47,7 +47,7 @@ public interface BilinearPairing {
      * @return the field
      */
     @NonNull
-    Field getField();
+    Field field();
 
     /**
      * Returns the G₁ group associated with the pairing.
@@ -63,7 +63,7 @@ public interface BilinearPairing {
      * @return the G₂ group
      */
     @NonNull
-    Group getGroup2();
+    Group group2();
 
     /**
      * Returns G₁ if input is G₂, and vice versa.

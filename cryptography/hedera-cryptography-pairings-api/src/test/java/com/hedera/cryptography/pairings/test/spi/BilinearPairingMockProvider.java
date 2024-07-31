@@ -27,18 +27,25 @@ import com.hedera.cryptography.pairings.spi.BilinearPairingProvider;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- *  A mock provider to be used in tests
+ *  A mock provider to be used in tests.
+ *  Returns a fake {@link BilinearPairing} implementation not suitable for usage.
  */
 public class BilinearPairingMockProvider extends BilinearPairingProvider {
+
+    public static final byte[] BYTES = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1
+    };
 
     private static class InstanceHolder {
         private static final FieldElement FIELD_ELEMENT;
         private static final Field FIELD;
-        private static final GroupElement GROUP_ELEMENT;
         private static final Group GROUP;
+        private static final Group GROUP2;
+        private static final GroupElement GROUP_ELEMENT;
+        private static final GroupElement GROUP_ELEMENT2;
         private static final BilinearPairing PAIRING;
 
         static {
@@ -82,9 +89,7 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
                 @NonNull
                 @Override
                 public byte[] toBytes() {
-                    return new byte[] {
-                        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1
-                    };
+                    return BYTES;
                 }
             };
 
@@ -123,6 +128,7 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
                     return PAIRING;
                 }
             };
+
             GROUP_ELEMENT = new GroupElement() {
                 @NonNull
                 @Override
@@ -162,131 +168,264 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
                 @NonNull
                 @Override
                 public byte[] toBytes() {
-                    return new byte[] {
-                        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1
-                    };
+                    return BYTES;
                 }
             };
+
             GROUP = new Group() {
+                /** {@inheritDoc} */
                 @NonNull
                 @Override
                 public BilinearPairing getPairing() {
                     return PAIRING;
                 }
 
+                /** {@inheritDoc} */
                 @NonNull
                 @Override
                 public GroupElement getGenerator() {
                     return GROUP_ELEMENT;
                 }
 
+                /** {@inheritDoc} */
                 @NonNull
                 @Override
                 public GroupElement zeroElement() {
                     return GROUP_ELEMENT;
                 }
-
+                /** {@inheritDoc} */
                 @NonNull
                 @Override
                 public GroupElement randomElement(@NonNull byte[] seed) {
                     return GROUP_ELEMENT;
                 }
 
+                /** {@inheritDoc} */
                 @NonNull
                 @Override
                 public GroupElement elementFromHash(@NonNull byte[] input) {
                     return GROUP_ELEMENT;
                 }
 
+                /** {@inheritDoc} */
                 @NonNull
                 @Override
                 public GroupElement batchAdd(@NonNull Collection<GroupElement> elements) {
                     return GROUP_ELEMENT;
                 }
 
+                /** {@inheritDoc} */
                 @NonNull
                 @Override
                 public GroupElement elementFromBytes(@NonNull byte[] bytes) {
                     return GROUP_ELEMENT;
                 }
 
+                /** {@inheritDoc} */
                 @Override
                 public int getCompressedSize() {
                     return 32;
                 }
 
+                /** {@inheritDoc} */
                 @Override
                 public int getUncompressedSize() {
                     return 32;
                 }
 
+                /** {@inheritDoc} */
                 @Override
                 public int getSeedSize() {
                     return 32;
                 }
             };
 
-            PAIRING = new BilinearPairingMockProvider.TestBilinearPairing(FIELD, GROUP, GROUP_ELEMENT);
+            GROUP2 = new Group() {
+                /** {@inheritDoc} */
+                @NonNull
+                @Override
+                public BilinearPairing getPairing() {
+                    return PAIRING;
+                }
+
+                /** {@inheritDoc} */
+                @NonNull
+                @Override
+                public GroupElement getGenerator() {
+                    return GROUP_ELEMENT;
+                }
+
+                /** {@inheritDoc} */
+                @NonNull
+                @Override
+                public GroupElement zeroElement() {
+                    return GROUP_ELEMENT;
+                }
+                /** {@inheritDoc} */
+                @NonNull
+                @Override
+                public GroupElement randomElement(@NonNull byte[] seed) {
+                    return GROUP_ELEMENT;
+                }
+
+                /** {@inheritDoc} */
+                @NonNull
+                @Override
+                public GroupElement elementFromHash(@NonNull byte[] input) {
+                    return GROUP_ELEMENT;
+                }
+
+                /** {@inheritDoc} */
+                @NonNull
+                @Override
+                public GroupElement batchAdd(@NonNull Collection<GroupElement> elements) {
+                    return GROUP_ELEMENT;
+                }
+
+                /** {@inheritDoc} */
+                @NonNull
+                @Override
+                public GroupElement elementFromBytes(@NonNull byte[] bytes) {
+                    return GROUP_ELEMENT;
+                }
+
+                /** {@inheritDoc} */
+                @Override
+                public int getCompressedSize() {
+                    return 32;
+                }
+
+                /** {@inheritDoc} */
+                @Override
+                public int getUncompressedSize() {
+                    return 32;
+                }
+
+                /** {@inheritDoc} */
+                @Override
+                public int getSeedSize() {
+                    return 32;
+                }
+            };
+
+            GROUP_ELEMENT2 = new GroupElement() {
+                @NonNull
+                @Override
+                public Group getGroup() {
+                    return GROUP2;
+                }
+
+                @NonNull
+                @Override
+                public GroupElement multiply(@NonNull FieldElement other) {
+                    return GROUP_ELEMENT2;
+                }
+
+                @NonNull
+                @Override
+                public GroupElement add(@NonNull GroupElement other) {
+                    return GROUP_ELEMENT2;
+                }
+
+                @NonNull
+                @Override
+                public GroupElement compress() {
+                    return GROUP_ELEMENT2;
+                }
+
+                @Override
+                public boolean isCompressed() {
+                    return false;
+                }
+
+                @NonNull
+                @Override
+                public GroupElement copy() {
+                    return GROUP_ELEMENT2;
+                }
+
+                @NonNull
+                @Override
+                public byte[] toBytes() {
+                    return BYTES;
+                }
+            };
+
+            PAIRING = new BilinearPairingMockProvider.TestBilinearPairing(FIELD, GROUP, GROUP2);
         }
     }
 
-    private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);
+    /**
+     * Counts the number of times {@link BilinearPairingMockProvider#doInit()} method gets invoked
+     */
+    private final AtomicInteger initializedCount = new AtomicInteger(0);
 
-    public static boolean isInitialized() {
-        return IS_INITIALIZED.get();
+    /**
+     * @return the number of times the {@link BilinearPairingMockProvider#doInit()}  method got invoked
+     */
+    public int getInitializedCount() {
+        return initializedCount.get();
     }
 
+    /** {@inheritDoc} */
     @Override
     protected void doInit() {
-        boolean changed = IS_INITIALIZED.compareAndSet(false, true);
-        if (!changed) throw new IllegalStateException("DoInit should only be called before once init");
+        initializedCount.incrementAndGet();
     }
 
+    /** {@inheritDoc} */
     @Override
     public Curve curve() {
         return Curve.ALT_BN128;
     }
 
+    /** {@inheritDoc} */
     @Override
     public BilinearPairing pairing() {
         return InstanceHolder.PAIRING;
     }
 
-    public static class TestBilinearPairing implements BilinearPairing {
-        private final Field field;
-        private final Group group;
-        private final GroupElement groupElement;
+    /**
+     * Fake implementation of a {@link BilinearPairing}
+     */
+    private record TestBilinearPairing(Field field, Group group, Group group2) implements BilinearPairing {
 
-        public TestBilinearPairing(Field field, Group group, GroupElement groupElement) {
-            this.field = field;
-            this.group = group;
-            this.groupElement = groupElement;
-        }
-
+        /** {@inheritDoc} */
         @NonNull
         @Override
-        public Field getField() {
+        public Field field() {
             return field;
         }
 
+        /** {@inheritDoc} */
         @NonNull
         @Override
         public Group getGroup1() {
             return group;
         }
 
+        /** {@inheritDoc} */
         @NonNull
         @Override
-        public Group getGroup2() {
-            return group;
+        public Group group2() {
+            return group2;
         }
 
+        /** {@inheritDoc} */
         @NonNull
         @Override
-        public Group getOtherGroup(@NonNull Group group) {
-            return this.group;
+        public Group getOtherGroup(@NonNull final Group group) {
+            if (group.equals(group2)) {
+                return group;
+            }
+            ;
+            if (group.equals(this.group)) {
+                return group2;
+            }
+            throw new IllegalArgumentException("group does not belong to this pairing");
         }
 
+        /** {@inheritDoc} */
         @NonNull
         @Override
         public PairingResult pairingBetween(@NonNull GroupElement element1, @NonNull GroupElement element2) {
@@ -294,21 +433,19 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
                 @NonNull
                 @Override
                 public GroupElement getInputElement1() {
-                    return groupElement;
+                    return group.zeroElement();
                 }
 
                 @NonNull
                 @Override
                 public GroupElement getInputElement2() {
-                    return groupElement;
+                    return group2.zeroElement();
                 }
 
                 @NonNull
                 @Override
                 public byte[] getPairingBytes() {
-                    return new byte[] {
-                        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1
-                    };
+                    return BYTES;
                 }
             };
         }

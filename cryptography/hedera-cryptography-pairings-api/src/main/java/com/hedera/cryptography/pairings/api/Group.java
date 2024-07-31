@@ -98,7 +98,7 @@ public interface Group {
      * Creates a group element from its serialized encoding
      *
      * @param bytes serialized form
-     * @return the new group element, or null if construction failed
+     * @return the new group element
      */
     @NonNull
     GroupElement elementFromBytes(@NonNull byte[] bytes);

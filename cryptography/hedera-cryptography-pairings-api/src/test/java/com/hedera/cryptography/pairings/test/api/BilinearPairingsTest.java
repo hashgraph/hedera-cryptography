@@ -17,9 +17,9 @@
 package com.hedera.cryptography.pairings.test.api;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hedera.cryptography.pairings.api.BilinearPairings;
 import com.hedera.cryptography.pairings.api.Curve;
@@ -44,8 +44,11 @@ class BilinearPairingsTest {
 
     @Test
     void bilinearPairingIsInitialized() {
-        BilinearPairings.instanceFor(Curve.ALT_BN128);
-        assertTrue(BilinearPairingMockProvider.isInitialized());
+        BilinearPairingProvider expected = BilinearPairings.findInstance(Curve.ALT_BN128);
+        BilinearPairingMockProvider secondRequest =
+                ((BilinearPairingMockProvider) BilinearPairings.findInstance(Curve.ALT_BN128));
+        assertEquals(1, secondRequest.getInitializedCount());
+        assertSame(expected, secondRequest);
     }
 
     @Test
@@ -61,11 +64,11 @@ class BilinearPairingsTest {
 
     @Test
     void unknownCurveThrowsException() {
-        assertThrows(NoSuchElementException.class, () -> BilinearPairings.instanceFor(TestCurve.NON_EXISTENT_CURVE));
+        assertThrows(NoSuchElementException.class, () -> BilinearPairings.instanceFor(TestCurves.NON_EXISTENT_CURVE));
     }
 
     @Test
     void failingCurveThrowsException() {
-        assertThrows(IllegalStateException.class, () -> BilinearPairings.instanceFor(TestCurve.FAIL_CURVE));
+        assertThrows(IllegalStateException.class, () -> BilinearPairings.instanceFor(TestCurves.FAIL_CURVE));
     }
 }

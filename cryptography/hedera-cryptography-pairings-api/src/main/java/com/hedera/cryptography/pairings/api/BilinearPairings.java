@@ -65,11 +65,11 @@ public final class BilinearPairings {
     @NonNull
     public static BilinearPairingProvider findInstance(@NonNull final Curve curve) {
         Objects.requireNonNull(curve, "curve must not be null");
-        for (BilinearPairingProvider provider : LOADER) {
+        for (final BilinearPairingProvider provider : LOADER) {
             if (curve == provider.curve()) {
                 try {
                     return provider.init();
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     throw new IllegalStateException("Could not initialize provider " + provider, e);
                 }
             }
