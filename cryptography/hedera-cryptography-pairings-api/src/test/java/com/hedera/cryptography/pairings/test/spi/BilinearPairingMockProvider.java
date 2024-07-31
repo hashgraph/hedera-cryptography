@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class BilinearPairingMockProvider extends BilinearPairingProvider {
 
-    public static final byte[] BYTES = {
+    private static final byte[] BYTES = {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1
     };
 
@@ -58,25 +58,25 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
 
                 @NonNull
                 @Override
-                public FieldElement add(@NonNull FieldElement other) {
+                public FieldElement add(@NonNull final FieldElement other) {
                     return FIELD_ELEMENT;
                 }
 
                 @NonNull
                 @Override
-                public FieldElement subtract(@NonNull FieldElement other) {
+                public FieldElement subtract(@NonNull final FieldElement other) {
                     return FIELD_ELEMENT;
                 }
 
                 @NonNull
                 @Override
-                public FieldElement multiply(@NonNull FieldElement other) {
+                public FieldElement multiply(@NonNull final FieldElement other) {
                     return FIELD_ELEMENT;
                 }
 
                 @NonNull
                 @Override
-                public FieldElement power(@NonNull BigInteger exponent) {
+                public FieldElement power(@NonNull final BigInteger exponent) {
                     return FIELD_ELEMENT;
                 }
 
@@ -102,13 +102,13 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
 
                 @NonNull
                 @Override
-                public FieldElement randomElement(@NonNull byte[] seed) {
+                public FieldElement randomElement(@NonNull final byte[] seed) {
                     return FIELD_ELEMENT;
                 }
 
                 @NonNull
                 @Override
-                public FieldElement elementFromBytes(@NonNull byte[] bytes) {
+                public FieldElement elementFromBytes(@NonNull final byte[] bytes) {
                     return FIELD_ELEMENT;
                 }
 
@@ -138,13 +138,13 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
 
                 @NonNull
                 @Override
-                public GroupElement multiply(@NonNull FieldElement other) {
+                public GroupElement multiply(@NonNull final FieldElement other) {
                     return GROUP_ELEMENT;
                 }
 
                 @NonNull
                 @Override
-                public GroupElement add(@NonNull GroupElement other) {
+                public GroupElement add(@NonNull final GroupElement other) {
                     return GROUP_ELEMENT;
                 }
 
@@ -196,28 +196,28 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement randomElement(@NonNull byte[] seed) {
+                public GroupElement randomElement(@NonNull final byte[] seed) {
                     return GROUP_ELEMENT;
                 }
 
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement elementFromHash(@NonNull byte[] input) {
+                public GroupElement elementFromHash(@NonNull final byte[] input) {
                     return GROUP_ELEMENT;
                 }
 
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement batchAdd(@NonNull Collection<GroupElement> elements) {
+                public GroupElement batchAdd(@NonNull final Collection<GroupElement> elements) {
                     return GROUP_ELEMENT;
                 }
 
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement elementFromBytes(@NonNull byte[] bytes) {
+                public GroupElement elementFromBytes(@NonNull final byte[] bytes) {
                     return GROUP_ELEMENT;
                 }
 
@@ -264,28 +264,28 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement randomElement(@NonNull byte[] seed) {
+                public GroupElement randomElement(@NonNull final byte[] seed) {
                     return GROUP_ELEMENT;
                 }
 
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement elementFromHash(@NonNull byte[] input) {
+                public GroupElement elementFromHash(@NonNull final byte[] input) {
                     return GROUP_ELEMENT;
                 }
 
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement batchAdd(@NonNull Collection<GroupElement> elements) {
+                public GroupElement batchAdd(@NonNull final Collection<GroupElement> elements) {
                     return GROUP_ELEMENT;
                 }
 
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement elementFromBytes(@NonNull byte[] bytes) {
+                public GroupElement elementFromBytes(@NonNull final byte[] bytes) {
                     return GROUP_ELEMENT;
                 }
 
@@ -317,13 +317,13 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
 
                 @NonNull
                 @Override
-                public GroupElement multiply(@NonNull FieldElement other) {
+                public GroupElement multiply(@NonNull final FieldElement other) {
                     return GROUP_ELEMENT2;
                 }
 
                 @NonNull
                 @Override
-                public GroupElement add(@NonNull GroupElement other) {
+                public GroupElement add(@NonNull final GroupElement other) {
                     return GROUP_ELEMENT2;
                 }
 
@@ -428,7 +428,8 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
         /** {@inheritDoc} */
         @NonNull
         @Override
-        public PairingResult pairingBetween(@NonNull GroupElement element1, @NonNull GroupElement element2) {
+        public PairingResult pairingBetween(
+                @NonNull final GroupElement element1, @NonNull final GroupElement element2) {
             return new PairingResult() {
                 @NonNull
                 @Override
@@ -452,10 +453,10 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
 
         @Override
         public boolean comparePairings(
-                @NonNull GroupElement pairingAElement1,
-                @NonNull GroupElement pairingAElement2,
-                @NonNull GroupElement pairingBElement1,
-                @NonNull GroupElement pairingBElement2) {
+                @NonNull final GroupElement pairingAElement1,
+                @NonNull final GroupElement pairingAElement2,
+                @NonNull final GroupElement pairingBElement1,
+                @NonNull final GroupElement pairingBElement2) {
             return true;
         }
     }
