@@ -388,7 +388,7 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
     /**
      * Fake implementation of a {@link BilinearPairing}
      */
-    private record TestBilinearPairing(Field field, Group group, Group group2) implements BilinearPairing {
+    private record TestBilinearPairing(@NonNull Field field,@NonNull Group group,@NonNull Group group2) implements BilinearPairing {
 
         /** {@inheritDoc} */
         @NonNull
