@@ -3,4 +3,9 @@
  */
 module com.hedera.cryptography.pairings.api {
     exports com.hedera.cryptography.pairings.api;
+    exports com.hedera.cryptography.pairings.spi;
+
+    uses com.hedera.cryptography.pairings.spi.BilinearPairingProvider;
+
+    requires static transitive com.github.spotbugs.annotations;
 }
