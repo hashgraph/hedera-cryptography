@@ -69,4 +69,58 @@ public final class SignatureSchema {
     public static SignatureSchema create(@NonNull final Curve curve, @NonNull final GroupAssignment groupAssignment) {
         return new SignatureSchema(groupAssignment, curve);
     }
+
+    /**
+     * Get the ID byte representing this schema
+     *
+     * @return the ID byte
+     */
+    public byte getIdByte() {
+        return BytePacker.pack(groupAssignment, curve.getId());
+    }
+
+    /**
+     * Packs and unpacks the curve type and group assignment into a single byte
+     */
+    private static class BytePacker {
+        private static final int G_ASSIGNMENT_MASK = 0b10000000; // 1 bit for GroupAssignment
+        private static final int CURVE_MASK = 0b01111111; // 7 bits for curve type
+
+        /**
+         * Packs the group assignment and curve type into a single byte
+         *
+         * @param groupAssignment the group assignment
+         * @param curveType       the curve type
+         * @return the packed byte
+         */
+        public static byte pack(@NonNull final GroupAssignment groupAssignment, final byte curveType) {
+            if (curveType < 0) {
+                throw new IllegalArgumentException("Curve type must be between 0 and 127");
+            }
+
+            final int assignmentValue = groupAssignment.ordinal() << 7;
+            return (byte) (assignmentValue | (curveType & CURVE_MASK));
+        }
+
+        /**
+         * Unpacks the group assignment from a packed byte
+         *
+         * @param packedByte the packed byte
+         * @return the group assignment
+         */
+        public static GroupAssignment unpackGroupAssignment(final byte packedByte) {
+            final int schemaValue = (packedByte & G_ASSIGNMENT_MASK) >> 7;
+            return GroupAssignment.values()[schemaValue];
+        }
+
+        /**
+         * Unpacks the curve type from a packed byte
+         *
+         * @param packedByte the packed byte
+         * @return the curve type
+         */
+        public static byte unpackCurveType(final byte packedByte) {
+            return (byte) (packedByte & CURVE_MASK);
+        }
+    }
 }

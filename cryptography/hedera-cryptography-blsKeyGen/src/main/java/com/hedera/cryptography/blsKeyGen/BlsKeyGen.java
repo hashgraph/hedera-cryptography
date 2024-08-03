@@ -14,19 +14,8 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.pairings.test.api;
+package com.hedera.cryptography.blsKeyGen;
 
-import com.hedera.cryptography.pairings.api.Curve;
-
-/**
- * List of Curves supported for this test
- */
-public enum TestCurves implements Curve {
-    NON_EXISTENT_CURVE,
-    FAIL_CURVE;
-
-    @Override
-    public byte getId() {
-        return -1;
-    }
+public class BlsKeyGen {
+    native int generateKeyPair(byte signatureSchema, String[] out);
 }

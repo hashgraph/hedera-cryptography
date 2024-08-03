@@ -33,4 +33,6 @@ public interface Curve {
      * Generator 5.
      */
     Curve ALT_BN128 = KnownCurves.ALT_BN128;
+
+    byte getId();
 }

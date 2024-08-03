@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2016-2024 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.pairings.test.api;
-
-import com.hedera.cryptography.pairings.api.Curve;
-
-/**
- * List of Curves supported for this test
- */
-public enum TestCurves implements Curve {
-    NON_EXISTENT_CURVE,
-    FAIL_CURVE;
-
-    @Override
-    public byte getId() {
-        return -1;
-    }
+plugins {
+    id("application")
+    id("com.hedera.gradle.java-module")
+    id("com.hedera.gradle.hedera-cryptography-publish")
 }
+
+testModuleInfo {
+    // requires("org.junit.jupiter.api")
+    // requires("org.assertj.core")
+}
+
+application.mainClass.set("com.hedera.cryptography.blsKeyGen.KeyWriter")
