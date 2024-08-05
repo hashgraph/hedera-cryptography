@@ -25,4 +25,16 @@ dependencies.constraints {
     api("com.github.spotbugs:spotbugs-annotations:4.7.3") {
         because("com.github.spotbugs.annotations")
     }
+    api("io.grpc:grpc-protobuf:1.65.1") {
+        because("io.grpc:grpc-protobuf")
+    }
+    api("com.google.protobuf:protobuf-java:4.27.3") {
+        because("com.google.protobuf")
+    }
+    api("org.mockito:mockito-core:5.8.0") {
+        because("org.mockito")
+    }
+    api("org.mockito:mockito-junit-jupiter:5.8.0") {
+        because("org.mockito.junit.jupiter")
+    }
 }

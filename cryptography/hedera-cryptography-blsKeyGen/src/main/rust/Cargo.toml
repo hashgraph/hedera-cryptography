@@ -1,10 +1,9 @@
 [package]
 name = "bls_key_gen"
-authors = [ "sinharo@gmail.com" ]
 repository = "https://github.com/hashgraph/hedera-cryptography/"
 description = "Library for BLS Key Generation for TSS under Groth21"
 categories = ["cryptography"]
-keywords = ["threshold", "signature", "cryptography"]
+keywords = ["tss","cryptography", "bls"]
 
 [lib]
 name = "key_gen"
@@ -22,19 +21,11 @@ opt-level = 3
 [features]
 
 [dependencies]
+jni = "0.21.1"
 ark-std = { version = "0.4.0" }
 ark-ec = { version = "0.4.0" }
 ark-ff = { version = "0.4.0" }
-ark-poly = { version = "0.4.0" }
 ark-bn254 = { version = "0.4.0", default-features = false, features = [ "curve" ] }
 ark-serialize = { version = "^0.4.0", default-features = true }
-jni = "0.21.1"
 
-num-bigint = { version = "0.4.0", default-features = false }
 rand = "*"
-rand_chacha = "*"
-paste = { version = "1.0" }
-crossbeam = { version = "0.8.2" }
-criterion = { version = "0.4.0", features = [ "html_reports" ] }
-sha2 = "*"
-base64 = "0.22.1"

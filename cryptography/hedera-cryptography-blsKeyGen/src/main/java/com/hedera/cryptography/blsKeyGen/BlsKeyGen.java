@@ -16,6 +16,28 @@
 
 package com.hedera.cryptography.blsKeyGen;
 
-public class BlsKeyGen {
-    native int generateKeyPair(byte signatureSchema, String[] out);
+import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
+
+/**
+ * Operations for generating Bls Keys
+ */
+public interface BlsKeyGen {
+
+    /**
+     * Generate a key pair (private key and public key) and return them as strings.
+     *
+     * @param groupAssignment  An int representing the {@link GroupAssignment} ordinal for selecting the elliptic curve group to use.
+     * @param out  An array of size 2 to store the resulting private key and public key.
+     * @return an integer status code (0 for success, -1 for failure).
+     */
+    int generateKeyPair(final int groupAssignment, byte[][] out);
+
+    /**
+     * Generate a public key given an existent private key and return it as string.
+     *
+     * @param groupAssignment  An int representing the {@link GroupAssignment} ordinal for selecting the elliptic curve group to use.
+     * @param sk  An array representing the private key.
+     * @return An array representing the public key
+     */
+    byte[] generatePublicKey(final int groupAssignment, final byte[] sk);
 }

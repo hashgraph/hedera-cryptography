@@ -16,67 +16,59 @@
 
 package com.hedera.cryptography.blsKeyGen;
 
-import com.hedera.common.nativesupport.LibraryLoader;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 
+/**
+ * Key generation tool
+ */
 public class KeyWriter {
 
-    public static void main(String[] args) {
+    private static final KeysService KEYS_SERVICE = new KeysService(
+            SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.GROUP1_FOR_SIGNING),
+            new NativeBlsKeyGen().initialize());
 
-        LibraryLoader.create(BlsKeyGen.class).install("libkey_gen");
-
-        String[] keyPair = new String[2];
-        if (new BlsKeyGen()
-                        .generateKeyPair(
-                                SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.GROUP1_FOR_SIGNING)
-                                        .getIdByte(),
-                                keyPair)
-                != 0) throw new RuntimeException("Failed to generate keys");
-        String base64PrivateKey = keyPair[0];
-        String base64PublicKey = keyPair[1];
-
-        try {
-            Path sk = writePemFile(base64PrivateKey, "PRIVATE KEY", "private_key.pem");
-            Path pk = writePemFile(base64PublicKey, "PUBLIC KEY", "public_key.pem");
-            System.out.printf(
-                    "Keys have been written to PEM files successfully. privateKey:%s publicKey:%s\n",
-                    sk.toAbsolutePath(), pk.toAbsolutePath());
-        } catch (IOException e) {
-            System.err.println("Error writing keys to PEM files: " + e.getMessage());
-            e.printStackTrace();
+    public static void main(String[] args) throws Exception {
+        if (args.length == 0 || args[0].equals("--help")) {
+            printHelp();
+        } else if (args[0].equals("generate-keys") && args.length == 3) {
+            String[] keyPair = KEYS_SERVICE.generateBase64KeyPair();
+            if (Files.exists(Path.of(args[1]))) {
+                System.err.printf("The private key file already exists. Won't overwrite. Please delete %s %n", args[1]);
+            }
+            if (Files.exists(Path.of(args[2]))) {
+                System.err.printf("The public key file already exists. Won't overwrite. Please delete %s %n", args[2]);
+            }
+            Path skPath = PemFiles.pemWrite(args[1], keyPair[0], "PRIVATE KEY");
+            Path pkPath = PemFiles.pemWrite(args[2], keyPair[1], "PUBLIC KEY");
+            System.out.printf("Saved private and public key files into: %s and %s %n", skPath, pkPath);
+        } else if (args[0].equals("generate-public-key") && args.length == 3) {
+            if (!Files.exists(Path.of(args[1]))) {
+                System.err.printf("The private key file does not exists. %s %n", args[1]);
+            }
+            if (Files.exists(Path.of(args[2]))) {
+                System.err.printf("The public key file already exists. Won't overwrite. Please delete %s %n", args[2]);
+            }
+            String base64PrivateKey = PemFiles.pemRead(args[1], "PRIVATE KEY");
+            String publicKey = KEYS_SERVICE.generateBase64KPublicKey(base64PrivateKey);
+            Path pkPath = PemFiles.pemWrite(args[2], publicKey, "PUBLIC KEY");
+            System.out.printf("Saved public key file into: %s %n", pkPath);
+        } else {
+            System.out.println("Invalid command or arguments. Use --help for usage information.");
         }
     }
 
-    private static Path writePemFile(String base64Key, String keyType, String fileName) throws IOException {
-        String header = "-----BEGIN " + keyType + "-----\n";
-        String footer = "\n-----END " + keyType + "-----\n";
-        String content = formatPemContent(base64Key);
-
-        String pemContent = header + content + footer;
-
-        Files.write(
-                Path.of(fileName),
-                pemContent.getBytes(),
-                StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING);
-        return Path.of(fileName);
-    }
-
-    private static String formatPemContent(String base64) {
-        // Insert line breaks every 64 characters to conform with PEM format standards
-        StringBuilder builder = new StringBuilder();
-        int index = 0;
-        while (index < base64.length()) {
-            builder.append(base64, index, Math.min(index + 64, base64.length()));
-            builder.append("\n");
-            index += 64;
-        }
-        return builder.toString();
+    private static void printHelp() {
+        System.out.println("Usage:");
+        System.out.println("  --help                           Print this help message.");
+        System.out.println("  generate-keys <private-key-pem> <public-key-pem>");
+        System.out.println(
+                "                                   Generate a private and public key pair and save them to the specified locations.");
+        System.out.println("  generate-public-key <private-key-pem> <public-key-pem>");
+        System.out.println(
+                "                                   Generate a public key from a given private key PEM file and save it to the specified location.");
     }
 }
