@@ -16,12 +16,11 @@
 
 package com.hedera.cryptography.ecKeyGen;
 
-import com.hedera.common.nativesupport.LibraryDescriptor;
-import com.hedera.common.nativesupport.ResourceLoader;
+import com.hedera.common.nativesupport.NativeLibrary;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -29,7 +28,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class NativeKeyGenerator implements KeyGenerator {
     private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);
-    public static final ResourceLoader LOADER = new ResourceLoader(NativeKeyGenerator.class);
 
     /**
      * Initializes the class by loading the necessary native libraries.
@@ -38,13 +36,17 @@ public class NativeKeyGenerator implements KeyGenerator {
      */
     public NativeKeyGenerator initialize() {
         if (IS_INITIALIZED.compareAndSet(false, true)) {
-            final String libkeyGen = "libkey_gen";
+            final NativeLibrary library = NativeLibrary.withName("libkey_gen");
             try {
-                Thread.sleep(10000);
-                Path path = LOADER.load(LibraryDescriptor.create(libkeyGen).getLocation());
-                System.load(path.toFile().getAbsolutePath());
-            } catch (Exception e) {
-                throw new UncheckedIOException("Unable to load library " + libkeyGen, new IOException(e));
+                // JPMS does not allow for resources contained in a module to be loaded in a separated class
+                // So we are forced to load this the InputStream in a class stored in a jar that holds the resource
+                final InputStream is = this.getClass().getModule().getResourceAsStream(library.locationInJar());
+                if (is == null) {
+                    throw new UncheckedIOException(new IOException("Could not find " + library.name()));
+                }
+                library.install(is);
+            } catch (IOException e) {
+                throw new UncheckedIOException("Unable to load library " + library.name(), new IOException(e));
             }
         }
         return this;

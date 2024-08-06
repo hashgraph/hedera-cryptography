@@ -26,7 +26,7 @@ dependencies.constraints {
         because("com.github.spotbugs.annotations")
     }
     api("io.grpc:grpc-protobuf:1.65.1") {
-        because("io.grpc:grpc-protobuf")
+        because("io.grpc.protobuf")
     }
     api("com.google.protobuf:protobuf-java:4.27.3") {
         because("com.google.protobuf")

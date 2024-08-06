@@ -1,0 +1,231 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.hedera.common.nativesupport;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.ProviderNotFoundException;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+
+/**
+ * <p>
+ * Handles loading of native binary libraries from within a JAR file based on operating system and architecture.
+ **<p/>
+ *  <p>
+ *  Since it is not possible to directly {@link System#load(String)} a library from within a JAR, this class facilitates
+ * the extraction and loading of these libraries when they are not pre-installed on the operating system.
+ *<p/>
+ * <p>
+ * The class provides mechanisms to extract the library from the JAR, store it in a temporary directory on the file system,
+ * set appropriate file permissions, and finally load the library into the application.
+ *<p/>
+ * <p>
+ *     Warning: It is responsibility of the caller to assure the {@link NativeLibrary#install(InputStream)} is only called once per desired library.
+ *<p/>
+ * @implNote Libraries are expected to be organized within the JAR file at {@code /software/<os>/<arch>/name}.
+ * This path structure is used to construct the location of the library based on the current operating
+ * system and architecture, ensuring only the correct version of the library is loaded according to the executing environment.
+ ** <p>
+ * As JPMS does not allow for resources contained in a module to be loaded in a separated class it is NOT responsibility of this class
+ * to retrieve the {@link InputStream} in the jar by invoking the classloader.
+ ** <p/>
+ * <p>
+ *  Callers must use any of the suitable methods including:
+ * <p/>
+ * <ul>
+ * <li>{@link Class#getResourceAsStream(String)}
+ * <li>{@link Module#getResourceAsStream(String)}
+ * </ul>
+ * <p/>
+ *
+ * Example usage:
+ * <pre>
+ * {@code
+ * NativeLibrary library = NativeLibrary.withName("example");
+ * library.install(getClass().getResourceAsStream(library.locationInJar()));
+ * }
+ * </pre>
+ *
+ * @see Architecture Current system architecture (e.g., x86, x64).
+ * @see OperatingSystem Current operating system (e.g., Windows, Linux, macOS).
+ */
+public class NativeLibrary {
+    /**
+     * The root resources folder where the software is located.
+     */
+    private static final String SOFTWARE_FOLDER_NAME = "software";
+
+    /**
+     * The path delimiter used in the JAR file.
+     */
+    private static final String RESOURCE_PATH_DELIMITER = File.separator;
+
+    /**
+     * Default extensions for binary libraries per OS
+     */
+    private static final Map<OperatingSystem, String> DEFAULT_LIB_EXTENSIONS =
+            Map.of(OperatingSystem.WINDOWS, "dll", OperatingSystem.LINUX, "so", OperatingSystem.DARWIN, "dylib");
+
+    private final String name;
+    private final Map<OperatingSystem, String> libExtensions;
+
+    /**
+     *
+     * @implNote This method expects the executable to be present at the following location in the JAR file:
+     * {@code /software/<os>/<arch>/name}.
+     *
+     * @param name the library to load.
+     * @param libExtensions defaults extensions for each os to use to load the library
+     */
+    private NativeLibrary(@NonNull String name, @NonNull Map<OperatingSystem, String> libExtensions) {
+        this.name = name;
+        this.libExtensions = libExtensions;
+    }
+
+    /**
+     * Factory method to create a NativeLibrary instance with custom library extensions.
+     *
+     * @param name The name of the library.
+     * @param libExtensions Custom library file extensions for each operating system.
+     * @return An instance of NativeLibrary.
+     */
+    public static NativeLibrary withName(
+            @NonNull final String name, @NonNull final Map<OperatingSystem, String> libExtensions) {
+        return new NativeLibrary(name, libExtensions);
+    }
+
+    /**
+     * Factory method to create a {@link NativeLibrary} instance using default library extensions.
+     *
+     * @param name The name of the library.
+     * @return An instance of NativeLibrary.
+     */
+    public static NativeLibrary withName(@NonNull final String name) {
+        return withName(name, DEFAULT_LIB_EXTENSIONS);
+    }
+
+    /**
+     * Returns the library name.
+     *
+     * @return the library name
+     */
+    public String name() {
+        return this.name;
+    }
+
+    /**
+     * Constructs the relative path within the JAR file for the library based on the operating system and architecture.
+     *
+     * @return A string representing the relative path.
+     */
+    public String locationInJar() {
+        return locationInJar(this.name, this.libExtensions);
+    }
+
+    /**
+     * Static helper to construct the library path in the JAR file for a given library name and extensions map.
+     *
+     * @param libraryName The name of the library.
+     * @param libExtensions Library file extensions for each operating system.
+     * @return The path to the library in the JAR file.
+     */
+    public static String locationInJar(
+            @NonNull final String libraryName, @NonNull final Map<OperatingSystem, String> libExtensions) {
+        Objects.requireNonNull(libraryName, "name must not be null");
+        Objects.requireNonNull(libExtensions, "libExtensions must not be null");
+        final OperatingSystem os = OperatingSystem.current();
+        final Architecture arch = Architecture.current();
+
+        String libExtension = libExtensions.get(os);
+        if (!libExtensions.isEmpty()) {
+            libExtension = "." + libExtension;
+        }
+        return SOFTWARE_FOLDER_NAME
+                + RESOURCE_PATH_DELIMITER
+                + os.name().toLowerCase(Locale.US)
+                + RESOURCE_PATH_DELIMITER
+                + arch.name().toLowerCase(Locale.US)
+                + RESOURCE_PATH_DELIMITER
+                + libraryName
+                + libExtension;
+    }
+
+    /**
+     * Unpackages the native library from a provided InputStream to a temporary dir, sets appropriate file permissions, and loads the library
+     * into the JVM.
+     * <p>
+     *     Warning: It is responsibility of the caller to assure this method is only called once per desired library.
+     *<p/>
+     * @param resourceStream An InputStream of the library file.
+     * @throws IOException if there's an error reading the file or setting permissions.
+     */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void install(@NonNull final InputStream resourceStream) throws IOException {
+        Objects.requireNonNull(resourceStream, "resourceStream must not be null");
+        final String fileName = Path.of(name).getFileName().toString();
+        final Path tempDirectory = createTempDirectory();
+        final Path tempFile = tempDirectory.resolve(fileName);
+
+        Files.copy(resourceStream, tempFile);
+        if (isPosixCompliant()) {
+            Files.setPosixFilePermissions(tempFile, PosixFilePermissions.fromString("rwxrwxrwx"));
+        } else {
+            final File f = tempFile.toFile();
+            f.setExecutable(true, false);
+            f.setReadable(true, false);
+            f.setWritable(true, false);
+        }
+
+        System.load(tempFile.toAbsolutePath().toString());
+    }
+
+    /**
+     * Creates a temporary directory for the requester.
+     *
+     * @return the path to the temporary directory.
+     * @throws IOException if the temporary directory cannot be created or an I/O error occurs.
+     */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private Path createTempDirectory() throws IOException {
+        final Path tempDirectory = Files.createTempDirectory(name);
+        tempDirectory.toFile().mkdir();
+        tempDirectory.toFile().deleteOnExit();
+        return tempDirectory;
+    }
+
+    /**
+     * Is the system we're running on Posix compliant?
+     *
+     * @return True if posix compliant.
+     */
+    private boolean isPosixCompliant() {
+        try {
+            return FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
+        } catch (FileSystemNotFoundException | ProviderNotFoundException | SecurityException e) {
+            return false;
+        }
+    }
+}
