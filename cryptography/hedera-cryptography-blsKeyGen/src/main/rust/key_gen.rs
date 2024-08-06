@@ -53,7 +53,10 @@ fn deserialize_field_element<G: CurveGroup>(
 }
 
 /// Generates a key pair (private key and public key) for a given elliptic curve ark_bn254 group.
-///
+///The private key is random scalar 𝑘 from the Field of the curve.
+///The public key is calculated as 𝑘 × 𝐺 where
+/// * k is the private key and
+/// * 𝐺 :  is a predefined generator point on the curve.
 /// # Arguments
 /// * `rng` - A mutable reference to a random number generator.
 ///
@@ -67,7 +70,9 @@ fn key_pair<G: CurveGroup, R: Rng>(rng: &mut R) -> (<<G as CurveGroup>::Config a
 }
 
 /// Computes the public key from a given private key (scalar field element).
-///
+///The public key is calculated as 𝑘 × 𝐺 where
+/// * k is the private key and
+/// * 𝐺 :  is a predefined generator point on the curve.
 /// # Arguments
 /// * `sk` - The private key (scalar field element).
 ///
@@ -102,7 +107,7 @@ fn gen_serialized_pair<G: CurveGroup, R: Rng>(rng: &mut R ) -> (Vec<u8>, Vec<u8>
 ///
 /// # Returns
 /// The serialized public key.
-fn gen_serialized_pub_key<G: CurveGroup>( sk: <<G as CurveGroup>::Config as CurveConfig>::ScalarField,) ->  Vec<u8>{
+fn gen_serialized_pub_key<G: CurveGroup>( sk: <<G as CurveGroup>::Config as CurveConfig>::ScalarField) ->  Vec<u8>{
     let pk_bytes =  Vec::new();
     let pk: <G as CurveGroup>::Affine = pub_key::<G>(sk);
     serialize_group_element::<G>(&pk, pk_bytes)
