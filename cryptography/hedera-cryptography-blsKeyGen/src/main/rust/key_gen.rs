@@ -73,7 +73,7 @@ fn key_pair<G: CurveGroup, R: Rng>(rng: &mut R) -> (<<G as CurveGroup>::Config a
 ///
 /// # Returns
 /// The public key (affine group element).
-fn pub_key<G: CurveGroup>( sk: <<G as CurveGroup>::Config as CurveConfig>::ScalarField,) ->  <G as CurveGroup>::Affine{
+fn pub_key<G: CurveGroup>( sk: <<G as CurveGroup>::Config as CurveConfig>::ScalarField) ->  <G as CurveGroup>::Affine{
     let generator = G::generator();
     let pk = generator.mul(&sk);
      pk.into_affine()
@@ -129,7 +129,7 @@ pub extern "system" fn Java_com_hedera_cryptography_blsKeyGen_NativeBlsKeyGen_ge
     let mut rng = OsRng;
     let group_byte = u8::try_from(group_assignment).expect("Invalid group assignment");
     let (serialized_sk, serialized_pk) = match group_byte {
-        1 => gen_serialized_pair::<ark_bn254::G2Projective, OsRng>(&mut rng),
+        0 => gen_serialized_pair::<ark_bn254::G2Projective, OsRng>(&mut rng),
         _ => gen_serialized_pair::<ark_bn254::G1Projective, OsRng>(&mut rng),
     };
 
@@ -191,13 +191,13 @@ pub extern "system" fn Java_com_hedera_cryptography_blsKeyGen_NativeBlsKeyGen_ge
 
     let group_byte = u8::try_from(group_assignment).expect("Invalid group assignment");
     let serialized_pk = match group_byte {
-        1 => {
+        0 => {
             let sk = deserialize_field_element::<ark_bn254::G2Projective>(sk_jbytes);
             gen_serialized_pub_key::<ark_bn254::G2Projective>(sk)
         },
         _ => {
             let sk= deserialize_field_element::<ark_bn254::G1Projective>(sk_jbytes);
-            gen_serialized_pub_key::<ark_bn254::G2Projective>(sk)
+            gen_serialized_pub_key::<ark_bn254::G1Projective>(sk)
         }
     };
 
