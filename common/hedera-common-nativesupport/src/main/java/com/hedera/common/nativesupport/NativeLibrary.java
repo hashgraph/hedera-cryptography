@@ -33,33 +33,26 @@ import java.util.Objects;
 /**
  * <p>
  * Handles loading of native binary libraries from within a JAR file based on operating system and architecture.
- **<p>
  *  <p>
  *  Since it is not possible to directly {@link System#load(String)} a library from within a JAR, this class facilitates
  * the extraction and loading of these libraries when they are not pre-installed on the operating system.
- *<p>
  * <p>
  * The class provides mechanisms to extract the library from the JAR, store it in a temporary directory on the file system,
  * set appropriate file permissions, and finally load the library into the application.
- *<p>
  * <p>
  *     Warning: It is responsibility of the caller to assure the {@link NativeLibrary#install(InputStream)} is only called once per desired library.
- *<p>
  * @implNote Libraries are expected to be organized within the JAR file at {@code /software/<os>/<arch>/name}.
  * This path structure is used to construct the location of the library based on the current operating
  * system and architecture, ensuring only the correct version of the library is loaded according to the executing environment.
  ** <p>
  * As JPMS does not allow for resources contained in a module to be loaded in a separated class it is NOT responsibility of this class
  * to retrieve the {@link InputStream} in the jar by invoking the classloader.
- ** <p>
  * <p>
  *  Callers must use any of the suitable methods including:
- * <p>
  * <ul>
  * <li>{@link Class#getResourceAsStream(String)}
  * <li>{@link Module#getResourceAsStream(String)}
  * </ul>
- * <p>
  *
  * Example usage:
  * <pre>
@@ -176,7 +169,7 @@ public class NativeLibrary {
     /**
      * Unpackages the native library from a provided InputStream to a temporary dir, sets appropriate file permissions, and loads the library
      * into the JVM.
-     * <p>Warning: It is responsibility of the caller to assure this method is only called once per desired library.<p>
+     * <p>Warning: It is responsibility of the caller to assure this method is only called once per desired library.
      * @param resourceStream An InputStream of the library file.
      * @throws IOException if there's an error reading the file or setting permissions.
      */
