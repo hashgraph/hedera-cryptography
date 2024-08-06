@@ -108,7 +108,7 @@ extraJavaModuleInfo {
     module("io.grpc:grpc-testing", "io.grpc.testing")
     module("io.grpc:grpc-services", "io.grpc.services")
     module("io.grpc:grpc-util", "io.grpc.util")
-    module("io.grpc:grpc-protobuf", "io.grpc.protobuf") { exportAllPackages() }
+    module("io.grpc:grpc-protobuf", "io.grpc.protobuf")
     module("io.grpc:grpc-protobuf-lite", "io.grpc.protobuf.lite")
     module("com.github.spotbugs:spotbugs-annotations", "com.github.spotbugs.annotations")
     module("com.google.code.findbugs:jsr305", "java.annotation") {
@@ -242,6 +242,7 @@ extraJavaModuleInfo {
         "com.github.docker-java:docker-java-transport-zerodep",
         "com.github.docker.transport.zerodep"
     )
+    module("com.google.protobuf:protobuf-java-util", "com.google.protobuf.util")
     module("com.google.protobuf:protobuf-java", "com.google.protobuf")
     module("com.squareup:javapoet", "com.squareup.javapoet") {
         exportAllPackages()
