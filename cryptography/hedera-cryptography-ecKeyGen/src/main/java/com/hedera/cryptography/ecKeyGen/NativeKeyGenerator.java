@@ -18,6 +18,7 @@ package com.hedera.cryptography.ecKeyGen;
 
 import com.hedera.common.nativesupport.NativeLibrary;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -34,6 +35,7 @@ public class NativeKeyGenerator implements KeyGenerator {
      *
      * @return this instance.
      */
+    @NonNull
     public NativeKeyGenerator initialize() {
         if (IS_INITIALIZED.compareAndSet(false, true)) {
             final NativeLibrary library = NativeLibrary.withName("libkey_gen");

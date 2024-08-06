@@ -105,6 +105,7 @@ public class NativeLibrary {
      * @param libExtensions Custom library file extensions for each operating system.
      * @return An instance of NativeLibrary.
      */
+    @NonNull
     public static NativeLibrary withName(
             @NonNull final String name, @NonNull final Map<OperatingSystem, String> libExtensions) {
         return new NativeLibrary(name, libExtensions);
@@ -116,6 +117,7 @@ public class NativeLibrary {
      * @param name The name of the library.
      * @return An instance of NativeLibrary.
      */
+    @NonNull
     public static NativeLibrary withName(@NonNull final String name) {
         return withName(name, DEFAULT_LIB_EXTENSIONS);
     }
@@ -125,6 +127,7 @@ public class NativeLibrary {
      *
      * @return the library name
      */
+    @NonNull
     public String name() {
         return this.name;
     }
@@ -134,6 +137,7 @@ public class NativeLibrary {
      *
      * @return A string representing the relative path.
      */
+    @NonNull
     public String locationInJar() {
         return locationInJar(this.name, this.libExtensions);
     }
@@ -145,6 +149,7 @@ public class NativeLibrary {
      * @param libExtensions Library file extensions for each operating system.
      * @return The path to the library in the JAR file.
      */
+    @NonNull
     public static String locationInJar(
             @NonNull final String libraryName, @NonNull final Map<OperatingSystem, String> libExtensions) {
         Objects.requireNonNull(libraryName, "name must not be null");
@@ -199,6 +204,7 @@ public class NativeLibrary {
      * @return the path to the temporary directory.
      * @throws IOException if the temporary directory cannot be created or an I/O error occurs.
      */
+    @NonNull
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private Path createTempDirectory() throws IOException {
         final Path tempDirectory = Files.createTempDirectory(name);
