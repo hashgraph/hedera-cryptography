@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.blsKeyGen;
+package com.hedera.cryptography.ecKeyGen;
 
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 
 /**
  * Operations for generating Bls Keys
  */
-public interface BlsKeyGen {
+public interface KeyGenerator {
 
     /**
      * Generate a key pair (private key and public key) and return them as strings.

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.blsKeyGen;
+package com.hedera.cryptography.ecKeyGen;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;

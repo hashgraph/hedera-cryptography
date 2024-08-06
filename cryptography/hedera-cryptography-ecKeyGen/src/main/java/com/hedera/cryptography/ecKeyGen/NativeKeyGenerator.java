@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.blsKeyGen;
+package com.hedera.cryptography.ecKeyGen;
 
 import com.hedera.common.nativesupport.LibraryLoader;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * An implementation of {@link BlsKeyGen} that uses JNI and rust code to generate the keys
+ * An implementation of {@link KeyGenerator} that uses JNI and rust code to generate the keys
  */
-public class NativeBlsKeyGen implements BlsKeyGen {
+public class NativeKeyGenerator implements KeyGenerator {
     private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);
 
     /**
@@ -31,9 +31,9 @@ public class NativeBlsKeyGen implements BlsKeyGen {
      *
      * @return this instance.
      */
-    public NativeBlsKeyGen initialize() {
+    public NativeKeyGenerator initialize() {
         if (IS_INITIALIZED.compareAndSet(false, true)) {
-            LibraryLoader.create(NativeBlsKeyGen.class).install("libkey_gen");
+            LibraryLoader.create(NativeKeyGenerator.class).install("libkey_gen");
         }
         return this;
     }

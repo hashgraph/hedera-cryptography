@@ -125,7 +125,7 @@ fn gen_serialized_pub_key<G: CurveGroup>( sk: <<G as CurveGroup>::Config as Curv
 /// # Returns
 /// An integer status code (0 for success, -1 for failure).
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_blsKeyGen_NativeBlsKeyGen_generateKeyPair(
+pub extern "system" fn Java_com_hedera_cryptography_ecKeyGen_NativeKeyGenerator_generateKeyPair(
     env: JNIEnv,
     _instance: JObject,
     group_assignment: jint,
@@ -173,7 +173,7 @@ pub extern "system" fn Java_com_hedera_cryptography_blsKeyGen_NativeBlsKeyGen_ge
 /// # Returns
 /// * A Java object array to of the resulting public key.
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_blsKeyGen_NativeBlsKeyGen_generatePublicKey<'local>(
+pub extern "system" fn Java_com_hedera_cryptography_ecKeyGen_NativeKeyGenerator_generatePublicKey<'local>(
     env: JNIEnv<'local>,
     _instance: JObject<'local>,
     group_assignment: jint,

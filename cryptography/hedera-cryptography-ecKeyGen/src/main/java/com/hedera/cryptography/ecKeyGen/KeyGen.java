@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.blsKeyGen;
+package com.hedera.cryptography.ecKeyGen;
 
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
@@ -25,11 +25,11 @@ import java.nio.file.Path;
 /**
  * Key generation tool
  */
-public class KeyWriter {
+public class KeyGen {
 
-    private static final KeysService KEYS_SERVICE = new KeysService(
+    private static final KeysGenerationService KEYS_SERVICE = new KeysGenerationService(
             SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.GROUP1_FOR_SIGNING),
-            new NativeBlsKeyGen().initialize());
+            new NativeKeyGenerator().initialize());
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0 || args[0].equals("--help")) {

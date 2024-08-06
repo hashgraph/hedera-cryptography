@@ -1,5 +1,5 @@
 [package]
-name = "bls_key_gen"
+name = "ec_key_gen"
 repository = "https://github.com/hashgraph/hedera-cryptography/"
 description = "Library for BLS Key Generation for TSS under Groth21"
 categories = ["cryptography"]

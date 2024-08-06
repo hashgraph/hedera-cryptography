@@ -25,4 +25,4 @@ testModuleInfo {
     requires("org.mockito")
 }
 
-application.mainClass.set("com.hedera.cryptography.blsKeyGen.KeyWriter")
+application.mainClass.set("com.hedera.cryptography.ecKeyGen.KeyWriter")

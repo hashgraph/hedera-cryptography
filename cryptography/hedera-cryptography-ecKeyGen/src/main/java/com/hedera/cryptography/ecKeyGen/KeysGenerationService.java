@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.blsKeyGen;
+package com.hedera.cryptography.ecKeyGen;
 
 import com.google.protobuf.ByteString;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
@@ -25,16 +25,16 @@ import java.util.Objects;
 /**
  * Service class for creating Bls Keys in base64 encoding
  */
-public class KeysService {
+public class KeysGenerationService {
 
-    private final BlsKeyGen keyGen;
+    private final KeyGenerator keyGen;
     private final SignatureSchema signatureSchema;
 
     /**
      * @param signatureSchema  Elliptic Curve predefined configuration for this utility
      * @param keyGen a Bls Key Generator
      */
-    public KeysService(@NonNull final SignatureSchema signatureSchema, @NonNull final BlsKeyGen keyGen) {
+    public KeysGenerationService(@NonNull final SignatureSchema signatureSchema, @NonNull final KeyGenerator keyGen) {
         this.keyGen = Objects.requireNonNull(keyGen, "keyGen must not be null");
         this.signatureSchema = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
     }

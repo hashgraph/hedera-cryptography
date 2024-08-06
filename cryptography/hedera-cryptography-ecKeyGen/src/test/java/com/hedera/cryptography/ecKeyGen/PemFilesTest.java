@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.blsKeyGen;
+package com.hedera.cryptography.ecKeyGen;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
