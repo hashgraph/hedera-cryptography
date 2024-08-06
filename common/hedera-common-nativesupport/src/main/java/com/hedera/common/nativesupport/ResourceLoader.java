@@ -123,6 +123,11 @@ public class ResourceLoader {
     private InputStream acquireResourceStream(@NonNull final String path) throws IOException {
         Objects.requireNonNull(path, "path must not be null");
 
+        final InputStream is = requester.getModule().getResourceAsStream(path);
+        if (is != null) {
+            return is;
+        }
+
         for (final ClassLoader resolver : resolvers) {
             final InputStream stream = resolver.getResourceAsStream(path);
             if (stream != null) {

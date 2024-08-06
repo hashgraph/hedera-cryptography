@@ -7,8 +7,4 @@ module com.hedera.cryptography.ecKeyGen {
     requires com.hedera.cryptography.pairings.signatures;
     requires com.github.spotbugs.annotations;
     requires com.google.protobuf;
-
-    opens software.darwin.arm64;
-// opens software.linux.amd64;
-// opens software.windows.amd64;
 }

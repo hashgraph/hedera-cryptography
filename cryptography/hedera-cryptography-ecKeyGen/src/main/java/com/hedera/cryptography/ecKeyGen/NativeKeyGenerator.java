@@ -16,8 +16,12 @@
 
 package com.hedera.cryptography.ecKeyGen;
 
-import com.hedera.common.nativesupport.LibraryLoader;
+import com.hedera.common.nativesupport.LibraryDescriptor;
+import com.hedera.common.nativesupport.ResourceLoader;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -25,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class NativeKeyGenerator implements KeyGenerator {
     private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);
+    public static final ResourceLoader LOADER = new ResourceLoader(NativeKeyGenerator.class);
 
     /**
      * Initializes the class by loading the necessary native libraries.
@@ -33,7 +38,14 @@ public class NativeKeyGenerator implements KeyGenerator {
      */
     public NativeKeyGenerator initialize() {
         if (IS_INITIALIZED.compareAndSet(false, true)) {
-            LibraryLoader.create(NativeKeyGenerator.class).install("libkey_gen");
+            final String libkeyGen = "libkey_gen";
+            try {
+                Thread.sleep(10000);
+                Path path = LOADER.load(LibraryDescriptor.create(libkeyGen).getLocation());
+                System.load(path.toFile().getAbsolutePath());
+            } catch (Exception e) {
+                throw new UncheckedIOException("Unable to load library " + libkeyGen, new IOException(e));
+            }
         }
         return this;
     }
