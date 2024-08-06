@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-plugins {
-    id("com.hedera.gradle.java-module")
-    id("com.hedera.gradle.hedera-common-publish")
-}
+package com.hedera.cryptography.eckeygen;
 
-testModuleInfo {
-    requires("org.junit.jupiter.api")
-    requires("org.mockito")
-}
+import static org.junit.jupiter.api.Assertions.*;
+
+class NativeKeyGeneratorTest {}

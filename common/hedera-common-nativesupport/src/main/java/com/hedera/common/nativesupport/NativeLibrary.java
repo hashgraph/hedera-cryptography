@@ -95,7 +95,7 @@ public class NativeLibrary {
      */
     private NativeLibrary(@NonNull String name, @NonNull Map<OperatingSystem, String> libExtensions) {
         this.name = name;
-        this.libExtensions = libExtensions;
+        this.libExtensions = Map.copyOf(libExtensions);
     }
 
     /**
@@ -158,8 +158,10 @@ public class NativeLibrary {
         final Architecture arch = Architecture.current();
 
         String libExtension = libExtensions.get(os);
-        if (!libExtensions.isEmpty()) {
+        if (libExtension != null && !libExtension.isEmpty()) {
             libExtension = "." + libExtension;
+        } else {
+            libExtension = "";
         }
         return SOFTWARE_FOLDER_NAME
                 + RESOURCE_PATH_DELIMITER
@@ -218,7 +220,7 @@ public class NativeLibrary {
      *
      * @return True if posix compliant.
      */
-    private boolean isPosixCompliant() {
+    static boolean isPosixCompliant() {
         try {
             return FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
         } catch (FileSystemNotFoundException | ProviderNotFoundException | SecurityException e) {
