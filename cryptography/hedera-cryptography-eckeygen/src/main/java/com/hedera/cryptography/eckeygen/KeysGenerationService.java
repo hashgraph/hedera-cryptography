@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.ecKeyGen;
+package com.hedera.cryptography.eckeygen;
 
 import com.google.protobuf.ByteString;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;

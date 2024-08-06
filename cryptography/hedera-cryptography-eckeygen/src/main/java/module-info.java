@@ -1,7 +1,7 @@
 /**
  * This module provides a cryptography utility to create EC PublicKeys and EC PrivateKeys.
  */
-module com.hedera.cryptography.ecKeyGen {
+module com.hedera.cryptography.eckeygen {
     requires com.hedera.common.nativesupport;
     requires com.hedera.cryptography.pairings.api;
     requires com.hedera.cryptography.pairings.signatures;
