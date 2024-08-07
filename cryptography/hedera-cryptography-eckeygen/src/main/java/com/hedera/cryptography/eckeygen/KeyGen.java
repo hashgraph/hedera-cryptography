@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.eckeygen;
 
+import com.hedera.cryptography.eckeygen.PemFiles.PemType;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
@@ -24,6 +25,13 @@ import java.nio.file.Path;
 
 /**
  * Key generation tool
+ *
+ *<p> usage:
+ *<p>Display usage information. <pre>{@code  --help}</pre>
+ *
+ *<p>Generating a Key Pair<pre>{@code generate-keys path/to/privateKey.pem path/to/publicKey.pem}<pre/>
+ *<p>Generating a Public Key from an Existing Private Key:
+ *<pre>{@code generate-public-key path/to/privateKey.pem path/to/publicKey.pem}
  */
 public class KeyGen {
 
@@ -32,29 +40,43 @@ public class KeyGen {
             new NativeKeyGenerator().initialize());
 
     public static void main(String[] args) throws Exception {
-        if (args.length == 0 || args[0].equals("--help")) {
+        if (args.length == 0) {
             printHelp();
-        } else if (args[0].equals("generate-keys") && args.length == 3) {
+        }
+        final String commandName = args[0];
+        if (commandName.equals("--help") || args.length != 3) {
+            printHelp();
+        }
+
+        final String privateKeyLocation = args[1];
+        final Path privateKeyPath = Path.of(privateKeyLocation);
+        final String publicKeyLocation = args[2];
+        final Path publicKeyPath = Path.of(publicKeyLocation);
+        if (commandName.equals("generate-keys")) {
             String[] keyPair = KEYS_SERVICE.generateBase64KeyPair();
-            if (Files.exists(Path.of(args[1]))) {
-                System.err.printf("The private key file already exists. Won't overwrite. Please delete %s %n", args[1]);
+            if (Files.exists(privateKeyPath)) {
+                System.err.printf(
+                        "The private key file already exists. Won't overwrite. Please delete %s %n",
+                        privateKeyLocation);
             }
-            if (Files.exists(Path.of(args[2]))) {
-                System.err.printf("The public key file already exists. Won't overwrite. Please delete %s %n", args[2]);
+            if (Files.exists(publicKeyPath)) {
+                System.err.printf(
+                        "The public key file already exists. Won't overwrite. Please delete %s %n", publicKeyLocation);
             }
-            Path skPath = PemFiles.pemWrite(args[1], keyPair[0], "PRIVATE KEY");
-            Path pkPath = PemFiles.pemWrite(args[2], keyPair[1], "PUBLIC KEY");
+            Path skPath = PemFiles.pemWrite(privateKeyLocation, keyPair[0], PemType.PRIVATE_KEY);
+            Path pkPath = PemFiles.pemWrite(publicKeyLocation, keyPair[1], PemType.PUBLIC_KEY);
             System.out.printf("Saved private and public key files into: %s and %s %n", skPath, pkPath);
-        } else if (args[0].equals("generate-public-key") && args.length == 3) {
-            if (!Files.exists(Path.of(args[1]))) {
-                System.err.printf("The private key file does not exists. %s %n", args[1]);
+        } else if (commandName.equals("generate-public-key")) {
+            if (!Files.exists(privateKeyPath)) {
+                System.err.printf("The private key file does not exists. %s %n", privateKeyLocation);
             }
-            if (Files.exists(Path.of(args[2]))) {
-                System.err.printf("The public key file already exists. Won't overwrite. Please delete %s %n", args[2]);
+            if (Files.exists(publicKeyPath)) {
+                System.err.printf(
+                        "The public key file already exists. Won't overwrite. Please delete %s %n", publicKeyLocation);
             }
-            String base64PrivateKey = PemFiles.pemRead(args[1], "PRIVATE KEY");
+            String base64PrivateKey = PemFiles.pemRead(privateKeyLocation, PemType.PRIVATE_KEY);
             String publicKey = KEYS_SERVICE.generateBase64KPublicKey(base64PrivateKey);
-            Path pkPath = PemFiles.pemWrite(args[2], publicKey, "PUBLIC KEY");
+            Path pkPath = PemFiles.pemWrite(publicKeyLocation, publicKey, PemType.PUBLIC_KEY);
             System.out.printf("Saved public key file into: %s %n", pkPath);
         } else {
             System.out.println("Invalid command or arguments. Use --help for usage information.");

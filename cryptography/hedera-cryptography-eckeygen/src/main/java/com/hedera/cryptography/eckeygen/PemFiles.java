@@ -29,21 +29,42 @@ import java.util.Objects;
 public class PemFiles {
 
     /**
+     * Subset of handled Pem File Types as defined in <a href="https://www.rfc-editor.org/rfc/rfc1422">rfc1422</a>
+     */
+    public enum PemType {
+        PRIVATE_KEY("PRIVATE KEY"),
+        PUBLIC_KEY("PUBLIC KEY");
+
+        private final String pemTypeName;
+
+        PemType(final String pemTypeName) {
+            this.pemTypeName = pemTypeName;
+        }
+
+        public String getPemTypeName() {
+            return pemTypeName;
+        }
+    }
+
+    private static final String HEADER_FORMAT = "-----BEGIN %s-----\n";
+    private static final String FOOTER_FORMAT = "-----END %s-----";
+
+    /**
      * Reads the content of a PEM file.
      *
      * @param path The location of the file in the fileSystem
-     * @param keyType eiter "PUBLIC KEY" or "PRIVATE KEY" string
+     * @param pemType one of the accepted pem types
      * @return the base64 string contained in the PemFile
      * @throws IOException In case of file reading error
      */
     @NonNull
-    public static String pemRead(@NonNull final String path, @NonNull final String keyType) throws IOException {
-        Objects.requireNonNull(keyType, "keyType must not be null");
+    public static String pemRead(@NonNull final String path, @NonNull final PemType pemType) throws IOException {
+        Objects.requireNonNull(pemType, "pemType must not be null");
         String pemContent = Files.readString(Path.of(Objects.requireNonNull(path, "path must not be null")));
 
         // Define PEM header and footer
-        String header = "-----BEGIN " + keyType + "-----";
-        String footer = "-----END " + keyType + "-----";
+        String header = HEADER_FORMAT.formatted(pemType.getPemTypeName());
+        String footer = FOOTER_FORMAT.formatted(pemType.getPemTypeName());
 
         // Remove header and footer
         pemContent = pemContent.replace(header, "").replace(footer, "").trim();
@@ -56,18 +77,18 @@ public class PemFiles {
      * Writes the content in a PEM file.
      *
      * @param path The location of the file in the fileSystem
-     * @param keyType eiter "PUBLIC KEY" or "PRIVATE KEY" string
+     * @param pemType eiter "PUBLIC KEY" or "PRIVATE KEY" string
      * @return the path of where the file was written
      * @throws IOException In case of file reading error
      */
     @NonNull
     public static Path pemWrite(
-            @NonNull final String path, @NonNull final String base64Key, @NonNull final String keyType)
+            @NonNull final String path, @NonNull final String base64Key, @NonNull final PemType pemType)
             throws IOException {
-        String header = "-----BEGIN " + Objects.requireNonNull(keyType, "keyType must not be null") + "-----\n";
-        String footer = "-----END " + keyType + "-----\n";
+        Objects.requireNonNull(pemType, "pemType must not be null");
+        String header = HEADER_FORMAT.formatted(pemType.getPemTypeName());
+        String footer = FOOTER_FORMAT.formatted(pemType.getPemTypeName());
         String content = formatPemContent(Objects.requireNonNull(base64Key, "base64Key must not be null"));
-
         String pemContent = header + content + footer;
 
         Files.write(
