@@ -27,12 +27,17 @@ import java.nio.file.Path;
  * Key generation tool
  *
  *<p>Usage:
- *<p>Display usage information:
+ *
+ * <p>Display usage information:
+ *
  * <pre>{@code  --help}</pre>
- *<p>Generating a Key Pair:
- * <pre>{@code generate-keys path/to/privateKey.pem path/to/publicKey.pem}<pre/>
- *<p>Generating a Public Key from an Existing Private Key:
- *<pre>{@code generate-public-key path/to/privateKey.pem path/to/publicKey.pem}<pre/>
+ *
+ * <p>Generating a Key Pair:
+ * <pre>{@code generate-keys path/to/privateKey.pem path/to/publicKey.pem}</pre>
+ *
+ * <p>Generating a Public Key from an Existing Private Key:
+ *
+ * <pre>{@code generate-public-key path/to/privateKey.pem path/to/publicKey.pem}</pre>
  */
 public class KeyGen {
 
