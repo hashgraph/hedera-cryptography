@@ -28,8 +28,11 @@ dependencies.constraints {
     api("io.grpc:grpc-protobuf:1.65.1") {
         because("io.grpc.protobuf")
     }
-    api("com.google.protobuf:protobuf-java:4.27.3") {
+    api("com.google.protobuf:protobuf-java:4.27.2") {
         because("com.google.protobuf")
+    }
+    api("com.google.protobuf:protobuf-java-util:4.27.3") {
+        because("com.google.protobuf.util")
     }
     api("org.mockito:mockito-core:5.8.0") {
         because("org.mockito")
