@@ -20,7 +20,7 @@ plugins {
     id("org.gradlex.java-module-versions")
 }
 
-group = "com.hedera.cryptography"
+group = "com.hedera"
 
 javaPlatform { allowDependencies() }
 
