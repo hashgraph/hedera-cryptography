@@ -22,13 +22,16 @@ plugins {
 
 // define versions for gradle to grab dependencies
 dependencies.constraints {
+    api("com.google.guava:guava:31.1-jre") {
+        because("com.google.common")
+    }
     api("com.github.spotbugs:spotbugs-annotations:4.7.3") {
         because("com.github.spotbugs.annotations")
     }
     api("io.grpc:grpc-protobuf:1.65.1") {
         because("io.grpc.protobuf")
     }
-    api("com.google.protobuf:protobuf-java:4.27.2") {
+    api("com.google.protobuf:protobuf-java:4.27.3") {
         because("com.google.protobuf")
     }
     api("com.google.protobuf:protobuf-java-util:4.27.3") {

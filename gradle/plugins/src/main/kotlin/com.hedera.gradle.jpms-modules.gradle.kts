@@ -243,7 +243,6 @@ extraJavaModuleInfo {
         "com.github.docker.transport.zerodep"
     )
     module("com.google.protobuf:protobuf-java-util", "com.google.protobuf.util")
-    module("com.google.protobuf:protobuf-java", "com.google.protobuf")
     module("com.squareup:javapoet", "com.squareup.javapoet") {
         exportAllPackages()
         requires("java.compiler")
