@@ -17,6 +17,8 @@
 package com.hedera.cryptography.eckeygen;
 
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
  * Operations for generating Bls Keys
@@ -24,19 +26,23 @@ import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 public interface KeyGenerator {
 
     /**
-     * Generate a key pair (private key and public key) and return them as strings.
+     * Generate a key pair (private key and public key) and return them and return them as byte arrays.
+     * Index 0 corresponds to the private key.
+     * Index 1 corresponds to the public key.
      *
      * @param groupAssignment  An int representing the {@link GroupAssignment} ordinal for selecting the elliptic curve group to use.
-     * @return An array of size 2 to store the resulting private key and public key.
+     * @return A byte array of size 2 with private key and public key each as byte[].
      */
+    @Nullable
     byte[][] generateKeyPair(final int groupAssignment);
 
     /**
      * Generate a public key given an existent private key and return it as string.
      *
      * @param groupAssignment  An int representing the {@link GroupAssignment} ordinal for selecting the elliptic curve group to use.
-     * @param sk  An array representing the private key.
-     * @return An array representing the public key
+     * @param sk  A byte array representing the private key.
+     * @return A byte array representing the public key
      */
-    byte[] generatePublicKey(final int groupAssignment, final byte[] sk);
+    @Nullable
+    byte[] generatePublicKey(final int groupAssignment, @NonNull final byte[] sk);
 }

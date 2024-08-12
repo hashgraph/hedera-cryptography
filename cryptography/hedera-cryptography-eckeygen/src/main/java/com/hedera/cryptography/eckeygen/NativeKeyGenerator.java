@@ -66,18 +66,17 @@ public class NativeKeyGenerator implements KeyGenerator {
      * Index 0 corresponds to the private key.
      * Index 1 corresponds to the public key.
      *
-     *
      * @param groupAssignment  An int representing the {@link GroupAssignment} ordinal for selecting the elliptic curve group to use.
-     * @return A byte array of size 2 to store the resulting private key and public key each as byte[].
+     * @return A byte array of size 2 with private key and public key each as byte[].
      */
     @Nullable
     public native byte[][] generateKeyPair(final int groupAssignment);
     /**
-     * JNI function to generate a public key given an existent private key and return it as Java strings.
+     * JNI function to generate a public key given an existent private key and return it as byte array.
      *
      * @param groupAssignment  An int representing the {@link GroupAssignment} ordinal for selecting the elliptic curve group to use.
-     * @param sk  A Java object array representing the private key.
-     * @return A Java object array representing the public key
+     * @param sk A Java byte[] array representing the private key.
+     * @return A Java byte[] array representing the public key
      */
     @Nullable
     public native byte[] generatePublicKey(final int groupAssignment, @NonNull final byte[] sk);
