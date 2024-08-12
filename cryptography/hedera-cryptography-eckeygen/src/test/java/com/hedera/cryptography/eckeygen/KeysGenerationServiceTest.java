@@ -29,7 +29,6 @@ import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
 import java.util.Base64;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
 
 class KeysGenerationServiceTest {
 
@@ -40,13 +39,12 @@ class KeysGenerationServiceTest {
     public void testGenerateBase64KeyPair() {
         // Given
         final KeyGenerator nativeKeyGenerator = mock(KeyGenerator.class);
-        when((nativeKeyGenerator.generateKeyPair(anyInt())))
-                .thenAnswer(invocation -> {
-                    byte[][] out = invocation.getArgument(1);
-                    out[0] = new byte[] {1, 2, 3};
-                    out[1] = new byte[] {4, 5, 6};
-                    return out;
-                });
+        when((nativeKeyGenerator.generateKeyPair(anyInt()))).thenAnswer(invocation -> {
+            byte[][] out = invocation.getArgument(1);
+            out[0] = new byte[] {1, 2, 3};
+            out[1] = new byte[] {4, 5, 6};
+            return out;
+        });
         KeysGenerationService ks = new KeysGenerationService(SIGNATURE_SCHEMA, nativeKeyGenerator);
         // When
         String[] keyPair = ks.generateBase64KeyPair();
@@ -64,8 +62,7 @@ class KeysGenerationServiceTest {
     public void testGenerateBase64KeyPairError() {
         // Given
         final KeyGenerator nativeKeyGenerator = mock(KeyGenerator.class);
-        when((nativeKeyGenerator.generateKeyPair(anyInt())))
-                .thenReturn(null);
+        when((nativeKeyGenerator.generateKeyPair(anyInt()))).thenReturn(null);
         KeysGenerationService ks = new KeysGenerationService(SIGNATURE_SCHEMA, nativeKeyGenerator);
 
         // then
