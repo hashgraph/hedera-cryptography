@@ -19,6 +19,7 @@ package com.hedera.cryptography.eckeygen;
 import com.hedera.common.nativesupport.NativeLibrary;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -69,6 +70,7 @@ public class NativeKeyGenerator implements KeyGenerator {
      * @param groupAssignment  An int representing the {@link GroupAssignment} ordinal for selecting the elliptic curve group to use.
      * @return A byte array of size 2 to store the resulting private key and public key each as byte[].
      */
+    @Nullable
     public native byte[][] generateKeyPair(final int groupAssignment);
     /**
      * JNI function to generate a public key given an existent private key and return it as Java strings.
@@ -77,5 +79,6 @@ public class NativeKeyGenerator implements KeyGenerator {
      * @param sk  A Java object array representing the private key.
      * @return A Java object array representing the public key
      */
-    public native byte[] generatePublicKey(final int groupAssignment, final byte[] sk);
+    @Nullable
+    public native byte[] generatePublicKey(final int groupAssignment, @NonNull final byte[] sk);
 }
