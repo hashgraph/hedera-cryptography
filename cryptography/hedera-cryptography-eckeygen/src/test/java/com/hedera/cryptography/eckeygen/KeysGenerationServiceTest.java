@@ -40,7 +40,7 @@ class KeysGenerationServiceTest {
         // Given
         final KeyGenerator nativeKeyGenerator = mock(KeyGenerator.class);
         when((nativeKeyGenerator.generateKeyPair(anyInt()))).thenAnswer(invocation -> {
-            byte[][] out = invocation.getArgument(1);
+            byte[][] out = new byte[2][2];
             out[0] = new byte[] {1, 2, 3};
             out[1] = new byte[] {4, 5, 6};
             return out;
