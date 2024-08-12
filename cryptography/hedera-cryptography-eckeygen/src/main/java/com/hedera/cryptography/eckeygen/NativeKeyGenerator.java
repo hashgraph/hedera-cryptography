@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * An implementation of {@link KeyGenerator} that uses JNI and rust code to generate the keys
  */
 public class NativeKeyGenerator implements KeyGenerator {
-    private static final AtomicBoolean IS_INITIALIZED = new AtomicBoolean(false);
+    private static final AtomicBoolean PENDING_INITIALIZATION = new AtomicBoolean(true);
 
     /**
      * Initializes the class by loading the necessary native libraries.
@@ -37,31 +37,39 @@ public class NativeKeyGenerator implements KeyGenerator {
      */
     @NonNull
     public NativeKeyGenerator initialize() {
-        if (IS_INITIALIZED.compareAndSet(false, true)) {
-            final NativeLibrary library = NativeLibrary.withName("libkey_gen");
-            try {
-                // JPMS does not allow for resources contained in a module to be loaded in a separated class
-                // So we are forced to load this the InputStream in a class stored in a jar that holds the resource
-                final InputStream is = this.getClass().getModule().getResourceAsStream(library.locationInJar());
-                if (is == null) {
-                    throw new UncheckedIOException(new IOException("Could not find " + library.name()));
+        if (PENDING_INITIALIZATION.get()) {
+            synchronized (this) {
+                if (!PENDING_INITIALIZATION.get()) {
+                    return this;
                 }
-                library.install(is);
-            } catch (IOException e) {
-                throw new UncheckedIOException("Unable to load library " + library.name(), new IOException(e));
+                final NativeLibrary library = NativeLibrary.withName("libkey_gen");
+                try {
+                    // JPMS does not allow for resources contained in a module to be loaded in a separated class
+                    // So we are forced to load this the InputStream in a class stored in a jar that holds the resource
+                    final InputStream is = this.getClass().getModule().getResourceAsStream(library.locationInJar());
+                    if (is == null) {
+                        throw new UncheckedIOException(new IOException("Could not find " + library.name()));
+                    }
+                    library.install(is);
+                } catch (IOException e) {
+                    throw new UncheckedIOException("Unable to load library " + library.name(), new IOException(e));
+                }
+                PENDING_INITIALIZATION.set(false);
             }
         }
         return this;
     }
 
     /**
-     * JNI function to generate a key pair (private key and public key) and return them as Java strings.
+     * JNI function to generate a key pair (private key and public key) and return them as byte arrays.
+     * Index 0 corresponds to the private key.
+     * Index 1 corresponds to the public key.
+     *
      *
      * @param groupAssignment  An int representing the {@link GroupAssignment} ordinal for selecting the elliptic curve group to use.
-     * @param out  A Java object array of size 2 to store the resulting private key and public key.
-     * @return an integer status code (0 for success, -1 for failure).
+     * @return A byte array of size 2 to store the resulting private key and public key each as byte[].
      */
-    public native int generateKeyPair(final int groupAssignment, byte[][] out);
+    public native byte[][] generateKeyPair(final int groupAssignment);
     /**
      * JNI function to generate a public key given an existent private key and return it as Java strings.
      *

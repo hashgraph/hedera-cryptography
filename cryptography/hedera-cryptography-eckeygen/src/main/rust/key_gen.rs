@@ -114,23 +114,22 @@ fn gen_serialized_pub_key<G: CurveGroup>( sk: <<G as CurveGroup>::Config as Curv
 }
 
 
-/// JNI function to generate a key pair (private key and public key) and set them in a Java byte array.
+/// JNI function to generate a key pair (private key and public key) and return them in a Java byte array
+/// of two elements where index 0 represents the private key, and index 1 the public key.
 ///
 /// # Arguments
 /// * `env` - The JNI environment.
 /// * `_instance` - The Java instance calling this function.
-/// * `group_assignment` - A byte indicating the elliptic curve group to use.
-/// * `output` - A Java object array to store the resulting private key and public key.
+/// * `group_assignment` - A jint indicating the elliptic curve group to use.
 ///
 /// # Returns
-/// An integer status code (0 for success, -1 for failure).
+///  A Java byte[][] array to store the resulting private key and public key.
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_eckeygen_NativeKeyGenerator_generateKeyPair(
-    env: JNIEnv,
+pub extern "system" fn Java_com_hedera_cryptography_eckeygen_NativeKeyGenerator_generateKeyPair<'local>(
+    mut env:  JNIEnv<'local>,
     _instance: JObject,
     group_assignment: jint,
-    output: JObjectArray,
-) -> jint {
+) -> JObjectArray<'local> {
     let mut rng = OsRng;
     let group_byte = u8::try_from(group_assignment).expect("Invalid group assignment");
     let (serialized_sk, serialized_pk) = match group_byte {
@@ -155,10 +154,11 @@ pub extern "system" fn Java_com_hedera_cryptography_eckeygen_NativeKeyGenerator_
     env.set_byte_array_region(&jbyte_array_sk, 0, sk_jbytes).expect("Failed to set byte array region for private key");
     env.set_byte_array_region(&jbyte_array_pk, 0, pk_jbytes).expect("Failed to set byte array region for public key");
 
+    let class = env.get_object_class(&jbyte_array_sk).expect("Failed to get the class");
+    let output:JObjectArray<'local> = env.new_object_array(2, class,JObject::null() ).expect("Failed to create output array for key pair") ;
     env.set_object_array_element(&output, 0, &jbyte_array_sk).expect("Failed to set object array element for private key");
     env.set_object_array_element(&output, 1, &jbyte_array_pk).expect("Failed to set object array element for public key");
-
-    0
+    output
 }
 
 

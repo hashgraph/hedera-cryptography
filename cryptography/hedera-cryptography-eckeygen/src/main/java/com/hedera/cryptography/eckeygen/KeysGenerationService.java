@@ -72,8 +72,8 @@ public class KeysGenerationService {
      */
     @NonNull
     public String[] generateBase64KeyPair() {
-        byte[][] output = new byte[2][];
-        if (keyGen.generateKeyPair(signatureSchema.getGroupAssignment().ordinal(), output) != 0) {
+        byte[][] output = keyGen.generateKeyPair(signatureSchema.getGroupAssignment().ordinal());
+        if ( output == null || output.length != 2) {
             throw new KeysServiceException("KeyPair generation failed");
         }
 

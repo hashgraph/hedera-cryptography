@@ -19,6 +19,14 @@ package com.hedera.cryptography.eckeygen;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.cryptography.pairings.curves.KnownCurves;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
 class NativeKeyGeneratorTest {
@@ -30,7 +38,45 @@ class NativeKeyGeneratorTest {
     };
 
     @Test
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    void testInitializeRaceCondition() throws InterruptedException {
+        final int numThreads = 10000;
+        final AtomicInteger counter = new AtomicInteger(0);
+        final AtomicInteger successful = new AtomicInteger(0);
+        final NativeKeyGenerator keyGenerator = new NativeKeyGenerator() {
+            @NonNull
+            @Override
+            public NativeKeyGenerator initialize() {
+                counter.incrementAndGet();
+                try {
+                    var value = super.initialize();
+                    successful.incrementAndGet();
+                    return value;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+        final List<Callable<Void>> callables = IntStream.range(0, numThreads)
+                .boxed()
+                .map(i -> (Callable<Void>) () -> {
+                    keyGenerator.initialize();
+                    return null;
+                })
+                .toList();
+
+        try (ExecutorService executor = Executors.newFixedThreadPool(numThreads)) {
+            executor.invokeAll(callables);
+            executor.shutdown();
+            executor.awaitTermination(1, TimeUnit.MINUTES);
+            assertEquals(numThreads, counter.get());
+            assertEquals(numThreads, successful.get());
+        }
+    }
+
+    @Test
     void testInitialize() {
+
         NativeKeyGenerator nativeKeyGenerator = new NativeKeyGenerator();
         assertDoesNotThrow(nativeKeyGenerator::initialize);
     }
@@ -46,9 +92,8 @@ class NativeKeyGeneratorTest {
     void testKeyPairGeneration() {
         NativeKeyGenerator nativeKeyGenerator = new NativeKeyGenerator();
         nativeKeyGenerator.initialize();
-        byte[][] output = new byte[2][];
-        int keyPair = nativeKeyGenerator.generateKeyPair(KnownCurves.ALT_BN128.getId(), output);
-        assertEquals(0, keyPair);
+        byte[][] output = nativeKeyGenerator.generateKeyPair(KnownCurves.ALT_BN128.getId());
+        assertEquals(2, output.length);
         assertNotNull(output[0]);
         assertNotNull(output[1]);
     }
@@ -65,9 +110,8 @@ class NativeKeyGeneratorTest {
     void testTwoWays() {
         NativeKeyGenerator nativeKeyGenerator = new NativeKeyGenerator();
         nativeKeyGenerator.initialize();
-        byte[][] output = new byte[2][];
-        int keyPair = nativeKeyGenerator.generateKeyPair(KnownCurves.ALT_BN128.getId(), output);
-        assertEquals(0, keyPair);
+        byte[][] output = nativeKeyGenerator.generateKeyPair(KnownCurves.ALT_BN128.getId());
+        assertEquals(2, output.length);
         assertNotNull(output[0]);
         assertNotNull(output[1]);
         byte[] pk = nativeKeyGenerator.generatePublicKey(KnownCurves.ALT_BN128.getId(), output[0]);

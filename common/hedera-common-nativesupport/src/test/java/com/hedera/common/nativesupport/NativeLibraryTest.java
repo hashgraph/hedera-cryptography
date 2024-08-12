@@ -18,6 +18,7 @@ package com.hedera.common.nativesupport;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.hedera.common.nativesupport.jni.Greeter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -115,6 +116,28 @@ class NativeLibraryTest {
         try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(library.locationInJar())) {
             assertNotNull(is, "Should have found " + library.locationInJar());
             assertDoesNotThrow(() -> library.install(is));
+        }
+    }
+
+    @Test
+    void testInstallAndInvoke() throws IOException {
+        // Load native library greeter.dll (Windows) or greeter.so (Linux) greeter.dylib (Mac)
+        final NativeLibrary library = NativeLibrary.withName("greeter");
+        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(library.locationInJar())) {
+            assertNotNull(is, "Should have found " + library.locationInJar());
+            assertDoesNotThrow(() -> library.install(is));
+            assertDoesNotThrow(() -> new Greeter().getGreeting());
+        }
+    }
+
+    @Test
+    void testInstallInvokeAndResult() throws IOException {
+        // Load native library greeter.dll (Windows) or greeter.so (Linux) greeter.dylib (Mac)
+        final NativeLibrary library = NativeLibrary.withName("greeter");
+        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(library.locationInJar())) {
+            assertNotNull(is, "Should have found " + library.locationInJar());
+            assertDoesNotThrow(() -> library.install(is));
+            assertEquals("Hello, World from C++!", new Greeter().getGreeting());
         }
     }
 }

@@ -27,10 +27,9 @@ public interface KeyGenerator {
      * Generate a key pair (private key and public key) and return them as strings.
      *
      * @param groupAssignment  An int representing the {@link GroupAssignment} ordinal for selecting the elliptic curve group to use.
-     * @param out  An array of size 2 to store the resulting private key and public key.
-     * @return an integer status code (0 for success, -1 for failure).
+     * @return An array of size 2 to store the resulting private key and public key.
      */
-    int generateKeyPair(final int groupAssignment, byte[][] out);
+    byte[][] generateKeyPair(final int groupAssignment);
 
     /**
      * Generate a public key given an existent private key and return it as string.

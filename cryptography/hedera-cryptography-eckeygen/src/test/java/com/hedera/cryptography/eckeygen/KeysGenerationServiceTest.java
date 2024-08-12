@@ -40,12 +40,12 @@ class KeysGenerationServiceTest {
     public void testGenerateBase64KeyPair() {
         // Given
         final KeyGenerator nativeKeyGenerator = mock(KeyGenerator.class);
-        when((nativeKeyGenerator.generateKeyPair(anyInt(), ArgumentMatchers.any())))
+        when((nativeKeyGenerator.generateKeyPair(anyInt())))
                 .thenAnswer(invocation -> {
                     byte[][] out = invocation.getArgument(1);
                     out[0] = new byte[] {1, 2, 3};
                     out[1] = new byte[] {4, 5, 6};
-                    return 0;
+                    return out;
                 });
         KeysGenerationService ks = new KeysGenerationService(SIGNATURE_SCHEMA, nativeKeyGenerator);
         // When
@@ -64,8 +64,8 @@ class KeysGenerationServiceTest {
     public void testGenerateBase64KeyPairError() {
         // Given
         final KeyGenerator nativeKeyGenerator = mock(KeyGenerator.class);
-        when((nativeKeyGenerator.generateKeyPair(anyInt(), ArgumentMatchers.any())))
-                .thenReturn(-1);
+        when((nativeKeyGenerator.generateKeyPair(anyInt())))
+                .thenReturn(null);
         KeysGenerationService ks = new KeysGenerationService(SIGNATURE_SCHEMA, nativeKeyGenerator);
 
         // then
