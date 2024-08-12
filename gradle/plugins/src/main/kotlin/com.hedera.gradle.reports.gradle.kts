@@ -20,6 +20,7 @@ plugins {
     id("com.hedera.gradle.lifecycle")
     id("com.hedera.gradle.repositories")
     id("com.hedera.gradle.jpms-modules")
+    id("com.hedera.gradle.jpms-module-dependencies")
 }
 
 dependencies {
@@ -28,7 +29,7 @@ dependencies {
         .filter { prj -> prj != project }
         .forEach {
             if (it.name == "hedera-dependency-versions") {
-                // jacocoAggregation(platform(project(it.path)))
+                jacocoAggregation(platform(project(it.path)))
             } else {
                 jacocoAggregation(project(it.path))
             }

@@ -35,6 +35,9 @@ public enum KnownCurves implements Curve {
      */
     ALT_BN128((byte) 1);
 
+    /**
+     * An internal unique id per curve.
+     */
     final byte id;
 
     KnownCurves(byte id) {

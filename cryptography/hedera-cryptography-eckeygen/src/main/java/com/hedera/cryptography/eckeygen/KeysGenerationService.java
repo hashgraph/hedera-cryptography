@@ -31,6 +31,8 @@ public class KeysGenerationService {
     private final SignatureSchema signatureSchema;
 
     /**
+     * Creates a new instance of this service.
+     *
      * @param signatureSchema  Elliptic Curve predefined configuration for this utility
      * @param keyGen a Bls Key Generator
      */
@@ -107,6 +109,10 @@ public class KeysGenerationService {
      * An exception thrown in case of generation error
      */
     public static class KeysServiceException extends RuntimeException {
+        /**
+         * Retrieves a specific RuntimeException
+         * @param message details of the error
+         */
         public KeysServiceException(@NonNull final String message) {
             super(message);
         }

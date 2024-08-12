@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2016-2024 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package com.hedera.common.nativesupport;
+plugins { id("org.gradlex.java-module-dependencies") }
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import org.junit.jupiter.api.Test;
-
-class ArchitectureTest {
-
-    @Test
-    void testCurrent() {
-        assertNotNull(Architecture.current());
-    }
-}
+// The following is required as we use different Module Name prefixes. Right now we have:
+// - 'com.' for 'com.swirlds' modules
+// - 'com.hedera.node.' for 'com.hedera.hashgraph' modules
+// - 'com.hedera.storage' for 'com.hedera.storage.blocknode' modules
+// If one of the module groups has 'requires' to modules of another group, we need to register
+// that module group here.
+javaModuleDependencies {}

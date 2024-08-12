@@ -23,7 +23,7 @@ plugins {
     id("com.hedera.gradle.repositories")
     id("com.hedera.gradle.nexus-publish")
     id("com.hedera.gradle.spotless-kotlin")
-    id("com.autonomousapps.dependency-analysis")
+    // id("com.autonomousapps.dependency-analysis")
 }
 
 spotless {

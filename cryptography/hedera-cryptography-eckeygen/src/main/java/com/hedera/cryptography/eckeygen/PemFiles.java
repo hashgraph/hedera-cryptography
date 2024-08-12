@@ -27,12 +27,21 @@ import java.util.Objects;
  * Writes and reads the base64 string in Pem files according to <a href="https://datatracker.ietf.org/doc/html/rfc7468">...</a>
  */
 public class PemFiles {
-
+    private static final String HEADER_FORMAT = "-----BEGIN %s-----\n";
+    private static final String FOOTER_FORMAT = "-----END %s-----";
     /**
      * Subset of handled Pem File Types as defined in <a href="https://www.rfc-editor.org/rfc/rfc1422">rfc1422</a>
      */
     public enum PemType {
+
+        /**
+         * Represents a private key
+         */
         PRIVATE_KEY("PRIVATE KEY"),
+
+        /**
+         * Represents a public key
+         */
         PUBLIC_KEY("PUBLIC KEY");
 
         private final String pemTypeName;
@@ -41,13 +50,29 @@ public class PemFiles {
             this.pemTypeName = pemTypeName;
         }
 
-        public String getPemTypeName() {
-            return pemTypeName;
+        /**
+         * Returns the footer.
+         * @return the formatted footer
+         */
+        public String getFooter() {
+            return String.format(FOOTER_FORMAT, pemTypeName);
+        }
+
+        /**
+         * Returns the formatted header.
+         * @return the header
+         */
+        public String getHeader() {
+            return String.format(HEADER_FORMAT, pemTypeName);
         }
     }
 
-    private static final String HEADER_FORMAT = "-----BEGIN %s-----\n";
-    private static final String FOOTER_FORMAT = "-----END %s-----";
+    /**
+     * Empty constructor for helper static classes
+     */
+    private PemFiles() {
+        // Empty constructor for helper static classes
+    }
 
     /**
      * Reads the content of a PEM file.
@@ -60,36 +85,32 @@ public class PemFiles {
     @NonNull
     public static String pemRead(@NonNull final String path, @NonNull final PemType pemType) throws IOException {
         Objects.requireNonNull(pemType, "pemType must not be null");
-        String pemContent = Files.readString(Path.of(Objects.requireNonNull(path, "path must not be null")));
-
+        final String pemContent = Files.readString(Path.of(Objects.requireNonNull(path, "path must not be null")));
         // Define PEM header and footer
-        String header = HEADER_FORMAT.formatted(pemType.getPemTypeName());
-        String footer = FOOTER_FORMAT.formatted(pemType.getPemTypeName());
+        final String header = pemType.getHeader();
+        final String footer = pemType.getFooter();
 
         // Remove header and footer
-        pemContent = pemContent.replace(header, "").replace(footer, "").trim();
-
-        // Remove all line breaks and spaces
-        return pemContent.replaceAll("\\s", "");
+        return pemContent.replace(header, "").replace(footer, "").trim().replaceAll("\\s", "");
     }
 
     /**
      * Writes the content in a PEM file.
      *
      * @param path The location of the file in the fileSystem
+     * @param content The content to write to the file
      * @param pemType eiter "PUBLIC KEY" or "PRIVATE KEY" string
      * @return the path of where the file was written
      * @throws IOException In case of file reading error
      */
     @NonNull
     public static Path pemWrite(
-            @NonNull final String path, @NonNull final String base64Key, @NonNull final PemType pemType)
+            @NonNull final String path, @NonNull final String content, @NonNull final PemType pemType)
             throws IOException {
         Objects.requireNonNull(pemType, "pemType must not be null");
-        String header = HEADER_FORMAT.formatted(pemType.getPemTypeName());
-        String footer = FOOTER_FORMAT.formatted(pemType.getPemTypeName());
-        String content = formatPemContent(Objects.requireNonNull(base64Key, "base64Key must not be null"));
-        String pemContent = header + content + footer;
+        final String pemContent = pemType.getHeader()
+                + formatPemContent(Objects.requireNonNull(content, "content must not be null"))
+                + pemType.getFooter();
 
         Files.write(
                 Path.of(Objects.requireNonNull(path, "path must not be null")),

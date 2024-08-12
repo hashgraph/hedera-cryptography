@@ -41,10 +41,33 @@ import java.nio.file.Path;
  */
 public class KeyGen {
 
+    /**
+     * Empty method for static helper class
+     */
+    private KeyGen() {
+        // Empty method for static helper class
+    }
+
     private static final KeysGenerationService KEYS_SERVICE = new KeysGenerationService(
             SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.GROUP1_FOR_SIGNING),
             new NativeKeyGenerator().initialize());
 
+    /**
+     *  <p>Usage:
+     *
+     *   <p>Display usage information:
+     *
+     *   <pre>{@code  --help}</pre>
+     *
+     *   <p>Generating a Key Pair:
+     *   <pre>{@code generate-keys path/to/privateKey.pem path/to/publicKey.pem}</pre>
+     *
+     *   <p>Generating a Public Key from an Existing Private Key:
+     *
+     *   <pre>{@code generate-public-key path/to/privateKey.pem path/to/publicKey.pem}</pre>
+     * @param args depending on the command see examples above
+     * @throws Exception if something happened while generating the keys
+     */
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
             printHelp();

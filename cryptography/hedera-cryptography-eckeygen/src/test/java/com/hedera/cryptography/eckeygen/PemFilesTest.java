@@ -103,7 +103,7 @@ public class PemFilesTest {
         Exception exception = assertThrows(NullPointerException.class, () -> {
             PemFiles.pemWrite("test.pem", null, PemType.PRIVATE_KEY);
         });
-        assertEquals("base64Key must not be null", exception.getMessage());
+        assertEquals("content must not be null", exception.getMessage());
     }
 
     @Test

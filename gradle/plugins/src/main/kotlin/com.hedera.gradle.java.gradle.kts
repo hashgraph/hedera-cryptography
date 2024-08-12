@@ -28,6 +28,7 @@ plugins {
     id("com.adarshr.test-logger")
     id("com.hedera.gradle.lifecycle")
     id("com.hedera.gradle.jpms-modules")
+    id("com.hedera.gradle.jpms-module-dependencies")
     id("com.hedera.gradle.repositories")
     id("com.hedera.gradle.spotless-java")
     id("com.hedera.gradle.spotless-kotlin")

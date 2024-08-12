@@ -34,5 +34,9 @@ public interface Curve {
      */
     Curve ALT_BN128 = KnownCurves.ALT_BN128;
 
+    /**
+     * The internal unique id for the curve.
+     * @return an internal unique id for the curve.
+     */
     byte getId();
 }
