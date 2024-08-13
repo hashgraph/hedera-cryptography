@@ -8,7 +8,7 @@ keywords = ["threshold", "signature", "cryptography"]
 
 [lib]
 name = "pairings_api"
-path = "./pairings_api.rs"
+path = "src/main/rust/pairings_api.rs"
 crate-type = ["cdylib"]
 
 

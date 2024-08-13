@@ -7,8 +7,6 @@ use ark_serialize::CanonicalSerialize;
 use ark_std::UniformRand;
 use rand_chacha::rand_core::SeedableRng;
 
-pub type Id = u64;
-
 /// the id this node will use for identifying shares
 pub type FieldElement<G> = <<G as CurveGroup>::Config as CurveConfig>::ScalarField;
 
@@ -68,21 +66,21 @@ pub fn field_elements_from_int<G: CurveGroup>(value: u64) -> FieldElement<G>{
 }
 
 
-pub fn field_elements_multiple_from_random<G: CurveGroup>() -> Vec<G::GroupElement>{
+pub fn field_elements_multiple_from_random<G: CurveGroup>() -> Vec<FieldElement<G>>{
     let mut rng = rand_chacha::ChaCha8Rng::from_seed([0u8; 32]);
-    (0..32).map(|_| G::GroupElement::rand(&mut rng)).collect::<Vec<G::GroupElement>>()
+    (0..32).map(|_| G::FieldElement::rand(&mut rng)).collect::<Vec<FieldElement<G>>>()
 }
 
-pub fn field_elements_max<G: CurveGroup>(value: Vec<G::GroupElement>) -> FieldElement<G>{
+pub fn field_elements_max<G: CurveGroup>(value: Vec<G::FieldElement>) -> FieldElement<G>{
     value.iter().max().unwrap_or(&FieldElement::<G>::zero())
 }
 
-pub fn field_elements_accum<G: CurveGroup>(value: Vec<G::GroupElement>) -> FieldElement<G>{
+pub fn field_elements_accum<G: CurveGroup>(value: Vec<G::FieldElement>) -> FieldElement<G>{
     value.iter()
         .enumerate()
         .fold(
-            G::GroupElement::zero(),
-            |acc, (i, &r)| acc + r * G::GroupElement::from(256u64).pow([i as u64])
+            G::FieldElement::zero(),
+            |acc, (i, &r)| acc + r * G::FieldElement::from(256u64).pow([i as u64])
         );
 }
 
@@ -100,6 +98,10 @@ pub fn field_elements_serialize_uncompressed<G: CurveGroup>(value: FieldElement<
 
 pub fn field_elements_acum<G: CurveGroup>(value: Vec<G::GenFieldElement>) -> FieldElement<G>{
     value.iter().max().unwrap_or(&FieldElement::<G>::zero())
+}
+
+pub fn group_elements_equality<G: CurveGroup>(value:G, value2:G)-> bool{
+    value.into_affine() == value2.into_affine()
 }
 
 pub fn group_elements_zero<G: CurveGroup>() -> G{
@@ -144,9 +146,9 @@ pub fn group_elements_g1_xy(a:G1Affine) -> (BigInt<4>, BigInt<4>) {
     (a.x().unwrap().into_bigint() , a.y().unwrap().into_bigint())
 }
 
-pub fn group_elements_from_g1_xy(x: BigInt<4>, y: BigInt<4>) ->G1Affine{
+pub fn group_elements_g1_from_xy(x: BigInt<4>, y: BigInt<4>) ->G1Affine{
     // Finally, while not recommended,
-    // '?>, musers can directly construct group elements
+    // users can directly construct group elements
     // from the x and y coordinates. This is useful when implementing algorithms
     // like hash-to-curve.
     let x_fq = Fq::new(x);
@@ -154,7 +156,11 @@ pub fn group_elements_from_g1_xy(x: BigInt<4>, y: BigInt<4>) ->G1Affine{
     G1Affine::new(x_fq, y_fq)
 }
 
-pub fn group_elements_from_g2_xy(x1: BigInt<4>, x2: BigInt<4>, y1: BigInt<4>, y2: BigInt<4>) ->G2Affine{
+pub fn group_elements_g2_xy(a:G2Affine) -> (BigInt<4>, BigInt<4>,BigInt<4>, BigInt<4>) {
+    (a.x().unwrap().c0.into_bigint(), a.x().unwrap().c1.into_bigint()  , a.y().unwrap().c0.into_bigint(),  a.y().unwrap().c1.into_bigint())
+}
+
+pub fn group_elements_g2_from_xy(x1: BigInt<4>, x2: BigInt<4>, y1: BigInt<4>, y2: BigInt<4>) ->G2Affine{
     // Finally, while not recommended, users can directly construct group elements
     // from the x and y coordinates. This is useful when implementing algorithms
     // like hash-to-curve.
