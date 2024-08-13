@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul};
+use std::ops::{Mul};
 use ark_bn254::{Bn254, Fq, Fq2, G1Affine, G2Affine};
 use ark_ec::{AffineRepr, CurveConfig, CurveGroup};
 use ark_ec::pairing::Pairing;
@@ -38,19 +38,19 @@ pub fn field_elements_add<G: CurveGroup>(value: FieldElement<G>, value2: FieldEl
 
 pub fn field_elements_from_random<G: CurveGroup>() -> FieldElement<G>{
     let mut rng = rand_chacha::ChaCha8Rng::from_seed([0u8; 32]);
-    FieldElement::<G>::from(&mut rng)
+    FieldElement::<G>::rand(&mut rng)
 }
 
 pub fn field_elements_inverse<G: CurveGroup>(value: FieldElement<G>) -> FieldElement<G> {
     value.inverse().unwrap()
 }
 
-pub fn field_elements_to_big_int<G: CurveGroup>(value: FieldElement<G>) -> BigInt<4> {
-    value.into_bigint()
+pub fn field_elements_to_big_int<G: CurveGroup>(value: FieldElement<G>) -> Vec<u64> {
+    value.into_bigint().as_ref().to_vec()
 }
 
 pub fn field_elements_pow<G: CurveGroup>(value: FieldElement<G>, exponent : u64) -> FieldElement<G>{
-    value.pow(exponent)
+    value.pow([exponent])
 }
 
 pub fn field_elements_minus<G: CurveGroup>(value: FieldElement<G>, value2: FieldElement<G>) -> FieldElement<G>{
@@ -68,20 +68,20 @@ pub fn field_elements_from_int<G: CurveGroup>(value: u64) -> FieldElement<G>{
 
 pub fn field_elements_multiple_from_random<G: CurveGroup>() -> Vec<FieldElement<G>>{
     let mut rng = rand_chacha::ChaCha8Rng::from_seed([0u8; 32]);
-    (0..32).map(|_| G::FieldElement::rand(&mut rng)).collect::<Vec<FieldElement<G>>>()
+    (0..32).map(|_| FieldElement::<G>::rand(&mut rng)).collect::<Vec<FieldElement<G>>>()
 }
 
-pub fn field_elements_max<G: CurveGroup>(value: Vec<G::FieldElement>) -> FieldElement<G>{
-    value.iter().max().unwrap_or(&FieldElement::<G>::zero())
+pub fn field_elements_max<G: CurveGroup>(value: Vec<FieldElement<G>>) -> FieldElement<G>{
+    *value.iter().max().unwrap_or(&FieldElement::<G>::zero())
 }
 
-pub fn field_elements_accum<G: CurveGroup>(value: Vec<G::FieldElement>) -> FieldElement<G>{
+pub fn field_elements_accum<G: CurveGroup>(value: Vec<FieldElement<G>>) -> FieldElement<G>{
     value.iter()
         .enumerate()
         .fold(
-            G::FieldElement::zero(),
-            |acc, (i, &r)| acc + r * G::FieldElement::from(256u64).pow([i as u64])
-        );
+            FieldElement::<G>::zero(),
+            |acc, (i, &r)| acc + r * FieldElement::<G>::from(256u64).pow([i as u64])
+        )
 }
 
 pub fn field_elements_serialize_compressed<G: CurveGroup>(value: FieldElement<G>) -> Vec<u8> {
@@ -96,8 +96,8 @@ pub fn field_elements_serialize_uncompressed<G: CurveGroup>(value: FieldElement<
     serialized_msg
 }
 
-pub fn field_elements_acum<G: CurveGroup>(value: Vec<G::GenFieldElement>) -> FieldElement<G>{
-    value.iter().max().unwrap_or(&FieldElement::<G>::zero())
+pub fn field_elements_acum<G: CurveGroup>(value: Vec<FieldElement<G>>) -> FieldElement<G>{
+    *value.iter().max().unwrap_or(&FieldElement::<G>::zero())
 }
 
 pub fn group_elements_equality<G: CurveGroup>(value:G, value2:G)-> bool{
@@ -106,10 +106,6 @@ pub fn group_elements_equality<G: CurveGroup>(value:G, value2:G)-> bool{
 
 pub fn group_elements_zero<G: CurveGroup>() -> G{
     G::zero()
-}
-
-pub fn group_elements_one<G: CurveGroup>() -> G{
-    G::one()
 }
 
 pub fn  group_elements_generator<G: CurveGroup>() -> G{
@@ -125,7 +121,7 @@ pub fn  group_elements_add<G:CurveGroup>(value:G, value2:G)->G{
 }
 
 pub fn  group_elements_add_affine<G:CurveGroup>(value:G, value2:G)->G::Affine{
-    value.into_affine() + value2.into_affine()
+    (value.into_affine() + value2.into_affine()).into()
 }
 
 pub fn  group_elements_scalar_multiply<G:CurveGroup>(value:G, value2: FieldElement<G>) ->G::Affine{
@@ -133,7 +129,7 @@ pub fn  group_elements_scalar_multiply<G:CurveGroup>(value:G, value2: FieldEleme
 }
 
 pub fn  group_elements_acum<G:CurveGroup>(values:Vec<G>) ->G{
-    values.iter().fold(G::zero(), |acc, point| { acc + point });
+    values.iter().fold(G::zero(), |acc, point| { acc + point })
 }
 
 pub fn group_elements_serialize<G: CurveGroup>(element: &G::Affine) -> Vec<u8> {
@@ -169,11 +165,11 @@ pub fn group_elements_g2_from_xy(x1: BigInt<4>, x2: BigInt<4>, y1: BigInt<4>, y2
     G2Affine::new(x_fq2, y_fq2)
 }
 
-pub fn group_elements_batch_multiply<G: CurveGroup>(values:Vec<&[FieldElement<G>]>) -> Vec<G::Affine> {
+pub fn group_elements_batch_multiply<G: CurveGroup>(values:Vec<FieldElement<G>>) -> Vec<G::Affine> {
     let generator = G::generator();
     values
         .iter()
-        .map(|coeff| { generator.mul(coeff).into_affine() })
+        .map(|coeff| { generator.into_affine().mul(coeff).into_affine() })
         .collect::<Vec<G::Affine>>()
 }
 
