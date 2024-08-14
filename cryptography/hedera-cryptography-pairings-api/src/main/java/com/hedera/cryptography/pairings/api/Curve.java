@@ -16,7 +16,7 @@
 
 package com.hedera.cryptography.pairings.api;
 
-import com.hedera.cryptography.pairings.curves.KnownCurves;
+import com.hedera.cryptography.pairings.api.curves.KnownCurves;
 
 /**
  * An enumeration of supported pairing curves.
