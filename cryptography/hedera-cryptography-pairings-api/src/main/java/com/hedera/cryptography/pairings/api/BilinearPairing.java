@@ -23,7 +23,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  *
  * <p>A bilinear pairing is a function that takes two elements from two groups and maps them to an element
  * in a third group, satisfying certain properties that are useful in various cryptographic schemes
- * such as identity-based encryption, short signatures, and more.</p>
+ * such as identity-based encryption, short signatures, and more.
  *
  * <p>
  * A pairing is a map: e : G₁ × G₂ -> Gₜ which can satisfy these properties:
@@ -34,7 +34,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  *   <li> Computability: There should be an efficient way to compute “e”.
  * </ul>
  * <p>This class provides access to each of the groups (G₁, G₂) for a specific Pairing and the FiniteField associated
- * with the curves.</p>
+ * with the curves.
  *
  * @see Group
  * @see Field

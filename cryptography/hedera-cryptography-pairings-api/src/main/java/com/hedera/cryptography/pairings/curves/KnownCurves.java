@@ -33,5 +33,19 @@ public enum KnownCurves implements Curve {
      * q=21888242871839275222246405745257275088696311157297823662689037894645226208583
      * Generator 5.
      */
-    ALT_BN128
+    ALT_BN128((byte) 1);
+
+    /**
+     * An internal unique id per curve.
+     */
+    final byte id;
+
+    KnownCurves(byte id) {
+        this.id = id;
+    }
+
+    @Override
+    public byte getId() {
+        return id;
+    }
 }

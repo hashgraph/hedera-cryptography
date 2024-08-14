@@ -21,11 +21,10 @@ import java.util.Random;
 
 /**
  * Represents a finite field used in a pairing-based cryptography scheme.
- * <p>A finite field, often denoted as 𝔽q, where (q) is a prime power, is a field with a finite number of elements.</p>
+ * <p>A finite field, often denoted as 𝔽q, where (q) is a prime power, is a field with a finite number of elements.
  *
  * <p>This is a factory interface, responsible for creating {@link FieldElement} which are scalars belonging to the
  * field represented by this instance.
- * </p>
  *
  * @see FieldElement
  */
