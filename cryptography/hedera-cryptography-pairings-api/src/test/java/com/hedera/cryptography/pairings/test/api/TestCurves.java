@@ -24,4 +24,9 @@ import com.hedera.cryptography.pairings.api.Curve;
 public enum TestCurves implements Curve {
     NON_EXISTENT_CURVE,
     FAIL_CURVE;
+
+    @Override
+    public byte getId() {
+        return -1;
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,16 @@ plugins {
     id("com.hedera.gradle.lifecycle")
     id("com.hedera.gradle.repositories")
     id("com.hedera.gradle.jpms-modules")
+    id("com.hedera.gradle.jpms-module-dependencies")
 }
 
 dependencies {
     rootProject.subprojects
         // exclude the 'reports' project itself
         .filter { prj -> prj != project }
-        // see also 'codecov.yml'
-
         .forEach {
             if (it.name == "hedera-dependency-versions") {
-                // jacocoAggregation(platform(project(it.path)))
+                jacocoAggregation(platform(project(it.path)))
             } else {
                 jacocoAggregation(project(it.path))
             }
@@ -42,7 +41,8 @@ dependencies {
 // See:
 // https://docs.gradle.org/current/samples/sample_jvm_multi_project_with_code_coverage_standalone.html
 reporting {
-    reports.create<JacocoCoverageReport>("testCodeCoverageReport") {
-        testType = TestSuiteType.UNIT_TEST
+    reports {
+        val testCodeCoverageReport by
+            creating(JacocoCoverageReport::class) { testType = TestSuiteType.UNIT_TEST }
     }
 }

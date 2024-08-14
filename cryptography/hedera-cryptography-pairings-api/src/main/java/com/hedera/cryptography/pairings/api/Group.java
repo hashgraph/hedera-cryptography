@@ -24,9 +24,9 @@ import java.util.Collection;
  *
  * <p>A group in this context is a set of elements combined with an operation that satisfies
  * the group properties: closure, associativity, identity, and invertibility. When the group
- * also satisfies the commutativity property, it is referred to as an abelian group.</p>
+ * also satisfies the commutativity property, it is referred to as an abelian group.
  *
- * <p>This class provides methods to obtain elements belonging to the group represented by the instance.</p>
+ * <p>This class provides methods to obtain elements belonging to the group represented by the instance.
  *
  * @see GroupElement
  */
