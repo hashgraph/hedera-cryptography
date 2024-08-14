@@ -1,0 +1,31 @@
+[package]
+name = "ec_key_gen"
+repository = "https://github.com/hashgraph/hedera-cryptography/"
+description = "Library for BLS Key Generation for TSS under Groth21"
+categories = ["cryptography"]
+keywords = ["tss","cryptography", "bls"]
+
+[lib]
+name = "key_gen"
+path = "src/main/rust/key_gen.rs"
+crate-type = ["cdylib"]
+version = "0.1.0"
+edition = "2021"
+
+[profile.bench]
+opt-level = 3
+
+[profile.test]
+opt-level = 3
+
+[features]
+
+[dependencies]
+jni = "0.21.1"
+ark-std = { version = "0.4.0" }
+ark-ec = { version = "0.4.0" }
+ark-ff = { version = "0.4.0" }
+ark-bn254 = { version = "0.4.0", default-features = false, features = [ "curve" ] }
+ark-serialize = { version = "^0.4.0", default-features = true }
+
+rand = "*"

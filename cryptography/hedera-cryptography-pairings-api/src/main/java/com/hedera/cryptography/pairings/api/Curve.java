@@ -33,4 +33,10 @@ public interface Curve {
      * Generator 5.
      */
     Curve ALT_BN128 = KnownCurves.ALT_BN128;
+
+    /**
+     * The internal unique id for the curve.
+     * @return an internal unique id for the curve.
+     */
+    byte getId();
 }
