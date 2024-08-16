@@ -199,6 +199,7 @@ pub fn group_elements_g2_xy(a:G2Affine) -> (BigInt<4>, BigInt<4>,BigInt<4>, BigI
 }
 
 pub fn group_elements_g2_from_xy(x1: BigInt<4>, x2: BigInt<4>, y1: BigInt<4>, y2: BigInt<4>) ->G2Affine{
+    // FROM: https://docs.rs/ark-algebra-intro/latest/ark_algebra_intro/
     // Finally, while not recommended, users can directly construct group elements
     // from the x and y coordinates. This is useful when implementing algorithms
     // like hash-to-curve.
