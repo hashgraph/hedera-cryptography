@@ -16,7 +16,7 @@
 
 package com.hedera.cryptography.altbn128;
 
-import com.hedera.cryptography.altbn128.jni.AltBn128Bindings;
+import com.hedera.cryptography.altbn128.jni.AltBn128FieldElements;
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
@@ -24,7 +24,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class AltBn128Field implements Field {
 
-    private static final int SIZE = AltBn128Bindings.getInstance().fieldElementSize();
+
     private final AltBn128BilinearPairing pairing;
 
     public AltBn128Field(@NonNull final AltBn128BilinearPairing pairing) {this.pairing = pairing;}
@@ -32,31 +32,31 @@ public class AltBn128Field implements Field {
     @NonNull
     @Override
     public FieldElement elementFromLong(final long inputLong) {
-        byte[] output = new byte[SIZE];
-        AltBn128Bindings.getInstance().fieldElementFromLong(inputLong, output);
-        return new AltBn128FieldElement(output, this);
+       final byte[] representation = AltBn128FieldElements.getInstance().fieldElementsFromLong(inputLong);
+        return new AltBn128FieldElement(representation, this);
     }
 
     @NonNull
     @Override
     public FieldElement randomElement(@NonNull final byte[] seed) {
-        throw new RuntimeException("Not Yet Implemented");
+        final byte[] representation = AltBn128FieldElements.getInstance().fieldElementsFromRandomSeed(seed);
+        return new AltBn128FieldElement(representation, this);
     }
 
     @NonNull
     @Override
-    public FieldElement elementFromBytes(@NonNull final byte[] bytes) {
-        throw new RuntimeException("Not Yet Implemented");
+    public FieldElement elementFromBytes(@NonNull final byte[] representation) {
+        return new AltBn128FieldElement( AltBn128FieldElements.getInstance().fieldElementsFromBytes(representation), this);
     }
 
     @Override
     public int getElementSize() {
-        return SIZE;
+        return AltBn128FieldElements.SIZE;
     }
 
     @Override
     public int getSeedSize() {
-        return 0;
+        return AltBn128FieldElements.SEED_SIZE;
     }
 
     @NonNull

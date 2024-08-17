@@ -1,14 +1,14 @@
 [package]
-name = "pairings_api"
+name = "altbn128"
 version = "0.0.1"
 edition = "2021"
-description = "Library for Non-interactive Distributed Key Generation for Dynamic Committees"
+description = "Library for alt-bn128 (bn254) elliptic curve operations"
 categories = ["cryptography"]
-keywords = ["threshold", "signature", "cryptography"]
+keywords = ["elliptic", "curve","alt-bn128", "cryptography"]
 
 [lib]
-name = "pairings_api"
-path = "src/main/rust/pairings_api.rs"
+name = "altbn128"
+path = "src/main/rust/lib.rs"
 crate-type = ["cdylib"]
 
 
