@@ -23,9 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 
-import com.hedera.cryptography.pairings.api.Group;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
@@ -36,24 +34,24 @@ class AltBn128FieldTest {
 
     @Test
     void constructionSucceeds() {
-        assertDoesNotThrow(() -> new AltBn128Field(mock(Group.class)));
+        assertDoesNotThrow(AltBn128Field::new);
     }
 
     @Test
     void createFieldElementOneIsNotNull() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         assertNotNull(field.one());
     }
 
     @Test
     void createFieldElementZeroIsNotNull() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         assertNotNull(field.zero());
     }
 
     @Test
     void zeroNotEqualsOne() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         assertNotEquals(field.zero(), field.one());
         assertFalse(field.zero().equals(field.one()));
         assertFalse(field.one().equals(field.zero()));
@@ -61,7 +59,7 @@ class AltBn128FieldTest {
 
     @Test
     void createRandomFieldElementIsNotNull() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         Random rng = new SecureRandom();
         final byte[] seed = new byte[field.getSeedSize()];
         rng.nextBytes(seed);
@@ -70,7 +68,7 @@ class AltBn128FieldTest {
 
     @Test
     void createRandomFieldWithSmallerSeedThrowsException() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         final byte[] smallerSeed = new byte[field.getSeedSize() - 1];
         final byte[] largerSeed = new byte[field.getSeedSize() + 1];
         assertThrows(IllegalArgumentException.class, () -> field.randomElement(smallerSeed));
@@ -79,7 +77,7 @@ class AltBn128FieldTest {
 
     @Test
     void createFieldElementFromLongIsNotNull() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         Random rng = new SecureRandom();
         var value = rng.nextLong();
         assertNotNull(field.elementFromLong(value));
@@ -87,25 +85,25 @@ class AltBn128FieldTest {
 
     @Test
     void createFieldElementFromNegativeLongIsNotNull() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         assertNotNull(field.elementFromLong(-1));
     }
 
     @Test
     void createFieldElementFromNegativeLongMaxValue() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         assertNotNull(field.elementFromLong(Long.MAX_VALUE));
     }
 
     @Test
     void createFieldElementFromNegativeLongMinValue() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         assertNotNull(field.elementFromLong(Long.MIN_VALUE));
     }
 
     @Test
     void createFieldElementFromLongIsEqualToZero() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         assertEquals(field.zero(), field.elementFromLong(0));
         assertTrue(field.zero().equals(field.elementFromLong(0)));
         assertTrue(field.elementFromLong(0).equals(field.zero()));
@@ -113,7 +111,7 @@ class AltBn128FieldTest {
 
     @Test
     void createFieldElementFromLongIsEqualToOne() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         assertEquals(field.one(), field.elementFromLong(1));
         assertTrue(field.one().equals(field.elementFromLong(1)));
         assertTrue(field.elementFromLong(1).equals(field.one()));
@@ -121,7 +119,7 @@ class AltBn128FieldTest {
 
     @Test
     void createFieldElementFromInvalidBytesThrowsException() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         Random rng = new SecureRandom();
         final byte[] value = new byte[field.getElementSize() - 1];
         rng.nextBytes(value);
@@ -133,13 +131,13 @@ class AltBn128FieldTest {
 
     @Test
     void fieldElementToBytesIsNotNull() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         assertNotNull(field.one().toBytes());
     }
 
     @Test
     void fieldElementToBytesAndInverseIsEquals() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         byte[] representation = field.one().toBytes();
         assertEquals(field.elementFromBytes(representation), field.one());
         assertTrue(field.one().equals(field.elementFromBytes(representation)));
@@ -148,13 +146,13 @@ class AltBn128FieldTest {
 
     @Test
     void fieldElementToBigIntegerIsNotNull() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
         assertNotNull(field.one().toBigInteger());
     }
 
     @Test
     void fieldElementToBigIntegerIsLittleEndianOne() {
-        var field = new AltBn128Field(mock(Group.class));
+        var field = new AltBn128Field();
 
         ByteBuffer bb = ByteBuffer.allocate(field.getSeedSize());
         bb.put(0, (byte) 1);

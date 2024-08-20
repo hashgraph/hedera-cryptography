@@ -25,7 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
- * This class acts as a facade that simplifies the interaction for operating with FieldElement byte[] representations.
+ * This class acts as a facade that simplifies the interaction for operating with {@code FieldElement} {@code byte[]} representations.
  *  It abstracts the complexities of dealing with return codes and input and output parameters
  *  providing a higher-level interface easier to interact with from Java.
  **/
@@ -33,17 +33,13 @@ public final class FieldElements {
 
     /** the underlying library adapter  */
     private final LibraryAdapter library;
-    /** 0 for G2 1 for G1 */
-    private final int groupIndex;
 
     /**
      * Creates an instance of this facade.
      * @param libraryAdapter the adapter containing the underlying logic.
-     * @param groupIndex 0 for G2 1 for G1
      */
-    public FieldElements(@NonNull final LibraryAdapter libraryAdapter, final int groupIndex) {
+    public FieldElements(@NonNull final LibraryAdapter libraryAdapter) {
         this.library = Objects.requireNonNull(libraryAdapter, "libraryAdapter must not be null");
-        this.groupIndex = groupIndex;
     }
 
     /**
@@ -54,7 +50,7 @@ public final class FieldElements {
      */
     public byte[] fromLong(final long inputLong) {
         final ByteBuffer bb = ByteBuffer.allocate(library.fieldElementsSize());
-        final int result = library.fieldElementsFromLong(groupIndex, inputLong, bb.array());
+        final int result = library.fieldElementsFromLong(inputLong, bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementFromLong");
         }
@@ -74,7 +70,7 @@ public final class FieldElements {
             throw new IllegalArgumentException("Invalid random seed");
         }
         final ByteBuffer bb = ByteBuffer.allocate(library.fieldElementsSize());
-        final int result = library.fieldElementsFromRandomSeed(groupIndex, seed, bb.array());
+        final int result = library.fieldElementsFromRandomSeed(seed, bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementFromRandomSeed");
         }
@@ -96,7 +92,7 @@ public final class FieldElements {
             throw new IllegalArgumentException("Invalid byte[] representation");
         }
         final ByteBuffer bb = ByteBuffer.allocate(library.fieldElementsSize());
-        final int result = library.fieldElementsFromBytes(groupIndex, representation, bb.array());
+        final int result = library.fieldElementsFromBytes(representation, bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementFromBytes");
         }
@@ -110,7 +106,7 @@ public final class FieldElements {
      */
     public byte[] zero() {
         final ByteBuffer bb = ByteBuffer.allocate(library.fieldElementsSize());
-        final int result = library.fieldElementsZero(groupIndex, bb.array());
+        final int result = library.fieldElementsZero(bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsZero");
         }
@@ -124,7 +120,7 @@ public final class FieldElements {
      */
     public byte[] one() {
         final ByteBuffer bb = ByteBuffer.allocate(library.fieldElementsSize());
-        final int result = library.fieldElementsOne(groupIndex, bb.array());
+        final int result = library.fieldElementsOne(bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsOne");
         }
@@ -139,7 +135,7 @@ public final class FieldElements {
      * @throws AltBn128Exception in case of error
      */
     public boolean equals(byte[] value, byte[] other) {
-        final int result = library.fieldElementsEquals(groupIndex, value, other);
+        final int result = library.fieldElementsEquals(value, other);
         if (result < SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsEquals");
         }

@@ -21,28 +21,26 @@ import com.hedera.cryptography.altbn128.facade.FieldElements;
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
-import com.hedera.cryptography.pairings.api.Group;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Objects;
 
 /**
  * The implementation of a {@link Field}
  * for {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
  */
 public class AltBn128Field implements Field {
-    private final Group group;
     private final FieldElements facade;
 
     /**
      * Creates an instance of a {@link Field} for this implementation.
-     * @param group The group this field belongs too
      * @throws NullPointerException if group is null
      */
-    public AltBn128Field(@NonNull final Group group) {
-        this.group = Objects.requireNonNull(group, "Group must not be null");
-        this.facade = new FieldElements(ArkBn254Adapter.getInstance(), 0);
+    public AltBn128Field() {
+        this.facade = new FieldElements(ArkBn254Adapter.getInstance());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public FieldElement elementFromLong(final long inputLong) {
@@ -50,6 +48,9 @@ public class AltBn128Field implements Field {
         return new AltBn128FieldElement(representation, this);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public FieldElement randomElement(@NonNull final byte[] seed) {
@@ -57,6 +58,9 @@ public class AltBn128Field implements Field {
         return new AltBn128FieldElement(representation, this);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public FieldElement elementFromBytes(@NonNull final byte[] representation) {
@@ -103,16 +107,5 @@ public class AltBn128Field implements Field {
     @Override
     public BilinearPairing getPairing() {
         throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    /**
-     * Returns  The group this field belongs too.
-     * @return  The group this field belongs too
-     */
-    // QQ @rohit: Is it the case that for this curve, we need to associate the fields to each group, and they are
-    // different than bls-381
-    @NonNull
-    public Group getGroup() {
-        return group;
     }
 }

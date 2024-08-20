@@ -43,60 +43,54 @@ public interface LibraryAdapter {
     /**
      * Creates a new random scalar from a seed value
      *
-     * @param groupAssignment An int representing the ordinal for selecting the elliptic curve group to use.
-     * @param inputSeed       the byte seed to be used to create the new scalar
-     * @param output          the byte array that will be filled with the new scalar
+     * @param inputSeed the byte seed to be used to create the new scalar
+     * @param output    the byte array that will be filled with the new scalar
      * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    int fieldElementsFromRandomSeed(final int groupAssignment, final byte[] inputSeed, final byte[] output);
+    int fieldElementsFromRandomSeed(final byte[] inputSeed, final byte[] output);
 
     /**
      * Creates a new scalar from a long
      *
-     * @param groupAssignment An int representing the ordinal for selecting the elliptic curve group to use.
-     * @param inputLong       the long to be used to create the new scalar
-     * @param output          the byte array that will be filled with the new scalar
+     * @param inputLong the long to be used to create the new scalar
+     * @param output    the byte array that will be filled with the new scalar
      * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    int fieldElementsFromLong(final int groupAssignment, final long inputLong, final byte[] output);
+    int fieldElementsFromLong(final long inputLong, final byte[] output);
 
     /**
      * Determines if the input representation is a valida FieldElement
      *
-     * @param groupAssignment An int representing the ordinal for selecting the elliptic curve group to use.
-     * @param input           the that represents the scalar
+     * @param input  the that represents the scalar
      * @param output the byte array that will be filled with the new scalar
      * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    int fieldElementsFromBytes(final int groupAssignment, final byte[] input, final byte[] output);
+    int fieldElementsFromBytes(final byte[] input, final byte[] output);
 
     /**
      * Creates a new zero value scalar
      *
-     * @param groupAssignment An int representing the ordinal for selecting the elliptic curve group to use.
      * @param output the byte array that will be filled with the new scalar
      * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    int fieldElementsZero(final int groupAssignment, final byte[] output);
+    int fieldElementsZero(final byte[] output);
 
     /**
      * Creates a new one value scalar.
      *
-     * @param groupAssignment An int representing the ordinal for selecting the elliptic curve group to use.
      * @param output the byte array that will be filled with the new scalar
      * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    int fieldElementsOne(final int groupAssignment, final byte[] output);
+    int fieldElementsOne(final byte[] output);
 
     /**
      * returns if two representations are the same
      *
-     * @param groupAssignment An int representing the ordinal for selecting the elliptic curve group to use.
-     * @param value           the that represents a scalar
-     * @param other          the that represents another scalar
+     * @param value the that represents a scalar
+     * @param other the that represents another scalar
      * @return 0 if false, 1 if true, or a less than zero error code if there was an error
      */
-    int fieldElementsEquals(final int groupAssignment, final byte[] value, final byte[] other);
+    int fieldElementsEquals(final byte[] value, final byte[] other);
 
     /**
      * Returns the byte size of a field element object.

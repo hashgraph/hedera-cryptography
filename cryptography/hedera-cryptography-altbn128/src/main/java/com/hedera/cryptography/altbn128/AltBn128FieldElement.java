@@ -30,7 +30,6 @@ import java.util.Objects;
  */
 public class AltBn128FieldElement implements FieldElement {
 
-    private static final int GROUP_INDEX = 0;
     private final AltBn128Field field;
     private final byte[] representation;
     private final FieldElements facade;
@@ -41,7 +40,7 @@ public class AltBn128FieldElement implements FieldElement {
      * @param field the {@link Field} that this instance will be an element of.
      */
     public AltBn128FieldElement(@NonNull final byte[] representation, @NonNull final AltBn128Field field) {
-        this(representation, field, new FieldElements(ArkBn254Adapter.getInstance(), GROUP_INDEX));
+        this(representation, field, new FieldElements(ArkBn254Adapter.getInstance()));
     }
 
     /**
@@ -59,30 +58,45 @@ public class AltBn128FieldElement implements FieldElement {
         this.facade = facade;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public Field getField() {
         return this.field;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public FieldElement add(@NonNull final FieldElement other) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public FieldElement subtract(@NonNull final FieldElement other) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public FieldElement multiply(@NonNull final FieldElement other) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public FieldElement power(@NonNull final BigInteger exponent) {

@@ -85,59 +85,52 @@ public final class ArkBn254Adapter implements LibraryAdapter {
     /**
      * Creates a new random scalar from a seed value
      *
-     * @param groupAssignment An int representing the ordinal for selecting the elliptic curve group to use.
-     * @param inputSeed       the byte seed to be used to create the new scalar
-     * @param output          the byte array that will be filled with the new scalar
+     * @param inputSeed the byte seed to be used to create the new scalar
+     * @param output    the byte array that will be filled with the new scalar
      * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    public native int fieldElementsFromRandomSeed(
-            final int groupAssignment, final byte[] inputSeed, final byte[] output);
+    public native int fieldElementsFromRandomSeed(final byte[] inputSeed, final byte[] output);
 
     /**
      * Creates a new scalar from a long
      *
-     * @param groupAssignment An int representing the ordinal for selecting the elliptic curve group to use.
-     * @param inputLong       the long to be used to create the new scalar
-     * @param output          the byte array that will be filled with the new scalar
+     * @param inputLong the long to be used to create the new scalar
+     * @param output    the byte array that will be filled with the new scalar
      * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    public native int fieldElementsFromLong(final int groupAssignment, final long inputLong, final byte[] output);
+    public native int fieldElementsFromLong(final long inputLong, final byte[] output);
 
     /**
      * Creates a new scalar from a byte[]
      *
-     * @param groupAssignment An int representing the ordinal for selecting the elliptic curve group to use.
-     * @param input           the that represents the scalar
-     * @param output          the byte array that will be filled with the new scalar
+     * @param input  the that represents the scalar
+     * @param output the byte array that will be filled with the new scalar
      * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    public native int fieldElementsFromBytes(final int groupAssignment, final byte[] input, final byte[] output);
+    public native int fieldElementsFromBytes(final byte[] input, final byte[] output);
 
     /**
      * Creates a new zero value scalar
      *
-     * @param groupAssignment An int representing the ordinal for selecting the elliptic curve group to use.
      * @param output the byte array that will be filled with the new scalar
      * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    public native int fieldElementsZero(final int groupAssignment, final byte[] output);
+    public native int fieldElementsZero(final byte[] output);
 
     /**
      * Creates a new one value scalar.
      *
-     * @param groupAssignment An int representing the ordinal for selecting the elliptic curve group to use.
      * @param output the byte array that will be filled with the new scalar
      * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    public native int fieldElementsOne(final int groupAssignment, final byte[] output);
+    public native int fieldElementsOne(final byte[] output);
 
     /**
      * returns if two representations are the same
      *
-     * @param groupAssignment An int representing the ordinal for selecting the elliptic curve group to use.
-     * @param value           the that represents a scalar
-     * @param other          the that represents another scalar
+     * @param value the that represents a scalar
+     * @param other the that represents another scalar
      * @return 0 if false, 1 if true, or a less than zero error code if there was an error
      */
-    public native int fieldElementsEquals(final int groupAssignment, final byte[] value, final byte[] other);
+    public native int fieldElementsEquals(final byte[] value, final byte[] other);
 }
