@@ -37,9 +37,9 @@ class FieldElementsTest {
     @BeforeEach
     void setUp() {
         libraryAdapter = mock(LibraryAdapter.class);
-        fieldElements = new FieldElements(libraryAdapter);
         when(libraryAdapter.fieldElementsSize()).thenReturn(TEST_SIZE);
         when(libraryAdapter.fieldElementsRandomSeedSize()).thenReturn(TEST_SIZE);
+        fieldElements = new FieldElements(libraryAdapter);
     }
 
     @Test
