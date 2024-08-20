@@ -1,8 +1,23 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hedera.cryptography.altbn128.facade;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,43 +31,54 @@ class FieldElementsTest {
 
     private static final int TEST_SIZE = 32;
     private static final int TEST_ERROR_RETURN_CODE = -10;
+    private static final int GROUP_INDEX = 0;
     private LibraryAdapter libraryAdapter;
     private FieldElements fieldElements;
 
     @BeforeEach
     void setUp() {
         libraryAdapter = mock(LibraryAdapter.class);
-        fieldElements = new FieldElements(libraryAdapter, 0);
+        fieldElements = new FieldElements(libraryAdapter, GROUP_INDEX);
         when(libraryAdapter.fieldElementsSize()).thenReturn(TEST_SIZE);
         when(libraryAdapter.fieldElementsRandomSeedSize()).thenReturn(TEST_SIZE);
     }
+
     @Test
-    void testErrorFromBytes(){
-        when(libraryAdapter.fieldElementsFromBytes(anyInt(), any(),any())).thenReturn(TEST_ERROR_RETURN_CODE);
-        assertThrows(AltBn128Exception.class, ()-> fieldElements.fromBytes(new byte[TEST_SIZE]));
+    void testErrorFromBytes() {
+        when(libraryAdapter.fieldElementsFromBytes(eq(GROUP_INDEX), any(), any()))
+                .thenReturn(TEST_ERROR_RETURN_CODE);
+        assertThrows(AltBn128Exception.class, () -> fieldElements.fromBytes(new byte[TEST_SIZE]));
     }
 
     @Test
-    void testErrorFromLong(){
-        when(libraryAdapter.fieldElementsFromLong(anyInt(), eq(10L),any())).thenReturn(TEST_ERROR_RETURN_CODE);
-        assertThrows(AltBn128Exception.class, ()-> fieldElements.fromLong(10));
+    void testErrorFromLong() {
+        when(libraryAdapter.fieldElementsFromLong(eq(GROUP_INDEX), eq(10L), any()))
+                .thenReturn(TEST_ERROR_RETURN_CODE);
+        assertThrows(AltBn128Exception.class, () -> fieldElements.fromLong(10));
     }
 
     @Test
-    void testErrorZero(){
-        when(libraryAdapter.fieldElementsZero(anyInt(), any())).thenReturn(TEST_ERROR_RETURN_CODE);
-        assertThrows(AltBn128Exception.class, ()-> fieldElements.zero());
+    void testErrorFromSeed() {
+        when(libraryAdapter.fieldElementsFromRandomSeed(eq(GROUP_INDEX), any(), any()))
+                .thenReturn(TEST_ERROR_RETURN_CODE);
+        assertThrows(AltBn128Exception.class, () -> fieldElements.fromRandomSeed(new byte[TEST_SIZE]));
     }
 
     @Test
-    void testErrorOne(){
-        when(libraryAdapter.fieldElementsOne(anyInt(), any())).thenReturn(TEST_ERROR_RETURN_CODE);
-        assertThrows(AltBn128Exception.class, ()-> fieldElements.one());
+    void testErrorZero() {
+        when(libraryAdapter.fieldElementsZero(eq(GROUP_INDEX), any())).thenReturn(TEST_ERROR_RETURN_CODE);
+        assertThrows(AltBn128Exception.class, () -> fieldElements.zero());
     }
 
     @Test
-    void testErrorEquals(){
-        when(libraryAdapter.fieldElementsEquals(anyInt(), any(), any())).thenReturn(TEST_ERROR_RETURN_CODE);
-        assertThrows(AltBn128Exception.class, ()-> fieldElements.equals(new byte[TEST_SIZE],new byte[TEST_SIZE]));
+    void testErrorOne() {
+        when(libraryAdapter.fieldElementsOne(eq(GROUP_INDEX), any())).thenReturn(TEST_ERROR_RETURN_CODE);
+        assertThrows(AltBn128Exception.class, () -> fieldElements.one());
+    }
+
+    @Test
+    void testErrorEquals() {
+        when(libraryAdapter.fieldElementsEquals(eq(GROUP_INDEX), any(), any())).thenReturn(TEST_ERROR_RETURN_CODE);
+        assertThrows(AltBn128Exception.class, () -> fieldElements.equals(new byte[TEST_SIZE], new byte[TEST_SIZE]));
     }
 }
