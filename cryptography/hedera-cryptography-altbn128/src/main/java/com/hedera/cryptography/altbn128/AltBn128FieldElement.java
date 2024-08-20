@@ -144,4 +144,6 @@ public class AltBn128FieldElement implements FieldElement {
     }
 
     // TODO: what about hashCode? should we rely on the hashCode of the array? seems sensible.
+    // the problem there is that, e.g. if q were to be: 11 =>  1 mod 11 = 12 mod 11 = 23 mod 11, so how is that handled
+    // in the representation, if all of them return the same array, then we can even check equality that way
 }

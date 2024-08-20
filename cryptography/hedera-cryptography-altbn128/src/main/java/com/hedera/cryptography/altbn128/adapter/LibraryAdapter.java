@@ -30,17 +30,6 @@ public interface LibraryAdapter {
     int SUCCESS = 0;
 
     /**
-     * The the byte size of a field element object.
-     * TODO Maybe better to request the value from rust
-     */
-    int FIELD_ELEMENTS_SIZE = 32;
-    /**
-     * the byte size of the random seed to use.
-     * TODO Maybe better to request the value from rust
-     */
-    int FIELD_ELEMENTS_RANDOM_SEED_SIZE = 32;
-
-    /**
      * Creates a new random scalar from a seed value
      *
      * @param inputSeed the byte seed to be used to create the new scalar
@@ -97,16 +86,12 @@ public interface LibraryAdapter {
      *
      * @return a non-zero error code if there was an error, otherwise 0
      */
-    default int fieldElementsSize() {
-        return FIELD_ELEMENTS_SIZE;
-    }
+    int fieldElementsSize();
 
     /**
      * Returns the byte size of the random seed to use.
      *
      * @return the byte size of the random seed to use.
      */
-    default int fieldElementsRandomSeedSize() {
-        return FIELD_ELEMENTS_RANDOM_SEED_SIZE;
-    }
+    int fieldElementsRandomSeedSize();
 }

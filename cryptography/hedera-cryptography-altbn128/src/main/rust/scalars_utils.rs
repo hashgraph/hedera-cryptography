@@ -2,7 +2,7 @@ use ark_ff::{BigInteger, One, PrimeField, Zero};
 use ark_std::UniformRand;
 use rand::Rng;
 
-/// Generic utility functions to instantiate scalars (fr) or field elements (fq)
+/// Generic utility functions to instantiate scalars (fr)
 /// In summary:
 /// Fq defines the coordinate field for the points on the curve (where the curve is drawn).
 /// Fr defines the field for the scalars used in operations on the curve, typically corresponding to the prime order of a subgroup of points on the curve.

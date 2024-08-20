@@ -27,7 +27,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     input_seed: JByteArray,
     output: JByteArray,
 ) -> jint {
-
     let input_seed_bytes = match env.convert_byte_array(&input_seed) {
         Ok(val) => val,
         Err(_) => return -1001,
@@ -73,7 +72,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     input_long: jlong,
     output: JByteArray,
 ) -> jint {
-
     let scalar = scalars_from_u64(input_long as u64);
     let fe_bytes = scalars_to_bytes(scalar);
 
@@ -109,7 +107,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     input: JByteArray,
     output: JByteArray,
 ) -> jint {
-
     let input_bytes = match env.convert_byte_array(&input) {
         Ok(val) => val,
         Err(_) => return -1001,
@@ -151,7 +148,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     _instance: JObject,
     output: JByteArray,
 ) -> jint {
-
     let scalar = scalars_zero();
     let fe_bytes = scalars_to_bytes(scalar);
     let transformed_vec: Vec<jbyte> = fe_bytes.iter().map(|&x| x as jbyte).collect();
@@ -183,7 +179,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     _instance: JObject,
     output: JByteArray,
 ) -> jint {
-
     let scalar = scalars_one();
     let fe_bytes = scalars_to_bytes(scalar);
 
@@ -221,7 +216,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     value: JByteArray,
     value2: JByteArray,
 ) -> jint {
-
     let input_bytes = match env.convert_byte_array(&value) {
         Ok(val) => val,
         Err(_) => return -1001,
@@ -246,4 +240,20 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     let scalar2 = scalars_from_bytes(&input_array2);
 
     (scalar == scalar2) as jint
+}
+
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_fieldElementsSize(
+    _env: JNIEnv,
+    _instance: JObject,
+) -> jint {
+    FIELD_ELEMENT_SIZE as jint
+}
+
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_fieldElementsRandomSeedSize(
+    _env: JNIEnv,
+    _instance: JObject,
+) -> jint {
+    SEED_SIZE as jint
 }

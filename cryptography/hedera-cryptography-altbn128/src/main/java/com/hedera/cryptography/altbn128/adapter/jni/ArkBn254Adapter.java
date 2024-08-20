@@ -133,4 +133,18 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      * @return 0 if false, 1 if true, or a less than zero error code if there was an error
      */
     public native int fieldElementsEquals(final byte[] value, final byte[] other);
+
+    /**
+     * Returns the byte size of a field element object.
+     *
+     * @return a non-zero error code if there was an error, otherwise 0
+     */
+    public native int fieldElementsSize();
+
+    /**
+     * Returns the byte size of the random seed to use.
+     *
+     * @return the byte size of the random seed to use.
+     */
+    public native int fieldElementsRandomSeedSize();
 }
