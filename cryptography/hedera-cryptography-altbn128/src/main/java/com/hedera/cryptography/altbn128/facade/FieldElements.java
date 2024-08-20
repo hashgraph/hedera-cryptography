@@ -57,7 +57,7 @@ public final class FieldElements {
      * @throws AltBn128Exception in case of error
      */
     public byte[] fromLong(final long inputLong) {
-        final ByteBuffer bb = ByteBuffer.allocate(library.fieldElementsSize());
+        final ByteBuffer bb = ByteBuffer.allocate(size);
         final int result = library.fieldElementsFromLong(inputLong, bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementFromLong");
@@ -74,10 +74,10 @@ public final class FieldElements {
      * @throws AltBn128Exception in case of error
      */
     public byte[] fromRandomSeed(@NonNull final byte[] seed) {
-        if (Objects.requireNonNull(seed, "Seed must not be null").length != library.fieldElementsRandomSeedSize()) {
+        if (Objects.requireNonNull(seed, "Seed must not be null").length != randomSeedSize) {
             throw new IllegalArgumentException("Invalid random seed");
         }
-        final ByteBuffer bb = ByteBuffer.allocate(library.fieldElementsSize());
+        final ByteBuffer bb = ByteBuffer.allocate(size);
         final int result = library.fieldElementsFromRandomSeed(seed, bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementFromRandomSeed");
@@ -95,11 +95,10 @@ public final class FieldElements {
      * @throws AltBn128Exception in case of error
      */
     public byte[] fromBytes(@NonNull final byte[] representation) {
-        if (Objects.requireNonNull(representation, "representation must not be null").length
-                != library.fieldElementsSize()) {
+        if (Objects.requireNonNull(representation, "representation must not be null").length != size) {
             throw new IllegalArgumentException("Invalid byte[] representation");
         }
-        final ByteBuffer bb = ByteBuffer.allocate(library.fieldElementsSize());
+        final ByteBuffer bb = ByteBuffer.allocate(size);
         final int result = library.fieldElementsFromBytes(representation, bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementFromBytes");
@@ -113,7 +112,7 @@ public final class FieldElements {
      * @throws AltBn128Exception in case of error
      */
     public byte[] zero() {
-        final ByteBuffer bb = ByteBuffer.allocate(library.fieldElementsSize());
+        final ByteBuffer bb = ByteBuffer.allocate(size);
         final int result = library.fieldElementsZero(bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsZero");
@@ -127,7 +126,7 @@ public final class FieldElements {
      * @throws AltBn128Exception in case of error
      */
     public byte[] one() {
-        final ByteBuffer bb = ByteBuffer.allocate(library.fieldElementsSize());
+        final ByteBuffer bb = ByteBuffer.allocate(size);
         final int result = library.fieldElementsOne(bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsOne");
