@@ -44,9 +44,9 @@ public final class FieldElements {
      */
     public FieldElements(@NonNull final LibraryAdapter libraryAdapter) {
         this.library = Objects.requireNonNull(libraryAdapter, "libraryAdapter must not be null");
-        //Caching the value given that this is frequently called
+        // Caching the value given that this is frequently called
         this.size = library.fieldElementsSize();
-        //Caching the value given that this is frequently calledZ
+        // Caching the value given that this is frequently called
         this.randomSeedSize = library.fieldElementsRandomSeedSize();
     }
 
