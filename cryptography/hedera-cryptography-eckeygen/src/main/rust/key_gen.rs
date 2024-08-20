@@ -62,7 +62,7 @@ fn deserialize_field_element<G: CurveGroup>(
 ///
 /// # Returns
 /// A tuple containing the private key (scalar field element) and the public key (affine group element).
-fn key_pair<G: CurveGroup, R: Rng>(rng: &mut R) -> (<<G as CurveGroup>::Config as CurveConfig>::ScalarField, <G as CurveGroup>::Affine) {
+fn key_pair<G: CurveGroup, R: Rng>(rng: &mut R) -> ( <G as CurveGroup>::Affine) {
     let sk = G::ScalarField::rand(rng);
     let generator = G::generator();
     let pk = generator.mul(&sk);

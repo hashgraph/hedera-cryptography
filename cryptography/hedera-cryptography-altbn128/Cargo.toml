@@ -1,5 +1,5 @@
 [package]
-name = "altbn128"
+name = "bn254"
 version = "0.0.1"
 edition = "2021"
 description = "Library for alt-bn128 (bn254) elliptic curve operations"
@@ -7,7 +7,7 @@ categories = ["cryptography"]
 keywords = ["elliptic", "curve","alt-bn128", "cryptography"]
 
 [lib]
-name = "altbn128"
+name = "bn254"
 path = "src/main/rust/lib.rs"
 crate-type = ["cdylib"]
 

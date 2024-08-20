@@ -1,5 +1,3 @@
-import com.hedera.cryptography.altbn128.spi.AltBn128BilinearPairingProvider;
-
 /**
  * Alt bn-128 implementation of the pairings api
  */
@@ -10,6 +8,7 @@ module com.hedera.cryptography.altbn128 {
 
     uses com.hedera.cryptography.pairings.spi.BilinearPairingProvider;
 
-    provides com.hedera.cryptography.pairings.spi.BilinearPairingProvider with
-            AltBn128BilinearPairingProvider;
+// TO add in the future:
+// provides com.hedera.cryptography.pairings.spi.BilinearPairingProvider with
+//        AltBn128BilinearPairingProvider;
 }

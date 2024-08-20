@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.altbn128;
+package com.hedera.cryptography.pairings.api;
 
-public class Foo {
-    private com.hedera.common.nativesupport.Architecture foo;
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+public class PairingsException extends RuntimeException {
+
+    public PairingsException(@NonNull final String message) {
+        super(message);
+    }
 }
