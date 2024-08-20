@@ -33,6 +33,10 @@ public final class FieldElements {
 
     /** the underlying library adapter  */
     private final LibraryAdapter library;
+    /** the occupied size in bytes of this of the fieldElements representations. */
+    private final int size;
+    /** the occupied size in bytes of the random seed.  */
+    private final int randomSeedSize;
 
     /**
      * Creates an instance of this facade.
@@ -40,6 +44,10 @@ public final class FieldElements {
      */
     public FieldElements(@NonNull final LibraryAdapter libraryAdapter) {
         this.library = Objects.requireNonNull(libraryAdapter, "libraryAdapter must not be null");
+        //Caching the value given that this is frequently called
+        this.size = library.fieldElementsSize();
+        //Caching the value given that this is frequently calledZ
+        this.randomSeedSize = library.fieldElementsRandomSeedSize();
     }
 
     /**
@@ -144,11 +152,10 @@ public final class FieldElements {
 
     /**
      * Return the occupied size in bytes of this of the fieldElements representations.
-     * TODO: should it be different for each group?
      * @return the occupied size in bytes of this of the fieldElements representations.
      */
     public int size() {
-        return library.fieldElementsSize();
+        return this.size;
     }
 
     /**
@@ -156,6 +163,6 @@ public final class FieldElements {
      * @return the size in bytes for the random seed.
      */
     public int randomSeedSize() {
-        return library.fieldElementsRandomSeedSize();
+        return this.randomSeedSize;
     }
 }

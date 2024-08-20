@@ -206,9 +206,9 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// *   0    False
 /// *   1    True
 /// * -1001  Jni Error: value Could not convert input_seed array to vector
-/// * -1002  Rust error: value Could not convert vector to an unsigned byte array of size SEED_SIZE
-/// * -1005  Rust error: value2 Could not convert vector to an unsigned byte array of size SEED_SIZE
-/// * -1006  Rust error: value2 Could not convert vector to an unsigned byte array of size SEED_SIZE
+/// * -1002  Rust error: value Could not convert vector to an unsigned byte array of size FIELD_ELEMENT_SIZE
+/// * -1005  Jni Error: value2 Could not convert input_seed array to vector
+/// * -1006  Rust error: value2 Could not convert vector to an unsigned byte array of size FIELD_ELEMENT_SIZE
 #[no_mangle]
 pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_fieldElementsEquals(
     env: JNIEnv,
@@ -242,6 +242,12 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     (scalar == scalar2) as jint
 }
 
+/// returns the size in bytes of a field element object representation
+/// # Arguments
+/// * `env` - The JNI environment.
+/// * `_instance` - The Java instance calling this function.
+/// # Returns
+/// *   the value of FIELD_ELEMENT_SIZE constant
 #[no_mangle]
 pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_fieldElementsSize(
     _env: JNIEnv,
@@ -250,6 +256,12 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     FIELD_ELEMENT_SIZE as jint
 }
 
+/// returns the size in bytes of the random seed to use
+/// # Arguments
+/// * `env` - The JNI environment.
+/// * `_instance` - The Java instance calling this function.
+/// # Returns
+/// *   the value of SEED_SIZE constant
 #[no_mangle]
 pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_fieldElementsRandomSeedSize(
     _env: JNIEnv,
