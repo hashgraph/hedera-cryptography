@@ -43,7 +43,7 @@ public abstract class BilinearPairingProvider {
      * @return the same instance that received the call but after being initialized if applicable.
      */
     public BilinearPairingProvider init() {
-        if (initialized.get()) {
+        if (!initialized.get()) {
             synchronized (this) {
                 if (initialized.get()) {
                     return this;
