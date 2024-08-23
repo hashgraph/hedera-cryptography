@@ -14,8 +14,19 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.altbn128;
+package com.hedera.cryptography.pairings.api;
 
-public class Foo {
-    private com.hedera.common.nativesupport.Architecture foo;
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+/**
+ * An exception thrown in the context of Elliptic curve primitives
+ */
+public class PairingsException extends RuntimeException {
+    /**
+     *  Creates an instance of this exception with a message
+     * @param message the message for this exception
+     */
+    public PairingsException(@NonNull final String message) {
+        super(message);
+    }
 }

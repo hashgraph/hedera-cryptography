@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.pairings.curves;
+package com.hedera.cryptography.pairings.api.curves;
 
 import com.hedera.cryptography.pairings.api.Curve;
 

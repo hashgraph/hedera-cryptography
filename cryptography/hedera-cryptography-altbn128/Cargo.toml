@@ -1,0 +1,39 @@
+[package]
+name = "bn254"
+version = "0.0.1"
+edition = "2021"
+description = "Library for alt-bn128 (bn254) elliptic curve operations"
+categories = ["cryptography"]
+keywords = ["elliptic", "curve","alt-bn128", "cryptography"]
+
+[lib]
+name = "bn254"
+path = "src/main/rust/lib.rs"
+crate-type = ["cdylib"]
+
+
+[profile.bench]
+opt-level = 3
+
+[profile.test]
+opt-level = 3
+
+[features]
+
+[dependencies]
+ark-std = { version = "0.4.0" }
+ark-ec = { version = "0.4.0" }
+ark-ff = { version = "0.4.0" }
+ark-poly = { version = "0.4.0" }
+ark-bn254 = { version = "0.4.0", default-features = false, features = [ "curve" ] }
+ark-serialize = { version = "^0.4.0", default-features = true }
+jni = "0.21.1"
+
+num-bigint = { version = "0.4.0", default-features = false }
+rand = "*"
+rand_chacha = "*"
+paste = { version = "1.0" }
+crossbeam = { version = "0.8.2" }
+criterion = { version = "0.4.0", features = [ "html_reports" ] }
+sha2 = "*"
+base64 = "0.22.1"

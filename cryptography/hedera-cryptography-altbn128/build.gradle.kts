@@ -20,6 +20,6 @@ plugins {
 }
 
 testModuleInfo {
-    // requires("org.junit.jupiter.api")
-    // requires("org.assertj.core")
+    requires("org.junit.jupiter.api")
+    requires("org.mockito")
 }
