@@ -16,10 +16,10 @@
 
 package com.hedera.cryptography.altbn128.facade;
 
-import static com.hedera.cryptography.altbn128.adapter.LibraryAdapter.SUCCESS;
+import static com.hedera.cryptography.altbn128.adapter.FieldsLibraryAdapter.SUCCESS;
 
 import com.hedera.cryptography.altbn128.AltBn128Exception;
-import com.hedera.cryptography.altbn128.adapter.LibraryAdapter;
+import com.hedera.cryptography.altbn128.adapter.FieldsLibraryAdapter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -32,7 +32,7 @@ import java.util.Objects;
 public final class FieldElements {
 
     /** the underlying library adapter  */
-    private final LibraryAdapter library;
+    private final FieldsLibraryAdapter adapter;
     /** the occupied size in bytes of this of the fieldElements representations. */
     private final int size;
     /** the occupied size in bytes of the random seed.  */
@@ -40,14 +40,14 @@ public final class FieldElements {
 
     /**
      * Creates an instance of this facade.
-     * @param libraryAdapter the adapter containing the underlying logic.
+     * @param fieldsLibraryAdapter the adapter containing the underlying logic.
      */
-    public FieldElements(@NonNull final LibraryAdapter libraryAdapter) {
-        this.library = Objects.requireNonNull(libraryAdapter, "libraryAdapter must not be null");
+    public FieldElements(@NonNull final FieldsLibraryAdapter fieldsLibraryAdapter) {
+        this.adapter = Objects.requireNonNull(fieldsLibraryAdapter, "adapter must not be null");
         // Caching the value given that this is frequently called
-        this.size = library.fieldElementsSize();
+        this.size = adapter.fieldElementsSize();
         // Caching the value given that this is frequently called
-        this.randomSeedSize = library.fieldElementsRandomSeedSize();
+        this.randomSeedSize = adapter.fieldElementsRandomSeedSize();
     }
 
     /**
@@ -58,7 +58,7 @@ public final class FieldElements {
      */
     public byte[] fromLong(final long inputLong) {
         final ByteBuffer bb = ByteBuffer.allocate(size);
-        final int result = library.fieldElementsFromLong(inputLong, bb.array());
+        final int result = adapter.fieldElementsFromLong(inputLong, bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementFromLong");
         }
@@ -78,7 +78,7 @@ public final class FieldElements {
             throw new IllegalArgumentException("Invalid random seed");
         }
         final ByteBuffer bb = ByteBuffer.allocate(size);
-        final int result = library.fieldElementsFromRandomSeed(seed, bb.array());
+        final int result = adapter.fieldElementsFromRandomSeed(seed, bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementFromRandomSeed");
         }
@@ -99,7 +99,7 @@ public final class FieldElements {
             throw new IllegalArgumentException("Invalid byte[] representation");
         }
         final ByteBuffer bb = ByteBuffer.allocate(size);
-        final int result = library.fieldElementsFromBytes(representation, bb.array());
+        final int result = adapter.fieldElementsFromBytes(representation, bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementFromBytes");
         }
@@ -113,7 +113,7 @@ public final class FieldElements {
      */
     public byte[] zero() {
         final ByteBuffer bb = ByteBuffer.allocate(size);
-        final int result = library.fieldElementsZero(bb.array());
+        final int result = adapter.fieldElementsZero(bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsZero");
         }
@@ -127,7 +127,7 @@ public final class FieldElements {
      */
     public byte[] one() {
         final ByteBuffer bb = ByteBuffer.allocate(size);
-        final int result = library.fieldElementsOne(bb.array());
+        final int result = adapter.fieldElementsOne(bb.array());
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsOne");
         }
@@ -142,7 +142,7 @@ public final class FieldElements {
      * @throws AltBn128Exception in case of error
      */
     public boolean equals(byte[] value, byte[] other) {
-        final int result = library.fieldElementsEquals(value, other);
+        final int result = adapter.fieldElementsEquals(value, other);
         if (result < SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsEquals");
         }

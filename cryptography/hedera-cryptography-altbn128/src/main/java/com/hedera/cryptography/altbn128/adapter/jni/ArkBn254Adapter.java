@@ -17,7 +17,8 @@
 package com.hedera.cryptography.altbn128.adapter.jni;
 
 import com.hedera.common.nativesupport.NativeLibrary;
-import com.hedera.cryptography.altbn128.adapter.LibraryAdapter;
+import com.hedera.cryptography.altbn128.adapter.FieldsLibraryAdapter;
+import com.hedera.cryptography.altbn128.adapter.Group2LibraryAdapter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * This class serves as an adapter between the Java code and the native arkworks altBn128 Rust functions.
  **/
-public final class ArkBn254Adapter implements LibraryAdapter {
+public final class ArkBn254Adapter implements FieldsLibraryAdapter, Group2LibraryAdapter {
 
     /**
      * Instance Holder for lazy loading
@@ -87,7 +88,7 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      *
      * @param inputSeed the byte seed to be used to create the new scalar
      * @param output    the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsFromRandomSeed(final byte[] inputSeed, final byte[] output);
 
@@ -96,7 +97,7 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      *
      * @param inputLong the long to be used to create the new scalar
      * @param output    the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsFromLong(final long inputLong, final byte[] output);
 
@@ -105,7 +106,7 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      *
      * @param input  the that represents the scalar
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsFromBytes(final byte[] input, final byte[] output);
 
@@ -113,7 +114,7 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      * Creates a new zero value scalar
      *
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsZero(final byte[] output);
 
@@ -121,7 +122,7 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      * Creates a new one value scalar.
      *
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsOne(final byte[] output);
 
@@ -147,4 +148,102 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      * @return the byte size of the random seed to use.
      */
     public native int fieldElementsRandomSeedSize();
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2FromCoordinates(final byte[] x1,final byte[] x2,final byte[] y1,final byte[] y2, final byte[] output);
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2FromSeed(final byte[] input, final byte[] output);
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2Zero(final byte[] output);
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2Generator(final byte[] output);
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2Equals(final byte[] value1, final byte[] value2);
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2Size();
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2RandomSeedSize();
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int panicTest();
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2Add(final byte[] value1,final byte[] value2, final byte[] output);
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2ScalarMul(final byte[] value, final byte[] scalar, final byte[] output);
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2ToAdHocAffineSerialization(final byte[] input, final byte[] output);
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2ToAffineSerialization(final byte[] input, final byte[] output);
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2batchScalarMultiplication(final byte[][] scalars, final byte[][] outputs);
+
+    /**
+     *
+     *
+     * @return
+     */
+    public native int g2batchAdd(final byte[][] input, final byte[] output);
 }
