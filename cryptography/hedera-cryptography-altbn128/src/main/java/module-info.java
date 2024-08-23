@@ -3,6 +3,12 @@
  */
 module com.hedera.cryptography.altbn128 {
     requires com.hedera.common.nativesupport;
+    requires com.hedera.cryptography.pairings.api;
+    requires jdk.jshell;
 
-// provides com.hedera.crypto.pairings.api with *;
+    uses com.hedera.cryptography.pairings.spi.BilinearPairingProvider;
+
+// TO add in the future:
+// provides com.hedera.cryptography.pairings.spi.BilinearPairingProvider with
+//        AltBn128BilinearPairingProvider;
 }

@@ -18,7 +18,7 @@ package com.hedera.cryptography.eckeygen;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.hedera.cryptography.pairings.curves.KnownCurves;
+import com.hedera.cryptography.pairings.api.curves.KnownCurves;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 import java.util.concurrent.Callable;

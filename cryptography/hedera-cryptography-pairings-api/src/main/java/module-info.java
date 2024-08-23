@@ -3,6 +3,7 @@
  */
 module com.hedera.cryptography.pairings.api {
     exports com.hedera.cryptography.pairings.api;
+    exports com.hedera.cryptography.pairings.api.curves;
     exports com.hedera.cryptography.pairings.spi;
 
     uses com.hedera.cryptography.pairings.spi.BilinearPairingProvider;
