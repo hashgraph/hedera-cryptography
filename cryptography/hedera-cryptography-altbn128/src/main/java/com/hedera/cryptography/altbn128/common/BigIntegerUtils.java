@@ -18,7 +18,10 @@ package com.hedera.cryptography.altbn128.common;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /** Static utility {@link BigInteger} operations */
@@ -50,7 +53,63 @@ public class BigIntegerUtils {
 
         return reverseBytes(paddedBytes);
     }
+    /**
+     * Converts a variable number of BigInteger arguments to their byte array representations,
+     * reverses each byte array, and concatenates them into a single byte array.
+     *
+     * @param args a variable number of BigInteger arguments
+     * @return a concatenated byte array containing the reversed byte array representations of each BigInteger
+     */
+    @NonNull
+    public static byte[] toLittleEndianBytes(final int size, @NonNull final BigInteger... args) {
+        int totalSize = 0;
+        ByteBuffer buffer = ByteBuffer.allocate(size);
 
+        for (BigInteger arg : args) {
+            totalSize += arg.toByteArray().length;
+
+            if (totalSize > size) {
+                break;
+            }
+
+            byte[] byteArray = arg.toByteArray();
+            byte[] reversedByteArray = reverseBytes(byteArray);
+
+            buffer.put(reversedByteArray);
+        }
+        if (totalSize > size) {
+            throw new IllegalArgumentException("BigInteger cannot be represented in " + size + " bytes.");
+        }
+
+        return buffer.array();
+    }
+
+    /**
+     * Splits a byte array into chunks of a given size, reverses each chunk, and converts each reversed chunk to a BigInteger.
+     *
+     * @param byteArray the byte array to be split and processed
+     * @param chunkSize the size of each chunk
+     * @return a list of BigIntegers created from the reversed chunks of the byte array
+     * @throws IllegalArgumentException if the byte array length is not divisible by the chunk size
+     */
+    @NonNull
+    public static List<BigInteger> toBigIntegers(final @NonNull byte[] byteArray, int chunkSize) {
+        if (byteArray.length % chunkSize != 0) {
+            throw new IllegalArgumentException("Byte array length must be divisible by the chunk size.");
+        }
+
+        List<BigInteger> bigIntegers = new ArrayList<>();
+
+        for (int i = 0; i < byteArray.length; i += chunkSize) {
+            byte[] chunk = Arrays.copyOfRange(byteArray, i, i + chunkSize);
+            byte[] reversedChunk = reverseBytes(chunk);
+
+            BigInteger bigInteger = new BigInteger(reversedChunk);
+            bigIntegers.add(bigInteger);
+        }
+
+        return bigIntegers;
+    }
     /**
      * Converts a little-endian byte array into a BigInteger.
      *

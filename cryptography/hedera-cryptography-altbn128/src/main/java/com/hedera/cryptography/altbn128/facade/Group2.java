@@ -31,8 +31,6 @@ public final class Group2 {
     private final Group2LibraryAdapter adapter;
     /** The occupied size in bytes of the GroupElement representations */
     private final int size;
-    /** The occupied size in bytes of the affine representation */
-    private final int affineSize;
     /** The occupied size in bytes of the random seed */
     private final int randomSeedSize;
     /** The occupied size in bytes of the scalar */
@@ -44,9 +42,7 @@ public final class Group2 {
      */
     public Group2(@NonNull final Group2LibraryAdapter adapter, final int fieldElementsSize) {
         this.adapter = Objects.requireNonNull(adapter, "adapter must not be null");
-        // Cache frequently called values
         this.size = adapter.g2Size();
-        this.affineSize = adapter.g2AffineSize();
         this.randomSeedSize = adapter.g2RandomSeedSize();
         this.fieldElementsSize = fieldElementsSize;
     }
@@ -177,47 +173,27 @@ public final class Group2 {
     }
 
     /**
-     * Returns the affine serialization of a point.
-     * This method converts the internal representation of a point to its affine representation
-     * and returns it as a byte array.
-     *
-     * @param point the Group2 point representation.
-     * @return a byte array of {@link Group2LibraryAdapter#g2AffineSize()} containing the affine serialized point
-     * @throws NullPointerException if the point is null
-     * @throws IllegalArgumentException if the point is of invalid size
-     * @throws AltBn128Exception in case of an error during serialization
-     */
-    public byte[] toAffineSerialization(@NonNull final byte[] point) {
-        validateSize(point, size, "Invalid point size");
-        final ByteBuffer output = ByteBuffer.allocate(this.affineSize);
-        int result = adapter.g2ToAffineSerialization(point, output.array());
-        if (result != Group2LibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "g2ToAffineSerialization");
-        }
-        return output.array();
-    }
-
-    /**
      * Converts an affine serialized point back into its internal representation.
      * This method takes a byte array representing the affine serialization of a point
      * and converts it back to its internal representation.
      *
-     * @param affinePoint a byte array of {@link Group2LibraryAdapter#g2AffineSize()} containing the affine serialized point
-     * @return a byte array of {@link Group2LibraryAdapter#g2Size()} containing the internal representation of the point
-     * @throws NullPointerException if the affinePoint is null
-     * @throws IllegalArgumentException if the affinePoint is of invalid size
-     * @throws AltBn128Exception in case of an error during deserialization
+     * @param bytes a byte array of {@link Group2LibraryAdapter#g2Size()} to validate if is a right point
+     * @return if valid the same {@code bytes} array of {@link Group2LibraryAdapter#g2Size()} containing the internal representation of the point
+     * @throws NullPointerException if the bytes is null
+     * @throws IllegalArgumentException if the bytes is of invalid size or the point does not belong to the curve
+     * @throws AltBn128Exception in case of error.
      */
-    public byte[] fromAffineSerialization(@NonNull final byte[] affinePoint) {
-        validateSize(
-                Objects.requireNonNull(affinePoint, "Affine point must not be null"), this.affineSize, "Affine point");
+    public byte[] fromBytes(@NonNull final byte[] bytes) {
+        validateSize(Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
 
-        final ByteBuffer output = ByteBuffer.allocate(this.affineSize);
-        int result = adapter.g2FromAffine(affinePoint, output.array());
-        if (result != Group2LibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "g2FromAffineBytes");
+        int result = adapter.g2Bytes(bytes);
+        if (result == Group2LibraryAdapter.NOT_IN_CURVE) {
+            throw new IllegalArgumentException("The point is not in curve");
+        } else if (result != Group2LibraryAdapter.SUCCESS) {
+            throw new AltBn128Exception(result, "g2Bytes");
         }
-        return output.array();
+
+        return bytes;
     }
 
     /**

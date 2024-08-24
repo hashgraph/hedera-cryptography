@@ -9,7 +9,6 @@ use rand_chacha::ChaCha8Rng;
 
 const GROUP2_SEED_SIZE: usize = 32;
 const GROUP2_ELEMENT_SIZE: usize = 128;
-const GROUP2_ELEMENT_AFFINE_SIZE: usize = 128;
 type G = ark_bn254::G2Projective;
 
 /// The following is a list of all possible return codes by the JNI functions in this file
@@ -188,40 +187,35 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     }
 }
 
-/// JNI function to create a new group element internal representation from its affine representation
+/// JNI function that determines if a byte array representation of a group element is valid
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
 /// * `value`   the byte that of size GROUP2_ELEMENT_AFFINE_SIZE represents the group element
-/// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
 /// # Returns
 /// *   0    Success
-/// * A less than 0 error code in case of error
+/// *  BUSINESS_ERROR_POINT_NOT_IN_CURVE   Business Error: Point is not in the curve
+/// *  A less than 0 error code in case of error
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_g2FromAffine(
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_g2Bytes(
     env: JNIEnv,
     _instance: JObject,
     value: JByteArray,
-    output: JByteArray,
 ) -> jint {
     let input_bytes = match env.convert_byte_array(&value) {
         Ok(val) => val,
         Err(_) => return JNI_ERROR_ARG_TO_VEC,
     };
 
-    let input_array: [u8; GROUP2_ELEMENT_AFFINE_SIZE] = match input_bytes.try_into() {
+    let input_array: [u8; GROUP2_ELEMENT_SIZE] = match input_bytes.try_into() {
         Ok(val) => val,
         Err(_) => return RUST_ERROR_COULD_NOT_TRANSFORM_ARGUMENT_DATA_TYPE,
     };
 
-    let point = match group_elements_deserialize_affine::<G>(&input_array){
-        Ok(val) => val,
-        Err(_) => return ARK_ERROR_ARGUMENT_SERIALIZATION,
-    };
-
-    let projective_point = group_elements_to_projective::<G>(point);
-
-    write_return_point(env, &projective_point, output).unwrap_or_else(|value| value)
+    match group_elements_deserialize_and_validate::<G>(&input_array){
+        Ok(_) => SUCCESS,
+        Err(_) =>  BUSINESS_ERROR_POINT_NOT_IN_CURVE,
+    }
 }
 
 
@@ -319,19 +313,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     GROUP2_SEED_SIZE as jint
 }
 
-/// returns the size in bytes of a group element affine object representation
-/// # Arguments
-/// * `env` _ The JNI environment.
-/// * `_instance` _ The Java instance calling this function.
-/// # Returns
-/// *   the value of GROUP_ELEMENT_AFFINE_SIZE constant
-#[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_g2AffineSize(
-    _env: JNIEnv,
-    _instance: JObject,
-) -> jint {
-    GROUP2_ELEMENT_AFFINE_SIZE as jint
-}
 
 /// Panics
 /// # Arguments
@@ -447,46 +428,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     let transformed_vec: Vec<jbyte> = output_array.iter().map(|&x| x as jbyte).collect();
 
     let ge_jbytes: [jbyte; 128] = match transformed_vec.as_slice().try_into() {
-        Ok(arr) => arr,
-        Err(_) => return RUST_ERROR_COULD_NOT_TRANSFORM_RESULT_DATA_TYPE,
-    };
-
-    match env.set_byte_array_region(output, 0, &ge_jbytes) {
-        Ok(_) => SUCCESS,
-        Err(_) => JNI_ERROR_COULD_SET_RESULT_DATA_IN_ARRAY,
-    }
-}
-
-/// returns the sum of two representations of a group elements
-/// # Arguments
-/// * `env` _ The JNI environment.
-/// * `_instance` _ The Java instance calling this function.
-/// * `value`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element
-/// * `output`   the byte array of size GROUP2_ELEMENT_AFFINE_SIZE that will be filled with the resulting group element in affine
-/// # Returns
-/// *   0    Success
-/// * A less than 0 error code in case of error
-#[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_g2ToAffineSerialization(
-    env: JNIEnv,
-    _instance: JObject,
-    value: JByteArray,
-    output: JByteArray,
-) -> jint {
-    let point1 = match to_point(&env, &value) {
-        Ok(value) => value,
-        Err(value) => return value,
-    };
-
-    let affine_point = group_elements_to_affine(point1);
-
-    let bytes = match group_elements_serialize_affine::<G>(&affine_point) {
-        Ok(val) => val,
-        Err(_) => return ARK_ERROR_RESULT_SERIALIZATION,
-    };
-
-    let transformed_vec: Vec<jbyte> = bytes.iter().map(|&x| x as jbyte).collect();
-    let ge_jbytes: [jbyte; GROUP2_ELEMENT_AFFINE_SIZE] = match transformed_vec.as_slice().try_into() {
         Ok(arr) => arr,
         Err(_) => return RUST_ERROR_COULD_NOT_TRANSFORM_RESULT_DATA_TYPE,
     };

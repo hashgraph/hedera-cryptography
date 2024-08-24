@@ -99,6 +99,7 @@ public interface Group {
      *
      * @param bytes serialized form
      * @return the new group element
+     * @throws IllegalArgumentException if the byte representation is not a valid point on the curve
      */
     @NonNull
     GroupElement fromBytes(@NonNull byte[] bytes);

@@ -19,9 +19,12 @@ package com.hedera.cryptography.altbn128;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
+import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 
@@ -114,10 +117,24 @@ class AltBn128Group2Test {
     }
 
     @Test
-    void toAffineAndPointAgain() {
+    void toBytesAndPointAgain() {
         var group = new AltBn128Group2();
         assertEquals(group.zero(), group.fromBytes(group.zero().toBytes()));
         assertEquals(group.generator(), group.fromBytes(group.generator().toBytes()));
+    }
+
+    @Test
+    void g2GeneratorIsWellKnown() {
+        var group = new AltBn128Group2();
+        assertEquals(
+                BigIntegerUtils.toBigIntegers(group.generator().toBytes(), 32),
+                List.of(
+                        new BigInteger("10857046999023057135944570762232829481370756359578518086990519993285655852781"),
+                                new BigInteger(
+                                        "11559732032986387107991004021392285783925812861821192530917403151452391805634"),
+                        new BigInteger("8495653923123431417604973247489272438418190587263600148770280649306958101930"),
+                                new BigInteger(
+                                        "4082367875863433681332203403145435568316851327593401208105741076214120093531")));
     }
 
     @Test

@@ -29,6 +29,8 @@ public interface Group2LibraryAdapter {
 
     /** The return code that represents that a call succeeded */
     int SUCCESS = 0;
+    /** The return code that represents that the requested point is not in the curve */
+    int NOT_IN_CURVE = -4;
 
     int POINT_BYTE_SIZE = 32;
 
@@ -78,30 +80,16 @@ public interface Group2LibraryAdapter {
     /**
      * Returns the byte size of a groupElement internal representation.
      *
-     * @return
+     * @return the byte size of a groupElement internal representation.
      */
     int g2Size();
 
     /**
-     * Returns the byte size of a groupElement affine representation.
-     *
-     * @return
-     */
-    int g2AffineSize();
-
-    /**
      * Returns the byte size of the expected seed byte array for creating random points on the curve.
      *
-     * @return
+     * @return the byte size of the expected seed byte array for creating random points on the curve.
      */
     int g2RandomSeedSize();
-
-    /**
-     * panic function invocation
-     * TODO: remove
-     * @return nothing this function panics
-     */
-    int panicTest();
 
     /**
      * Returns the addition of code {@code value} and  {@code other}.
@@ -124,28 +112,19 @@ public interface Group2LibraryAdapter {
     int g2ScalarMul(final byte[] point, final byte[] scalar, final byte[] output);
 
     /**
-     * Returns the serialization of the affine representation of the point
+     * Validates if a byte array of {@link Group2LibraryAdapter#g2Size()} is a valid representation of a point in the curve
      *
-     * @param point a byte array of {@link Group2LibraryAdapter#g2Size()} that will be used as the seed to create the point
-     * @param output a {@link Group2LibraryAdapter#g2AffineSize()} array to hold the internal representation of the point
-     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @param point a byte array of {@link Group2LibraryAdapter#g2Size()} that will be used as the seed to create the
+     *              point
+     * @return {@link Group2LibraryAdapter#SUCCESS} for success, {@link Group2LibraryAdapter#NOT_IN_CURVE} if the point is invalid or a less than zero error code if there was an error
      */
-    int g2ToAdHocAffineSerialization(final byte[] point, final byte[] output);
-
-    /**
-     * Returns the serialization of the affine representation of the point
-     *
-     * @param point a byte array of {@link Group2LibraryAdapter#g2Size()} that will be used as the seed to create the point
-     * @param output a {@link Group2LibraryAdapter#g2AffineSize()} array to hold the internal representation of the point
-     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
-     */
-    int g2ToAffineSerialization(final byte[] point, final byte[] output);
+    int g2Bytes(final byte[] point);
 
     /**
      * Returns the result of the multiplication of the {@link Group2LibraryAdapter#g2Generator(byte[])} for each scalar in the {@code scalars} list
      *
      * @param scalars a byte matrix representing a list of N byte arrays of {@link FieldsLibraryAdapter#fieldElementsSize()}} size each representing a scalar
-     * @param outputs a byte matrix of N byte arrays {@link Group2LibraryAdapter#g2AffineSize()} size to hold the internal representation of the generator point times the scalar in {@code scalars}
+     * @param outputs a byte matrix of N byte arrays {@link Group2LibraryAdapter#g2Size()}size to hold the internal representation of the generator point times the scalar in {@code scalars}
      * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int g2batchScalarMultiplication(final byte[][] scalars, final byte[][] outputs);
@@ -154,17 +133,8 @@ public interface Group2LibraryAdapter {
      * Returns the point that is the result of the total sum a collection of points
      *
      * @param input a byte matrix representing a list of N byte arrays of {@link Group2LibraryAdapter#g2Size()} representing each point
-     * @param output a {@link Group2LibraryAdapter#g2AffineSize()} array to hold the internal representation of the point
+     * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
      * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int g2batchAdd(final byte[][] input, final byte[] output);
-
-    /**
-     * Creates a GroupElement byte internal representation from an external affine representation of {@link Group2LibraryAdapter#g2AffineSize()} bytes long.
-     *
-     * @param input  a {@link Group2LibraryAdapter#g2AffineSize()} size array  affine representation of bytes long
-     * @param output a {@link Group2LibraryAdapter#g2Size()} size array to hold the internal representation of the point
-     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
-     */
-    int g2FromAffine(final byte[] input, final byte[] output);
 }

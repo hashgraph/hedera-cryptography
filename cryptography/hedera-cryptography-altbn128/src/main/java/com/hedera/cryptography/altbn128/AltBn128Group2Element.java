@@ -118,7 +118,7 @@ public class AltBn128Group2Element implements GroupElement {
     @NonNull
     @Override
     public byte[] toBytes() {
-        return facade.toAffineSerialization(this.innerRepresentation);
+        return Arrays.copyOf(this.innerRepresentation, innerRepresentation.length);
     }
 
     @Override

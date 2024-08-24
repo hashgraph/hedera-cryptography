@@ -108,12 +108,16 @@ public class AltBn128Group2 implements Group {
     }
 
     /**
-     * {@inheritDoc}
+     * Creates a group element from its serialized encoding, validating if the point is in the curve.
+     *
+     * @throws NullPointerException if the bytes is null
+     * @throws IllegalArgumentException if the bytes is of invalid size or the point does not belong to the curve
+     * @throws AltBn128Exception in case of error.
      */
     @NonNull
     @Override
     public GroupElement fromBytes(@NonNull final byte[] bytes) {
-        return new AltBn128Group2Element(this, facade.fromAffineSerialization(bytes), facade);
+        return new AltBn128Group2Element(this, facade.fromBytes(bytes), facade);
     }
 
     /**

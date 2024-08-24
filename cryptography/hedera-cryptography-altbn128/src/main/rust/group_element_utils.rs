@@ -87,7 +87,7 @@ pub fn group_elements_serialize_affine<G: CurveGroup>(element: &G::Affine) -> Re
 }
 
 /// returns the point from an affine byte representation of a point
-pub fn group_elements_deserialize_affine<G: CurveGroup>(value: &[u8]) -> Result<G::Affine, String> {
+pub fn group_elements_deserialize_and_validate<G: CurveGroup>(value: &[u8]) -> Result<G::Affine, String> {
     match G::Affine::deserialize_uncompressed_unchecked(value) {
         Ok(val) => Ok(val),
         Err(err) => Err(err.to_string()),
