@@ -159,7 +159,8 @@ public final class ArkBn254Adapter implements FieldsLibraryAdapter, Group2Librar
      * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
      * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    public native int g2FromCoordinates(final byte[] x1, final byte[] x2, final byte[] y1, final byte[] y2, final byte[] output);
+    public native int g2FromCoordinates(
+            final byte[] x1, final byte[] x2, final byte[] y1, final byte[] y2, final byte[] output);
 
     /**
      * Creates a GroupElement byte internal representation from a seed byte array
@@ -292,5 +293,5 @@ public final class ArkBn254Adapter implements FieldsLibraryAdapter, Group2Librar
      * @param output a {@link Group2LibraryAdapter#g2Size()} size array to hold the internal representation of the point
      * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    public native int g2FromAffine(final byte[] input, final byte[] output) ;
+    public native int g2FromAffine(final byte[] input, final byte[] output);
 }

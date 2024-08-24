@@ -29,6 +29,7 @@ public interface Group2LibraryAdapter {
 
     /** The return code that represents that a call succeeded */
     int SUCCESS = 0;
+
     int POINT_BYTE_SIZE = 32;
 
     /**
@@ -166,5 +167,4 @@ public interface Group2LibraryAdapter {
      * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int g2FromAffine(final byte[] input, final byte[] output);
-
 }

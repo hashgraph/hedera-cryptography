@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hedera.cryptography.altbn128.common;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -9,15 +25,14 @@ import org.junit.jupiter.api.Test;
 class BigIntegerUtilsTest {
 
     @Test
-    void test () {
+    void test() {
         BigInteger bigInt = new BigInteger("1234567890"); // Example BigInteger
         int size = 32;
-            byte[] result = BigIntegerUtils.toLittleEndianBytes(bigInt, size);
-            System.out.println("Little-endian byte array: " + Arrays.toString(result));
+        byte[] result = BigIntegerUtils.toLittleEndianBytes(bigInt, size);
+        System.out.println("Little-endian byte array: " + Arrays.toString(result));
 
-            BigInteger convertedBack = BigIntegerUtils.fromLittleEndianBytes(result);
-            System.out.println("Converted back to BigInteger: " + convertedBack);
-            assertEquals(bigInt, convertedBack);
-
+        BigInteger convertedBack = BigIntegerUtils.fromLittleEndianBytes(result);
+        System.out.println("Converted back to BigInteger: " + convertedBack);
+        assertEquals(bigInt, convertedBack);
     }
 }

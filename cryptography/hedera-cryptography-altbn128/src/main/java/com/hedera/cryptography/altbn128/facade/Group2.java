@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hedera.cryptography.altbn128.facade;
 
 import com.hedera.cryptography.altbn128.AltBn128Exception;
@@ -44,12 +60,15 @@ public final class Group2 {
      * @return the byte array representation of the Group2 point.
      * @throws AltBn128Exception in case of error.
      */
-    public byte[] fromCoordinates(@NonNull final BigInteger x1, @NonNull final BigInteger x2,
-                                  @NonNull final BigInteger y1, @NonNull final BigInteger y2) {
+    public byte[] fromCoordinates(
+            @NonNull final BigInteger x1,
+            @NonNull final BigInteger x2,
+            @NonNull final BigInteger y1,
+            @NonNull final BigInteger y2) {
         byte[] x1Array = BigIntegerUtils.toLittleEndianBytes(x1, Group2LibraryAdapter.POINT_BYTE_SIZE);
-        byte[] x2Array =BigIntegerUtils.toLittleEndianBytes(x2, Group2LibraryAdapter.POINT_BYTE_SIZE);
-        byte[] y1Array =BigIntegerUtils.toLittleEndianBytes(y1, Group2LibraryAdapter.POINT_BYTE_SIZE);
-        byte[] y2Array =BigIntegerUtils.toLittleEndianBytes(y2, Group2LibraryAdapter.POINT_BYTE_SIZE);
+        byte[] x2Array = BigIntegerUtils.toLittleEndianBytes(x2, Group2LibraryAdapter.POINT_BYTE_SIZE);
+        byte[] y1Array = BigIntegerUtils.toLittleEndianBytes(y1, Group2LibraryAdapter.POINT_BYTE_SIZE);
+        byte[] y2Array = BigIntegerUtils.toLittleEndianBytes(y2, Group2LibraryAdapter.POINT_BYTE_SIZE);
 
         final ByteBuffer output = ByteBuffer.allocate(size);
         final int result = adapter.g2FromCoordinates(x1Array, x2Array, y1Array, y2Array, output.array());
@@ -111,7 +130,7 @@ public final class Group2 {
      * @throws AltBn128Exception in case of error.
      */
     public boolean equals(@NonNull final byte[] point1, @NonNull final byte[] point2) {
-        if(point1.length != point2.length) {
+        if (point1.length != point2.length) {
             return false;
         }
         final int result = adapter.g2Equals(point1, point2);
@@ -190,7 +209,8 @@ public final class Group2 {
      * @throws AltBn128Exception in case of an error during deserialization
      */
     public byte[] fromAffineSerialization(@NonNull final byte[] affinePoint) {
-        validateSize(Objects.requireNonNull(affinePoint, "Affine point must not be null"), this.affineSize, "Affine point");
+        validateSize(
+                Objects.requireNonNull(affinePoint, "Affine point must not be null"), this.affineSize, "Affine point");
 
         final ByteBuffer output = ByteBuffer.allocate(this.affineSize);
         int result = adapter.g2FromAffine(affinePoint, output.array());
@@ -199,7 +219,6 @@ public final class Group2 {
         }
         return output.array();
     }
-
 
     /**
      * Sums a collection of points and returns the resulting point.
@@ -228,7 +247,8 @@ public final class Group2 {
      * @param expectedSize the expected size of the array.
      * @param message the error message to throw.
      */
-    private static void validateSize(@Nullable final byte[] data, final int expectedSize, @NonNull final String message) {
+    private static void validateSize(
+            @Nullable final byte[] data, final int expectedSize, @NonNull final String message) {
         if (Objects.requireNonNull(data, "data must not be null").length != expectedSize) {
             throw new IllegalArgumentException(message);
         }
@@ -237,7 +257,6 @@ public final class Group2 {
     public int size() {
         return this.size;
     }
-
 
     public int randomSeedSize() {
         return this.randomSeedSize;

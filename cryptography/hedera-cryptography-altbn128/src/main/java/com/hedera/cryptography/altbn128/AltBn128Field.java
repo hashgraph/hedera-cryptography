@@ -74,9 +74,9 @@ public class AltBn128Field implements Field {
     @NonNull
     @Override
     public FieldElement fromBigInteger(@NonNull final BigInteger bigInteger) {
-        return new AltBn128FieldElement(facade.fromBytes(BigIntegerUtils.toLittleEndianBytes(bigInteger, facade.size())), this);
+        return new AltBn128FieldElement(
+                facade.fromBytes(BigIntegerUtils.toLittleEndianBytes(bigInteger, facade.size())), this);
     }
-
 
     /**
      * Return a FieldElement of value 0

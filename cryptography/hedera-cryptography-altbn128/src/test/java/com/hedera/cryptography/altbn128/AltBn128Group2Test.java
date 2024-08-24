@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hedera.cryptography.altbn128;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -86,7 +102,8 @@ class AltBn128Group2Test {
     void generatorTimesTwoEqualsGeneratorPlusGenerator() {
         var group = new AltBn128Group2();
         var field = new AltBn128Field();
-        assertEquals(group.generator().multiply(field.fromLong(2)), group.generator().add(group.generator()));
+        assertEquals(
+                group.generator().multiply(field.fromLong(2)), group.generator().add(group.generator()));
     }
 
     @Test
@@ -103,17 +120,16 @@ class AltBn128Group2Test {
         assertEquals(group.generator(), group.fromBytes(group.generator().toBytes()));
     }
 
-
     @Test
     void equality() {
         var group = new AltBn128Group2();
-        assertEquals(group.zero(),group.zero());
+        assertEquals(group.zero(), group.zero());
         final GroupElement zero = group.zero();
         assertTrue(zero.equals(zero));
         assertNotEquals(group.zero(), group.generator());
         assertNotEquals(group.generator(), group.zero());
         assertNotEquals(group.generator(), null);
         assertNotEquals(group.generator(), mock(GroupElement.class));
-        assertNotEquals(mock(GroupElement.class),group.generator());
+        assertNotEquals(mock(GroupElement.class), group.generator());
     }
 }

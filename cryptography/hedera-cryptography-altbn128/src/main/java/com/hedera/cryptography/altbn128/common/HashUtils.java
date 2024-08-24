@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2023 Hedera Hashgraph, LLC
+ * Copyright (C) 2022-2024 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.hedera.cryptography.altbn128.common;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -32,6 +33,7 @@ public final class HashUtils {
      * @param message message to hash
      * @return 256-bit hash
      */
+    @NonNull
     public static byte[] computeSha256(final @NonNull byte[] message) {
         Objects.requireNonNull(message, "message must not be null");
         try {
@@ -39,7 +41,7 @@ public final class HashUtils {
             digest.update(message);
             return digest.digest();
         } catch (final NoSuchAlgorithmException e) {
-            throw new IllegalArgumentException("Could not hash message",e);
+            throw new IllegalArgumentException("Could not hash message", e);
         }
     }
 }

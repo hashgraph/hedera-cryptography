@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
@@ -22,7 +38,8 @@ public class AltBn128Group2 implements Group {
      * Creates an instance of a {@link Group2} for this implementation.
      */
     public AltBn128Group2() {
-        this.facade = new Group2(ArkBn254Adapter.getInstance(), ArkBn254Adapter.getInstance().fieldElementsSize());
+        this.facade = new Group2(
+                ArkBn254Adapter.getInstance(), ArkBn254Adapter.getInstance().fieldElementsSize());
     }
 
     /**
@@ -78,12 +95,13 @@ public class AltBn128Group2 implements Group {
     @Override
     public GroupElement batchAdd(@NonNull final Collection<GroupElement> elements) {
         Objects.requireNonNull(elements, "elements must not be null");
-        if(elements.stream().anyMatch(e-> !AltBn128Group2Element.class.isAssignableFrom(e.getClass()))){
+        if (elements.stream().anyMatch(e -> !AltBn128Group2Element.class.isAssignableFrom(e.getClass()))) {
             throw new IllegalArgumentException("elements must implement AltBn128Group2Element");
         }
-        List<AltBn128Group2Element> elems = elements.stream().map(AltBn128Group2Element.class::cast).toList();
+        List<AltBn128Group2Element> elems =
+                elements.stream().map(AltBn128Group2Element.class::cast).toList();
         byte[][] all = new byte[elems.size()][];
-        for(int i = 0; i < elems.size(); i++){
+        for (int i = 0; i < elems.size(); i++) {
             all[i] = elems.get(i).getInnerRepresentation();
         }
         return new AltBn128Group2Element(this, facade.batchAdd(all), facade);

@@ -110,6 +110,4 @@ public interface GroupElement {
      */
     @NonNull
     byte[] toBytes();
-
-
 }
