@@ -25,9 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import org.junit.jupiter.api.Test;
 
 class AltBn128FieldTest {
@@ -63,7 +63,7 @@ class AltBn128FieldTest {
         Random rng = new SecureRandom();
         final byte[] seed = new byte[field.getSeedSize()];
         rng.nextBytes(seed);
-        assertNotNull(field.randomElement(seed));
+        assertNotNull(field.random(seed));
     }
 
     @Test
@@ -71,50 +71,50 @@ class AltBn128FieldTest {
         var field = new AltBn128Field();
         final byte[] smallerSeed = new byte[field.getSeedSize() - 1];
         final byte[] largerSeed = new byte[field.getSeedSize() + 1];
-        assertThrows(IllegalArgumentException.class, () -> field.randomElement(smallerSeed));
-        assertThrows(IllegalArgumentException.class, () -> field.randomElement(largerSeed));
+        assertThrows(IllegalArgumentException.class, () -> field.random(smallerSeed));
+        assertThrows(IllegalArgumentException.class, () -> field.random(largerSeed));
     }
 
     @Test
-    void createFieldElementFromLongIsNotNull() {
+    void createFieldFromLongIsNotNull() {
         var field = new AltBn128Field();
         Random rng = new SecureRandom();
         var value = rng.nextLong();
-        assertNotNull(field.elementFromLong(value));
+        assertNotNull(field.fromLong(value));
     }
 
     @Test
     void createFieldElementFromNegativeLongIsNotNull() {
         var field = new AltBn128Field();
-        assertNotNull(field.elementFromLong(-1));
+        assertNotNull(field.fromLong(-1));
     }
 
     @Test
     void createFieldElementFromNegativeLongMaxValue() {
         var field = new AltBn128Field();
-        assertNotNull(field.elementFromLong(Long.MAX_VALUE));
+        assertNotNull(field.fromLong(Long.MAX_VALUE));
     }
 
     @Test
     void createFieldElementFromNegativeLongMinValue() {
         var field = new AltBn128Field();
-        assertNotNull(field.elementFromLong(Long.MIN_VALUE));
+        assertNotNull(field.fromLong(Long.MIN_VALUE));
     }
 
     @Test
-    void createFieldElementFromLongIsEqualToZero() {
+    void createFieldFromLongIsEqualToZero() {
         var field = new AltBn128Field();
-        assertEquals(field.zero(), field.elementFromLong(0));
-        assertTrue(field.zero().equals(field.elementFromLong(0)));
-        assertTrue(field.elementFromLong(0).equals(field.zero()));
+        assertEquals(field.zero(), field.fromLong(0));
+        assertTrue(field.zero().equals(field.fromLong(0)));
+        assertTrue(field.fromLong(0).equals(field.zero()));
     }
 
     @Test
-    void createFieldElementFromLongIsEqualToOne() {
+    void createFieldFromLongIsEqualToOne() {
         var field = new AltBn128Field();
-        assertEquals(field.one(), field.elementFromLong(1));
-        assertTrue(field.one().equals(field.elementFromLong(1)));
-        assertTrue(field.elementFromLong(1).equals(field.one()));
+        assertEquals(field.one(), field.fromLong(1));
+        assertTrue(field.one().equals(field.fromLong(1)));
+        assertTrue(field.fromLong(1).equals(field.one()));
     }
 
     @Test
@@ -123,10 +123,10 @@ class AltBn128FieldTest {
         Random rng = new SecureRandom();
         final byte[] value = new byte[field.getElementSize() - 1];
         rng.nextBytes(value);
-        assertThrows(IllegalArgumentException.class, () -> field.elementFromBytes(value));
+        assertThrows(IllegalArgumentException.class, () -> field.fromBytes(value));
         final byte[] value2 = new byte[field.getElementSize() + 1];
         rng.nextBytes(value2);
-        assertThrows(IllegalArgumentException.class, () -> field.elementFromBytes(value2));
+        assertThrows(IllegalArgumentException.class, () -> field.fromBytes(value2));
     }
 
     @Test
@@ -139,9 +139,9 @@ class AltBn128FieldTest {
     void fieldElementToBytesAndInverseIsEquals() {
         var field = new AltBn128Field();
         byte[] representation = field.one().toBytes();
-        assertEquals(field.elementFromBytes(representation), field.one());
-        assertTrue(field.one().equals(field.elementFromBytes(representation)));
-        assertTrue(field.elementFromBytes(representation).equals(field.one()));
+        assertEquals(field.fromBytes(representation), field.one());
+        assertTrue(field.one().equals(field.fromBytes(representation)));
+        assertTrue(field.fromBytes(representation).equals(field.one()));
     }
 
     @Test
@@ -151,13 +151,10 @@ class AltBn128FieldTest {
     }
 
     @Test
-    void fieldElementToBigIntegerIsLittleEndianOne() {
+    void fieldElementToBigInteger() {
         var field = new AltBn128Field();
-
-        ByteBuffer bb = ByteBuffer.allocate(field.getSeedSize());
-        bb.put(0, (byte) 1);
-        BigInteger littleEndianOne = new BigInteger(bb.array());
-
-        assertEquals(littleEndianOne, field.one().toBigInteger());
+        assertEquals(BigInteger.ONE, field.one().toBigInteger());
+        assertEquals(BigInteger.ZERO, field.zero().toBigInteger());
+        assertEquals(BigInteger.TEN, field.fromLong(10L).toBigInteger());
     }
 }

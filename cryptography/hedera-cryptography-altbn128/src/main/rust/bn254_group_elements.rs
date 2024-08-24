@@ -7,8 +7,9 @@ use jni::JNIEnv;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 
-const GROUP1_SEED_SIZE: usize = 32;
-const GROUP1_ELEMENT_SIZE: usize = 32;
+const GROUP2_SEED_SIZE: usize = 32;
+const GROUP2_ELEMENT_SIZE: usize = 128;
+const GROUP2_ELEMENT_AFFINE_SIZE: usize = 128;
 type G = ark_bn254::G2Projective;
 
 /// The following is a list of all possible return codes by the JNI functions in this file
@@ -49,8 +50,7 @@ fn write_return_point(env: JNIEnv, point: &G, output: JByteArray) -> Result<jint
     };
 
     let transformed_vec: Vec<jbyte> = ge_bytes.iter().map(|&x| x as jbyte).collect();
-
-    let ge_jbytes: [jbyte; GROUP1_ELEMENT_SIZE] = match transformed_vec.as_slice().try_into() {
+    let ge_jbytes: [jbyte; GROUP2_ELEMENT_SIZE] = match transformed_vec.as_slice().try_into() {
         Ok(arr) => arr,
         Err(_) => return Err(RUST_ERROR_COULD_NOT_TRANSFORM_RESULT_DATA_TYPE),
     };
@@ -90,11 +90,12 @@ fn to_point(env: &JNIEnv, value: &JByteArray) -> Result<G, jint> {
     Ok(point1)
 }
 
-/// JNI function to create a new random scalar from a seed value
+/// JNI function to create a new random group element from a seed value
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
-/// * `output`  the byte array that will be filled with the new scalar. Must be size FIELD_ELEMENT_SIZE.
+/// * `input_seed`   the byte array of size GROUP2_ELEMENT_SIZE represents the group element
+/// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
 /// # Returns
 /// *   0    Success
 /// * A less than 0 error code in case of error
@@ -110,7 +111,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
         Err(_) => return JNI_ERROR_ARG_TO_VEC,
     };
 
-    let seed_array: [u8; GROUP1_SEED_SIZE] = match input_seed_bytes.try_into() {
+    let seed_array: [u8; GROUP2_SEED_SIZE] = match input_seed_bytes.try_into() {
         Ok(val) => val,
         Err(_) => return RUST_ERROR_COULD_NOT_TRANSFORM_ARGUMENT_DATA_TYPE,
     };
@@ -121,12 +122,15 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     write_return_point(env, &point, output).unwrap_or_else(|value| value)
 }
 
-/// JNI function to create a new scalar from a byte array
+/// JNI function to create a new group element from the point coordinates
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
-/// * `input`  the byte that represents the scalar
-/// * `output`   the byte array that will be filled with the new scalar
+/// * `x1` a byte array of size 32 with a point coordinate
+/// * `x2` a byte array of size 32 with a point coordinate
+/// * `y1` a byte array of size 32 with a point coordinate
+/// * `y2` a byte array of size 32 with a point coordinate
+/// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
 /// # Returns
 /// *   0    Success
 /// *  BUSINESS_ERROR_POINT_NOT_IN_CURVE   Business Error: Point is not in the curve
@@ -173,7 +177,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 
     let transformed_vec: Vec<jbyte> = ge_bytes.iter().map(|&x| x as jbyte).collect();
 
-    let ge_jbytes: [jbyte; GROUP1_ELEMENT_SIZE] = match transformed_vec.as_slice().try_into() {
+    let ge_jbytes: [jbyte; GROUP2_ELEMENT_SIZE] = match transformed_vec.as_slice().try_into() {
         Ok(arr) => arr,
         Err(_) => return RUST_ERROR_COULD_NOT_TRANSFORM_RESULT_DATA_TYPE,
     };
@@ -184,11 +188,48 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     }
 }
 
+/// JNI function to create a new group element internal representation from its affine representation
+/// # Arguments
+/// * `env` _ The JNI environment.
+/// * `_instance` _ The Java instance calling this function.
+/// * `value`   the byte that of size GROUP2_ELEMENT_AFFINE_SIZE represents the group element
+/// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
+/// # Returns
+/// *   0    Success
+/// * A less than 0 error code in case of error
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_g2FromAffine(
+    env: JNIEnv,
+    _instance: JObject,
+    value: JByteArray,
+    output: JByteArray,
+) -> jint {
+    let input_bytes = match env.convert_byte_array(&value) {
+        Ok(val) => val,
+        Err(_) => return JNI_ERROR_ARG_TO_VEC,
+    };
+
+    let input_array: [u8; GROUP2_ELEMENT_AFFINE_SIZE] = match input_bytes.try_into() {
+        Ok(val) => val,
+        Err(_) => return RUST_ERROR_COULD_NOT_TRANSFORM_ARGUMENT_DATA_TYPE,
+    };
+
+    let point = match group_elements_deserialize_affine::<G>(&input_array){
+        Ok(val) => val,
+        Err(_) => return ARK_ERROR_ARGUMENT_SERIALIZATION,
+    };
+
+    let projective_point = group_elements_to_projective::<G>(point);
+
+    write_return_point(env, &projective_point, output).unwrap_or_else(|value| value)
+}
+
+
 /// Returns the zero group element
 /// # Arguments
 /// * `env` - The JNI environment.
 /// * `_instance` - The Java instance calling this function.
-/// * `output`   the byte array that will be filled with the new point
+/// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
 /// # Returns
 /// *   0    Success
 /// * A less than 0 error code in case of error
@@ -206,8 +247,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
-/// * `group_id` _ A jint indicating the elliptic curve group to use.
-/// * `output`   the byte array that will be filled with the new point
+/// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
 /// # Returns
 /// *   0    Success
 /// * A less than 0 error code in case of error
@@ -225,8 +265,8 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
-/// * `value`   the byte that represents the group element 1
-/// * `value2`  the byte that represents the group element 2
+/// * `value`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element
+/// * `value2`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element 2
 /// # Returns
 /// *   0    False
 /// *   1    True
@@ -251,18 +291,18 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     (point1 == point2) as jint
 }
 
-/// returns the size in bytes of a field element object representation
+/// returns the size in bytes of a group element object representation
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
 /// # Returns
-/// *   the value of GROUP1_ELEMENT_SIZE constant
+/// *   the value of GROUP2_ELEMENT_SIZE constant
 #[no_mangle]
 pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_g2Size(
     _env: JNIEnv,
     _instance: JObject,
 ) -> jint {
-    GROUP1_ELEMENT_SIZE as jint
+    GROUP2_ELEMENT_SIZE as jint
 }
 
 /// returns the size in bytes of the random seed to use
@@ -270,13 +310,27 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
 /// # Returns
-/// *   the value of SEED_SIZE constant
+/// *   the value of GROUP2_SEED_SIZE constant
 #[no_mangle]
 pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_g2RandomSeedSize(
     _env: JNIEnv,
     _instance: JObject,
 ) -> jint {
-    GROUP1_SEED_SIZE as jint
+    GROUP2_SEED_SIZE as jint
+}
+
+/// returns the size in bytes of a group element affine object representation
+/// # Arguments
+/// * `env` _ The JNI environment.
+/// * `_instance` _ The Java instance calling this function.
+/// # Returns
+/// *   the value of GROUP_ELEMENT_AFFINE_SIZE constant
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_g2AffineSize(
+    _env: JNIEnv,
+    _instance: JObject,
+) -> jint {
+    GROUP2_ELEMENT_AFFINE_SIZE as jint
 }
 
 /// Panics
@@ -295,9 +349,9 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
-/// * `value`   the byte that represents the group element 1
-/// * `value2`  the byte that represents the group element 2
-/// * `output`   the byte array that will be filled with the new point representing the result of the operation
+/// * `value`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element
+/// * `value2`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element 2
+/// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
 /// # Returns
 
 /// * A less than 0 error code in case of error
@@ -328,9 +382,9 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
-/// * `value`   the byte that represents the group element 1
+/// * `value`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element
 /// * `value2`  the byte that represents the scalar
-/// * `output`  the byte array that will be filled with the new point representing the result of the operation
+/// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
 /// # Returns
 /// *   0    Success
 /// * A less than 0 error code in case of error
@@ -362,9 +416,8 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
-/// * `value`   the byte that represents the group element 1
-/// * `value2`  the byte that represents the group element 2
-/// * `output`   the byte array that will be filled with the new point representing the result of the operation
+/// * `value`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element
+/// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
 /// # Returns
 /// *   0    Success
 /// * A less than 0 error code in case of error
@@ -408,9 +461,8 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
-/// * `value`   the byte that represents the group element 1
-/// * `value2`  the byte that represents the group element 2
-/// * `output`   the byte array that will be filled with the new point representing the result of the operation
+/// * `value`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element
+/// * `output`   the byte array of size GROUP2_ELEMENT_AFFINE_SIZE that will be filled with the resulting group element in affine
 /// # Returns
 /// *   0    Success
 /// * A less than 0 error code in case of error
@@ -434,8 +486,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     };
 
     let transformed_vec: Vec<jbyte> = bytes.iter().map(|&x| x as jbyte).collect();
-
-    let ge_jbytes: [jbyte; 128] = match transformed_vec.as_slice().try_into() {
+    let ge_jbytes: [jbyte; GROUP2_ELEMENT_AFFINE_SIZE] = match transformed_vec.as_slice().try_into() {
         Ok(arr) => arr,
         Err(_) => return RUST_ERROR_COULD_NOT_TRANSFORM_RESULT_DATA_TYPE,
     };

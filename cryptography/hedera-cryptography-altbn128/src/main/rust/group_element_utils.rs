@@ -1,7 +1,7 @@
 use ark_bn254::{Fq, Fq2, G1Affine, G2Affine};
 use ark_ec::{AffineRepr, CurveConfig, CurveGroup};
 use ark_ff::{BigInt, PrimeField};
-use ark_serialize::CanonicalSerialize;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use rand::Rng;
 /// Generic utility functions to instantiate and operate with curve points
 
@@ -83,6 +83,14 @@ pub fn group_elements_serialize_affine<G: CurveGroup>(element: &G::Affine) -> Re
     match element.serialize_uncompressed(&mut serialized) {
         Ok(_) => Ok(serialized),
         Err(v) => Err(v.to_string()),
+    }
+}
+
+/// returns the point from an affine byte representation of a point
+pub fn group_elements_deserialize_affine<G: CurveGroup>(value: &[u8]) -> Result<G::Affine, String> {
+    match G::Affine::deserialize_uncompressed_unchecked(value) {
+        Ok(val) => Ok(val),
+        Err(err) => Err(err.to_string()),
     }
 }
 

@@ -83,6 +83,7 @@ public interface GroupElement {
      * @return this object, compressed
      */
     @NonNull
+    @Deprecated
     GroupElement compress();
 
     /**
@@ -90,6 +91,7 @@ public interface GroupElement {
      *
      * @return true if the element is compressed, otherwise false
      */
+    @Deprecated
     boolean isCompressed();
 
     /**
@@ -98,13 +100,16 @@ public interface GroupElement {
      * @return a copy of the group element
      */
     @NonNull
+    @Deprecated
     GroupElement copy();
 
     /**
-     * Returns the byte array representation of the group element
+     * Returns the external byte array representation of the group element
      *
-     * @return the byte array representation of the group element
+     * @return the external byte array representation of the group element
      */
     @NonNull
     byte[] toBytes();
+
+
 }

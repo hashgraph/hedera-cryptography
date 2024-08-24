@@ -17,8 +17,9 @@
 package com.hedera.cryptography.altbn128.adapter;
 
 /**
- * This interface defines a contract and any third party library that provides the functionality must adhere to.
- *  This contract is not Java friendly, and it is defined in a way that is easy to implement in other languages.
+ * This interface defines a contract and any third party library that provides the functionality for handling Finite Fields and Scalars must adhere to.
+ *
+ *  @apiNote This contract is not Java friendly, and it is defined in a way that is easy to implement in other languages.
  *  All operations return a status code, where 0 mean success, and a non-zero result means a codified error callers must know how to deal with.
  *  As the native code does not guarantee validation of parameters, Input and output parameters must be provided and instantiated accordingly for the invocation to be performed safety.
  *  i.e.:Sending non-null values and correctly instantiated arrays (expected size) is responsibility of the caller.

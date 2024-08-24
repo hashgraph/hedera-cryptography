@@ -57,7 +57,7 @@ public interface Group {
      * @return the group's generator
      */
     @NonNull
-    GroupElement getGenerator();
+    GroupElement generator();
 
     /**
      * Creates a new group element with value 0
@@ -65,7 +65,7 @@ public interface Group {
      * @return the new group element
      */
     @NonNull
-    GroupElement zeroElement();
+    GroupElement zero();
 
     /**
      * Creates a group element from a seed
@@ -74,7 +74,7 @@ public interface Group {
      * @return the new group element
      */
     @NonNull
-    GroupElement randomElement(@NonNull byte[] seed);
+    GroupElement random(@NonNull byte[] seed);
 
     /**
      * Hashes an unbounded length input to a group element
@@ -83,7 +83,7 @@ public interface Group {
      * @return the new group element
      */
     @NonNull
-    GroupElement elementFromHash(@NonNull byte[] input);
+    GroupElement fromHash(@NonNull byte[] input);
 
     /**
      * Adds a collection of group elements together
@@ -101,7 +101,7 @@ public interface Group {
      * @return the new group element
      */
     @NonNull
-    GroupElement elementFromBytes(@NonNull byte[] bytes);
+    GroupElement fromBytes(@NonNull byte[] bytes);
 
     /**
      * Gets the size in bytes of a compressed group element

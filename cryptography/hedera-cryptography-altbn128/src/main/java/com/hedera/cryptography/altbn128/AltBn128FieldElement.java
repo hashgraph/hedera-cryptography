@@ -17,6 +17,7 @@
 package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
+import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.altbn128.facade.FieldElements;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
@@ -104,23 +105,12 @@ public class AltBn128FieldElement implements FieldElement {
     }
 
     /**
-     * Returns the field element as a {@link BigInteger} from this element's byte array representation.
-     * The byte array representation in this implementation is in little-endian format.
-     * Since {@code BigInteger} expects a big-endian byte array by default, the result reflects the interpretation of the little-endian
-     * array under big-endian assumptions.
-     * Therefore, if the input byte array in little-endian is:
-     * <pre>
-     *   [0x01, 0x00, 0x00, 0x00, ..., 0x00]
-     * </pre>
-     * That represent the number 1 in little-endian format, the {@link BigInteger} returned won't be the same, as
-     * the {@code BigInteger} that represents the number 1.
-     *
-     * @return a {@link BigInteger} reflecting the direct interpretation of the internal little-endian byte array as big-endian
+     * {@inheritDoc}
      */
     @NonNull
     @Override
     public BigInteger toBigInteger() {
-        return new BigInteger(representation);
+        return BigIntegerUtils.fromLittleEndianBytes(representation);
     }
 
     /**

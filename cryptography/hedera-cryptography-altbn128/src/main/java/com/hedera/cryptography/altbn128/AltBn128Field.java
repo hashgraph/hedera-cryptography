@@ -17,11 +17,13 @@
 package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
+import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.altbn128.facade.FieldElements;
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.math.BigInteger;
 
 /**
  * The implementation of a {@link Field}
@@ -32,7 +34,6 @@ public class AltBn128Field implements Field {
 
     /**
      * Creates an instance of a {@link Field} for this implementation.
-     * @throws NullPointerException if group is null
      */
     public AltBn128Field() {
         this.facade = new FieldElements(ArkBn254Adapter.getInstance());
@@ -43,7 +44,7 @@ public class AltBn128Field implements Field {
      */
     @NonNull
     @Override
-    public FieldElement elementFromLong(final long inputLong) {
+    public FieldElement fromLong(final long inputLong) {
         final byte[] representation = facade.fromLong(inputLong);
         return new AltBn128FieldElement(representation, this);
     }
@@ -53,7 +54,7 @@ public class AltBn128Field implements Field {
      */
     @NonNull
     @Override
-    public FieldElement randomElement(@NonNull final byte[] seed) {
+    public FieldElement random(@NonNull final byte[] seed) {
         final byte[] representation = facade.fromRandomSeed(seed);
         return new AltBn128FieldElement(representation, this);
     }
@@ -63,9 +64,19 @@ public class AltBn128Field implements Field {
      */
     @NonNull
     @Override
-    public FieldElement elementFromBytes(@NonNull final byte[] representation) {
+    public FieldElement fromBytes(@NonNull final byte[] representation) {
         return new AltBn128FieldElement(facade.fromBytes(representation), this);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public FieldElement fromBigInteger(@NonNull final BigInteger bigInteger) {
+        return new AltBn128FieldElement(facade.fromBytes(BigIntegerUtils.toLittleEndianBytes(bigInteger, facade.size())), this);
+    }
+
 
     /**
      * Return a FieldElement of value 0

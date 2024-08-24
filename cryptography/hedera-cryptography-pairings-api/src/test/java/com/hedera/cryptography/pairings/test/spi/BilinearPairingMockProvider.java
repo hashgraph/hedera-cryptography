@@ -96,19 +96,25 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
             FIELD = new Field() {
                 @NonNull
                 @Override
-                public FieldElement elementFromLong(long inputLong) {
+                public FieldElement fromLong(long inputLong) {
                     return FIELD_ELEMENT;
                 }
 
                 @NonNull
                 @Override
-                public FieldElement randomElement(@NonNull final byte[] seed) {
+                public FieldElement random(@NonNull final byte[] seed) {
                     return FIELD_ELEMENT;
                 }
 
                 @NonNull
                 @Override
-                public FieldElement elementFromBytes(@NonNull final byte[] bytes) {
+                public FieldElement fromBytes(@NonNull final byte[] bytes) {
+                    return FIELD_ELEMENT;
+                }
+
+                @NonNull
+                @Override
+                public FieldElement fromBigInteger(@NonNull final BigInteger bigInteger) {
                     return FIELD_ELEMENT;
                 }
 
@@ -183,27 +189,27 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement getGenerator() {
+                public GroupElement generator() {
                     return GROUP_ELEMENT;
                 }
 
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement zeroElement() {
+                public GroupElement zero() {
                     return GROUP_ELEMENT;
                 }
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement randomElement(@NonNull final byte[] seed) {
+                public GroupElement random(@NonNull final byte[] seed) {
                     return GROUP_ELEMENT;
                 }
 
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement elementFromHash(@NonNull final byte[] input) {
+                public GroupElement fromHash(@NonNull final byte[] input) {
                     return GROUP_ELEMENT;
                 }
 
@@ -217,7 +223,7 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement elementFromBytes(@NonNull final byte[] bytes) {
+                public GroupElement fromBytes(@NonNull final byte[] bytes) {
                     return GROUP_ELEMENT;
                 }
 
@@ -251,27 +257,27 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement getGenerator() {
+                public GroupElement generator() {
                     return GROUP_ELEMENT;
                 }
 
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement zeroElement() {
+                public GroupElement zero() {
                     return GROUP_ELEMENT;
                 }
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement randomElement(@NonNull final byte[] seed) {
+                public GroupElement random(@NonNull final byte[] seed) {
                     return GROUP_ELEMENT;
                 }
 
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement elementFromHash(@NonNull final byte[] input) {
+                public GroupElement fromHash(@NonNull final byte[] input) {
                     return GROUP_ELEMENT;
                 }
 
@@ -285,7 +291,7 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
                 /** {@inheritDoc} */
                 @NonNull
                 @Override
-                public GroupElement elementFromBytes(@NonNull final byte[] bytes) {
+                public GroupElement fromBytes(@NonNull final byte[] bytes) {
                     return GROUP_ELEMENT;
                 }
 
@@ -435,13 +441,13 @@ public class BilinearPairingMockProvider extends BilinearPairingProvider {
                 @NonNull
                 @Override
                 public GroupElement getInputElement1() {
-                    return group.zeroElement();
+                    return group.zero();
                 }
 
                 @NonNull
                 @Override
                 public GroupElement getInputElement2() {
-                    return group2.zeroElement();
+                    return group2.zero();
                 }
 
                 @NonNull
