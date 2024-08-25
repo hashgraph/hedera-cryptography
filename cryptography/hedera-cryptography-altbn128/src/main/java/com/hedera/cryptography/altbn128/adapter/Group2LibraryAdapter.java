@@ -31,8 +31,8 @@ public interface Group2LibraryAdapter {
     int SUCCESS = 0;
     /** The return code that represents that the requested point is not in the curve */
     int NOT_IN_CURVE = -4;
-
-    int POINT_BYTE_SIZE = 32;
+    /** The coordinate size */
+    int POINT_COORDINATE_SIZE = 32;
 
     /**
      * Creates a GroupElement byte internal representation from x1,x2,y1,y2 representation of coordinates each of those 32 bytes long.

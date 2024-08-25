@@ -17,6 +17,7 @@
 package com.hedera.cryptography.altbn128.facade;
 
 import com.hedera.cryptography.altbn128.AltBn128Exception;
+import com.hedera.cryptography.altbn128.adapter.FieldsLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.Group2LibraryAdapter;
 import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -61,10 +62,10 @@ public final class Group2 {
             @NonNull final BigInteger x2,
             @NonNull final BigInteger y1,
             @NonNull final BigInteger y2) {
-        byte[] x1Array = BigIntegerUtils.toLittleEndianBytes(x1, Group2LibraryAdapter.POINT_BYTE_SIZE);
-        byte[] x2Array = BigIntegerUtils.toLittleEndianBytes(x2, Group2LibraryAdapter.POINT_BYTE_SIZE);
-        byte[] y1Array = BigIntegerUtils.toLittleEndianBytes(y1, Group2LibraryAdapter.POINT_BYTE_SIZE);
-        byte[] y2Array = BigIntegerUtils.toLittleEndianBytes(y2, Group2LibraryAdapter.POINT_BYTE_SIZE);
+        byte[] x1Array = BigIntegerUtils.toLittleEndianBytes(x1, Group2LibraryAdapter.POINT_COORDINATE_SIZE);
+        byte[] x2Array = BigIntegerUtils.toLittleEndianBytes(x2, Group2LibraryAdapter.POINT_COORDINATE_SIZE);
+        byte[] y1Array = BigIntegerUtils.toLittleEndianBytes(y1, Group2LibraryAdapter.POINT_COORDINATE_SIZE);
+        byte[] y2Array = BigIntegerUtils.toLittleEndianBytes(y2, Group2LibraryAdapter.POINT_COORDINATE_SIZE);
 
         final ByteBuffer output = ByteBuffer.allocate(size);
         final int result = adapter.g2FromCoordinates(x1Array, x2Array, y1Array, y2Array, output.array());
@@ -202,9 +203,8 @@ public final class Group2 {
      * the point that is the result of summing all the points together.
      *
      * @param points a byte matrix representing a list of N byte arrays of {@link Group2LibraryAdapter#g2Size()} representing each point
-     * @return a byte array of {@link Group2LibraryAdapter#g2Size()} containing the affine serialized point
-     * @throws NullPointerException if the input points or any of its elements are null
-     * @throws IllegalArgumentException if any point in the input is of invalid size
+     * @return a byte array of {@link Group2LibraryAdapter#g2Size()} containing representation of the resulting point.
+     * @throws NullPointerException if points is null
      * @throws AltBn128Exception in case of an error during the batch addition
      */
     public byte[] batchAdd(@NonNull final byte[][] points) {
@@ -230,14 +230,32 @@ public final class Group2 {
         }
     }
 
+    /**
+     * Return the occupied size in bytes of this group2Elements representations.
+     * @return the occupied size in bytes of this group2Elements representations.
+     */
     public int size() {
         return this.size;
     }
 
+    /**
+     * Return the occupied size in bytes of the random seed.
+     * @return the size in bytes for the random seed.
+     */
     public int randomSeedSize() {
         return this.randomSeedSize;
     }
 
+    /**
+     * multiplies each scalar in a collection for the generator point and returns the resulting points.
+     * This method takes a list of scalars (each in internal representation) and returns
+     * the list of point that is the result of multiplying the scalar for the generator point.
+     *
+     * @param scalars a byte matrix representing a list of N scalars of {@link FieldsLibraryAdapter#fieldElementsSize()}  representing each scalar
+     * @return N points each as a byte array of {@link Group2LibraryAdapter#g2Size()} containing representation of the resulting point.
+     * @throws NullPointerException if scalars is null
+     * @throws AltBn128Exception in case of an error during the batch addition
+     */
     public byte[][] batchMultiply(final byte[][] scalars) {
         Objects.requireNonNull(scalars, "scalars must not be null");
         final byte[][] array = new byte[scalars.length][this.size];

@@ -150,8 +150,8 @@ public final class FieldElements {
     }
 
     /**
-     * Return the occupied size in bytes of this of the fieldElements representations.
-     * @return the occupied size in bytes of this of the fieldElements representations.
+     * Return the occupied size in bytes of the fieldElements representations.
+     * @return the occupied size in bytes of the fieldElements representations.
      */
     public int size() {
         return this.size;
