@@ -41,10 +41,13 @@ pub fn group_elements_scalar_multiply<G: CurveGroup>(value: G, value2: ScalarFie
     value.mul(value2)
 }
 
-
 /// returns the total sum of all the point in a collection
 pub fn group_elements_total_sum<G: CurveGroup>(values: Vec<G>) -> G {
     values.iter().fold(G::zero(), |acc, point| acc + point)
+}
+
+pub fn group_elements_hash_to_curve<G: CurveGroup>(values: Vec<u8>) -> G {
+    G::hash(&values)
 }
 
 /// given a collection of N scalars, return a generator element multiplied by each of the scalars in the collection
@@ -78,7 +81,9 @@ pub fn group_elements_deserialize<G: CurveGroup>(value: &[u8]) -> Result<G, Stri
 }
 
 /// returns the byte representation of a point in affine representation
-pub fn group_elements_serialize_affine<G: CurveGroup>(element: &G::Affine) -> Result<Vec<u8>, String> {
+pub fn group_elements_serialize_affine<G: CurveGroup>(
+    element: &G::Affine,
+) -> Result<Vec<u8>, String> {
     let mut serialized = Vec::new();
     match element.serialize_uncompressed(&mut serialized) {
         Ok(_) => Ok(serialized),
@@ -87,7 +92,9 @@ pub fn group_elements_serialize_affine<G: CurveGroup>(element: &G::Affine) -> Re
 }
 
 /// returns the point from an affine byte representation of a point
-pub fn group_elements_deserialize_and_validate<G: CurveGroup>(value: &[u8]) -> Result<G::Affine, String> {
+pub fn group_elements_deserialize_and_validate<G: CurveGroup>(
+    value: &[u8],
+) -> Result<G::Affine, String> {
     match G::Affine::deserialize_uncompressed_unchecked(value) {
         Ok(val) => Ok(val),
         Err(err) => Err(err.to_string()),
@@ -99,8 +106,8 @@ pub fn group_elements_deserialize_and_validate<G: CurveGroup>(value: &[u8]) -> R
 /// ****************
 
 /// returns the point in affine representation from a projective representation of the point
-pub fn group_elements_to_affine<G: CurveGroup>(element: G) ->G::Affine {
-     element.into_affine()
+pub fn group_elements_to_affine<G: CurveGroup>(element: G) -> G::Affine {
+    element.into_affine()
 }
 /// returns the point in projective representation from an affine  representation of the point
 pub fn group_elements_to_projective<G: CurveGroup>(element: G::Affine) -> G {

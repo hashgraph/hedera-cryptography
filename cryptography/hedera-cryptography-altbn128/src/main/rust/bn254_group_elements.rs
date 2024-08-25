@@ -76,6 +76,7 @@ fn transform_array_to_big_int(env: &JNIEnv, n: JByteArray) -> Result<[u64; 4], i
     Ok(number)
 }
 
+/// Utility function read a curve point form a JbyteArray, the point is validated, so this function must be used with trusted source of information.
 fn to_point(env: &JNIEnv, value: &JByteArray) -> Result<G, jint> {
     let input_bytes = match env.convert_byte_array(&value) {
         Ok(val) => val,
@@ -212,12 +213,19 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
         Err(_) => return RUST_ERROR_COULD_NOT_TRANSFORM_ARGUMENT_DATA_TYPE,
     };
 
-    match group_elements_deserialize_and_validate::<G>(&input_array){
-        Ok(_) => SUCCESS,
-        Err(_) =>  BUSINESS_ERROR_POINT_NOT_IN_CURVE,
+    let point = match group_elements_deserialize_and_validate::<G>(&input_array) {
+        Ok(val) => val,
+        Err(_) => return BUSINESS_ERROR_POINT_NOT_IN_CURVE,
+    };
+    if !point.is_on_curve() {
+        return BUSINESS_ERROR_POINT_NOT_IN_CURVE;
+    }
+    if !point.is_in_correct_subgroup_assuming_on_curve() {
+        BUSINESS_ERROR_POINT_NOT_IN_CURVE
+    } else {
+        SUCCESS
     }
 }
-
 
 /// Returns the zero group element
 /// # Arguments
@@ -312,7 +320,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 ) -> jint {
     GROUP2_SEED_SIZE as jint
 }
-
 
 /// Panics
 /// # Arguments

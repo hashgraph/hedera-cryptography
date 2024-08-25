@@ -114,17 +114,25 @@ class AltBn128Group2Test {
         var group = new AltBn128Group2();
         var field = new AltBn128Field();
         assertEquals(
-                group.batchAdd(List.of(group.generator(),group.generator(),group.generator(),group.generator())),
-               group.generator().multiply(field.fromLong(4)));
+                group.batchAdd(List.of(group.generator(), group.generator(), group.generator(), group.generator())),
+                group.generator().multiply(field.fromLong(4)));
     }
+
     @Test
     void generatorBatchAddedFourTimesAndZerosEqualsGeneratorTimes4() {
         var group = new AltBn128Group2();
         var field = new AltBn128Field();
         assertEquals(
-                group.batchAdd(List.of(group.zero(),group.generator(),group.generator(),group.generator(),group.generator(),group.zero())),
+                group.batchAdd(List.of(
+                        group.zero(),
+                        group.generator(),
+                        group.generator(),
+                        group.generator(),
+                        group.generator(),
+                        group.zero())),
                 group.generator().multiply(field.fromLong(4)));
     }
+
     @Test
     void generatorPlusZeroIsGenerator() {
         var group = new AltBn128Group2();
@@ -156,8 +164,12 @@ class AltBn128Group2Test {
     @Test
     void fromInvalidPoint() {
         var group = new AltBn128Group2();
-        System.out.println(group.fromBytes(BigIntegerUtils.toLittleEndianBytes(128, BigInteger.ONE,new BigInteger("10"),BigInteger.ONE,BigInteger.ONE)));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> group.fromBytes(BigIntegerUtils.toLittleEndianBytes(
+                        128, BigInteger.ONE, new BigInteger("10"), BigInteger.ONE, BigInteger.ONE)));
     }
+
     @Test
     void equality() {
         var group = new AltBn128Group2();
