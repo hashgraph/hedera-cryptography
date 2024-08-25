@@ -110,6 +110,22 @@ class AltBn128Group2Test {
     }
 
     @Test
+    void generatorBatchAddedFourTimesEqualsGeneratorTimes4() {
+        var group = new AltBn128Group2();
+        var field = new AltBn128Field();
+        assertEquals(
+                group.batchAdd(List.of(group.generator(),group.generator(),group.generator(),group.generator())),
+               group.generator().multiply(field.fromLong(4)));
+    }
+    @Test
+    void generatorBatchAddedFourTimesAndZerosEqualsGeneratorTimes4() {
+        var group = new AltBn128Group2();
+        var field = new AltBn128Field();
+        assertEquals(
+                group.batchAdd(List.of(group.zero(),group.generator(),group.generator(),group.generator(),group.generator(),group.zero())),
+                group.generator().multiply(field.fromLong(4)));
+    }
+    @Test
     void generatorPlusZeroIsGenerator() {
         var group = new AltBn128Group2();
         assertEquals(group.generator(), group.generator().add(group.zero()));
@@ -137,6 +153,11 @@ class AltBn128Group2Test {
                                         "4082367875863433681332203403145435568316851327593401208105741076214120093531")));
     }
 
+    @Test
+    void fromInvalidPoint() {
+        var group = new AltBn128Group2();
+        System.out.println(group.fromBytes(BigIntegerUtils.toLittleEndianBytes(128, BigInteger.ONE,new BigInteger("10"),BigInteger.ONE,BigInteger.ONE)));
+    }
     @Test
     void equality() {
         var group = new AltBn128Group2();

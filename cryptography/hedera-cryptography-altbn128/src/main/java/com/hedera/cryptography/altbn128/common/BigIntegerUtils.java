@@ -27,8 +27,6 @@ import java.util.Objects;
 /** Static utility {@link BigInteger} operations */
 public class BigIntegerUtils {
 
-    /** Hidden Constructor */
-    private BigIntegerUtils() {}
 
     /**
      * Converts a BigInteger into a byte array of the given size in little-endian order.

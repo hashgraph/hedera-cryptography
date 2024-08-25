@@ -458,7 +458,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
         Ok(val) => val as usize,
         Err(_) => return JNI_ERROR_COULD_NOT_GET_ARGUMENT_SIZE,
     };
-
     let mut points = Vec::new();
     for i in 0..n {
         let element = match env.get_object_array_element(&values, i as jsize) {
@@ -466,22 +465,12 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
             Err(_) => return JNI_ERROR_CANNOT_RETRIEVE_ARGUMENT_MATRIX_VALUE,
         };
 
-        // Get the class of the element
-        let byte_array = element.cast::<jbyteArray>();
-
-        // Use an unsafe block to cast JObject to JByteArray
-        let element_byte_array: JByteArray = unsafe { JByteArray::from_raw(*byte_array) };
-
-        let input_bytes = match env.convert_byte_array(&element_byte_array) {
-            Ok(val) => val,
-            Err(_) => return JNI_ERROR_ARG_TO_VEC,
+        let element_byte_array: JByteArray = unsafe { JByteArray::from_raw(*element) };
+        let point1 = match to_point(&env, &element_byte_array) {
+            Ok(value) => value,
+            Err(value) => return value,
         };
-
-        let arg_point = match group_elements_deserialize::<G>(&input_bytes) {
-            Ok(val) => val,
-            Err(_) => return ARK_ERROR_ARGUMENT_SERIALIZATION,
-        };
-        points.push(arg_point);
+        points.push(point1);
     }
 
     let point = group_elements_total_sum(points);

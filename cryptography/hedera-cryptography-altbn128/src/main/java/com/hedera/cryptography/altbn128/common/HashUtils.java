@@ -24,8 +24,6 @@ import java.util.Objects;
 /** Static utility hashing operations */
 public final class HashUtils {
 
-    /** Hidden Constructor */
-    private HashUtils() {}
 
     /**
      * Computes SHA 256 hash
