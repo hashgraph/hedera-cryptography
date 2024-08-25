@@ -46,10 +46,6 @@ pub fn group_elements_total_sum<G: CurveGroup>(values: Vec<G>) -> G {
     values.iter().fold(G::zero(), |acc, point| acc + point)
 }
 
-pub fn group_elements_hash_to_curve<G: CurveGroup>(values: Vec<u8>) -> G {
-    G::hash(&values)
-}
-
 /// given a collection of N scalars, return a generator element multiplied by each of the scalars in the collection
 pub fn group_elements_batch_multiply<G: CurveGroup>(values: Vec<ScalarField<G>>) -> Vec<G> {
     let generator = G::generator();

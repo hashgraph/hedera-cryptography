@@ -20,9 +20,11 @@ import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.common.HashUtils;
 import com.hedera.cryptography.altbn128.facade.Group2;
 import com.hedera.cryptography.pairings.api.BilinearPairing;
+import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -105,6 +107,35 @@ public class AltBn128Group2 implements Group {
             all[i] = elems.get(i).getInnerRepresentation();
         }
         return new AltBn128Group2Element(this, facade.batchAdd(all), facade);
+    }
+
+    /**
+     * Multiplies a list of scalar values for the generator point of the group
+     *
+     *
+     * @param elements the scalar elements to multiply the generator
+     * @return same size list of points that are the generator point of this curve times the scalar in the same index
+     * @throws NullPointerException if the elements is null
+     * @throws IllegalArgumentException if the bytes are n
+     * @throws AltBn128Exception in case of error.
+     *
+     */
+    public List<GroupElement> batchMultiply(@NonNull final Collection<FieldElement> elements) {
+        Objects.requireNonNull(elements, "elements must not be null");
+        if (elements.stream().anyMatch(e -> !AltBn128FieldElement.class.isAssignableFrom(e.getClass()))) {
+            throw new IllegalArgumentException("elements must implement AltBn128Group2Element");
+        }
+        List<AltBn128FieldElement> elems =
+                elements.stream().map(AltBn128FieldElement.class::cast).toList();
+        byte[][] all = new byte[elems.size()][];
+        for (int i = 0; i < elems.size(); i++) {
+            all[i] = elems.get(i).toBytes();
+        }
+        byte[][] g2Elements = facade.batchMultiply(all);
+
+        return Arrays.stream(g2Elements)
+                .map(rep -> (GroupElement) new AltBn128Group2Element(this, rep, facade))
+                .toList();
     }
 
     /**

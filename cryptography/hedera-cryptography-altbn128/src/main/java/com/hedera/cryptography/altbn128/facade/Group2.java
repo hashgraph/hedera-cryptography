@@ -237,4 +237,14 @@ public final class Group2 {
     public int randomSeedSize() {
         return this.randomSeedSize;
     }
+
+    public byte[][] batchMultiply(final byte[][] scalars) {
+        Objects.requireNonNull(scalars, "scalars must not be null");
+        final byte[][] array = new byte[scalars.length][this.size];
+        int result = adapter.g2batchScalarMultiplication(scalars, array);
+        if (result != Group2LibraryAdapter.SUCCESS) {
+            throw new AltBn128Exception(result, "g2batchScalarMultiplication");
+        }
+        return array;
+    }
 }

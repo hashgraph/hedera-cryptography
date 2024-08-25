@@ -513,10 +513,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
             Err(_) => return JNI_ERROR_CANNOT_RETRIEVE_ARGUMENT_MATRIX_VALUE,
         };
 
-        let byte_array = element.cast::<jbyteArray>();
-
-        // Use an unsafe block to cast JObject to JByteArray
-        let element_byte_array: JByteArray = unsafe { JByteArray::from_raw(*byte_array) };
+        let element_byte_array: JByteArray = unsafe { JByteArray::from_raw(*element) };
 
         let input_bytes = match env.convert_byte_array(&element_byte_array) {
             Ok(val) => val,

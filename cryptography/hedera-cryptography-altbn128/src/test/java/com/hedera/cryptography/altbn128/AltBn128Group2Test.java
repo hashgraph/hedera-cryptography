@@ -20,12 +20,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
+import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
 class AltBn128Group2Test {
@@ -168,6 +171,23 @@ class AltBn128Group2Test {
                 IllegalArgumentException.class,
                 () -> group.fromBytes(BigIntegerUtils.toLittleEndianBytes(
                         128, BigInteger.ONE, new BigInteger("10"), BigInteger.ONE, BigInteger.ONE)));
+    }
+
+    @Test
+    void batchMultiply() {
+        var group = new AltBn128Group2();
+        var field = new AltBn128Field();
+        List<FieldElement> scalars =
+                IntStream.range(0, 100).boxed().map(field::fromLong).toList();
+        List<GroupElement> results = new ArrayList<>();
+        assertDoesNotThrow(() -> results.addAll(group.batchMultiply(scalars)));
+
+        IntStream.range(0, results.size()).forEach(index -> {
+            assertEquals(
+                    group.generator().multiply(field.fromLong(index)),
+                    results.get(index),
+                    "result " + index + " is not correct");
+        });
     }
 
     @Test
