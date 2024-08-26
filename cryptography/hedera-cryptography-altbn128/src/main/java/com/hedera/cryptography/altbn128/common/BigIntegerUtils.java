@@ -50,6 +50,7 @@ public class BigIntegerUtils {
      * Converts a variable number of BigInteger arguments to their byte array representations,
      * reverses each byte array, and concatenates them into a single byte array.
      *
+     * @param size the desired final length of the resulting byte array
      * @param args a variable number of BigInteger arguments
      * @return a concatenated byte array containing the reversed byte array representations of each BigInteger
      */
@@ -59,14 +60,14 @@ public class BigIntegerUtils {
         ByteBuffer buffer = ByteBuffer.allocate(size);
 
         for (BigInteger arg : args) {
-            totalSize += arg.toByteArray().length;
+            final byte[] argByteArrays = arg.toByteArray();
+            totalSize += argByteArrays.length;
 
             if (totalSize > size) {
                 break;
             }
 
-            final byte[] byteArray = arg.toByteArray();
-            buffer.put(reverseBytes(byteArray, byteArray.length));
+            buffer.put(reverseBytes(argByteArrays, argByteArrays.length));
         }
         if (totalSize > size) {
             throw new IllegalArgumentException("BigInteger cannot be represented in " + size + " bytes.");

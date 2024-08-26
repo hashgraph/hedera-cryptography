@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.altbn128;
 
+import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.facade.Group2Facade;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
@@ -34,11 +35,16 @@ public class AltBn128Group2Element implements GroupElement {
     private final Group2Facade facade;
     private final Group group;
 
-    public AltBn128Group2Element(
-            @NonNull Group group, @NonNull final byte[] innerRepresentation, @NonNull final Group2Facade facade) {
+    /**
+     * Creates a new instance
+     * @param group the group this element belongs to
+     * @param innerRepresentation the byte array representation of this element
+     */
+    public AltBn128Group2Element(@NonNull Group group, @NonNull final byte[] innerRepresentation) {
         this.group = Objects.requireNonNull(group, "group must not be null");
         this.innerRepresentation = Objects.requireNonNull(innerRepresentation, "innerRepresentation must not be null");
-        this.facade = facade;
+        this.facade = new Group2Facade(
+                ArkBn254Adapter.getInstance(), ArkBn254Adapter.getInstance().fieldElementsSize());
     }
 
     /**
@@ -57,7 +63,7 @@ public class AltBn128Group2Element implements GroupElement {
     @Override
     public GroupElement multiply(@NonNull final FieldElement other) {
         Objects.requireNonNull(other, "other must not be null");
-        return new AltBn128Group2Element(group, facade.scalarMul(this.innerRepresentation, other.toBytes()), facade);
+        return new AltBn128Group2Element(group, facade.scalarMul(this.innerRepresentation, other.toBytes()));
     }
 
     /**
@@ -68,7 +74,7 @@ public class AltBn128Group2Element implements GroupElement {
     @Override
     public GroupElement add(@NonNull final GroupElement other) {
         return new AltBn128Group2Element(
-                group, facade.add(this.innerRepresentation, asSubclassOrThrow(other).innerRepresentation), facade);
+                group, facade.add(this.innerRepresentation, asSubclassOrThrow(other).innerRepresentation));
     }
 
     @NonNull
@@ -109,7 +115,7 @@ public class AltBn128Group2Element implements GroupElement {
     @NonNull
     @Override
     public GroupElement copy() {
-        return new AltBn128Group2Element(group, Arrays.copyOf(innerRepresentation, innerRepresentation.length), facade);
+        return new AltBn128Group2Element(group, Arrays.copyOf(innerRepresentation, innerRepresentation.length));
     }
 
     /**

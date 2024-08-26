@@ -45,6 +45,7 @@ public final class Group2Facade {
     /**
      * Creates an instance of this facade.
      * @param adapter the adapter containing the underlying logic.
+     * @param fieldElementsSize size in bytes of the scalar field.
      */
     public Group2Facade(@NonNull final Group2LibraryAdapter adapter, final int fieldElementsSize) {
         this.adapter = Objects.requireNonNull(adapter, "adapter must not be null");

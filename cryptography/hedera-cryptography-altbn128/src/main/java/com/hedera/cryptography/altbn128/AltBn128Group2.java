@@ -58,7 +58,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement generator() {
-        return new AltBn128Group2Element(this, facade.generator(), facade);
+        return new AltBn128Group2Element(this, facade.generator());
     }
 
     /**
@@ -67,7 +67,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement zero() {
-        return new AltBn128Group2Element(this, facade.zero(), facade);
+        return new AltBn128Group2Element(this, facade.zero());
     }
 
     /**
@@ -76,7 +76,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement random(@NonNull final byte[] seed) {
-        return new AltBn128Group2Element(this, facade.fromSeed(seed), facade);
+        return new AltBn128Group2Element(this, facade.fromSeed(seed));
     }
 
     /**
@@ -85,7 +85,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement fromHash(@NonNull final byte[] input) {
-        return new AltBn128Group2Element(this, facade.fromSeed(HashUtils.computeSha256(input)), facade);
+        return new AltBn128Group2Element(this, facade.fromSeed(HashUtils.computeSha256(input)));
     }
 
     /**
@@ -105,7 +105,7 @@ public class AltBn128Group2 implements Group {
         for (int i = 0; i < elems.size(); i++) {
             all[i] = elems.get(i).getInnerRepresentation();
         }
-        return new AltBn128Group2Element(this, facade.batchAdd(all), facade);
+        return new AltBn128Group2Element(this, facade.batchAdd(all));
     }
 
     /**
@@ -133,7 +133,7 @@ public class AltBn128Group2 implements Group {
         final byte[][] g2Elements = facade.batchMultiply(all);
 
         return Arrays.stream(g2Elements)
-                .map(rep -> (GroupElement) new AltBn128Group2Element(this, rep, facade))
+                .map(rep -> (GroupElement) new AltBn128Group2Element(this, rep))
                 .toList();
     }
 
@@ -147,7 +147,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement fromBytes(@NonNull final byte[] bytes) {
-        return new AltBn128Group2Element(this, facade.fromBytes(bytes), facade);
+        return new AltBn128Group2Element(this, facade.fromBytes(bytes));
     }
 
     /**
