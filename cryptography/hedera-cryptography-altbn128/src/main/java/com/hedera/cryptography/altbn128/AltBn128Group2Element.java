@@ -16,7 +16,7 @@
 
 package com.hedera.cryptography.altbn128;
 
-import com.hedera.cryptography.altbn128.facade.Group2;
+import com.hedera.cryptography.altbn128.facade.Group2Facade;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
@@ -31,11 +31,11 @@ import java.util.Objects;
  */
 public class AltBn128Group2Element implements GroupElement {
     private final byte[] innerRepresentation;
-    private final Group2 facade;
+    private final Group2Facade facade;
     private final Group group;
 
     public AltBn128Group2Element(
-            @NonNull Group group, @NonNull final byte[] innerRepresentation, @NonNull final Group2 facade) {
+            @NonNull Group group, @NonNull final byte[] innerRepresentation, @NonNull final Group2Facade facade) {
         this.group = Objects.requireNonNull(group, "group must not be null");
         this.innerRepresentation = Objects.requireNonNull(innerRepresentation, "innerRepresentation must not be null");
         this.facade = facade;

@@ -17,16 +17,21 @@
 package com.hedera.cryptography.altbn128.facade;
 
 import com.hedera.cryptography.altbn128.AltBn128Exception;
-import com.hedera.cryptography.altbn128.adapter.FieldsLibraryAdapter;
+import com.hedera.cryptography.altbn128.adapter.FieldLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.Group2LibraryAdapter;
 import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.util.Objects;
 
-public final class Group2 {
+/**
+ * This class acts as a facade that simplifies the interaction for operating specifically with the second {@code Group}
+ *  and its {@code GroupElement} {@code byte[]} representations.
+ *  It abstracts the complexities of dealing with return codes and input and output parameters
+ *  providing a higher-level interface easier to interact with from Java.
+ **/
+public final class Group2Facade {
 
     /** The underlying library adapter */
     private final Group2LibraryAdapter adapter;
@@ -41,7 +46,7 @@ public final class Group2 {
      * Creates an instance of this facade.
      * @param adapter the adapter containing the underlying logic.
      */
-    public Group2(@NonNull final Group2LibraryAdapter adapter, final int fieldElementsSize) {
+    public Group2Facade(@NonNull final Group2LibraryAdapter adapter, final int fieldElementsSize) {
         this.adapter = Objects.requireNonNull(adapter, "adapter must not be null");
         this.size = adapter.g2Size();
         this.randomSeedSize = adapter.g2RandomSeedSize();
@@ -62,17 +67,17 @@ public final class Group2 {
             @NonNull final BigInteger x2,
             @NonNull final BigInteger y1,
             @NonNull final BigInteger y2) {
-        byte[] x1Array = BigIntegerUtils.toLittleEndianBytes(x1, Group2LibraryAdapter.POINT_COORDINATE_SIZE);
-        byte[] x2Array = BigIntegerUtils.toLittleEndianBytes(x2, Group2LibraryAdapter.POINT_COORDINATE_SIZE);
-        byte[] y1Array = BigIntegerUtils.toLittleEndianBytes(y1, Group2LibraryAdapter.POINT_COORDINATE_SIZE);
-        byte[] y2Array = BigIntegerUtils.toLittleEndianBytes(y2, Group2LibraryAdapter.POINT_COORDINATE_SIZE);
+        byte[] x1Array = BigIntegerUtils.toLittleEndianBytes(x1, Group2LibraryAdapter.POINT_COORDINATE_BYTE_SIZE);
+        byte[] x2Array = BigIntegerUtils.toLittleEndianBytes(x2, Group2LibraryAdapter.POINT_COORDINATE_BYTE_SIZE);
+        byte[] y1Array = BigIntegerUtils.toLittleEndianBytes(y1, Group2LibraryAdapter.POINT_COORDINATE_BYTE_SIZE);
+        byte[] y2Array = BigIntegerUtils.toLittleEndianBytes(y2, Group2LibraryAdapter.POINT_COORDINATE_BYTE_SIZE);
 
-        final ByteBuffer output = ByteBuffer.allocate(size);
-        final int result = adapter.g2FromCoordinates(x1Array, x2Array, y1Array, y2Array, output.array());
+        final byte[] output = new byte[size];
+        final int result = adapter.g2FromCoordinates(x1Array, x2Array, y1Array, y2Array, output);
         if (result != Group2LibraryAdapter.SUCCESS) {
             throw new AltBn128Exception(result, "g2FromCoordinates");
         }
-        return output.array();
+        return output;
     }
 
     /**
@@ -83,12 +88,12 @@ public final class Group2 {
      */
     public byte[] fromSeed(@NonNull final byte[] seed) {
         validateSize(seed, randomSeedSize, "Invalid random seed size");
-        final ByteBuffer output = ByteBuffer.allocate(size);
-        final int result = adapter.g2FromSeed(seed, output.array());
+        final byte[] output = new byte[size];
+        final int result = adapter.g2FromSeed(seed, output);
         if (result != Group2LibraryAdapter.SUCCESS) {
             throw new AltBn128Exception(result, "g2FromSeed");
         }
-        return output.array();
+        return output;
     }
 
     /**
@@ -97,12 +102,12 @@ public final class Group2 {
      * @throws AltBn128Exception in case of error.
      */
     public byte[] zero() {
-        final ByteBuffer output = ByteBuffer.allocate(size);
-        final int result = adapter.g2Zero(output.array());
+        final byte[] output = new byte[size];
+        final int result = adapter.g2Zero(output);
         if (result != Group2LibraryAdapter.SUCCESS) {
             throw new AltBn128Exception(result, "g2Zero");
         }
-        return output.array();
+        return output;
     }
 
     /**
@@ -111,12 +116,12 @@ public final class Group2 {
      * @throws AltBn128Exception in case of error.
      */
     public byte[] generator() {
-        final ByteBuffer output = ByteBuffer.allocate(size);
-        final int result = adapter.g2Generator(output.array());
+        final byte[] output = new byte[size];
+        final int result = adapter.g2Generator(output);
         if (result != Group2LibraryAdapter.SUCCESS) {
             throw new AltBn128Exception(result, "g2Generator");
         }
-        return output.array();
+        return output;
     }
 
     /**
@@ -147,12 +152,12 @@ public final class Group2 {
     public byte[] add(@NonNull final byte[] point1, @NonNull final byte[] point2) {
         validateSize(point1, size, "Invalid point size");
         validateSize(point2, size, "Invalid point size");
-        final ByteBuffer output = ByteBuffer.allocate(size);
-        final int result = adapter.g2Add(point1, point2, output.array());
+        final byte[] output = new byte[size];
+        final int result = adapter.g2Add(point1, point2, output);
         if (result != Group2LibraryAdapter.SUCCESS) {
             throw new AltBn128Exception(result, "g2Add");
         }
-        return output.array();
+        return output;
     }
 
     /**
@@ -165,12 +170,12 @@ public final class Group2 {
     public byte[] scalarMul(@NonNull final byte[] point, @NonNull final byte[] scalar) {
         validateSize(point, size, "Invalid point size");
         validateSize(scalar, fieldElementsSize, "Invalid scalar size");
-        final ByteBuffer output = ByteBuffer.allocate(size);
-        final int result = adapter.g2ScalarMul(point, scalar, output.array());
+        final byte[] output = new byte[size];
+        final int result = adapter.g2ScalarMul(point, scalar, output);
         if (result != Group2LibraryAdapter.SUCCESS) {
             throw new AltBn128Exception(result, "g2ScalarMul");
         }
-        return output.array();
+        return output;
     }
 
     /**
@@ -209,12 +214,12 @@ public final class Group2 {
      */
     public byte[] batchAdd(@NonNull final byte[][] points) {
         Objects.requireNonNull(points, "points must not be null");
-        final ByteBuffer output = ByteBuffer.allocate(this.size);
-        int result = adapter.g2batchAdd(points, output.array());
+        final byte[] output = new byte[size];
+        int result = adapter.g2batchAdd(points, output);
         if (result != Group2LibraryAdapter.SUCCESS) {
             throw new AltBn128Exception(result, "g2batchAdd");
         }
-        return output.array();
+        return output;
     }
 
     /**
@@ -251,7 +256,7 @@ public final class Group2 {
      * This method takes a list of scalars (each in internal representation) and returns
      * the list of point that is the result of multiplying the scalar for the generator point.
      *
-     * @param scalars a byte matrix representing a list of N scalars of {@link FieldsLibraryAdapter#fieldElementsSize()}  representing each scalar
+     * @param scalars a byte matrix representing a list of N scalars of {@link FieldLibraryAdapter#fieldElementsSize()}  representing each scalar
      * @return N points each as a byte array of {@link Group2LibraryAdapter#g2Size()} containing representation of the resulting point.
      * @throws NullPointerException if scalars is null
      * @throws AltBn128Exception in case of an error during the batch addition

@@ -16,12 +16,11 @@
 
 package com.hedera.cryptography.altbn128.facade;
 
-import static com.hedera.cryptography.altbn128.adapter.FieldsLibraryAdapter.SUCCESS;
+import static com.hedera.cryptography.altbn128.adapter.FieldLibraryAdapter.SUCCESS;
 
 import com.hedera.cryptography.altbn128.AltBn128Exception;
-import com.hedera.cryptography.altbn128.adapter.FieldsLibraryAdapter;
+import com.hedera.cryptography.altbn128.adapter.FieldLibraryAdapter;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
@@ -29,10 +28,10 @@ import java.util.Objects;
  *  It abstracts the complexities of dealing with return codes and input and output parameters
  *  providing a higher-level interface easier to interact with from Java.
  **/
-public final class FieldElements {
+public final class FieldFacade {
 
     /** the underlying library adapter  */
-    private final FieldsLibraryAdapter adapter;
+    private final FieldLibraryAdapter adapter;
     /** the occupied size in bytes of this of the fieldElements representations. */
     private final int size;
     /** the occupied size in bytes of the random seed.  */
@@ -40,10 +39,10 @@ public final class FieldElements {
 
     /**
      * Creates an instance of this facade.
-     * @param fieldsLibraryAdapter the adapter containing the underlying logic.
+     * @param fieldLibraryAdapter the adapter containing the underlying logic.
      */
-    public FieldElements(@NonNull final FieldsLibraryAdapter fieldsLibraryAdapter) {
-        this.adapter = Objects.requireNonNull(fieldsLibraryAdapter, "adapter must not be null");
+    public FieldFacade(@NonNull final FieldLibraryAdapter fieldLibraryAdapter) {
+        this.adapter = Objects.requireNonNull(fieldLibraryAdapter, "adapter must not be null");
         // Caching the value given that this is frequently called
         this.size = adapter.fieldElementsSize();
         // Caching the value given that this is frequently called
@@ -53,20 +52,20 @@ public final class FieldElements {
     /**
      * Creates a byte array representation of a fieldElement form a {@code long} parameter.
      * @param inputLong the long parameter to create the representation from
-     * @return a byte array of size {@link FieldElements#size()} with the representation of the input
+     * @return a byte array of size {@link FieldFacade#size()} with the representation of the input
      * @throws AltBn128Exception in case of error
      */
     public byte[] fromLong(final long inputLong) {
-        final ByteBuffer bb = ByteBuffer.allocate(size);
-        final int result = adapter.fieldElementsFromLong(inputLong, bb.array());
+        final byte[] output = new byte[size];
+        final int result = adapter.fieldElementsFromLong(inputLong, output);
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementFromLong");
         }
-        return bb.array();
+        return output;
     }
 
     /**
-     * Creates a byte array representation of a fieldElement form randomly generated seed of size {@link FieldElements#randomSeedSize()}
+     * Creates a byte array representation of a fieldElement form randomly generated seed of size {@link FieldFacade#randomSeedSize()}
      * @param seed the randomly generated seed.
      * @return a byte array representation of a fieldElement form seed
      * @throws NullPointerException if the seed is null
@@ -77,12 +76,12 @@ public final class FieldElements {
         if (Objects.requireNonNull(seed, "Seed must not be null").length != randomSeedSize) {
             throw new IllegalArgumentException("Invalid random seed");
         }
-        final ByteBuffer bb = ByteBuffer.allocate(size);
-        final int result = adapter.fieldElementsFromRandomSeed(seed, bb.array());
+        final byte[] output = new byte[size];
+        final int result = adapter.fieldElementsFromRandomSeed(seed, output);
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementFromRandomSeed");
         }
-        return bb.array();
+        return output;
     }
 
     /**
@@ -98,12 +97,12 @@ public final class FieldElements {
         if (Objects.requireNonNull(representation, "representation must not be null").length != size) {
             throw new IllegalArgumentException("Invalid byte[] representation");
         }
-        final ByteBuffer bb = ByteBuffer.allocate(size);
-        final int result = adapter.fieldElementsFromBytes(representation, bb.array());
+        final byte[] output = new byte[size];
+        final int result = adapter.fieldElementsFromBytes(representation, output);
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementFromBytes");
         }
-        return bb.array();
+        return output;
     }
 
     /**
@@ -112,12 +111,12 @@ public final class FieldElements {
      * @throws AltBn128Exception in case of error
      */
     public byte[] zero() {
-        final ByteBuffer bb = ByteBuffer.allocate(size);
-        final int result = adapter.fieldElementsZero(bb.array());
+        final byte[] output = new byte[size];
+        final int result = adapter.fieldElementsZero(output);
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsZero");
         }
-        return bb.array();
+        return output;
     }
 
     /**
@@ -126,12 +125,12 @@ public final class FieldElements {
      * @throws AltBn128Exception in case of error
      */
     public byte[] one() {
-        final ByteBuffer bb = ByteBuffer.allocate(size);
-        final int result = adapter.fieldElementsOne(bb.array());
+        final byte[] output = new byte[size];
+        final int result = adapter.fieldElementsOne(output);
         if (result != SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsOne");
         }
-        return bb.array();
+        return output;
     }
 
     /**

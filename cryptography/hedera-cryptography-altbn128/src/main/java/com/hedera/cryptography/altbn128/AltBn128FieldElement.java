@@ -18,7 +18,7 @@ package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
-import com.hedera.cryptography.altbn128.facade.FieldElements;
+import com.hedera.cryptography.altbn128.facade.FieldFacade;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -33,7 +33,7 @@ public class AltBn128FieldElement implements FieldElement {
 
     private final AltBn128Field field;
     private final byte[] representation;
-    private final FieldElements facade;
+    private final FieldFacade facade;
 
     /**
      * Creates a new {@link FieldElement}.
@@ -41,7 +41,7 @@ public class AltBn128FieldElement implements FieldElement {
      * @param field the {@link Field} that this instance will be an element of.
      */
     public AltBn128FieldElement(@NonNull final byte[] representation, @NonNull final AltBn128Field field) {
-        this(representation, field, new FieldElements(ArkBn254Adapter.getInstance()));
+        this(representation, field, new FieldFacade(ArkBn254Adapter.getInstance()));
     }
 
     /**
@@ -53,7 +53,7 @@ public class AltBn128FieldElement implements FieldElement {
     AltBn128FieldElement(
             @NonNull final byte[] representation,
             @NonNull final AltBn128Field field,
-            @NonNull final FieldElements facade) {
+            @NonNull final FieldFacade facade) {
         this.representation = Objects.requireNonNull(representation, "representation must not be null");
         this.field = field;
         this.facade = facade;

@@ -18,7 +18,7 @@ package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.common.HashUtils;
-import com.hedera.cryptography.altbn128.facade.Group2;
+import com.hedera.cryptography.altbn128.facade.Group2Facade;
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
@@ -30,17 +30,16 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * The implementation of a {@link Group2}
- * for {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
+ * The implementation of the second {@link Group} of {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
  */
 public class AltBn128Group2 implements Group {
-    private final Group2 facade;
+    private final Group2Facade facade;
 
     /**
-     * Creates an instance of a {@link Group2} for this implementation.
+     * Creates an instance of a {@link Group2Facade} for this implementation.
      */
     public AltBn128Group2() {
-        this.facade = new Group2(
+        this.facade = new Group2Facade(
                 ArkBn254Adapter.getInstance(), ArkBn254Adapter.getInstance().fieldElementsSize());
     }
 
@@ -102,7 +101,7 @@ public class AltBn128Group2 implements Group {
         }
         List<AltBn128Group2Element> elems =
                 elements.stream().map(AltBn128Group2Element.class::cast).toList();
-        byte[][] all = new byte[elems.size()][];
+        final byte[][] all = new byte[elems.size()][];
         for (int i = 0; i < elems.size(); i++) {
             all[i] = elems.get(i).getInnerRepresentation();
         }
@@ -127,11 +126,11 @@ public class AltBn128Group2 implements Group {
         }
         List<AltBn128FieldElement> elems =
                 elements.stream().map(AltBn128FieldElement.class::cast).toList();
-        byte[][] all = new byte[elems.size()][];
+        final byte[][] all = new byte[elems.size()][];
         for (int i = 0; i < elems.size(); i++) {
             all[i] = elems.get(i).toBytes();
         }
-        byte[][] g2Elements = facade.batchMultiply(all);
+        final byte[][] g2Elements = facade.batchMultiply(all);
 
         return Arrays.stream(g2Elements)
                 .map(rep -> (GroupElement) new AltBn128Group2Element(this, rep, facade))

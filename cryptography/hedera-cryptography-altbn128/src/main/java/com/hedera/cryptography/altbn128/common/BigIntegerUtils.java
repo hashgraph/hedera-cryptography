@@ -44,11 +44,7 @@ public class BigIntegerUtils {
             throw new IllegalArgumentException("BigInteger cannot be represented in " + size + " bytes.");
         }
 
-        byte[] paddedBytes = new byte[size];
-
-        System.arraycopy(bigEndianBytes, 0, paddedBytes, size - bigEndianBytes.length, bigEndianBytes.length);
-
-        return reverseBytes(paddedBytes);
+        return reverseBytes(bigEndianBytes, size);
     }
     /**
      * Converts a variable number of BigInteger arguments to their byte array representations,
@@ -69,10 +65,8 @@ public class BigIntegerUtils {
                 break;
             }
 
-            byte[] byteArray = arg.toByteArray();
-            byte[] reversedByteArray = reverseBytes(byteArray);
-
-            buffer.put(reversedByteArray);
+            final byte[] byteArray = arg.toByteArray();
+            buffer.put(reverseBytes(byteArray, byteArray.length));
         }
         if (totalSize > size) {
             throw new IllegalArgumentException("BigInteger cannot be represented in " + size + " bytes.");
@@ -99,9 +93,7 @@ public class BigIntegerUtils {
 
         for (int i = 0; i < byteArray.length; i += chunkSize) {
             byte[] chunk = Arrays.copyOfRange(byteArray, i, i + chunkSize);
-            byte[] reversedChunk = reverseBytes(chunk);
-
-            BigInteger bigInteger = new BigInteger(reversedChunk);
+            BigInteger bigInteger = new BigInteger(reverseBytes(chunk, chunkSize));
             bigIntegers.add(bigInteger);
         }
 
@@ -116,23 +108,27 @@ public class BigIntegerUtils {
     @NonNull
     public static BigInteger fromLittleEndianBytes(@NonNull final byte[] littleEndianBytes) {
         Objects.requireNonNull(littleEndianBytes, "littleEndianBytes must not be null");
-        byte[] bigEndianBytes = reverseBytes(Arrays.copyOf(littleEndianBytes, littleEndianBytes.length));
-        return new BigInteger(bigEndianBytes);
+        return new BigInteger(reverseBytes(littleEndianBytes, littleEndianBytes.length));
     }
 
     /**
      * Reverses the order of bytes in the array.
      *
      * @param input the byte array to reverse
+     * @param size the end size of the array
      * @return the reversed byte array
      */
     @NonNull
-    private static byte[] reverseBytes(@NonNull byte[] input) {
-        for (int i = 0; i < input.length / 2; i++) {
-            byte temp = input[i];
-            input[i] = input[input.length - i - 1];
-            input[input.length - i - 1] = temp;
+    private static byte[] reverseBytes(@NonNull byte[] input, final int size) {
+        ByteBuffer buffer = ByteBuffer.allocate(size);
+        buffer.put(input);
+        buffer.flip();
+
+        final byte[] output = new byte[size];
+
+        for (int i = 0; i < input.length; i++) {
+            output[input.length - i - 1] = input[i];
         }
-        return input;
+        return output;
     }
 }

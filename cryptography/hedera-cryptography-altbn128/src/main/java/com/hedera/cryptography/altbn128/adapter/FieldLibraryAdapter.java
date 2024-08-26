@@ -25,7 +25,7 @@ package com.hedera.cryptography.altbn128.adapter;
  *  i.e.:Sending non-null values and correctly instantiated arrays (expected size) is responsibility of the caller.
  *
  */
-public interface FieldsLibraryAdapter {
+public interface FieldLibraryAdapter {
 
     /** The return code that represents that a call succeeded */
     int SUCCESS = 0;
@@ -35,7 +35,7 @@ public interface FieldsLibraryAdapter {
      *
      * @param inputSeed the byte seed to be used to create the new scalar
      * @param output    the byte array that will be filled with the new scalar
-     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int fieldElementsFromRandomSeed(final byte[] inputSeed, final byte[] output);
 
@@ -44,7 +44,7 @@ public interface FieldsLibraryAdapter {
      *
      * @param inputLong the long to be used to create the new scalar
      * @param output    the byte array that will be filled with the new scalar
-     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int fieldElementsFromLong(final long inputLong, final byte[] output);
 
@@ -53,7 +53,7 @@ public interface FieldsLibraryAdapter {
      *
      * @param input  the that represents the scalar
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int fieldElementsFromBytes(final byte[] input, final byte[] output);
 
@@ -61,7 +61,7 @@ public interface FieldsLibraryAdapter {
      * Creates a new zero value scalar
      *
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int fieldElementsZero(final byte[] output);
 
@@ -69,7 +69,7 @@ public interface FieldsLibraryAdapter {
      * Creates a new one value scalar.
      *
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int fieldElementsOne(final byte[] output);
 

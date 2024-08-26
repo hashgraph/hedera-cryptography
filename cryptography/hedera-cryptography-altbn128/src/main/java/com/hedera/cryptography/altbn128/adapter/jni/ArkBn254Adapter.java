@@ -17,7 +17,7 @@
 package com.hedera.cryptography.altbn128.adapter.jni;
 
 import com.hedera.common.nativesupport.NativeLibrary;
-import com.hedera.cryptography.altbn128.adapter.FieldsLibraryAdapter;
+import com.hedera.cryptography.altbn128.adapter.FieldLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.Group2LibraryAdapter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * This class serves as an adapter between the Java code and the native arkworks altBn128 Rust functions.
  **/
-public final class ArkBn254Adapter implements FieldsLibraryAdapter, Group2LibraryAdapter {
+public final class ArkBn254Adapter implements FieldLibraryAdapter, Group2LibraryAdapter {
 
     /**
      * Instance Holder for lazy loading
@@ -88,7 +88,7 @@ public final class ArkBn254Adapter implements FieldsLibraryAdapter, Group2Librar
      *
      * @param inputSeed the byte seed to be used to create the new scalar
      * @param output    the byte array that will be filled with the new scalar
-     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsFromRandomSeed(final byte[] inputSeed, final byte[] output);
 
@@ -97,7 +97,7 @@ public final class ArkBn254Adapter implements FieldsLibraryAdapter, Group2Librar
      *
      * @param inputLong the long to be used to create the new scalar
      * @param output    the byte array that will be filled with the new scalar
-     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsFromLong(final long inputLong, final byte[] output);
 
@@ -106,7 +106,7 @@ public final class ArkBn254Adapter implements FieldsLibraryAdapter, Group2Librar
      *
      * @param input  the that represents the scalar
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsFromBytes(final byte[] input, final byte[] output);
 
@@ -114,7 +114,7 @@ public final class ArkBn254Adapter implements FieldsLibraryAdapter, Group2Librar
      * Creates a new zero value scalar
      *
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsZero(final byte[] output);
 
@@ -122,7 +122,7 @@ public final class ArkBn254Adapter implements FieldsLibraryAdapter, Group2Librar
      * Creates a new one value scalar.
      *
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link FieldsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsOne(final byte[] output);
 
@@ -152,10 +152,10 @@ public final class ArkBn254Adapter implements FieldsLibraryAdapter, Group2Librar
     /**
      * Creates a GroupElement byte internal representation from x1,x2,y1,y2 representation of coordinates each of those 32 bytes long.
      *
-     * @param x1 a POINT_BYTE_SIZE length array containing the first element of coordinate x.
-     * @param x2 a POINT_BYTE_SIZE length array containing the second element of coordinate x.
-     * @param y1 a POINT_BYTE_SIZE length array containing the first element of coordinate y.
-     * @param y2 a POINT_BYTE_SIZE length array containing the first element of coordinate y.
+     * @param x1 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate x.
+     * @param x2 a POINT_COORDINATE_BYTE_SIZE length array containing the second element of coordinate x.
+     * @param y1 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate y.
+     * @param y2 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate y.
      * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
      * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
@@ -226,7 +226,7 @@ public final class ArkBn254Adapter implements FieldsLibraryAdapter, Group2Librar
      *
      *@implNote inputs and outputs are not validated for nullity or correct sizing. Callers needs to handle that.
      * @param point a byte array of {@link Group2LibraryAdapter#g2Size()} that will be used as the seed to create the point
-     * @param scalar a byte array of {@link FieldsLibraryAdapter#fieldElementsSize()}} that contains the representation of the scalar
+     * @param scalar a byte array of {@link FieldLibraryAdapter#fieldElementsSize()}} that contains the representation of the scalar
      * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
      * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
@@ -246,7 +246,7 @@ public final class ArkBn254Adapter implements FieldsLibraryAdapter, Group2Librar
      * Returns the result of the multiplication of the {@link Group2LibraryAdapter#g2Generator(byte[])} for each scalar in the {@code scalars} list
      *
      * @implNote inputs and outputs are not validated for nullity or correct sizing. Callers needs to handle that.
-     * @param scalars a byte matrix representing a list of N byte arrays of {@link FieldsLibraryAdapter#fieldElementsSize()}} size each representing a scalar
+     * @param scalars a byte matrix representing a list of N byte arrays of {@link FieldLibraryAdapter#fieldElementsSize()}} size each representing a scalar
      * @param outputs a byte matrix of N byte arrays {@link Group2LibraryAdapter#g2Size()} size to hold the internal representation of the generator point times the scalar in {@code scalars}
      * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */

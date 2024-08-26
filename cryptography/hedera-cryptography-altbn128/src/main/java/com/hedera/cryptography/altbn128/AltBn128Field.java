@@ -18,7 +18,7 @@ package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
-import com.hedera.cryptography.altbn128.facade.FieldElements;
+import com.hedera.cryptography.altbn128.facade.FieldFacade;
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
@@ -30,13 +30,13 @@ import java.math.BigInteger;
  * for {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
  */
 public class AltBn128Field implements Field {
-    private final FieldElements facade;
+    private final FieldFacade facade;
 
     /**
      * Creates an instance of a {@link Field} for this implementation.
      */
     public AltBn128Field() {
-        this.facade = new FieldElements(ArkBn254Adapter.getInstance());
+        this.facade = new FieldFacade(ArkBn254Adapter.getInstance());
     }
 
     /**

@@ -31,16 +31,16 @@ public interface Group2LibraryAdapter {
     int SUCCESS = 0;
     /** The return code that represents that the requested point is not in the curve */
     int NOT_IN_CURVE = -4;
-    /** The coordinate size */
-    int POINT_COORDINATE_SIZE = 32;
+    /** The occupied size in bytes of each point coordinate*/
+    int POINT_COORDINATE_BYTE_SIZE = 32;
 
     /**
      * Creates a GroupElement byte internal representation from x1,x2,y1,y2 representation of coordinates each of those 32 bytes long.
      *
-     * @param x1 a POINT_BYTE_SIZE length array containing the first element of coordinate x.
-     * @param x2 a POINT_BYTE_SIZE length array containing the second element of coordinate x.
-     * @param y1 a POINT_BYTE_SIZE length array containing the first element of coordinate y.
-     * @param y2 a POINT_BYTE_SIZE length array containing the first element of coordinate y.
+     * @param x1 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate x.
+     * @param x2 a POINT_COORDINATE_BYTE_SIZE length array containing the second element of coordinate x.
+     * @param y1 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate y.
+     * @param y2 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate y.
      * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
      * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
@@ -105,7 +105,7 @@ public interface Group2LibraryAdapter {
      * Returns the scalar multiplication between code {@code point} and {@code scalar}.
      *
      * @param point a byte array of {@link Group2LibraryAdapter#g2Size()} that will be used as the seed to create the point
-     * @param scalar a byte array of {@link FieldsLibraryAdapter#fieldElementsSize()}} that contains the representation of the scalar
+     * @param scalar a byte array of {@link FieldLibraryAdapter#fieldElementsSize()}} that contains the representation of the scalar
      * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
      * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
@@ -123,7 +123,7 @@ public interface Group2LibraryAdapter {
     /**
      * Returns the result of the multiplication of the {@link Group2LibraryAdapter#g2Generator(byte[])} for each scalar in the {@code scalars} list
      *
-     * @param scalars a byte matrix representing a list of N byte arrays of {@link FieldsLibraryAdapter#fieldElementsSize()}} size each representing a scalar
+     * @param scalars a byte matrix representing a list of N byte arrays of {@link FieldLibraryAdapter#fieldElementsSize()}} size each representing a scalar
      * @param outputs a byte matrix of N byte arrays {@link Group2LibraryAdapter#g2Size()}size to hold the internal representation of the generator point times the scalar in {@code scalars}
      * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
