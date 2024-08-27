@@ -17,6 +17,7 @@
 package com.hedera.cryptography.pairings.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.math.BigInteger;
 import java.util.Random;
 
 /**
@@ -35,11 +36,11 @@ public interface Field {
      * @return the random field element
      */
     @NonNull
-    default FieldElement randomElement(@NonNull final Random random) {
+    default FieldElement random(@NonNull final Random random) {
         final byte[] seed = new byte[getSeedSize()];
         random.nextBytes(seed);
 
-        return randomElement(seed);
+        return random(seed);
     }
 
     /**
@@ -49,7 +50,7 @@ public interface Field {
      * @return the new field element
      */
     @NonNull
-    FieldElement elementFromLong(long inputLong);
+    FieldElement fromLong(long inputLong);
 
     /**
      * Creates a field element from a seed
@@ -58,7 +59,7 @@ public interface Field {
      * @return the new field element
      */
     @NonNull
-    FieldElement randomElement(@NonNull byte[] seed);
+    FieldElement random(@NonNull byte[] seed);
 
     /**
      * Creates a field element from its serialized encoding
@@ -67,7 +68,16 @@ public interface Field {
      * @return the new field element
      */
     @NonNull
-    FieldElement elementFromBytes(@NonNull byte[] bytes);
+    FieldElement fromBytes(@NonNull byte[] bytes);
+
+    /**
+     * Creates a field element from a {@link BigInteger}
+     *
+     * @param bigInteger the scalar
+     * @return the new field element
+     */
+    @NonNull
+    FieldElement fromBigInteger(@NonNull BigInteger bigInteger);
 
     /**
      * Gets the size in bytes of an element
