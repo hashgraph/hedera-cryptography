@@ -132,6 +132,6 @@ public class AltBn128Group2Element implements GroupElement {
      */
     @Override
     public int size() {
-        return this.innerRepresentation.length;
+        return this.representation.length;
     }
 }
