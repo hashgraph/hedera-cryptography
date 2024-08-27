@@ -23,7 +23,6 @@ import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -122,7 +121,7 @@ public class AltBn128FieldElement implements FieldElement {
     @NonNull
     @Override
     public byte[] toBytes() {
-        return Arrays.copyOf(this.representation, representation.length);
+        return this.representation.clone();
     }
 
     /**
