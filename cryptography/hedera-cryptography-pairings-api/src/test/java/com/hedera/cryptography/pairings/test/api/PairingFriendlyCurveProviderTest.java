@@ -20,22 +20,25 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.hedera.cryptography.pairings.spi.BilinearPairingProvider;
-import com.hedera.cryptography.pairings.test.spi.BilinearPairingMockProvider;
+import com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
+import com.hedera.cryptography.pairings.test.spi.PairingMockFriendlyCurveProvider;
 import java.util.ServiceLoader;
 import org.junit.jupiter.api.Test;
 
-class BilinearPairingProviderTest {
+class PairingFriendlyCurveProviderTest {
 
     @Test
-    void testFindBilinearPairingProvider() {
-        assertDoesNotThrow(() -> ServiceLoader.load(BilinearPairingProvider.class));
+    void testFindBilinearPairingFriendlyCurveProvider() {
+        assertDoesNotThrow(() -> ServiceLoader.load(PairingFriendlyCurveProvider.class));
         assertDoesNotThrow(
-                () -> ServiceLoader.load(BilinearPairingProvider.class).findFirst());
-        assertTrue(() ->
-                ServiceLoader.load(BilinearPairingProvider.class).findFirst().isPresent());
+                () -> ServiceLoader.load(PairingFriendlyCurveProvider.class).findFirst());
+        assertTrue(() -> ServiceLoader.load(PairingFriendlyCurveProvider.class)
+                .findFirst()
+                .isPresent());
         assertInstanceOf(
-                BilinearPairingMockProvider.class,
-                ServiceLoader.load(BilinearPairingProvider.class).findFirst().get());
+                PairingMockFriendlyCurveProvider.class,
+                ServiceLoader.load(PairingFriendlyCurveProvider.class)
+                        .findFirst()
+                        .get());
     }
 }

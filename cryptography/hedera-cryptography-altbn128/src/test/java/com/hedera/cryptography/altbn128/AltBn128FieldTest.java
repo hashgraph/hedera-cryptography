@@ -60,7 +60,7 @@ class AltBn128FieldTest {
     void createRandomFieldElementIsNotNull() {
         var field = new AltBn128Field();
         Random rng = new SecureRandom();
-        final byte[] seed = new byte[field.getSeedSize()];
+        final byte[] seed = new byte[field.seedSize()];
         rng.nextBytes(seed);
         assertNotNull(field.random(seed));
     }
@@ -68,8 +68,8 @@ class AltBn128FieldTest {
     @Test
     void createRandomFieldWithSmallerSeedThrowsException() {
         var field = new AltBn128Field();
-        final byte[] smallerSeed = new byte[field.getSeedSize() - 1];
-        final byte[] largerSeed = new byte[field.getSeedSize() + 1];
+        final byte[] smallerSeed = new byte[field.seedSize() - 1];
+        final byte[] largerSeed = new byte[field.seedSize() + 1];
         assertThrows(IllegalArgumentException.class, () -> field.random(smallerSeed));
         assertThrows(IllegalArgumentException.class, () -> field.random(largerSeed));
     }
@@ -120,10 +120,10 @@ class AltBn128FieldTest {
     void createFieldElementFromInvalidBytesThrowsException() {
         var field = new AltBn128Field();
         Random rng = new SecureRandom();
-        final byte[] value = new byte[field.getElementSize() - 1];
+        final byte[] value = new byte[field.elementSize() - 1];
         rng.nextBytes(value);
         assertThrows(IllegalArgumentException.class, () -> field.fromBytes(value));
-        final byte[] value2 = new byte[field.getElementSize() + 1];
+        final byte[] value2 = new byte[field.elementSize() + 1];
         rng.nextBytes(value2);
         assertThrows(IllegalArgumentException.class, () -> field.fromBytes(value2));
     }

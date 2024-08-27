@@ -16,15 +16,15 @@
 
 package com.hedera.cryptography.pairings.test.spi;
 
-import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.pairings.spi.BilinearPairingProvider;
+import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
+import com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
 import com.hedera.cryptography.pairings.test.api.TestCurves;
 
 /**
- * A {@link BilinearPairingProvider} implementation that will always fail the initialization process.
+ * A {@link PairingFriendlyCurveProvider} implementation that will always fail the initialization process.
  */
-public class BilinearFailingPairingProvider extends BilinearPairingProvider {
+public class FailingPairingFriendlyCurveProvider extends PairingFriendlyCurveProvider {
     @Override
     protected void doInit() {
         throw new RuntimeException("this is a failing provider");
@@ -36,7 +36,7 @@ public class BilinearFailingPairingProvider extends BilinearPairingProvider {
     }
 
     @Override
-    public BilinearPairing pairing() {
+    public PairingFriendlyCurve pairingFriendlyCurve() {
         return null;
     }
 }

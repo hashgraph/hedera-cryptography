@@ -47,9 +47,7 @@ public interface GroupElement {
      *
      * @return the size of the group element in bytes
      */
-    default int size() {
-        return isCompressed() ? getGroup().getCompressedSize() : getGroup().getUncompressedSize();
-    }
+    int size();
 
     /**
      * Returns the group of the element
@@ -76,23 +74,6 @@ public interface GroupElement {
      */
     @NonNull
     GroupElement add(@NonNull GroupElement other);
-
-    /**
-     * Compresses the group element
-     *
-     * @return this object, compressed
-     */
-    @NonNull
-    @Deprecated
-    GroupElement compress();
-
-    /**
-     * Gets whether the group element is compressed
-     *
-     * @return true if the element is compressed, otherwise false
-     */
-    @Deprecated
-    boolean isCompressed();
 
     /**
      * Returns a copy of the group element

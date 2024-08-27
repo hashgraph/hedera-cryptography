@@ -20,13 +20,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Represents a bilinear pairing operation used in cryptographic protocols.
- *
- * <p>A bilinear pairing is a function that takes two elements from two groups and maps them to an element
- * in a third group, satisfying certain properties that are useful in various cryptographic schemes
- * such as identity-based encryption, short signatures, and more.
- *
- * <p>
- * A pairing is a map: e : G₁ × G₂ -> Gₜ which can satisfy these properties:
+ * <p>A pairing is a map: e : G₁ × G₂ -> Gₜ which can satisfy these properties:
  *  <ul>
  *   <li> Bilinearity: “a”, “b” member of “Fq” (Finite Field), “P” member of “G₁”, and “Q” member of “G₂”,
  *        then e(a×P, b×Q) = e(ab×P, Q) = e(P, ab×Q) = e(P, Q)^(ab)
@@ -37,74 +31,26 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * with the curves.
  *
  * @see Group
- * @see Field
+ * @see GroupElement
+ * @see PairingFriendlyCurve
  */
 public interface BilinearPairing {
 
     /**
-     * Returns the finite field “Fq” associated with the curves of G₁ and G₂.
+     * Get the first input element. This element is in the opposite group of the second input element
      *
-     * @return the field
+     * @return the first input element
      */
     @NonNull
-    Field field();
+    GroupElement getInputElement1();
 
     /**
-     * Returns the G₁ group associated with the pairing.
+     * Get the second input element. This element is in the opposite group of the first input element
      *
-     * @return the G₁ group
+     * @return the second input element
      */
     @NonNull
-    Group getGroup1();
-
-    /**
-     * Returns the G₂ group associated with the pairing.
-     *
-     * @return the G₂ group
-     */
-    @NonNull
-    Group group2();
-
-    /**
-     * Returns G₁ if input is G₂, and vice versa.
-     *
-     * @param group the group to get the "other group" of
-     * @return the other group
-     */
-    @NonNull
-    Group getOtherGroup(@NonNull Group group);
-
-    /**
-     * Returns a pairing between elements from G₁ and G₂
-     * <p>
-     * The order of the elements is not important, element1 can be from G₁ and element2 from G₂, or vice versa.
-     *
-     * @param element1 one element of the pairing
-     * @param element2 the other element of the pairing
-     * @return the PairingResult
-     */
-    @NonNull
-    PairingResult pairingBetween(@NonNull GroupElement element1, @NonNull GroupElement element2);
-
-    /**
-     * Compares two pairing results.
-     * <p>
-     * This default implementation uses {@link #comparePairings} under the hood, with the assumption that the actual
-     * pairing computation was not performed upon construction of the {@link PairingResult} objects. If an
-     * implementation of {@link PairingResult} is used that actually does perform the pairing computation upon
-     * construction, this method should be overridden to compare the results directly.
-     *
-     * @param result1 the first pairing result
-     * @param result2 the second pairing result
-     * @return true if the pairings are equal, otherwise false
-     */
-    default boolean comparePairingResults(@NonNull final PairingResult result1, @NonNull final PairingResult result2) {
-        return comparePairings(
-                result1.getInputElement1(),
-                result1.getInputElement2(),
-                result2.getInputElement1(),
-                result2.getInputElement2());
-    }
+    GroupElement getInputElement2();
 
     /**
      * Compares two pairings, referred to as A and B.
@@ -113,15 +59,8 @@ public interface BilinearPairing {
      * <p>
      * The order of the elements in each pairing is not important.
      *
-     * @param pairingAElement1 the first element of the first pairing
-     * @param pairingAElement2 the second element of the first pairing
-     * @param pairingBElement1 the first element of the second pairing
-     * @param pairingBElement2 the second element of the second pairing
+     * @param other the other pairing to compare to
      * @return true if the pairings are equal, otherwise false
      */
-    boolean comparePairings(
-            @NonNull GroupElement pairingAElement1,
-            @NonNull GroupElement pairingAElement2,
-            @NonNull GroupElement pairingBElement1,
-            @NonNull GroupElement pairingBElement2);
+    boolean compare(BilinearPairing other);
 }

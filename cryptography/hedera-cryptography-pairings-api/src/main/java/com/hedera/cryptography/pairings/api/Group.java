@@ -22,10 +22,9 @@ import java.util.Collection;
 /**
  * Represents a mathematical group used in a pairing-based cryptography system.
  *
- * <p>A group in this context is a set of elements combined with an operation that satisfies
- * the group properties: closure, associativity, identity, and invertibility. When the group
- * also satisfies the commutativity property, it is referred to as an abelian group.
- *
+ * <p>A group in this context is a set of elements (curve points) with operations that satisfies the group properties:
+ *  closure, associativity, identity, and invertibility.
+ * <p>Curves can be defined by more than one group.
  * <p>This class provides methods to obtain elements belonging to the group represented by the instance.
  *
  * @see GroupElement
@@ -40,7 +39,7 @@ public interface Group {
      */
     @NonNull
     default Group getOppositeGroup() {
-        return getPairing().getOtherGroup(this);
+        return getPairingFriendlyCurve().getOtherGroup(this);
     }
 
     /**
@@ -49,10 +48,11 @@ public interface Group {
      * @return the pairing associated with this group
      */
     @NonNull
-    BilinearPairing getPairing();
+    PairingFriendlyCurve getPairingFriendlyCurve();
 
     /**
-     * Returns the group's generator
+     * Returns the group's generator.
+     * A generator is a point that when multiplied to every different scalar value, it can produce all other elements of the group.
      *
      * @return the group's generator
      */
@@ -105,23 +105,16 @@ public interface Group {
     GroupElement fromBytes(@NonNull byte[] bytes);
 
     /**
-     * Gets the size in bytes of a compressed group element
-     *
-     * @return the size of a compressed group element
-     */
-    int getCompressedSize();
-
-    /**
-     * Gets the size in bytes of an uncompressed group element
-     *
-     * @return the size of an uncompressed group element
-     */
-    int getUncompressedSize();
-
-    /**
      * Gets the size in bytes of the seed necessary to generate a new element
      *
      * @return the size of a seed needed to generate a new element
      */
-    int getSeedSize();
+    int seedSize();
+
+    /**
+     * Gets the size in bytes of a group element
+     *
+     * @return the size in bytes of a group element
+     */
+    int elementSize();
 }
