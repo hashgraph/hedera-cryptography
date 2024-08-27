@@ -26,13 +26,10 @@ public final class ArkBn254Adapter implements LibraryAdapter {
     /**
      * Instance Holder for lazy loading
      */
-    private static final SingletonLoader<ArkBn254Adapter> INSTANCE_HOLDER = new SingletonLoader<>(
-            "libbn254",
-            new ArkBn254Adapter()
-    );
+    private static final SingletonLoader<ArkBn254Adapter> INSTANCE_HOLDER =
+            new SingletonLoader<>("libbn254", new ArkBn254Adapter());
 
-    private ArkBn254Adapter() {
-    }
+    private ArkBn254Adapter() {}
 
     /**
      * @return the singleton instance of this library adapter.

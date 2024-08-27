@@ -16,27 +16,19 @@
 
 package com.hedera.cryptography.eckeygen;
 
-import com.hedera.common.nativesupport.NativeLibrary;
 import com.hedera.common.nativesupport.SingletonLoader;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * An implementation of {@link KeyGenerator} that uses JNI and rust code to generate the keys
  */
 public class NativeKeyGenerator implements KeyGenerator {
-    private static final SingletonLoader<NativeKeyGenerator> INSTANCE_HOLDER = new SingletonLoader<>(
-            "libkey_gen",
-            new NativeKeyGenerator()
-    );
+    private static final SingletonLoader<NativeKeyGenerator> INSTANCE_HOLDER =
+            new SingletonLoader<>("libkey_gen", new NativeKeyGenerator());
 
-    private NativeKeyGenerator() {
-    }
+    private NativeKeyGenerator() {}
 
     public static NativeKeyGenerator getInstance() {
         return INSTANCE_HOLDER.getInstance();

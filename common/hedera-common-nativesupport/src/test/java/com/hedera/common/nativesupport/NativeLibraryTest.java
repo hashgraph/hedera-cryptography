@@ -34,7 +34,7 @@ class NativeLibraryTest {
 
     private static Stream<Object[]> combinedParameters() {
         return Stream.of(OperatingSystem.values())
-                .flatMap(os -> Stream.of(Architecture.values()).map(arch -> new Object[]{os, arch}));
+                .flatMap(os -> Stream.of(Architecture.values()).map(arch -> new Object[] {os, arch}));
     }
 
     @ParameterizedTest
@@ -132,6 +132,5 @@ class NativeLibraryTest {
         assertNotNull(library.locationInJar(), "Should have found location in jar");
         assertDoesNotThrow(() -> library.install(this.getClass()));
         assertEquals("Hello, World from C++!", new Greeter().getGreeting());
-
     }
 }
