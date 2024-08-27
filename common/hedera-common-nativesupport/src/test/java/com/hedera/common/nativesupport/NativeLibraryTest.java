@@ -16,11 +16,12 @@
 
 package com.hedera.common.nativesupport;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.hedera.common.nativesupport.jni.Greeter;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ class NativeLibraryTest {
 
     private static Stream<Object[]> combinedParameters() {
         return Stream.of(OperatingSystem.values())
-                .flatMap(os -> Stream.of(Architecture.values()).map(arch -> new Object[] {os, arch}));
+                .flatMap(os -> Stream.of(Architecture.values()).map(arch -> new Object[]{os, arch}));
     }
 
     @ParameterizedTest
@@ -45,7 +46,7 @@ class NativeLibraryTest {
         assertNotNull(library);
 
         try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
-                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class); ) {
+                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class)) {
             osStatic.when(OperatingSystem::current).thenReturn(operatingSystem);
             archStatic.when(Architecture::current).thenReturn(architecture);
 
@@ -75,7 +76,7 @@ class NativeLibraryTest {
         assertNotNull(library);
 
         try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
-                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class); ) {
+                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class)) {
             osStatic.when(OperatingSystem::current).thenReturn(operatingSystem);
             archStatic.when(Architecture::current).thenReturn(architecture);
 
@@ -97,7 +98,7 @@ class NativeLibraryTest {
         assertNotNull(library);
 
         try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
-                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class); ) {
+                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class)) {
             osStatic.when(OperatingSystem::current).thenReturn(operatingSystem);
             archStatic.when(Architecture::current).thenReturn(architecture);
 
@@ -113,8 +114,8 @@ class NativeLibraryTest {
     @Test
     public void testInstallExistentLib() {
         final NativeLibrary library = NativeLibrary.withName("greeter");
-            assertNotNull(library.locationInJar(), "Should have found location in jar");
-            assertDoesNotThrow(() -> library.install(this.getClass()));
+        assertNotNull(library.locationInJar(), "Should have found location in jar");
+        assertDoesNotThrow(() -> library.install(this.getClass()));
     }
 
     @Test
@@ -130,7 +131,7 @@ class NativeLibraryTest {
         final NativeLibrary library = NativeLibrary.withName("greeter");
         assertNotNull(library.locationInJar(), "Should have found location in jar");
         assertDoesNotThrow(() -> library.install(this.getClass()));
-            assertEquals("Hello, World from C++!", new Greeter().getGreeting());
+        assertEquals("Hello, World from C++!", new Greeter().getGreeting());
 
     }
 }
