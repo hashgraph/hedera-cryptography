@@ -22,7 +22,7 @@ env:
 jobs:
   build:
     name: Publish Release
-    runs-on: network-node-auxiliary-linux-medium
+    runs-on: network-node-linux-medium
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
