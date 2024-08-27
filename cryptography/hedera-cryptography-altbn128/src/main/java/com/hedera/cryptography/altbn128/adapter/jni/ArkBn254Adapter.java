@@ -64,18 +64,7 @@ public final class ArkBn254Adapter implements LibraryAdapter {
                 if (!PENDING_INITIALIZATION.get()) {
                     return this;
                 }
-                final NativeLibrary library = NativeLibrary.withName("libbn254");
-                try {
-                    // JPMS does not allow for resources contained in a module to be loaded in a separated class
-                    // So we are forced to load this the InputStream in a class stored in a jar that holds the resource
-                    final InputStream is = this.getClass().getModule().getResourceAsStream(library.locationInJar());
-                    if (is == null) {
-                        throw new UncheckedIOException(new IOException("Could not find " + library.name()));
-                    }
-                    library.install(is);
-                } catch (IOException e) {
-                    throw new UncheckedIOException("Unable to load adapter " + library.name(), new IOException(e));
-                }
+                NativeLibrary.withName("libbn254").install(this.getClass());
                 PENDING_INITIALIZATION.set(false);
             }
         }

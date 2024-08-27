@@ -20,6 +20,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -174,6 +175,24 @@ public class NativeLibrary {
     }
 
     /**
+     * Unpackages the native library to a temporary dir, sets appropriate file permissions, and loads the library into
+     * the JVM.
+     * <p>Warning: It is responsibility of the caller to assure this method is only called once per desired library.
+     *
+     * @param c because JPMS does not allow for resources contained in a module to be loaded in a separated class, the
+     *          caller must provide a class that is in the module that contains the resource.
+     */
+    public void install(@NonNull final Class<?> c) {
+        try {
+            // JPMS does not allow for resources contained in a module to be loaded in a separated class
+            // So we are forced to load this the InputStream in a class stored in a jar that holds the resource
+            install(c.getModule().getResourceAsStream(locationInJar()));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Unable to load adapter " + name(), new IOException(e));
+        }
+    }
+
+    /**
      * Unpackages the native library from a provided InputStream to a temporary dir, sets appropriate file permissions, and loads the library
      * into the JVM.
      * <p>Warning: It is responsibility of the caller to assure this method is only called once per desired library.
@@ -181,7 +200,7 @@ public class NativeLibrary {
      * @throws IOException if there's an error reading the file or setting permissions.
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void install(@NonNull final InputStream resourceStream) throws IOException {
+    private void install(@NonNull final InputStream resourceStream) throws IOException {
         Objects.requireNonNull(resourceStream, "resourceStream must not be null");
         final String fileName = Path.of(name).getFileName().toString();
         final Path tempDirectory = createTempDirectory();

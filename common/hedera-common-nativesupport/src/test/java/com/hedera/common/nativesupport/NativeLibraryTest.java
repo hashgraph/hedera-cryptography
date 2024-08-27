@@ -111,33 +111,26 @@ class NativeLibraryTest {
     }
 
     @Test
-    public void testInstallExistentLib() throws IOException {
+    public void testInstallExistentLib() {
         final NativeLibrary library = NativeLibrary.withName("greeter");
-        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(library.locationInJar())) {
-            assertNotNull(is, "Should have found " + library.locationInJar());
-            assertDoesNotThrow(() -> library.install(is));
-        }
+            assertNotNull(library.locationInJar(), "Should have found location in jar");
+            assertDoesNotThrow(() -> library.install(this.getClass()));
     }
 
     @Test
-    void testInstallAndInvoke() throws IOException {
+    void testInstallAndInvoke() {
         // Load native library greeter.dll (Windows) or greeter.so (Linux) greeter.dylib (Mac)
-        final NativeLibrary library = NativeLibrary.withName("greeter");
-        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(library.locationInJar())) {
-            assertNotNull(is, "Should have found " + library.locationInJar());
-            assertDoesNotThrow(() -> library.install(is));
-            assertDoesNotThrow(() -> new Greeter().getGreeting());
-        }
+        NativeLibrary.withName("greeter").install(this.getClass());
+        assertDoesNotThrow(() -> new Greeter().getGreeting());
     }
 
     @Test
-    void testInstallInvokeAndResult() throws IOException {
+    void testInstallInvokeAndResult() {
         // Load native library greeter.dll (Windows) or greeter.so (Linux) greeter.dylib (Mac)
         final NativeLibrary library = NativeLibrary.withName("greeter");
-        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(library.locationInJar())) {
-            assertNotNull(is, "Should have found " + library.locationInJar());
-            assertDoesNotThrow(() -> library.install(is));
+        assertNotNull(library.locationInJar(), "Should have found location in jar");
+        assertDoesNotThrow(() -> library.install(this.getClass()));
             assertEquals("Hello, World from C++!", new Greeter().getGreeting());
-        }
+
     }
 }
