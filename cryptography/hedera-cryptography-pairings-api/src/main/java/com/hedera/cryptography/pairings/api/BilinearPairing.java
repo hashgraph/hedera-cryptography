@@ -27,9 +27,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  *   <li> Non-degeneracy: e != 1
  *   <li> Computability: There should be an efficient way to compute “e”.
  * </ul>
- * <p>This class provides access to each of the groups (G₁, G₂) for a specific Pairing and the FiniteField associated
- * with the curves.
- *
  * @see Group
  * @see GroupElement
  * @see PairingFriendlyCurve
@@ -53,7 +50,7 @@ public interface BilinearPairing {
     GroupElement getInputElement2();
 
     /**
-     * Compares two pairings, referred to as A and B.
+     * Compares two pairings.
      * <p>
      * The 2 elements of each pairing must be in opposite groups.
      * <p>
