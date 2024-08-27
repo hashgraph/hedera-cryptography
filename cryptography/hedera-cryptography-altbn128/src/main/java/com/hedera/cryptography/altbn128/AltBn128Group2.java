@@ -103,7 +103,7 @@ public class AltBn128Group2 implements Group {
                 elements.stream().map(AltBn128Group2Element.class::cast).toList();
         final byte[][] all = new byte[elems.size()][];
         for (int i = 0; i < elems.size(); i++) {
-            all[i] = elems.get(i).getInnerRepresentation();
+            all[i] = elems.get(i).getRepresentation();
         }
         return new AltBn128Group2Element(this, facade.batchAdd(all));
     }
@@ -128,7 +128,7 @@ public class AltBn128Group2 implements Group {
                 elements.stream().map(AltBn128FieldElement.class::cast).toList();
         final byte[][] all = new byte[elems.size()][];
         for (int i = 0; i < elems.size(); i++) {
-            all[i] = elems.get(i).toBytes();
+            all[i] = elems.get(i).getRepresentation();
         }
         final byte[][] g2Elements = facade.batchMultiply(all);
 
