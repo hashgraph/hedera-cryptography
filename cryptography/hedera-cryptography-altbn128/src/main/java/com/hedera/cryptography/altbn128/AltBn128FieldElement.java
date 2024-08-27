@@ -23,6 +23,7 @@ import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -121,7 +122,17 @@ public class AltBn128FieldElement implements FieldElement {
     @NonNull
     @Override
     public byte[] toBytes() {
-        return representation.clone();
+        return Arrays.copyOf(this.representation, representation.length);
+    }
+
+    /**
+     * Returns the internal byte[] of this element.
+     * @implNote This has limited visibility as is only intended to be used internally in the library.
+     * Users of the library are expected to get a copy of the array accessing the {@link AltBn128Group2Element#toBytes()} method.
+     * @return the internal projective representation of this point
+     */
+    byte[] getRepresentation() {
+        return representation;
     }
 
     @Override

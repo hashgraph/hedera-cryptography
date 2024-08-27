@@ -31,18 +31,18 @@ import java.util.Objects;
  * for {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
  */
 public class AltBn128Group2Element implements GroupElement {
-    private final byte[] innerRepresentation;
+    private final byte[] representation;
     private final Group2Facade facade;
     private final Group group;
 
     /**
      * Creates a new instance
      * @param group the group this element belongs to
-     * @param innerRepresentation the byte array representation of this element
+     * @param representation the byte array representation of this element
      */
-    public AltBn128Group2Element(@NonNull Group group, @NonNull final byte[] innerRepresentation) {
+    public AltBn128Group2Element(@NonNull Group group, @NonNull final byte[] representation) {
         this.group = Objects.requireNonNull(group, "group must not be null");
-        this.innerRepresentation = Objects.requireNonNull(innerRepresentation, "innerRepresentation must not be null");
+        this.representation = Objects.requireNonNull(representation, "innerRepresentation must not be null");
         this.facade = new Group2Facade(
                 ArkBn254Adapter.getInstance(), ArkBn254Adapter.getInstance().fieldElementsSize());
     }
@@ -63,7 +63,7 @@ public class AltBn128Group2Element implements GroupElement {
     @Override
     public GroupElement multiply(@NonNull final FieldElement other) {
         Objects.requireNonNull(other, "other must not be null");
-        return new AltBn128Group2Element(group, facade.scalarMul(this.innerRepresentation, other.toBytes()));
+        return new AltBn128Group2Element(group, facade.scalarMul(this.representation, other.toBytes()));
     }
 
     /**
@@ -74,7 +74,7 @@ public class AltBn128Group2Element implements GroupElement {
     @Override
     public GroupElement add(@NonNull final GroupElement other) {
         return new AltBn128Group2Element(
-                group, facade.add(this.innerRepresentation, asSubclassOrThrow(other).innerRepresentation));
+                group, facade.add(this.representation, asSubclassOrThrow(other).representation));
     }
 
     @NonNull
@@ -94,7 +94,7 @@ public class AltBn128Group2Element implements GroupElement {
     @NonNull
     @Override
     public GroupElement copy() {
-        return new AltBn128Group2Element(group, Arrays.copyOf(innerRepresentation, innerRepresentation.length));
+        return new AltBn128Group2Element(group, toBytes());
     }
 
     /**
@@ -103,7 +103,7 @@ public class AltBn128Group2Element implements GroupElement {
     @NonNull
     @Override
     public byte[] toBytes() {
-        return Arrays.copyOf(this.innerRepresentation, innerRepresentation.length);
+        return Arrays.copyOf(this.representation, representation.length);
     }
 
     @Override
@@ -115,15 +115,17 @@ public class AltBn128Group2Element implements GroupElement {
             return true;
         }
 
-        return facade.equals(this.innerRepresentation, ((AltBn128Group2Element) obj).innerRepresentation);
+        return facade.equals(this.representation, ((AltBn128Group2Element) obj).representation);
     }
 
     /**
-     * Returns the internal projective representation of this point.
+     * Returns the internal byte[] of this element.
+     * @implNote This has limited visibility as is only intended to be used internally in the library.
+     * Users of the library are expected to get a copy of the array accessing the {@link AltBn128Group2Element#toBytes()} method.
      * @return the internal projective representation of this point
      */
-    byte[] getInnerRepresentation() {
-        return innerRepresentation;
+    byte[] getRepresentation() {
+        return representation;
     }
 
     /**
