@@ -16,59 +16,30 @@
 
 package com.hedera.cryptography.altbn128.adapter.jni;
 
-import com.hedera.common.nativesupport.NativeLibrary;
+import com.hedera.common.nativesupport.SingletonLoader;
 import com.hedera.cryptography.altbn128.adapter.LibraryAdapter;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class serves as an adapter between the Java code and the native arkworks altBn128 Rust functions.
  **/
 public final class ArkBn254Adapter implements LibraryAdapter {
-
     /**
      * Instance Holder for lazy loading
      */
-    static class InstanceHolder {
-        /**
-         * The Singleton instance
-         */
-        public static final ArkBn254Adapter INSTANCE = new ArkBn254Adapter().initialize();
+    private static final SingletonLoader<ArkBn254Adapter> INSTANCE_HOLDER = new SingletonLoader<>(
+            "libbn254",
+            ArkBn254Adapter.class,
+            ArkBn254Adapter::new
+    );
+
+    private ArkBn254Adapter() {
     }
 
     /**
-     * True by default, false after initialization.
-     */
-    private static final AtomicBoolean PENDING_INITIALIZATION = new AtomicBoolean(true);
-
-    /**
-     * Returns the singleton instance of this library adapter.
      * @return the singleton instance of this library adapter.
      */
     public static ArkBn254Adapter getInstance() {
-        return InstanceHolder.INSTANCE;
-    }
-
-    /**
-     * Initializes the class by loading the necessary native libraries.
-     *
-     * @return this instance.
-     */
-    @NonNull
-    public ArkBn254Adapter initialize() {
-        if (PENDING_INITIALIZATION.get()) {
-            synchronized (this) {
-                if (!PENDING_INITIALIZATION.get()) {
-                    return this;
-                }
-                NativeLibrary.withName("libbn254").install(this.getClass());
-                PENDING_INITIALIZATION.set(false);
-            }
-        }
-        return this;
+        return INSTANCE_HOLDER.getInstance();
     }
 
     /**

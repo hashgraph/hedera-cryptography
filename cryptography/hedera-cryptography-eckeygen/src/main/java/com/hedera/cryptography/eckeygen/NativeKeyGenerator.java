@@ -17,6 +17,7 @@
 package com.hedera.cryptography.eckeygen;
 
 import com.hedera.common.nativesupport.NativeLibrary;
+import com.hedera.common.nativesupport.SingletonLoader;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -29,25 +30,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * An implementation of {@link KeyGenerator} that uses JNI and rust code to generate the keys
  */
 public class NativeKeyGenerator implements KeyGenerator {
-    private static final AtomicBoolean PENDING_INITIALIZATION = new AtomicBoolean(true);
+    private static final SingletonLoader<NativeKeyGenerator> INSTANCE_HOLDER = new SingletonLoader<>(
+            "libkey_gen",
+            NativeKeyGenerator.class,
+            NativeKeyGenerator::new
+    );
 
-    /**
-     * Initializes the class by loading the necessary native libraries.
-     *
-     * @return this instance.
-     */
-    @NonNull
-    public NativeKeyGenerator initialize() {
-        if (PENDING_INITIALIZATION.get()) {
-            synchronized (this) {
-                if (!PENDING_INITIALIZATION.get()) {
-                    return this;
-                }
-                NativeLibrary.withName("libkey_gen").install(this.getClass());
-                PENDING_INITIALIZATION.set(false);
-            }
-        }
-        return this;
+    private NativeKeyGenerator() {
+    }
+
+    public static NativeKeyGenerator getInstance() {
+        return INSTANCE_HOLDER.getInstance();
     }
 
     /**
