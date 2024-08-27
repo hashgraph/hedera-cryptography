@@ -32,8 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class NativeKeyGenerator implements KeyGenerator {
     private static final SingletonLoader<NativeKeyGenerator> INSTANCE_HOLDER = new SingletonLoader<>(
             "libkey_gen",
-            NativeKeyGenerator.class,
-            NativeKeyGenerator::new
+            new NativeKeyGenerator()
     );
 
     private NativeKeyGenerator() {

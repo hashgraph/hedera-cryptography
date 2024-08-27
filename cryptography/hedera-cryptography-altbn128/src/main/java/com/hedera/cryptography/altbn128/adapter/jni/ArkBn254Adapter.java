@@ -28,8 +28,7 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      */
     private static final SingletonLoader<ArkBn254Adapter> INSTANCE_HOLDER = new SingletonLoader<>(
             "libbn254",
-            ArkBn254Adapter.class,
-            ArkBn254Adapter::new
+            new ArkBn254Adapter()
     );
 
     private ArkBn254Adapter() {
