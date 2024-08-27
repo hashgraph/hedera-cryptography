@@ -23,7 +23,6 @@ import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -124,7 +123,7 @@ public class AltBn128Group2Element implements GroupElement {
     @NonNull
     @Override
     public byte[] toBytes() {
-        return Arrays.copyOf(this.representation, representation.length);
+        return this.representation.clone();
     }
 
     @Override
