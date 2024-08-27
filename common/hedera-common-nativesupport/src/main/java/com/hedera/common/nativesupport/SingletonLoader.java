@@ -6,7 +6,7 @@ public class SingletonLoader<T> {
     private final String libraryName;
     private final Class<T> clazz;
     private final Supplier<T> instanceSupplier;
-    private T instance;
+    private volatile T instance;
 
     public SingletonLoader(final String libraryName, final Class<T> clazz, final Supplier<T> instanceSupplier) {
         this.libraryName = libraryName;
@@ -14,7 +14,7 @@ public class SingletonLoader<T> {
         this.instanceSupplier = instanceSupplier;
     }
 
-    public synchronized T getInstance() {
+    public T getInstance() {
         if (instance == null) {
             synchronized (this) {
                 if (instance != null) {

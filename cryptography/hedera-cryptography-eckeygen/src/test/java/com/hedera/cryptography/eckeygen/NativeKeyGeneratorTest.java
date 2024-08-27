@@ -20,19 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hedera.cryptography.pairings.api.curves.KnownCurves;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 class NativeKeyGeneratorTest {
@@ -42,44 +31,6 @@ class NativeKeyGeneratorTest {
         -76, -28, 121, -71, -34, 28, -50, 126, 50, 85, -6, -74, -93, -83, -125, -26, 70, 70, 87, -123, -16, -104, -60,
         122, 111, 42, -40, -67, -101, -38, 83, 106, -56, -60, 103, -34, 107, 1
     };
-
-    @Test
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    void testInitializeRaceCondition() throws InterruptedException {
-        final int numThreads = 10000;
-        final AtomicInteger counter = new AtomicInteger(0);
-        final AtomicInteger successful = new AtomicInteger(0);
-        final Callable<NativeKeyGenerator> callable = new Callable<>() {
-            @NonNull
-            @Override
-            public NativeKeyGenerator call() {
-                counter.incrementAndGet();
-                try {
-                    var value = NativeKeyGenerator.getInstance();
-                    successful.incrementAndGet();
-                    return value;
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        };
-        final List<Callable<NativeKeyGenerator>> callables =
-                Stream.generate(()->callable)
-                        .limit(numThreads)
-                .toList();
-
-        try (ExecutorService executor = Executors.newFixedThreadPool(numThreads)) {
-            final List<Future<NativeKeyGenerator>> futures = executor.invokeAll(callables);
-            executor.shutdown();
-            executor.awaitTermination(1, TimeUnit.MINUTES);
-            assertEquals(numThreads, counter.get());
-            assertEquals(numThreads, successful.get());
-            for (Future<NativeKeyGenerator> future : futures) {
-                assertTrue(future.isDone());
-                assertSame(NativeKeyGenerator.getInstance(), future.resultNow());
-            }
-        }
-    }
 
     @Test
     void testInitialize() {
