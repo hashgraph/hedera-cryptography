@@ -17,6 +17,7 @@
 package com.hedera.cryptography.eckeygen;
 
 import com.hedera.common.nativesupport.NativeLibrary;
+import com.hedera.common.nativesupport.SingletonLoader;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -29,36 +30,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * An implementation of {@link KeyGenerator} that uses JNI and rust code to generate the keys
  */
 public class NativeKeyGenerator implements KeyGenerator {
-    private static final AtomicBoolean PENDING_INITIALIZATION = new AtomicBoolean(true);
+    private static final SingletonLoader<NativeKeyGenerator> INSTANCE_HOLDER = new SingletonLoader<>(
+            "libkey_gen",
+            new NativeKeyGenerator()
+    );
 
-    /**
-     * Initializes the class by loading the necessary native libraries.
-     *
-     * @return this instance.
-     */
-    @NonNull
-    public NativeKeyGenerator initialize() {
-        if (PENDING_INITIALIZATION.get()) {
-            synchronized (this) {
-                if (!PENDING_INITIALIZATION.get()) {
-                    return this;
-                }
-                final NativeLibrary library = NativeLibrary.withName("libkey_gen");
-                try {
-                    // JPMS does not allow for resources contained in a module to be loaded in a separated class
-                    // So we are forced to load this the InputStream in a class stored in a jar that holds the resource
-                    final InputStream is = this.getClass().getModule().getResourceAsStream(library.locationInJar());
-                    if (is == null) {
-                        throw new UncheckedIOException(new IOException("Could not find " + library.name()));
-                    }
-                    library.install(is);
-                } catch (IOException e) {
-                    throw new UncheckedIOException("Unable to load library " + library.name(), new IOException(e));
-                }
-                PENDING_INITIALIZATION.set(false);
-            }
-        }
-        return this;
+    private NativeKeyGenerator() {
+    }
+
+    public static NativeKeyGenerator getInstance() {
+        return INSTANCE_HOLDER.getInstance();
     }
 
     /**

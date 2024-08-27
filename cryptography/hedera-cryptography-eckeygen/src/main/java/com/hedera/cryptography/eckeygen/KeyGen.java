@@ -50,7 +50,7 @@ public class KeyGen {
 
     private static final KeysGenerationService KEYS_SERVICE = new KeysGenerationService(
             SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.GROUP1_FOR_SIGNING),
-            new NativeKeyGenerator().initialize());
+            NativeKeyGenerator.getInstance());
 
     /**
      *  <p>Usage:
