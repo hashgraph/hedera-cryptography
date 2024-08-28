@@ -22,10 +22,12 @@ import java.util.Random;
 
 /**
  * Represents a finite field used in a pairing-based cryptography scheme.
+ *  <p>A finite field is a ring of scalars values [0,1,...r-1, 0, 1, ...] where all operations are done modulus a prime number P.
+ * <p> All operations inside the field, produce a value that belongs to it.
+ * In an elliptic curve, these are the values that can be used to operate in certain {@link Group} operations.
+ * <p>Each scalar element in the field is a {@link FieldElement}.
  *
- * <p>This is a factory interface, responsible for creating {@link FieldElement} which are scalars belonging to the
- * field represented by this instance.
- *
+ * @see Group
  * @see FieldElement
  */
 public interface Field {
@@ -37,7 +39,7 @@ public interface Field {
      */
     @NonNull
     default FieldElement random(@NonNull final Random random) {
-        final byte[] seed = new byte[getSeedSize()];
+        final byte[] seed = new byte[seedSize()];
         random.nextBytes(seed);
 
         return random(seed);
@@ -84,14 +86,14 @@ public interface Field {
      *
      * @return the size of an element
      */
-    int getElementSize();
+    int elementSize();
 
     /**
      * Gets the size in bytes of the seed necessary to generate a new element
      *
      * @return the size of a seed needed to generate a new element
      */
-    int getSeedSize();
+    int seedSize();
 
     /**
      * Get the pairing that this field is used in
@@ -99,5 +101,5 @@ public interface Field {
      * @return the pairing
      */
     @NonNull
-    BilinearPairing getPairing();
+    PairingFriendlyCurve getPairingFriendlyCurve();
 }
