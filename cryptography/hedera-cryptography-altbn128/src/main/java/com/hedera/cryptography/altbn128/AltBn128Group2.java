@@ -19,10 +19,10 @@ package com.hedera.cryptography.altbn128;
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.common.HashUtils;
 import com.hedera.cryptography.altbn128.facade.Group2Facade;
-import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,7 +48,7 @@ public class AltBn128Group2 implements Group {
      */
     @NonNull
     @Override
-    public BilinearPairing getPairing() {
+    public PairingFriendlyCurve getPairingFriendlyCurve() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -154,23 +154,15 @@ public class AltBn128Group2 implements Group {
      * {@inheritDoc}
      */
     @Override
-    public int getCompressedSize() {
-        return facade.size();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getUncompressedSize() {
-        return facade.size();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getSeedSize() {
+    public int seedSize() {
         return facade.randomSeedSize();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int elementSize() {
+        return facade.size();
     }
 }

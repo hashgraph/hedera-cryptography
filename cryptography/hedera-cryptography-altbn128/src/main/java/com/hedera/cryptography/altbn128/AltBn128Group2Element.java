@@ -92,27 +92,6 @@ public class AltBn128Group2Element implements GroupElement {
     @Deprecated
     @NonNull
     @Override
-    public GroupElement compress() {
-        return this.copy();
-    }
-
-    /**
-     * {@inheritDoc}
-     * @deprecated
-     */
-    @Deprecated
-    @Override
-    public boolean isCompressed() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @deprecated
-     */
-    @Deprecated
-    @NonNull
-    @Override
     public GroupElement copy() {
         return new AltBn128Group2Element(group, toBytes());
     }
@@ -146,5 +125,13 @@ public class AltBn128Group2Element implements GroupElement {
      */
     byte[] getRepresentation() {
         return representation;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int size() {
+        return this.representation.length;
     }
 }

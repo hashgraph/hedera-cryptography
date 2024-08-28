@@ -53,7 +53,7 @@ class AltBn128Group2FacadeTest {
     void createRandomGroupElementIsNotNull() {
         var group = new AltBn128Group2();
         Random rng = new SecureRandom();
-        final byte[] seed = new byte[group.getSeedSize()];
+        final byte[] seed = new byte[group.seedSize()];
         rng.nextBytes(seed);
         assertNotNull(group.random(seed));
     }
@@ -61,8 +61,8 @@ class AltBn128Group2FacadeTest {
     @Test
     void createRandomGroupWithSmallerSeedThrowsException() {
         var group = new AltBn128Group2();
-        final byte[] smallerSeed = new byte[group.getSeedSize() - 1];
-        final byte[] largerSeed = new byte[group.getSeedSize() + 1];
+        final byte[] smallerSeed = new byte[group.seedSize() - 1];
+        final byte[] largerSeed = new byte[group.seedSize() + 1];
         assertThrows(IllegalArgumentException.class, () -> group.random(smallerSeed));
         assertThrows(IllegalArgumentException.class, () -> group.random(largerSeed));
     }
@@ -71,7 +71,7 @@ class AltBn128Group2FacadeTest {
     void createGroupElementFromRandomIsNotNull() {
         var group = new AltBn128Group2();
         Random rng = new SecureRandom();
-        ByteBuffer buffer = ByteBuffer.allocate(group.getSeedSize());
+        ByteBuffer buffer = ByteBuffer.allocate(group.seedSize());
         rng.nextBytes(buffer.array());
         group.random(buffer.array());
         assertNotNull(buffer.array());
@@ -91,7 +91,7 @@ class AltBn128Group2FacadeTest {
     void createRandomGroupElementAndGetAffineRepresentationIsNotNull() {
         var group = new AltBn128Group2();
         Random rng = new SecureRandom();
-        final byte[] seed = new byte[group.getSeedSize()];
+        final byte[] seed = new byte[group.seedSize()];
         rng.nextBytes(seed);
         final GroupElement random = group.random(seed);
         assertNotNull(random);

@@ -19,9 +19,9 @@ package com.hedera.cryptography.altbn128;
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.altbn128.facade.FieldFacade;
-import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 
@@ -101,7 +101,7 @@ public class AltBn128Field implements Field {
      * @return the occupied size in bytes of this field's FieldElements
      */
     @Override
-    public int getElementSize() {
+    public int elementSize() {
         return facade.size();
     }
 
@@ -110,13 +110,13 @@ public class AltBn128Field implements Field {
      * @return the size in bytes for the random seed.
      */
     @Override
-    public int getSeedSize() {
+    public int seedSize() {
         return facade.randomSeedSize();
     }
 
     @NonNull
     @Override
-    public BilinearPairing getPairing() {
+    public PairingFriendlyCurve getPairingFriendlyCurve() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

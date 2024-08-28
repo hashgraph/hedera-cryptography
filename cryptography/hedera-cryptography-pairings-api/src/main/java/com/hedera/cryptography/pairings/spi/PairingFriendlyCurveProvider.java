@@ -16,15 +16,15 @@
 
 package com.hedera.cryptography.pairings.spi;
 
-import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Curve;
+import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * This should return a {@link BilinearPairing} for a given {@link Curve} the implementation supports.
+ * This should return a {@link PairingFriendlyCurve} for a given {@link Curve} the implementation supports.
  * Spi will return a new instance of this class everytime is requested with {@link java.util.ServiceLoader}
  */
-public abstract class BilinearPairingProvider {
+public abstract class PairingFriendlyCurveProvider {
     /**
      * Atomic boolean to avoid repeated attempts to reload the resource.
      */
@@ -42,7 +42,7 @@ public abstract class BilinearPairingProvider {
      * Implementations should consider that the Init method will be every time the instance is requested.
      * @return the same instance that received the call but after being initialized if applicable.
      */
-    public BilinearPairingProvider init() {
+    public PairingFriendlyCurveProvider init() {
         if (!initialized.get()) {
             synchronized (this) {
                 if (initialized.get()) {
@@ -63,9 +63,9 @@ public abstract class BilinearPairingProvider {
     public abstract Curve curve();
 
     /**
-     * Returns the instance of the {@link BilinearPairing}
+     * Returns the instance of the {@link PairingFriendlyCurve}
      *
-     * @return the instance of the {@link BilinearPairing}
+     * @return the instance of the {@link PairingFriendlyCurve}
      */
-    public abstract BilinearPairing pairing();
+    public abstract PairingFriendlyCurve pairingFriendlyCurve();
 }

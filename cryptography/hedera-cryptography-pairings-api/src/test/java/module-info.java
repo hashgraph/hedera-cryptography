@@ -1,13 +1,14 @@
-import com.hedera.cryptography.pairings.test.spi.BilinearFailingPairingProvider;
-import com.hedera.cryptography.pairings.test.spi.BilinearPairingMockProvider;
+import com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
+import com.hedera.cryptography.pairings.test.spi.FailingPairingFriendlyCurveProvider;
+import com.hedera.cryptography.pairings.test.spi.PairingMockFriendlyCurveProvider;
 
 open module com.hedera.cryptography.pairings.test {
     requires transitive com.hedera.cryptography.pairings.api;
     requires org.junit.jupiter.api;
 
-    uses com.hedera.cryptography.pairings.spi.BilinearPairingProvider;
+    uses PairingFriendlyCurveProvider;
 
-    provides com.hedera.cryptography.pairings.spi.BilinearPairingProvider with
-            BilinearPairingMockProvider,
-            BilinearFailingPairingProvider;
+    provides PairingFriendlyCurveProvider with
+            PairingMockFriendlyCurveProvider,
+            FailingPairingFriendlyCurveProvider;
 }
