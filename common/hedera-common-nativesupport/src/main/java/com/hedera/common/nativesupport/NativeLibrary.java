@@ -194,8 +194,7 @@ public class NativeLibrary {
      * the JVM.
      * <p>Warning: It is responsibility of the caller to assure this method is only called once per desired library.
      *
-     * @param c because JPMS does not allow for resources contained in a module to be loaded in a separated class, the
-     *          caller must provide a class that is in the module that contains the resource.
+     * @param c the class whose module contains the native library
      * @throws IllegalStateException if the module does not open the package where the resource is located
      */
     public void install(@NonNull final Class<?> c) {
