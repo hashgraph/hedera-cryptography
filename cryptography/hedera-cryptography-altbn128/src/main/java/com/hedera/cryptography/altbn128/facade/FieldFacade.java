@@ -171,7 +171,7 @@ public final class FieldFacade {
      * @return {@code true} if {@code value} and {@code other} are equals. {@code false} otherwise
      * @throws AltBn128Exception in case of error
      */
-    public byte[] add(byte[] value, byte[] other) {
+    public byte[] add(@NonNull final byte[] value, @NonNull final byte[] other) {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsAdd(value, other, output);
         if (result < SUCCESS) {
@@ -187,7 +187,7 @@ public final class FieldFacade {
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
      * @throws AltBn128Exception in case of error
      */
-    public byte[] multiply(byte[] value, byte[] other) {
+    public byte[] multiply(@NonNull final byte[] value, @NonNull final byte[] other) {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsMultiply(value, other, output);
         if (result < SUCCESS) {
@@ -202,7 +202,7 @@ public final class FieldFacade {
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
      * @throws AltBn128Exception in case of error
      */
-    public byte[] subtracts(byte[] value, byte[] other) {
+    public byte[] subtracts(@NonNull final byte[] value, @NonNull final byte[] other) {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsSubtract(value, other, output);
         if (result < SUCCESS) {
@@ -217,7 +217,7 @@ public final class FieldFacade {
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
      * @throws AltBn128Exception in case of error
      */
-    public byte[] inverse(byte[] value) {
+    public byte[] inverse(@NonNull final byte[] value) {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsInverse(value, output);
         if (result == FieldLibraryAdapter.CANNOT_INVERT) {
@@ -236,7 +236,7 @@ public final class FieldFacade {
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
      * @throws AltBn128Exception in case of error
      */
-    public byte[] pow(byte[] value, final long exponent) {
+    public byte[] pow(@NonNull final byte[] value, final long exponent) {
         if (exponent < 0) throw new IllegalArgumentException("exponent must not be negative");
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsPow(value, exponent, output);

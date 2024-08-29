@@ -42,6 +42,8 @@ public final class ArkBn254Adapter implements FieldLibraryAdapter, Group2Library
     }
 
     /**
+     * Returns the singleton instance of this library adapter.
+     *
      * @return the singleton instance of this library adapter.
      */
     public static ArkBn254Adapter getInstance() {

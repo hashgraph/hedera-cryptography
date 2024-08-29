@@ -36,7 +36,14 @@ public class AltBn128Group2Element implements GroupElement {
     private final byte[] representation;
     private final Group2Facade facade;
 
-    AltBn128Group2Element(final Group group, final byte[] representation, final Group2Facade facade) {
+    /**
+     * Creates a new instance
+     * @param group the group this element belongs to
+     * @param representation the byte array representation of this element
+     * @param facade the facade to use
+     */
+    AltBn128Group2Element(
+            @NonNull final Group group, @NonNull final byte[] representation, @NonNull final Group2Facade facade) {
         this.group = Objects.requireNonNull(group, "group must not be null");
         this.representation = Objects.requireNonNull(representation, "innerRepresentation must not be null");
         this.facade = Objects.requireNonNull(facade, "facade must not be null");
@@ -47,7 +54,7 @@ public class AltBn128Group2Element implements GroupElement {
      * @param group the group this element belongs to
      * @param representation the byte array representation of this element
      */
-    public AltBn128Group2Element(@NonNull Group group, @NonNull final byte[] representation) {
+    public AltBn128Group2Element(@NonNull final Group group, @NonNull final byte[] representation) {
         this(
                 group,
                 representation,

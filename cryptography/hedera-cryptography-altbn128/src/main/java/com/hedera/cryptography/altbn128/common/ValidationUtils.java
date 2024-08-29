@@ -19,16 +19,36 @@ package com.hedera.cryptography.altbn128.common;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 
+/**
+ *  Some utility functions to perform validations
+ */
 public class ValidationUtils {
 
+    /**
+     * private constructor to ensure static access
+     */
+    private ValidationUtils() {
+        // private constructor to ensure static access
+    }
+
+    /**
+     * Returns a cast of the parameter to the expected subclass, or throws an exception if not compatible.
+     * @param expectedSubclass the expected subclass
+     * @param parameter the object to perform the cast to
+     * @param <T> the class we expect to receive
+     * @param <Y> the superclass we are down casting
+     * @return the same instance cast to the expected subtype
+     * @throws IllegalArgumentException if T cannot be cast to Y
+     */
     @NonNull
     @SuppressWarnings("unchecked")
-    public static <T> T expectOrThrow(final @NonNull Class<T> expectedSubclass, final @NonNull Object other) {
+    public static <T extends Y, Y> T expectOrThrow(
+            final @NonNull Class<T> expectedSubclass, final @NonNull Y parameter) {
         Objects.requireNonNull(expectedSubclass, "expectedSubclass must not be null");
-        Objects.requireNonNull(other, "other must not be null");
-        if (!expectedSubclass.isAssignableFrom(other.getClass())) {
+        Objects.requireNonNull(parameter, "parameter must not be null");
+        if (!expectedSubclass.isAssignableFrom(parameter.getClass())) {
             throw new IllegalArgumentException("Not the element");
         }
-        return (T) other;
+        return (T) parameter;
     }
 }

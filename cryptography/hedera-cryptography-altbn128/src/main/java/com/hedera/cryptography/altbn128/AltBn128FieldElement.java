@@ -161,7 +161,7 @@ public class AltBn128FieldElement implements FieldElement {
         if (this.field != ((AltBn128FieldElement) obj).field) return false;
         if (this.representation.length != ((AltBn128FieldElement) obj).representation.length) return false;
 
-        return Arrays.equals(this.representation, ((AltBn128FieldElement) obj).representation);
+        return facade.equals(this.representation, ((AltBn128FieldElement) obj).representation);
     }
 
     @Override
