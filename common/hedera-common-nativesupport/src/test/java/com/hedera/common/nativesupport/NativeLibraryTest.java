@@ -16,11 +16,12 @@
 
 package com.hedera.common.nativesupport;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.hedera.common.nativesupport.jni.Greeter;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ class NativeLibraryTest {
         assertNotNull(library);
 
         try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
-                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class); ) {
+                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class)) {
             osStatic.when(OperatingSystem::current).thenReturn(operatingSystem);
             archStatic.when(Architecture::current).thenReturn(architecture);
 
@@ -75,7 +76,7 @@ class NativeLibraryTest {
         assertNotNull(library);
 
         try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
-                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class); ) {
+                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class)) {
             osStatic.when(OperatingSystem::current).thenReturn(operatingSystem);
             archStatic.when(Architecture::current).thenReturn(architecture);
 
@@ -97,7 +98,7 @@ class NativeLibraryTest {
         assertNotNull(library);
 
         try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
-                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class); ) {
+                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class)) {
             osStatic.when(OperatingSystem::current).thenReturn(operatingSystem);
             archStatic.when(Architecture::current).thenReturn(architecture);
 
@@ -111,33 +112,25 @@ class NativeLibraryTest {
     }
 
     @Test
-    public void testInstallExistentLib() throws IOException {
+    public void testInstallExistentLib() {
         final NativeLibrary library = NativeLibrary.withName("greeter");
-        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(library.locationInJar())) {
-            assertNotNull(is, "Should have found " + library.locationInJar());
-            assertDoesNotThrow(() -> library.install(is));
-        }
+        assertNotNull(library.locationInJar(), "Should have found location in jar");
+        assertDoesNotThrow(() -> library.install(this.getClass()));
     }
 
     @Test
-    void testInstallAndInvoke() throws IOException {
+    void testInstallAndInvoke() {
         // Load native library greeter.dll (Windows) or greeter.so (Linux) greeter.dylib (Mac)
-        final NativeLibrary library = NativeLibrary.withName("greeter");
-        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(library.locationInJar())) {
-            assertNotNull(is, "Should have found " + library.locationInJar());
-            assertDoesNotThrow(() -> library.install(is));
-            assertDoesNotThrow(() -> new Greeter().getGreeting());
-        }
+        NativeLibrary.withName("greeter").install(this.getClass());
+        assertDoesNotThrow(() -> new Greeter().getGreeting());
     }
 
     @Test
-    void testInstallInvokeAndResult() throws IOException {
+    void testInstallInvokeAndResult() {
         // Load native library greeter.dll (Windows) or greeter.so (Linux) greeter.dylib (Mac)
         final NativeLibrary library = NativeLibrary.withName("greeter");
-        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(library.locationInJar())) {
-            assertNotNull(is, "Should have found " + library.locationInJar());
-            assertDoesNotThrow(() -> library.install(is));
-            assertEquals("Hello, World from C++!", new Greeter().getGreeting());
-        }
+        assertNotNull(library.locationInJar(), "Should have found location in jar");
+        assertDoesNotThrow(() -> library.install(this.getClass()));
+        assertEquals("Hello, World from C++!", new Greeter().getGreeting());
     }
 }

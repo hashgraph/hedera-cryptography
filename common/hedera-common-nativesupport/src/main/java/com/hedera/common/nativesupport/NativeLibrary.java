@@ -20,6 +20,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -174,6 +175,46 @@ public class NativeLibrary {
     }
 
     /**
+     * Copied from jdk.internal.module.Resources.toPackageName() since the method is not open to the public.
+     *
+     * @return the package name where the native library is located
+     */
+    public String packageNameOfResource() {
+        final String name = locationInJar();
+        int index = name.lastIndexOf('/');
+        if (index == -1 || index == name.length() - 1) {
+            return "";
+        } else {
+            return name.substring(0, index).replace('/', '.');
+        }
+    }
+
+    /**
+     * Unpackages the native library to a temporary dir, sets appropriate file permissions, and loads the library into
+     * the JVM.
+     * <p>Warning: It is responsibility of the caller to assure this method is only called once per desired library.
+     *
+     * @param c the class whose module contains the native library
+     * @throws IllegalStateException if the module does not open the package where the resource is located
+     */
+    public void install(@NonNull final Class<?> c) {
+        if (!c.getModule().isOpen(packageNameOfResource(), this.getClass().getModule())) {
+            // getResourceAsStream() will not throw an exception if the package is not opened, it will just return null
+            // so we manually check if the package is opened
+            throw new IllegalStateException("The module '%s' must open the package '%s' to module '%s'"
+                    .formatted(
+                            c.getModule().getName(),
+                            packageNameOfResource(),
+                            this.getClass().getModule().getName()));
+        }
+        try {
+            install(c.getModule().getResourceAsStream(locationInJar()));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Unable to load adapter " + name(), new IOException(e));
+        }
+    }
+
+    /**
      * Unpackages the native library from a provided InputStream to a temporary dir, sets appropriate file permissions, and loads the library
      * into the JVM.
      * <p>Warning: It is responsibility of the caller to assure this method is only called once per desired library.
@@ -181,7 +222,7 @@ public class NativeLibrary {
      * @throws IOException if there's an error reading the file or setting permissions.
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void install(@NonNull final InputStream resourceStream) throws IOException {
+    private void install(@NonNull final InputStream resourceStream) throws IOException {
         Objects.requireNonNull(resourceStream, "resourceStream must not be null");
         final String fileName = Path.of(name).getFileName().toString();
         final Path tempDirectory = createTempDirectory();
