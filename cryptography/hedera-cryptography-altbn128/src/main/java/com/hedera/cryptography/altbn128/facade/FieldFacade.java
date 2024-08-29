@@ -16,10 +16,10 @@
 
 package com.hedera.cryptography.altbn128.facade;
 
-import static com.hedera.cryptography.altbn128.adapter.FieldLibraryAdapter.SUCCESS;
+import static com.hedera.cryptography.altbn128.adapter.FieldElementsLibraryAdapter.SUCCESS;
 
 import com.hedera.cryptography.altbn128.AltBn128Exception;
-import com.hedera.cryptography.altbn128.adapter.FieldLibraryAdapter;
+import com.hedera.cryptography.altbn128.adapter.FieldElementsLibraryAdapter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 
@@ -31,7 +31,7 @@ import java.util.Objects;
 public final class FieldFacade {
 
     /** the underlying library adapter  */
-    private final FieldLibraryAdapter adapter;
+    private final FieldElementsLibraryAdapter adapter;
     /** the occupied size in bytes of this of the fieldElements representations. */
     private final int size;
     /** the occupied size in bytes of the random seed.  */
@@ -39,14 +39,14 @@ public final class FieldFacade {
 
     /**
      * Creates an instance of this facade.
-     * @param fieldLibraryAdapter the adapter containing the underlying logic.
+     * @param fieldElementsLibraryAdapter the adapter containing the underlying logic.
      */
-    public FieldFacade(@NonNull final FieldLibraryAdapter fieldLibraryAdapter) {
-        this.adapter = Objects.requireNonNull(fieldLibraryAdapter, "adapter must not be null");
+    public FieldFacade(@NonNull final FieldElementsLibraryAdapter fieldElementsLibraryAdapter) {
+        this.adapter = Objects.requireNonNull(fieldElementsLibraryAdapter, "adapter must not be null");
         // Caching the value given that this is frequently called
         this.size = adapter.fieldElementsSize();
         // Caching the value given that this is frequently called
-        this.randomSeedSize = adapter.fieldElementsRandomSeedSize();
+        this.randomSeedSize = adapter.randomSeedSize();
     }
 
     /**
@@ -220,7 +220,7 @@ public final class FieldFacade {
     public byte[] inverse(@NonNull final byte[] value) {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsInverse(value, output);
-        if (result == FieldLibraryAdapter.CANNOT_INVERT) {
+        if (result == FieldElementsLibraryAdapter.CANNOT_INVERT) {
             throw new IllegalArgumentException("The scalar cannot be inverted");
         }
         if (result < SUCCESS) {
