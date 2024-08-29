@@ -1,7 +1,5 @@
-use ark_bn254::{Fq, Fq2, G1Affine, G2Affine};
-use ark_ec::{AffineRepr, CurveConfig, CurveGroup};
-use ark_ff::{BigInt, PrimeField};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_ec::{ CurveConfig, CurveGroup};
+use ark_serialize::{CanonicalDeserialize};
 use rand::Rng;
 /// Generic utility functions to instantiate and operate with curve points
 
@@ -76,17 +74,6 @@ pub fn group_elements_deserialize<G: CurveGroup>(value: &[u8]) -> Result<G, Stri
     }
 }
 
-/// returns the byte representation of a point in affine representation
-pub fn group_elements_serialize_affine<G: CurveGroup>(
-    element: &G::Affine,
-) -> Result<Vec<u8>, String> {
-    let mut serialized = Vec::new();
-    match element.serialize_uncompressed(&mut serialized) {
-        Ok(_) => Ok(serialized),
-        Err(v) => Err(v.to_string()),
-    }
-}
-
 /// returns the point from an affine byte representation of a point
 pub fn group_elements_deserialize_and_validate<G: CurveGroup>(
     value: &[u8],
@@ -95,64 +82,4 @@ pub fn group_elements_deserialize_and_validate<G: CurveGroup>(
         Ok(val) => Ok(val),
         Err(err) => Err(err.to_string()),
     }
-}
-
-/// ****************
-/// Representations
-/// ****************
-
-/// returns the point in affine representation from a projective representation of the point
-pub fn group_elements_to_affine<G: CurveGroup>(element: G) -> G::Affine {
-    element.into_affine()
-}
-/// returns the point in projective representation from an affine  representation of the point
-pub fn group_elements_to_projective<G: CurveGroup>(element: G::Affine) -> G {
-    element.into_group()
-}
-
-/// extracts x and y coordinates for a G1Affine point
-pub fn group_elements_g1_xy(a: G1Affine) -> ([u64; 4], [u64; 4]) {
-    (
-        a.x().unwrap().into_bigint().0,
-        a.y().unwrap().into_bigint().0,
-    )
-}
-
-/// creates an affine representation of the G1Affine point from x and y coordinates. The point would need to be validated.
-/// The 0 point is not supported
-pub fn group_elements_g1_from_xy(x: [u64; 4], y: [u64; 4]) -> G1Affine {
-    // Finally, while not recommended,
-    // users can directly construct group elements
-    // from the x and y coordinates. This is useful when implementing algorithms
-    // like hash-to-curve.
-    let x_fq = Fq::new(BigInt::new(x));
-    let y_fq = Fq::new(BigInt::new(y));
-    G1Affine::new(x_fq, y_fq)
-}
-
-/// extracts x,x and y,y coordinates for a G2Affine point
-pub fn group_elements_g2_xy(a: G2Affine) -> ([u64; 4], [u64; 4], [u64; 4], [u64; 4]) {
-    (
-        a.x().unwrap().c0.into_bigint().0,
-        a.x().unwrap().c1.into_bigint().0,
-        a.y().unwrap().c0.into_bigint().0,
-        a.y().unwrap().c1.into_bigint().0,
-    )
-}
-
-/// creates an affine representation of the G2Affine point from x,x and y,y coordinates. The point would need to be validated.
-/// The 0 point is not supported
-pub fn group_elements_g2_from_xy(
-    x1: [u64; 4],
-    x2: [u64; 4],
-    y1: [u64; 4],
-    y2: [u64; 4],
-) -> G2Affine {
-    // FROM: https://docs.rs/ark-algebra-intro/latest/ark_algebra_intro/
-    // Finally, while not recommended, users can directly construct group elements
-    // from the x and y coordinates. This is useful when implementing algorithms
-    // like hash-to-curve.
-    let x_fq2 = Fq2::new(Fq::new(BigInt::new(x1)), Fq::new(BigInt::new(x2)));
-    let y_fq2 = Fq2::new(Fq::new(BigInt::new(y1)), Fq::new(BigInt::new(y2)));
-    G2Affine::new(x_fq2, y_fq2)
 }

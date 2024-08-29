@@ -31,20 +31,6 @@ public interface Group2LibraryAdapter {
     int SUCCESS = 0;
     /** The return code that represents that the requested point is not in the curve */
     int NOT_IN_CURVE = -4;
-    /** The occupied size in bytes of each point coordinate*/
-    int POINT_COORDINATE_BYTE_SIZE = 32;
-
-    /**
-     * Creates a GroupElement byte internal representation from x1,x2,y1,y2 representation of coordinates each of those 32 bytes long.
-     *
-     * @param x1 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate x.
-     * @param x2 a POINT_COORDINATE_BYTE_SIZE length array containing the second element of coordinate x.
-     * @param y1 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate y.
-     * @param y2 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate y.
-     * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
-     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
-     */
-    int g2FromCoordinates(final byte[] x1, final byte[] x2, final byte[] y1, final byte[] y2, final byte[] output);
 
     /**
      * Creates a GroupElement byte internal representation from a seed byte array
