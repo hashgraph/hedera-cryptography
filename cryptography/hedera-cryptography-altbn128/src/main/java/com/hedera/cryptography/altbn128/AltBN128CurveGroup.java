@@ -24,7 +24,6 @@ public enum AltBN128CurveGroup {
     /**
      *  G1
      */
-
     GROUP1,
     /**
      *  G2
