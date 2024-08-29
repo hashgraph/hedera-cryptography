@@ -7,7 +7,7 @@ use rand::Rng;
 /// Fq defines the coordinate field for the points on the curve (where the curve is drawn).
 /// Fr defines the field for the scalars used in operations on the curve, typically corresponding to the prime order of a subgroup of points on the curve.
 
-type F = ark_bn254::Fr;
+pub type F = ark_bn254::Fr;
 
 /// creates a scalar from an u8 array reference
 /// G is a curve group

@@ -21,40 +21,40 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.hedera.cryptography.pairings.api.BilinearPairings;
 import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.pairings.spi.BilinearPairingProvider;
-import com.hedera.cryptography.pairings.test.spi.BilinearPairingMockProvider;
+import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
+import com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
+import com.hedera.cryptography.pairings.test.spi.PairingMockFriendlyCurveProvider;
 import java.util.NoSuchElementException;
 import org.junit.jupiter.api.Test;
 
-class BilinearPairingsTest {
+class PairingsFriendlyCurvesTest {
 
     @Test
     void implementedCurveIsFound() {
-        assertDoesNotThrow(() -> BilinearPairings.instanceFor(Curve.ALT_BN128));
+        assertDoesNotThrow(() -> PairingFriendlyCurves.instanceFor(Curve.ALT_BN128));
     }
 
     @Test
     void multipleCallsReturnSameInstance() {
-        BilinearPairingProvider expected = BilinearPairings.findInstance(Curve.ALT_BN128);
-        assertDoesNotThrow(() -> BilinearPairings.findInstance(Curve.ALT_BN128));
-        assertSame(expected, BilinearPairings.findInstance(Curve.ALT_BN128));
+        PairingFriendlyCurveProvider expected = PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
+        assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(Curve.ALT_BN128));
+        assertSame(expected, PairingFriendlyCurves.findInstance(Curve.ALT_BN128));
     }
 
     @Test
     void bilinearPairingIsInitialized() {
-        BilinearPairingProvider expected = BilinearPairings.findInstance(Curve.ALT_BN128);
-        BilinearPairingMockProvider secondRequest =
-                ((BilinearPairingMockProvider) BilinearPairings.findInstance(Curve.ALT_BN128));
+        PairingFriendlyCurveProvider expected = PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
+        PairingMockFriendlyCurveProvider secondRequest =
+                ((PairingMockFriendlyCurveProvider) PairingFriendlyCurves.findInstance(Curve.ALT_BN128));
         assertEquals(1, secondRequest.getInitializedCount());
         assertSame(expected, secondRequest);
     }
 
     @Test
     void multipleInitializationsAreIgnored() {
-        BilinearPairingMockProvider bilinearPairingProvider =
-                (BilinearPairingMockProvider) BilinearPairings.findInstance(Curve.ALT_BN128);
+        PairingMockFriendlyCurveProvider bilinearPairingProvider =
+                (PairingMockFriendlyCurveProvider) PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
         bilinearPairingProvider.init();
         assertDoesNotThrow(
                 bilinearPairingProvider
@@ -64,11 +64,12 @@ class BilinearPairingsTest {
 
     @Test
     void unknownCurveThrowsException() {
-        assertThrows(NoSuchElementException.class, () -> BilinearPairings.instanceFor(TestCurves.NON_EXISTENT_CURVE));
+        assertThrows(
+                NoSuchElementException.class, () -> PairingFriendlyCurves.instanceFor(TestCurves.NON_EXISTENT_CURVE));
     }
 
     @Test
     void failingCurveThrowsException() {
-        assertThrows(IllegalStateException.class, () -> BilinearPairings.instanceFor(TestCurves.FAIL_CURVE));
+        assertThrows(IllegalStateException.class, () -> PairingFriendlyCurves.instanceFor(TestCurves.FAIL_CURVE));
     }
 }

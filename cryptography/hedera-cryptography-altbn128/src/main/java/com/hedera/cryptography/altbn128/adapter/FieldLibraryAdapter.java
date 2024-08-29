@@ -17,14 +17,15 @@
 package com.hedera.cryptography.altbn128.adapter;
 
 /**
- * This interface defines a contract and any third party library that provides the functionality must adhere to.
- *  This contract is not Java friendly, and it is defined in a way that is easy to implement in other languages such as rust.
+ * This interface defines a contract and any third party library that provides the functionality for handling Finite Fields and Scalars must adhere to.
+ *
+ *  @apiNote This contract is not Java friendly, and it is defined in a way that is easy to implement in other languages.
  *  All operations return a status code, where 0 mean success, and a non-zero result means a codified error callers must know how to deal with.
  *  As the native code does not guarantee validation of parameters, Input and output parameters must be provided and instantiated accordingly for the invocation to be performed safety.
  *  i.e.:Sending non-null values and correctly instantiated arrays (expected size) is responsibility of the caller.
  *
  */
-public interface LibraryAdapter {
+public interface FieldLibraryAdapter {
 
     /** The return code that represents that a call succeeded */
     int SUCCESS = 0;
@@ -34,7 +35,7 @@ public interface LibraryAdapter {
      *
      * @param inputSeed the byte seed to be used to create the new scalar
      * @param output    the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int fieldElementsFromRandomSeed(final byte[] inputSeed, final byte[] output);
 
@@ -43,7 +44,7 @@ public interface LibraryAdapter {
      *
      * @param inputLong the long to be used to create the new scalar
      * @param output    the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int fieldElementsFromLong(final long inputLong, final byte[] output);
 
@@ -52,7 +53,7 @@ public interface LibraryAdapter {
      *
      * @param input  the that represents the scalar
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int fieldElementsFromBytes(final byte[] input, final byte[] output);
 
@@ -60,7 +61,7 @@ public interface LibraryAdapter {
      * Creates a new zero value scalar
      *
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int fieldElementsZero(final byte[] output);
 
@@ -68,7 +69,7 @@ public interface LibraryAdapter {
      * Creates a new one value scalar.
      *
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int fieldElementsOne(final byte[] output);
 

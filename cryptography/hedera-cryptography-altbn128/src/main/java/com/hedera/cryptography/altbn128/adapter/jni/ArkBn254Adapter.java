@@ -16,13 +16,21 @@
 
 package com.hedera.cryptography.altbn128.adapter.jni;
 
+import com.hedera.common.nativesupport.NativeLibrary;
+import com.hedera.cryptography.altbn128.adapter.FieldLibraryAdapter;
+import com.hedera.cryptography.altbn128.adapter.Group2LibraryAdapter;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import com.hedera.common.nativesupport.SingletonLoader;
 import com.hedera.cryptography.altbn128.adapter.LibraryAdapter;
 
 /**
  * This class serves as an adapter between the Java code and the native arkworks altBn128 Rust functions.
  **/
-public final class ArkBn254Adapter implements LibraryAdapter {
+public final class ArkBn254Adapter implements FieldLibraryAdapter, Group2LibraryAdapter {
     /** Instance Holder for lazy loading and concurrency handling */
     private static final SingletonLoader<ArkBn254Adapter> INSTANCE_HOLDER =
             new SingletonLoader<>("libbn254", new ArkBn254Adapter());
@@ -52,7 +60,7 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      *
      * @param inputSeed the byte seed to be used to create the new scalar
      * @param output    the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsFromRandomSeed(final byte[] inputSeed, final byte[] output);
 
@@ -61,7 +69,7 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      *
      * @param inputLong the long to be used to create the new scalar
      * @param output    the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsFromLong(final long inputLong, final byte[] output);
 
@@ -70,7 +78,7 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      *
      * @param input  the that represents the scalar
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsFromBytes(final byte[] input, final byte[] output);
 
@@ -78,7 +86,7 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      * Creates a new zero value scalar
      *
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsZero(final byte[] output);
 
@@ -86,7 +94,7 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      * Creates a new one value scalar.
      *
      * @param output the byte array that will be filled with the new scalar
-     * @return {@link LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsOne(final byte[] output);
 
@@ -112,4 +120,117 @@ public final class ArkBn254Adapter implements LibraryAdapter {
      * @return the byte size of the random seed to use.
      */
     public native int fieldElementsRandomSeedSize();
+
+    /**
+     * Creates a GroupElement byte internal representation from x1,x2,y1,y2 representation of coordinates each of those 32 bytes long.
+     *
+     * @param x1 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate x.
+     * @param x2 a POINT_COORDINATE_BYTE_SIZE length array containing the second element of coordinate x.
+     * @param y1 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate y.
+     * @param y2 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate y.
+     * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
+     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int g2FromCoordinates(
+            final byte[] x1, final byte[] x2, final byte[] y1, final byte[] y2, final byte[] output);
+
+    /**
+     * Creates a GroupElement byte internal representation from a seed byte array
+     * @implNote inputs and outputs are not validated for nullity or correct sizing. Callers needs to handle that.
+     * @param input a byte array of {@link Group2LibraryAdapter#g2Size()} that contains the internal represents the point
+     * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
+     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int g2FromSeed(final byte[] input, final byte[] output);
+
+    /**
+     * Returns the GroupElement byte internal representation of the point at infinity
+     * @implNote inputs and outputs are not validated for nullity or correct sizing. Callers needs to handle that.
+     * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
+     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int g2Zero(final byte[] output);
+
+    /**
+     * Returns the GroupElement byte internal representation of the generator point of the group
+     * @implNote inputs and outputs are not validated for nullity or correct sizing. Callers needs to handle that.
+     * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
+     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int g2Generator(final byte[] output);
+
+    /**
+     * returns if two representations are the same
+     *@implNote inputs and outputs are not validated for nullity or correct sizing. Callers needs to handle that.
+     * @param value a byte array of {@link Group2LibraryAdapter#g2Size()} that contains the internal represents the point
+     * @param other a byte array of {@link Group2LibraryAdapter#g2Size()}  that contains the internal represents the point
+     * @return 0 if false, 1 if true, or a less than zero error code if there was an error
+     */
+    public native int g2Equals(final byte[] value, final byte[] other);
+
+    /**
+     * Returns the byte size of a groupElement internal representation.
+     *
+     * @return a non-zero error code if there was an error, otherwise 0
+     */
+    public native int g2Size();
+
+    /**
+     * Returns the byte size of the expected seed byte array for creating random points on the curve.
+     *
+     * @return a non-zero error code if there was an error, otherwise 0
+     */
+    public native int g2RandomSeedSize();
+
+    /**
+     * Returns the addition of code {@code value} and  {@code other}.
+     *
+     * @implNote inputs and outputs are not validated for nullity or correct sizing. Callers needs to handle that.
+     * @param value a byte array of {@link Group2LibraryAdapter#g2Size()} that contains the internal represents the point
+     * @param other a byte array of {@link Group2LibraryAdapter#g2Size()} that contains the internal represents the point
+     * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
+     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int g2Add(final byte[] value, final byte[] other, final byte[] output);
+
+    /**
+     * Returns the scalar multiplication between code {@code point} and {@code scalar}.
+     *
+     *@implNote inputs and outputs are not validated for nullity or correct sizing. Callers needs to handle that.
+     * @param point a byte array of {@link Group2LibraryAdapter#g2Size()} that will be used as the seed to create the point
+     * @param scalar a byte array of {@link FieldLibraryAdapter#fieldElementsSize()}} that contains the representation of the scalar
+     * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
+     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int g2ScalarMul(final byte[] point, final byte[] scalar, final byte[] output);
+
+    /**
+     * Returns if is a valid serialization of a point in the curve
+     *
+     * @param point a byte array of {@link Group2LibraryAdapter#g2Size()} that will be used as the seed to create the
+     *              point
+     * @implNote inputs and outputs are not validated for nullity or correct sizing. Callers needs to handle that.
+     * @return 0 if false, 1 if true, or a less than zero error code if there was an error
+     */
+    public native int g2Bytes(final byte[] point);
+
+    /**
+     * Returns the result of the multiplication of the {@link Group2LibraryAdapter#g2Generator(byte[])} for each scalar in the {@code scalars} list
+     *
+     * @implNote inputs and outputs are not validated for nullity or correct sizing. Callers needs to handle that.
+     * @param scalars a byte matrix representing a list of N byte arrays of {@link FieldLibraryAdapter#fieldElementsSize()}} size each representing a scalar
+     * @param outputs a byte matrix of N byte arrays {@link Group2LibraryAdapter#g2Size()} size to hold the internal representation of the generator point times the scalar in {@code scalars}
+     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int g2batchScalarMultiplication(final byte[][] scalars, final byte[][] outputs);
+
+    /**
+     * Returns the point that is the result of the total sum a collection of points
+     *
+     * @implNote inputs and outputs are not validated for nullity or correct sizing. Callers needs to handle that.
+     * @param input a byte matrix representing a list of N byte arrays of {@link Group2LibraryAdapter#g2Size()} representing each point
+     * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
+     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int g2batchAdd(final byte[][] input, final byte[] output);
 }

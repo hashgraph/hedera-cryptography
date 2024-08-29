@@ -17,7 +17,8 @@
 package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
-import com.hedera.cryptography.altbn128.facade.FieldElements;
+import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
+import com.hedera.cryptography.altbn128.facade.FieldFacade;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -32,7 +33,7 @@ public class AltBn128FieldElement implements FieldElement {
 
     private final AltBn128Field field;
     private final byte[] representation;
-    private final FieldElements facade;
+    private final FieldFacade facade;
 
     /**
      * Creates a new {@link FieldElement}.
@@ -40,7 +41,7 @@ public class AltBn128FieldElement implements FieldElement {
      * @param field the {@link Field} that this instance will be an element of.
      */
     public AltBn128FieldElement(@NonNull final byte[] representation, @NonNull final AltBn128Field field) {
-        this(representation, field, new FieldElements(ArkBn254Adapter.getInstance()));
+        this(representation, field, new FieldFacade(ArkBn254Adapter.getInstance()));
     }
 
     /**
@@ -52,7 +53,7 @@ public class AltBn128FieldElement implements FieldElement {
     AltBn128FieldElement(
             @NonNull final byte[] representation,
             @NonNull final AltBn128Field field,
-            @NonNull final FieldElements facade) {
+            @NonNull final FieldFacade facade) {
         this.representation = Objects.requireNonNull(representation, "representation must not be null");
         this.field = field;
         this.facade = facade;
@@ -104,23 +105,12 @@ public class AltBn128FieldElement implements FieldElement {
     }
 
     /**
-     * Returns the field element as a {@link BigInteger} from this element's byte array representation.
-     * The byte array representation in this implementation is in little-endian format.
-     * Since {@code BigInteger} expects a big-endian byte array by default, the result reflects the interpretation of the little-endian
-     * array under big-endian assumptions.
-     * Therefore, if the input byte array in little-endian is:
-     * <pre>
-     *   [0x01, 0x00, 0x00, 0x00, ..., 0x00]
-     * </pre>
-     * That represent the number 1 in little-endian format, the {@link BigInteger} returned won't be the same, as
-     * the {@code BigInteger} that represents the number 1.
-     *
-     * @return a {@link BigInteger} reflecting the direct interpretation of the internal little-endian byte array as big-endian
+     * {@inheritDoc}
      */
     @NonNull
     @Override
     public BigInteger toBigInteger() {
-        return new BigInteger(representation);
+        return BigIntegerUtils.fromLittleEndianBytes(representation);
     }
 
     /**
@@ -131,7 +121,17 @@ public class AltBn128FieldElement implements FieldElement {
     @NonNull
     @Override
     public byte[] toBytes() {
-        return representation.clone();
+        return this.representation.clone();
+    }
+
+    /**
+     * Returns the internal byte[] of this element.
+     * @implNote This has limited visibility as is only intended to be used internally in the library.
+     * Users of the library are expected to get a copy of the array accessing the {@link AltBn128Group2Element#toBytes()} method.
+     * @return the internal projective representation of this point
+     */
+    byte[] getRepresentation() {
+        return representation;
     }
 
     @Override

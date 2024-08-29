@@ -1,2 +1,2 @@
-com.hedera.cryptography.pairings.test.spi.BilinearPairingMockProvider
-com.hedera.cryptography.pairings.test.spi.BilinearFailingPairingProvider
+com.hedera.cryptography.pairings.test.spi.PairingMockFriendlyCurveProvider
+com.hedera.cryptography.pairings.test.spi.FailingPairingFriendlyCurveProvider

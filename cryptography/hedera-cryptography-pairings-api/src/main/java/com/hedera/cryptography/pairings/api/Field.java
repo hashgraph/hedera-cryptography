@@ -17,14 +17,17 @@
 package com.hedera.cryptography.pairings.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.math.BigInteger;
 import java.util.Random;
 
 /**
  * Represents a finite field used in a pairing-based cryptography scheme.
+ *  <p>A finite field is a ring of scalars values [0,1,...r-1, 0, 1, ...] where all operations are done modulus a prime number P.
+ * <p> All operations inside the field, produce a value that belongs to it.
+ * In an elliptic curve, these are the values that can be used to operate in certain {@link Group} operations.
+ * <p>Each scalar element in the field is a {@link FieldElement}.
  *
- * <p>This is a factory interface, responsible for creating {@link FieldElement} which are scalars belonging to the
- * field represented by this instance.
- *
+ * @see Group
  * @see FieldElement
  */
 public interface Field {
@@ -35,11 +38,11 @@ public interface Field {
      * @return the random field element
      */
     @NonNull
-    default FieldElement randomElement(@NonNull final Random random) {
-        final byte[] seed = new byte[getSeedSize()];
+    default FieldElement random(@NonNull final Random random) {
+        final byte[] seed = new byte[seedSize()];
         random.nextBytes(seed);
 
-        return randomElement(seed);
+        return random(seed);
     }
 
     /**
@@ -49,7 +52,7 @@ public interface Field {
      * @return the new field element
      */
     @NonNull
-    FieldElement elementFromLong(long inputLong);
+    FieldElement fromLong(long inputLong);
 
     /**
      * Creates a field element from a seed
@@ -58,7 +61,7 @@ public interface Field {
      * @return the new field element
      */
     @NonNull
-    FieldElement randomElement(@NonNull byte[] seed);
+    FieldElement random(@NonNull byte[] seed);
 
     /**
      * Creates a field element from its serialized encoding
@@ -67,21 +70,30 @@ public interface Field {
      * @return the new field element
      */
     @NonNull
-    FieldElement elementFromBytes(@NonNull byte[] bytes);
+    FieldElement fromBytes(@NonNull byte[] bytes);
+
+    /**
+     * Creates a field element from a {@link BigInteger}
+     *
+     * @param bigInteger the scalar
+     * @return the new field element
+     */
+    @NonNull
+    FieldElement fromBigInteger(@NonNull BigInteger bigInteger);
 
     /**
      * Gets the size in bytes of an element
      *
      * @return the size of an element
      */
-    int getElementSize();
+    int elementSize();
 
     /**
      * Gets the size in bytes of the seed necessary to generate a new element
      *
      * @return the size of a seed needed to generate a new element
      */
-    int getSeedSize();
+    int seedSize();
 
     /**
      * Get the pairing that this field is used in
@@ -89,5 +101,5 @@ public interface Field {
      * @return the pairing
      */
     @NonNull
-    BilinearPairing getPairing();
+    PairingFriendlyCurve getPairingFriendlyCurve();
 }

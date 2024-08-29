@@ -39,7 +39,7 @@ public interface FieldElement {
      * @return the size of the field element
      */
     default int size() {
-        return getField().getElementSize();
+        return getField().elementSize();
     }
 
     /**
