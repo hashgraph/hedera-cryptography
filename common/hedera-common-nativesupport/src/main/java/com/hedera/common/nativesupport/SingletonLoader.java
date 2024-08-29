@@ -66,7 +66,7 @@ public class SingletonLoader<T> {
      *
      * @return the package name
      */
-    public String getNativeLibraryPackageName(){
+    public String getNativeLibraryPackageName() {
         return nativeLibrary.packageNameOfResource();
     }
 }

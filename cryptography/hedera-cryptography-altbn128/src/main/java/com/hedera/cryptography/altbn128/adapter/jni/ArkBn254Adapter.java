@@ -31,9 +31,9 @@ public final class ArkBn254Adapter implements LibraryAdapter {
         // Open the package to allow access to the native library
         // This can be done in module-info.java as well, but by default the compiler complains since there are no
         // classes in the package, just resources
-        ArkBn254Adapter.class.getModule().addOpens(
-                INSTANCE_HOLDER.getNativeLibraryPackageName(),
-                SingletonLoader.class.getModule());
+        ArkBn254Adapter.class
+                .getModule()
+                .addOpens(INSTANCE_HOLDER.getNativeLibraryPackageName(), SingletonLoader.class.getModule());
     }
 
     private ArkBn254Adapter() {

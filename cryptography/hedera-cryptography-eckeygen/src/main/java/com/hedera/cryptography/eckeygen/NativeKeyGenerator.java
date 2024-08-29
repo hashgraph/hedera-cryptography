@@ -32,9 +32,9 @@ public class NativeKeyGenerator implements KeyGenerator {
         // Open the package to allow access to the native library
         // This can be done in module-info.java as well, but by default the compiler complains since there are no
         // classes in the package, just resources
-        NativeKeyGenerator.class.getModule().addOpens(
-                INSTANCE_HOLDER.getNativeLibraryPackageName(),
-                SingletonLoader.class.getModule());
+        NativeKeyGenerator.class
+                .getModule()
+                .addOpens(INSTANCE_HOLDER.getNativeLibraryPackageName(), SingletonLoader.class.getModule());
     }
 
     private NativeKeyGenerator() {

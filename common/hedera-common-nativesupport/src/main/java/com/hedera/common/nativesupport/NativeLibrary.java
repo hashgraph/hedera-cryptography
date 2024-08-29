@@ -182,7 +182,7 @@ public class NativeLibrary {
     public String packageNameOfResource() {
         final String name = locationInJar();
         int index = name.lastIndexOf('/');
-        if (index == -1 || index == name.length()-1) {
+        if (index == -1 || index == name.length() - 1) {
             return "";
         } else {
             return name.substring(0, index).replace('/', '.');
@@ -199,16 +199,14 @@ public class NativeLibrary {
      * @throws IllegalStateException if the module does not open the package where the resource is located
      */
     public void install(@NonNull final Class<?> c) {
-        if (!c.getModule().isOpen(
-                packageNameOfResource(),
-                this.getClass().getModule())) {
+        if (!c.getModule().isOpen(packageNameOfResource(), this.getClass().getModule())) {
             // getResourceAsStream() will not throw an exception if the package is not opened, it will just return null
             // so we manually check if the package is opened
-            throw new IllegalStateException(
-                    "The module '%s' must open the package '%s' to module '%s'".formatted(
+            throw new IllegalStateException("The module '%s' must open the package '%s' to module '%s'"
+                    .formatted(
                             c.getModule().getName(),
-                            packageNameOfResource(), this.getClass().getModule().getName())
-            );
+                            packageNameOfResource(),
+                            this.getClass().getModule().getName()));
         }
         try {
             install(c.getModule().getResourceAsStream(locationInJar()));
