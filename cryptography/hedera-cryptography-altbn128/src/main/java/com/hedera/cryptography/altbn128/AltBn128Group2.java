@@ -58,7 +58,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement generator() {
-        return new AltBn128Group2Element(this, facade.generator());
+        return new AltBn128Group2Element(this, facade.generator(), facade);
     }
 
     /**
@@ -67,7 +67,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement zero() {
-        return new AltBn128Group2Element(this, facade.zero());
+        return new AltBn128Group2Element(this, facade.zero(), facade);
     }
 
     /**
@@ -76,7 +76,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement random(@NonNull final byte[] seed) {
-        return new AltBn128Group2Element(this, facade.fromSeed(seed));
+        return new AltBn128Group2Element(this, facade.fromSeed(seed), facade);
     }
 
     /**
@@ -85,7 +85,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement fromHash(@NonNull final byte[] input) {
-        return new AltBn128Group2Element(this, facade.fromSeed(HashUtils.computeSha256(input)));
+        return new AltBn128Group2Element(this, facade.fromSeed(HashUtils.computeSha256(input)), facade);
     }
 
     /**
@@ -147,7 +147,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement fromBytes(@NonNull final byte[] bytes) {
-        return new AltBn128Group2Element(this, facade.fromBytes(bytes));
+        return new AltBn128Group2Element(this, facade.fromBytes(bytes), facade);
     }
 
     /**

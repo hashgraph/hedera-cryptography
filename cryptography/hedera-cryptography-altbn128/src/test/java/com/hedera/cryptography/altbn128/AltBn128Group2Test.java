@@ -31,7 +31,7 @@ import java.util.Random;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
-class AltBn128Group2FacadeTest {
+class AltBn128Group2Test {
     @Test
     void constructionSucceeds() {
         assertDoesNotThrow(AltBn128Group2::new);

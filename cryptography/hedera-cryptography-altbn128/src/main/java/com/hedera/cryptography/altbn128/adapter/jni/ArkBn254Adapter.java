@@ -42,6 +42,8 @@ public final class ArkBn254Adapter implements FieldLibraryAdapter, Group2Library
     }
 
     /**
+     * Returns the singleton instance of this library adapter.
+     *
      * @return the singleton instance of this library adapter.
      */
     public static ArkBn254Adapter getInstance() {
@@ -115,17 +117,52 @@ public final class ArkBn254Adapter implements FieldLibraryAdapter, Group2Library
     public native int fieldElementsRandomSeedSize();
 
     /**
-     * Creates a GroupElement byte internal representation from x1,x2,y1,y2 representation of coordinates each of those 32 bytes long.
+     * Adds two scalars
      *
-     * @param x1 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate x.
-     * @param x2 a POINT_COORDINATE_BYTE_SIZE length array containing the second element of coordinate x.
-     * @param y1 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate y.
-     * @param y2 a POINT_COORDINATE_BYTE_SIZE length array containing the first element of coordinate y.
-     * @param output a {@link Group2LibraryAdapter#g2Size()} array to hold the internal representation of the point
-     * @return {@link Group2LibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @param input1  the that represents the scalar
+     * @param input2  the that represents the scalar
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    public native int g2FromCoordinates(
-            final byte[] x1, final byte[] x2, final byte[] y1, final byte[] y2, final byte[] output);
+    public native int fieldElementsAdd(final byte[] input1, final byte[] input2, final byte[] output);
+
+    /**
+     * subtracts two scalars
+     *
+     * @param input1  the that represents the scalar
+     * @param input2  the that represents the scalar
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int fieldElementsSubtract(final byte[] input1, final byte[] input2, final byte[] output);
+
+    /**
+     * Multiplies two scalars
+     *
+     * @param input1  the that represents the scalar
+     * @param input2  the that represents the scalar
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int fieldElementsMultiply(final byte[] input1, final byte[] input2, final byte[] output);
+
+    /**
+     * Creates powers a scalar to an exponent
+     * @param input1  the that represents the scalar
+     * @param exponent the long to be used to create the new scalar
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int fieldElementsPow(final byte[] input1, final long exponent, final byte[] output);
+
+    /**
+     * returns the inverse scalar (value^-1)
+     *
+     * @param input  the that represents the scalar
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int fieldElementsInverse(final byte[] input, final byte[] output);
 
     /**
      * Creates a GroupElement byte internal representation from a seed byte array

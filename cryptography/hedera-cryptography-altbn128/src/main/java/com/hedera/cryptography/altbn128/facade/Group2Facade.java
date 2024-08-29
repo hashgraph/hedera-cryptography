@@ -19,10 +19,8 @@ package com.hedera.cryptography.altbn128.facade;
 import com.hedera.cryptography.altbn128.AltBn128Exception;
 import com.hedera.cryptography.altbn128.adapter.FieldLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.Group2LibraryAdapter;
-import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import java.math.BigInteger;
 import java.util.Objects;
 
 /**
@@ -52,33 +50,6 @@ public final class Group2Facade {
         this.size = adapter.g2Size();
         this.randomSeedSize = adapter.g2RandomSeedSize();
         this.fieldElementsSize = fieldElementsSize;
-    }
-
-    /**
-     * Creates a Group2 point from coordinates.
-     * @param x1 the first element of the x-coordinate.
-     * @param x2 the second element of the x-coordinate.
-     * @param y1 the first element of the y-coordinate.
-     * @param y2 the second element of the y-coordinate.
-     * @return the byte array representation of the Group2 point.
-     * @throws AltBn128Exception in case of error.
-     */
-    public byte[] fromCoordinates(
-            @NonNull final BigInteger x1,
-            @NonNull final BigInteger x2,
-            @NonNull final BigInteger y1,
-            @NonNull final BigInteger y2) {
-        byte[] x1Array = BigIntegerUtils.toLittleEndianBytes(x1, Group2LibraryAdapter.POINT_COORDINATE_BYTE_SIZE);
-        byte[] x2Array = BigIntegerUtils.toLittleEndianBytes(x2, Group2LibraryAdapter.POINT_COORDINATE_BYTE_SIZE);
-        byte[] y1Array = BigIntegerUtils.toLittleEndianBytes(y1, Group2LibraryAdapter.POINT_COORDINATE_BYTE_SIZE);
-        byte[] y2Array = BigIntegerUtils.toLittleEndianBytes(y2, Group2LibraryAdapter.POINT_COORDINATE_BYTE_SIZE);
-
-        final byte[] output = new byte[size];
-        final int result = adapter.g2FromCoordinates(x1Array, x2Array, y1Array, y2Array, output);
-        if (result != Group2LibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "g2FromCoordinates");
-        }
-        return output;
     }
 
     /**
@@ -123,24 +94,6 @@ public final class Group2Facade {
             throw new AltBn128Exception(result, "g2Generator");
         }
         return output;
-    }
-
-    /**
-     * Checks if two Group2 points are equal.
-     * @param point1 the first point.
-     * @param point2 the second point.
-     * @return true if points are equal, false otherwise.
-     * @throws AltBn128Exception in case of error.
-     */
-    public boolean equals(@NonNull final byte[] point1, @NonNull final byte[] point2) {
-        if (point1.length != point2.length) {
-            return false;
-        }
-        final int result = adapter.g2Equals(point1, point2);
-        if (result < Group2LibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "g2Equals");
-        }
-        return result == 1;
     }
 
     /**

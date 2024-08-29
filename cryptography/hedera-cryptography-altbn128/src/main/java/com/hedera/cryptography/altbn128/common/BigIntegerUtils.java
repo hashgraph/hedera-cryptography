@@ -28,6 +28,13 @@ import java.util.Objects;
 public class BigIntegerUtils {
 
     /**
+     * private constructor to ensure static access
+     */
+    private BigIntegerUtils() {
+        // private constructor to ensure static access
+    }
+
+    /**
      * Converts a BigInteger into a byte array of the given size in little-endian order.
      *
      * @param value the BigInteger to convert

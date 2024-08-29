@@ -84,7 +84,15 @@ public interface FieldElement {
      * @return a new field element which is the power
      */
     @NonNull
-    FieldElement power(@NonNull BigInteger exponent);
+    FieldElement power(long exponent);
+
+    /**
+     * produces the element^-1
+     *
+     * @return a new field element that is the inverse of the element
+     */
+    @NonNull
+    FieldElement inverse();
 
     /**
      * Returns the field element as a BigInteger

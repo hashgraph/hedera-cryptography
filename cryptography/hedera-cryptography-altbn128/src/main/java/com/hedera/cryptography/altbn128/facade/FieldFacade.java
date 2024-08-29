@@ -87,8 +87,8 @@ public final class FieldFacade {
     /**
      * Creates a byte array representation of a fieldElement form another byte array representation
      * TODO: review if this is necessary, what validation is being provided.
-     * @return a byte array representation of a fieldElement form the provided byte array representation
      * @param representation the byte representation to validate
+     * @return a byte array representation of a fieldElement form the provided byte array representation
      * @throws NullPointerException if the representation is null
      * @throws IllegalArgumentException if the representation is invalid
      * @throws AltBn128Exception in case of error
@@ -107,7 +107,7 @@ public final class FieldFacade {
 
     /**
      * Return a byte array representation of a fieldElement of value 0.
-     * @return return a byte array representation of a fieldElement of value 0
+     * @return a byte array of size {@link FieldFacade#size()} with the representation of the element 0
      * @throws AltBn128Exception in case of error
      */
     public byte[] zero() {
@@ -121,7 +121,7 @@ public final class FieldFacade {
 
     /**
      * Return a byte array representation of a fieldElement of value 1.
-     * @return return a byte array representation of a fieldElement of value 1
+     * @return a byte array of size {@link FieldFacade#size()} with the representation of the element 1
      * @throws AltBn128Exception in case of error
      */
     public byte[] one() {
@@ -162,5 +162,87 @@ public final class FieldFacade {
      */
     public int randomSeedSize() {
         return this.randomSeedSize;
+    }
+
+    /**
+     * adds two field elements representations
+     * @param value first value
+     * @param other second value
+     * @return {@code true} if {@code value} and {@code other} are equals. {@code false} otherwise
+     * @throws AltBn128Exception in case of error
+     */
+    public byte[] add(@NonNull final byte[] value, @NonNull final byte[] other) {
+        final byte[] output = new byte[size];
+        final int result = adapter.fieldElementsAdd(value, other, output);
+        if (result < SUCCESS) {
+            throw new AltBn128Exception(result, "fieldElementsAdd");
+        }
+        return output;
+    }
+
+    /**
+     * Multiplies two field elements representations
+     * @param value first value
+     * @param other second value
+     * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
+     * @throws AltBn128Exception in case of error
+     */
+    public byte[] multiply(@NonNull final byte[] value, @NonNull final byte[] other) {
+        final byte[] output = new byte[size];
+        final int result = adapter.fieldElementsMultiply(value, other, output);
+        if (result < SUCCESS) {
+            throw new AltBn128Exception(result, "fieldElementsMultiply");
+        }
+        return output;
+    }
+    /**
+     * Subtracts two field elements representations
+     * @param value first value
+     * @param other second value
+     * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
+     * @throws AltBn128Exception in case of error
+     */
+    public byte[] subtracts(@NonNull final byte[] value, @NonNull final byte[] other) {
+        final byte[] output = new byte[size];
+        final int result = adapter.fieldElementsSubtract(value, other, output);
+        if (result < SUCCESS) {
+            throw new AltBn128Exception(result, "fieldElementsSubtracts");
+        }
+        return output;
+    }
+
+    /**
+     * Multiplies two field elements representations
+     * @param value first value
+     * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
+     * @throws AltBn128Exception in case of error
+     */
+    public byte[] inverse(@NonNull final byte[] value) {
+        final byte[] output = new byte[size];
+        final int result = adapter.fieldElementsInverse(value, output);
+        if (result == FieldLibraryAdapter.CANNOT_INVERT) {
+            throw new IllegalArgumentException("The scalar cannot be inverted");
+        }
+        if (result < SUCCESS) {
+            throw new AltBn128Exception(result, "fieldElementsMultiply");
+        }
+        return output;
+    }
+
+    /**
+     * Multiplies two field elements representations
+     * @param value the base scalar value
+     * @param exponent the long parameter to create the representation from
+     * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
+     * @throws AltBn128Exception in case of error
+     */
+    public byte[] pow(@NonNull final byte[] value, final long exponent) {
+        if (exponent < 0) throw new IllegalArgumentException("exponent must not be negative");
+        final byte[] output = new byte[size];
+        final int result = adapter.fieldElementsPow(value, exponent, output);
+        if (result < SUCCESS) {
+            throw new AltBn128Exception(result, "fieldElementsPow");
+        }
+        return output;
     }
 }

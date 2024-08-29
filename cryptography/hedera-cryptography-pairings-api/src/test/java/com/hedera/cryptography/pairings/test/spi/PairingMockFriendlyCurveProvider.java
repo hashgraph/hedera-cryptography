@@ -177,7 +177,13 @@ public class PairingMockFriendlyCurveProvider extends PairingFriendlyCurveProvid
         /** {@inheritDoc} */
         @NonNull
         @Override
-        public FieldElement power(@NonNull final BigInteger exponent) {
+        public FieldElement power(final long exponent) {
+            return new TestFieldElement(field);
+        }
+
+        @NonNull
+        @Override
+        public FieldElement inverse() {
             return new TestFieldElement(field);
         }
 

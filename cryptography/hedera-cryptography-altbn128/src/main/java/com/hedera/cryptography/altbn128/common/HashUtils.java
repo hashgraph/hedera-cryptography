@@ -25,6 +25,13 @@ import java.util.Objects;
 public final class HashUtils {
 
     /**
+     * private constructor to ensure static access
+     */
+    private HashUtils() {
+        // private constructor to ensure static access
+    }
+
+    /**
      * Computes SHA 256 hash
      *
      * @param message message to hash
