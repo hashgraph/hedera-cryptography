@@ -23,13 +23,22 @@ import com.hedera.cryptography.altbn128.adapter.LibraryAdapter;
  * This class serves as an adapter between the Java code and the native arkworks altBn128 Rust functions.
  **/
 public final class ArkBn254Adapter implements LibraryAdapter {
-    /**
-     * Instance Holder for lazy loading
-     */
+    /** Instance Holder for lazy loading and concurrency handling */
     private static final SingletonLoader<ArkBn254Adapter> INSTANCE_HOLDER =
             new SingletonLoader<>("libbn254", new ArkBn254Adapter());
 
-    private ArkBn254Adapter() {}
+    static {
+        // Open the package to allow access to the native library
+        // This can be done in module-info.java as well, but by default the compiler complains since there are no
+        // classes in the package, just resources
+        ArkBn254Adapter.class.getModule().addOpens(
+                INSTANCE_HOLDER.getNativeLibraryPackageName(),
+                SingletonLoader.class.getModule());
+    }
+
+    private ArkBn254Adapter() {
+        // private constructor to ensure singleton
+    }
 
     /**
      * @return the singleton instance of this library adapter.

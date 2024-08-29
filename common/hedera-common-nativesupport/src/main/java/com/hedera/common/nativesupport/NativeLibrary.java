@@ -175,32 +175,9 @@ public class NativeLibrary {
     }
 
     /**
-     * Unpackages the native library to a temporary dir, sets appropriate file permissions, and loads the library into
-     * the JVM.
-     * <p>Warning: It is responsibility of the caller to assure this method is only called once per desired library.
-     *
-     * @param c because JPMS does not allow for resources contained in a module to be loaded in a separated class, the
-     *          caller must provide a class that is in the module that contains the resource.
-     */
-    public void install(@NonNull final Class<?> c) {
-        try {
-            if(!c.getModule().isOpen(
-                    packageNameOfResource(),
-                    this.getClass().getModule())){
-                throw new IllegalStateException(
-                        "The module '%s' must open the package '%s' to module '%s'".formatted(
-                                c.getModule().getName(),
-                                packageNameOfResource(), this.getClass().getModule().getName())
-                );
-            }
-            install(c.getModule().getResourceAsStream(locationInJar()));
-        } catch (IOException e) {
-            throw new UncheckedIOException("Unable to load adapter " + name(), new IOException(e));
-        }
-    }
-
-    /**
      * Copied from jdk.internal.module.Resources.toPackageName() since the method is not open to the public.
+     *
+     * @return the package name where the native library is located
      */
     public String packageNameOfResource() {
         final String name = locationInJar();
@@ -209,6 +186,34 @@ public class NativeLibrary {
             return "";
         } else {
             return name.substring(0, index).replace('/', '.');
+        }
+    }
+
+    /**
+     * Unpackages the native library to a temporary dir, sets appropriate file permissions, and loads the library into
+     * the JVM.
+     * <p>Warning: It is responsibility of the caller to assure this method is only called once per desired library.
+     *
+     * @param c because JPMS does not allow for resources contained in a module to be loaded in a separated class, the
+     *          caller must provide a class that is in the module that contains the resource.
+     * @throws IllegalStateException if the module does not open the package where the resource is located
+     */
+    public void install(@NonNull final Class<?> c) {
+        if (!c.getModule().isOpen(
+                packageNameOfResource(),
+                this.getClass().getModule())) {
+            // getResourceAsStream() will not throw an exception if the package is not opened, it will just return null
+            // so we manually check if the package is opened
+            throw new IllegalStateException(
+                    "The module '%s' must open the package '%s' to module '%s'".formatted(
+                            c.getModule().getName(),
+                            packageNameOfResource(), this.getClass().getModule().getName())
+            );
+        }
+        try {
+            install(c.getModule().getResourceAsStream(locationInJar()));
+        } catch (IOException e) {
+            throw new UncheckedIOException("Unable to load adapter " + name(), new IOException(e));
         }
     }
 

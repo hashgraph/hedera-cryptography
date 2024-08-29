@@ -27,15 +27,23 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 public class NativeKeyGenerator implements KeyGenerator {
     private static final SingletonLoader<NativeKeyGenerator> INSTANCE_HOLDER =
             new SingletonLoader<>("libkey_gen", new NativeKeyGenerator());
+
     static {
+        // Open the package to allow access to the native library
+        // This can be done in module-info.java as well, but by default the compiler complains since there are no
+        // classes in the package, just resources
         NativeKeyGenerator.class.getModule().addOpens(
-                INSTANCE_HOLDER.getLibraryPackage(),
+                INSTANCE_HOLDER.getNativeLibraryPackageName(),
                 SingletonLoader.class.getModule());
     }
 
     private NativeKeyGenerator() {
+        // private constructor to ensure singleton
     }
 
+    /**
+     * @return the singleton instance of the native key generator.
+     */
     public static NativeKeyGenerator getInstance() {
         return INSTANCE_HOLDER.getInstance();
     }

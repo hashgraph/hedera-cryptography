@@ -60,7 +60,13 @@ public class SingletonLoader<T> {
         return instance;
     }
 
-    public String getLibraryPackage(){
+    /**
+     * Returns the package name of the native library is located. This is useful if you need to open the package
+     * programmatically.
+     *
+     * @return the package name
+     */
+    public String getNativeLibraryPackageName(){
         return nativeLibrary.packageNameOfResource();
     }
 }
