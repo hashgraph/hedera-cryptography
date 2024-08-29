@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @param <T> the type of the singleton instance
  */
 public class SingletonLoader<T> {
-    private final String libraryName;
+    private final NativeLibrary nativeLibrary;
     private final T instance;
     private final AtomicBoolean libraryLoaded = new AtomicBoolean(false);
 
@@ -38,7 +38,7 @@ public class SingletonLoader<T> {
      * @param instance    the singleton instance to use
      */
     public SingletonLoader(@NonNull final String libraryName, @NonNull final T instance) {
-        this.libraryName = Objects.requireNonNull(libraryName);
+        this.nativeLibrary = NativeLibrary.withName(Objects.requireNonNull(libraryName));
         this.instance = Objects.requireNonNull(instance);
     }
 
@@ -53,10 +53,14 @@ public class SingletonLoader<T> {
                 if (libraryLoaded.get()) {
                     return instance;
                 }
-                NativeLibrary.withName(libraryName).install(instance.getClass());
+                nativeLibrary.install(instance.getClass());
                 libraryLoaded.set(true);
             }
         }
         return instance;
+    }
+
+    public String getLibraryPackage(){
+        return nativeLibrary.packageNameOfResource();
     }
 }

@@ -71,7 +71,9 @@ public class KeyGen {
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
             printHelp();
+            System.exit(0);
         }
+
         final String commandName = args[0];
         if (commandName.equals("--help") || args.length != 3) {
             printHelp();

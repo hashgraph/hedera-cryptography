@@ -27,8 +27,14 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 public class NativeKeyGenerator implements KeyGenerator {
     private static final SingletonLoader<NativeKeyGenerator> INSTANCE_HOLDER =
             new SingletonLoader<>("libkey_gen", new NativeKeyGenerator());
+    static {
+        NativeKeyGenerator.class.getModule().addOpens(
+                INSTANCE_HOLDER.getLibraryPackage(),
+                SingletonLoader.class.getModule());
+    }
 
-    private NativeKeyGenerator() {}
+    private NativeKeyGenerator() {
+    }
 
     public static NativeKeyGenerator getInstance() {
         return INSTANCE_HOLDER.getInstance();

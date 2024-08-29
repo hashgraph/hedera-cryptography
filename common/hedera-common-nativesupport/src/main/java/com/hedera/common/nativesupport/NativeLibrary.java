@@ -184,11 +184,31 @@ public class NativeLibrary {
      */
     public void install(@NonNull final Class<?> c) {
         try {
-            // JPMS does not allow for resources contained in a module to be loaded in a separated class
-            // So we are forced to load this the InputStream in a class stored in a jar that holds the resource
+            if(!c.getModule().isOpen(
+                    packageNameOfResource(),
+                    this.getClass().getModule())){
+                throw new IllegalStateException(
+                        "The module '%s' must open the package '%s' to module '%s'".formatted(
+                                c.getModule().getName(),
+                                packageNameOfResource(), this.getClass().getModule().getName())
+                );
+            }
             install(c.getModule().getResourceAsStream(locationInJar()));
         } catch (IOException e) {
             throw new UncheckedIOException("Unable to load adapter " + name(), new IOException(e));
+        }
+    }
+
+    /**
+     * Copied from jdk.internal.module.Resources.toPackageName() since the method is not open to the public.
+     */
+    public String packageNameOfResource() {
+        final String name = locationInJar();
+        int index = name.lastIndexOf('/');
+        if (index == -1 || index == name.length()-1) {
+            return "";
+        } else {
+            return name.substring(0, index).replace('/', '.');
         }
     }
 
