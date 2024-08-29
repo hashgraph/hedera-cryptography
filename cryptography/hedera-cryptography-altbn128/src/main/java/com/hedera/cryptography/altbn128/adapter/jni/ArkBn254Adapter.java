@@ -16,16 +16,9 @@
 
 package com.hedera.cryptography.altbn128.adapter.jni;
 
-import com.hedera.common.nativesupport.NativeLibrary;
+import com.hedera.common.nativesupport.SingletonLoader;
 import com.hedera.cryptography.altbn128.adapter.FieldLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.Group2LibraryAdapter;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import com.hedera.common.nativesupport.SingletonLoader;
-import com.hedera.cryptography.altbn128.adapter.LibraryAdapter;
 
 /**
  * This class serves as an adapter between the Java code and the native arkworks altBn128 Rust functions.
