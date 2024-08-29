@@ -16,13 +16,15 @@
 
 package com.hedera.cryptography.altbn128;
 
+import static com.hedera.cryptography.altbn128.common.ValidationUtils.expectOrThrow;
+
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.facade.Group2Facade;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -30,9 +32,15 @@ import java.util.Objects;
  * for {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
  */
 public class AltBn128Group2Element implements GroupElement {
+    private final Group group;
     private final byte[] representation;
     private final Group2Facade facade;
-    private final Group group;
+
+    AltBn128Group2Element(final Group group, final byte[] representation, final Group2Facade facade) {
+        this.group = Objects.requireNonNull(group, "group must not be null");
+        this.representation = Objects.requireNonNull(representation, "innerRepresentation must not be null");
+        this.facade = Objects.requireNonNull(facade, "facade must not be null");
+    }
 
     /**
      * Creates a new instance
@@ -40,10 +48,12 @@ public class AltBn128Group2Element implements GroupElement {
      * @param representation the byte array representation of this element
      */
     public AltBn128Group2Element(@NonNull Group group, @NonNull final byte[] representation) {
-        this.group = Objects.requireNonNull(group, "group must not be null");
-        this.representation = Objects.requireNonNull(representation, "innerRepresentation must not be null");
-        this.facade = new Group2Facade(
-                ArkBn254Adapter.getInstance(), ArkBn254Adapter.getInstance().fieldElementsSize());
+        this(
+                group,
+                representation,
+                new Group2Facade(
+                        ArkBn254Adapter.getInstance(),
+                        ArkBn254Adapter.getInstance().fieldElementsSize()));
     }
 
     /**
@@ -62,7 +72,7 @@ public class AltBn128Group2Element implements GroupElement {
     @Override
     public GroupElement multiply(@NonNull final FieldElement other) {
         Objects.requireNonNull(other, "other must not be null");
-        return new AltBn128Group2Element(group, facade.scalarMul(this.representation, other.toBytes()));
+        return new AltBn128Group2Element(group, facade.scalarMul(this.representation, other.toBytes()), facade);
     }
 
     /**
@@ -73,16 +83,9 @@ public class AltBn128Group2Element implements GroupElement {
     @Override
     public GroupElement add(@NonNull final GroupElement other) {
         return new AltBn128Group2Element(
-                group, facade.add(this.representation, asSubclassOrThrow(other).representation));
-    }
-
-    @NonNull
-    private AltBn128Group2Element asSubclassOrThrow(final @Nullable GroupElement other) {
-        Objects.requireNonNull(other, "other must not be null");
-        if (!(other instanceof AltBn128Group2Element)) {
-            throw new IllegalArgumentException("Not the correct group element");
-        }
-        return (AltBn128Group2Element) other;
+                group,
+                facade.add(this.representation, expectOrThrow(AltBn128Group2Element.class, other).representation),
+                facade);
     }
 
     /**
@@ -93,7 +96,7 @@ public class AltBn128Group2Element implements GroupElement {
     @NonNull
     @Override
     public GroupElement copy() {
-        return new AltBn128Group2Element(group, toBytes());
+        return new AltBn128Group2Element(group, toBytes(), facade);
     }
 
     /**
@@ -107,14 +110,20 @@ public class AltBn128Group2Element implements GroupElement {
 
     @Override
     public boolean equals(final Object obj) {
-        if (!(obj instanceof AltBn128Group2Element)) {
-            return false;
-        }
         if (this == obj) {
             return true;
         }
+        if (!(obj instanceof AltBn128Group2Element)) {
+            return false;
+        }
+        if (this.group != ((AltBn128Group2Element) obj).group) return false;
 
-        return facade.equals(this.representation, ((AltBn128Group2Element) obj).representation);
+        return Arrays.equals(this.representation, ((AltBn128Group2Element) obj).representation);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getClass(), this.group, Arrays.hashCode(this.representation));
     }
 
     /**

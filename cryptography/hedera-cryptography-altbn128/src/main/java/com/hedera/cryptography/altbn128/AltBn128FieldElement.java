@@ -16,6 +16,8 @@
 
 package com.hedera.cryptography.altbn128;
 
+import static com.hedera.cryptography.altbn128.common.ValidationUtils.expectOrThrow;
+
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.altbn128.facade.FieldFacade;
@@ -23,6 +25,7 @@ import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -74,7 +77,10 @@ public class AltBn128FieldElement implements FieldElement {
     @NonNull
     @Override
     public FieldElement add(@NonNull final FieldElement other) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new AltBn128FieldElement(
+                facade.add(this.representation, expectOrThrow(AltBn128FieldElement.class, other).representation),
+                field,
+                facade);
     }
 
     /**
@@ -83,7 +89,10 @@ public class AltBn128FieldElement implements FieldElement {
     @NonNull
     @Override
     public FieldElement subtract(@NonNull final FieldElement other) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new AltBn128FieldElement(
+                facade.subtracts(this.representation, expectOrThrow(AltBn128FieldElement.class, other).representation),
+                field,
+                facade);
     }
 
     /**
@@ -92,7 +101,10 @@ public class AltBn128FieldElement implements FieldElement {
     @NonNull
     @Override
     public FieldElement multiply(@NonNull final FieldElement other) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new AltBn128FieldElement(
+                facade.multiply(this.representation, expectOrThrow(AltBn128FieldElement.class, other).representation),
+                field,
+                facade);
     }
 
     /**
@@ -100,8 +112,17 @@ public class AltBn128FieldElement implements FieldElement {
      */
     @NonNull
     @Override
-    public FieldElement power(@NonNull final BigInteger exponent) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public FieldElement power(final long exponent) {
+        return new AltBn128FieldElement(facade.pow(this.representation, exponent), field, facade);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public FieldElement inverse() {
+        return new AltBn128FieldElement(facade.inverse(this.representation), field, facade);
     }
 
     /**
@@ -140,10 +161,11 @@ public class AltBn128FieldElement implements FieldElement {
         if (this.field != ((AltBn128FieldElement) obj).field) return false;
         if (this.representation.length != ((AltBn128FieldElement) obj).representation.length) return false;
 
-        return facade.equals(this.representation, ((AltBn128FieldElement) obj).representation);
+        return Arrays.equals(this.representation, ((AltBn128FieldElement) obj).representation);
     }
 
-    // TODO: what about hashCode? should we rely on the hashCode of the array? seems sensible.
-    // the problem there is that, e.g. if q were to be: 11 =>  1 mod 11 = 12 mod 11 = 23 mod 11, so how is that handled
-    // in the representation, if all of them return the same array, then we can even check equality that way
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getClass(), this.field, Arrays.hashCode(this.representation));
+    }
 }

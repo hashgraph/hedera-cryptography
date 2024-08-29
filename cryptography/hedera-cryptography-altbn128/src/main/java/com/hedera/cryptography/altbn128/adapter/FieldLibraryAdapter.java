@@ -23,12 +23,13 @@ package com.hedera.cryptography.altbn128.adapter;
  *  All operations return a status code, where 0 mean success, and a non-zero result means a codified error callers must know how to deal with.
  *  As the native code does not guarantee validation of parameters, Input and output parameters must be provided and instantiated accordingly for the invocation to be performed safety.
  *  i.e.:Sending non-null values and correctly instantiated arrays (expected size) is responsibility of the caller.
- *
  */
 public interface FieldLibraryAdapter {
 
     /** The return code that represents that a call succeeded */
     int SUCCESS = 0;
+    /** The return code that represents that a scalar cannot be inverted */
+    int CANNOT_INVERT = -5;
 
     /**
      * Creates a new random scalar from a seed value
@@ -95,4 +96,52 @@ public interface FieldLibraryAdapter {
      * @return the byte size of the random seed to use.
      */
     int fieldElementsRandomSeedSize();
+
+    /**
+     * Adds two scalars
+     *
+     * @param input1  the that represents the scalar
+     * @param input2  the that represents the scalar
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    int fieldElementsAdd(final byte[] input1, final byte[] input2, final byte[] output);
+
+    /**
+     * subtracts two scalars
+     *
+     * @param input1  the that represents the scalar
+     * @param input2  the that represents the scalar
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    int fieldElementsSubtract(final byte[] input1, final byte[] input2, final byte[] output);
+
+    /**
+     * Multiplies two scalars
+     *
+     * @param input1  the that represents the scalar
+     * @param input2  the that represents the scalar
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    int fieldElementsMultiply(final byte[] input1, final byte[] input2, final byte[] output);
+
+    /**
+     * Creates powers a scalar to an exponent
+     * @param input1  the that represents the scalar
+     * @param exponent the long to be used to create the new scalar
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    int fieldElementsPow(final byte[] input1, final long exponent, final byte[] output);
+
+    /**
+     * returns the inverse scalar (value^-1)
+     *
+     * @param input  the that represents the scalar
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link FieldLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    int fieldElementsInverse(final byte[] input, final byte[] output);
 }

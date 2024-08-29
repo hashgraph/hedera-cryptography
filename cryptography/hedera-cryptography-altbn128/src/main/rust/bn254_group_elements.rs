@@ -1,8 +1,7 @@
 use crate::group_element_utils::*;
 use crate::scalars_utils::scalars_from_bytes;
-use ark_ec::CurveGroup;
 use jni::objects::{JByteArray, JObject, JObjectArray};
-use jni::sys::{jbyte, jbyteArray, jint, jsize};
+use jni::sys::{jbyte, jint, jsize};
 use jni::JNIEnv;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -60,22 +59,6 @@ fn write_return_point(env: JNIEnv, point: &G, output: JByteArray) -> Result<jint
     }
 }
 
-/// Utility function to parse a JByteArray into an array of [u64; 4]
-fn transform_array_to_big_int(env: &JNIEnv, n: JByteArray) -> Result<[u64; 4], i32> {
-    let x1_bytes = match (*env).convert_byte_array(&n) {
-        Ok(val) => val,
-        Err(_) => return Err(JNI_ERROR_ARG_TO_VEC),
-    };
-
-    let u8_array: [u8; 32] = match x1_bytes.try_into() {
-        Ok(val) => val,
-        Err(_) => return Err(RUST_ERROR_COULD_NOT_TRANSFORM_ARGUMENT_DATA_TYPE),
-    };
-
-    let number: [u64; 4] = unsafe { *(u8_array.as_ptr() as *const [u64; 4]) };
-    Ok(number)
-}
-
 /// Utility function read a curve point form a JbyteArray, the point is validated, so this function must be used with trusted source of information.
 fn to_point(env: &JNIEnv, value: &JByteArray) -> Result<G, jint> {
     let input_bytes = match env.convert_byte_array(&value) {
@@ -120,72 +103,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     let point = group_elements_from_random::<G, ChaCha8Rng>(&mut rng);
 
     write_return_point(env, &point, output).unwrap_or_else(|value| value)
-}
-
-/// JNI function to create a new group element from the point coordinates
-/// # Arguments
-/// * `env` _ The JNI environment.
-/// * `_instance` _ The Java instance calling this function.
-/// * `x1` a byte array of size 32 with a point coordinate
-/// * `x2` a byte array of size 32 with a point coordinate
-/// * `y1` a byte array of size 32 with a point coordinate
-/// * `y2` a byte array of size 32 with a point coordinate
-/// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
-/// # Returns
-/// *   0    Success
-/// *  BUSINESS_ERROR_POINT_NOT_IN_CURVE   Business Error: Point is not in the curve
-/// *  A less than 0 error code in case of error
-#[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_g2FromCoordinates(
-    env: JNIEnv,
-    _instance: JObject,
-    x1: JByteArray,
-    x2: JByteArray,
-    y1: JByteArray,
-    y2: JByteArray,
-    output: JByteArray,
-) -> jint {
-    let x1_array: [u64; 4] = match transform_array_to_big_int(&env, x1) {
-        Ok(val) => val,
-        Err(err) => return err,
-    };
-
-    let x2_array: [u64; 4] = match transform_array_to_big_int(&env, x2) {
-        Ok(val) => val,
-        Err(err) => return err,
-    };
-
-    let y1_array: [u64; 4] = match transform_array_to_big_int(&env, y1) {
-        Ok(val) => val,
-        Err(err) => return err,
-    };
-
-    let y2_array: [u64; 4] = match transform_array_to_big_int(&env, y2) {
-        Ok(val) => val,
-        Err(err) => return err,
-    };
-
-    let affine_point = group_elements_g2_from_xy(x1_array, x2_array, y1_array, y2_array);
-    if !affine_point.is_on_curve() {
-        return BUSINESS_ERROR_POINT_NOT_IN_CURVE;
-    }
-    let point = group_elements_to_projective::<G>(affine_point);
-    let ge_bytes = match group_elements_serialize(&point) {
-        Ok(val) => val,
-        Err(_) => return ARK_ERROR_RESULT_SERIALIZATION,
-    };
-
-    let transformed_vec: Vec<jbyte> = ge_bytes.iter().map(|&x| x as jbyte).collect();
-
-    let ge_jbytes: [jbyte; GROUP2_ELEMENT_SIZE] = match transformed_vec.as_slice().try_into() {
-        Ok(arr) => arr,
-        Err(_) => return RUST_ERROR_COULD_NOT_TRANSFORM_RESULT_DATA_TYPE,
-    };
-
-    match env.set_byte_array_region(output, 0, &ge_jbytes) {
-        Ok(_) => SUCCESS,
-        Err(_) => JNI_ERROR_COULD_SET_RESULT_DATA_IN_ARRAY,
-    }
 }
 
 /// JNI function that determines if a byte array representation of a group element is valid
@@ -398,51 +315,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 
     let point = group_elements_scalar_multiply(point1, value);
     write_return_point(env, &point, output).unwrap_or_else(|value| value)
-}
-
-/// returns the sum of two representations of a group elements
-/// # Arguments
-/// * `env` _ The JNI environment.
-/// * `_instance` _ The Java instance calling this function.
-/// * `value`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element
-/// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
-/// # Returns
-/// *   0    Success
-/// * A less than 0 error code in case of error
-#[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_g2ToAdHocAffineSerialization(
-    env: JNIEnv,
-    _instance: JObject,
-    value: JByteArray,
-    output: JByteArray,
-) -> jint {
-    let point1 = match to_point(&env, &value) {
-        Ok(value) => value,
-        Err(value) => return value,
-    };
-
-    let pair = group_elements_g2_xy(point1.into_affine());
-
-    let mut combined = [0u64; 16];
-
-    combined[..4].copy_from_slice(&pair.0);
-    combined[4..8].copy_from_slice(&pair.1);
-    combined[8..12].copy_from_slice(&pair.2);
-    combined[12..].copy_from_slice(&pair.3);
-
-    let output_array: [u8; 128] = unsafe { *(combined.as_ptr() as *const [u8; 128]) };
-
-    let transformed_vec: Vec<jbyte> = output_array.iter().map(|&x| x as jbyte).collect();
-
-    let ge_jbytes: [jbyte; 128] = match transformed_vec.as_slice().try_into() {
-        Ok(arr) => arr,
-        Err(_) => return RUST_ERROR_COULD_NOT_TRANSFORM_RESULT_DATA_TYPE,
-    };
-
-    match env.set_byte_array_region(output, 0, &ge_jbytes) {
-        Ok(_) => SUCCESS,
-        Err(_) => JNI_ERROR_COULD_SET_RESULT_DATA_IN_ARRAY,
-    }
 }
 
 /// JNI function to return the batch addition of N group elements

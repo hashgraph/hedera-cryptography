@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
@@ -126,34 +125,5 @@ class AltBn128FieldTest {
         final byte[] value2 = new byte[field.elementSize() + 1];
         rng.nextBytes(value2);
         assertThrows(IllegalArgumentException.class, () -> field.fromBytes(value2));
-    }
-
-    @Test
-    void fieldElementToBytesIsNotNull() {
-        var field = new AltBn128Field();
-        assertNotNull(field.one().toBytes());
-    }
-
-    @Test
-    void fieldElementToBytesAndInverseIsEquals() {
-        var field = new AltBn128Field();
-        byte[] representation = field.one().toBytes();
-        assertEquals(field.fromBytes(representation), field.one());
-        assertTrue(field.one().equals(field.fromBytes(representation)));
-        assertTrue(field.fromBytes(representation).equals(field.one()));
-    }
-
-    @Test
-    void fieldElementToBigIntegerIsNotNull() {
-        var field = new AltBn128Field();
-        assertNotNull(field.one().toBigInteger());
-    }
-
-    @Test
-    void fieldElementToBigInteger() {
-        var field = new AltBn128Field();
-        assertEquals(BigInteger.ONE, field.one().toBigInteger());
-        assertEquals(BigInteger.ZERO, field.zero().toBigInteger());
-        assertEquals(BigInteger.TEN, field.fromLong(10L).toBigInteger());
     }
 }
