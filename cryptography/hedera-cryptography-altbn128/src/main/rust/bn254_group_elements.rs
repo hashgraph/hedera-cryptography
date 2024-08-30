@@ -9,6 +9,7 @@ use rand_chacha::ChaCha8Rng;
 
 const GROUP1_ELEMENT_SIZE: usize = 64;
 const GROUP2_ELEMENT_SIZE: usize = 128;
+const GROUP1: u8 = 0;
 type G1 = G1Projective;
 type G2 = G2Projective;
 
@@ -36,7 +37,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     };
     let mut rng = ChaCha8Rng::from_seed(seed_array);
     match group_id {
-        0 => {
+        GROUP1 => {
             type G = G1;
             let point = group_elements_from_random::<G, ChaCha8Rng>(&mut rng);
             jni_helpers::write_return_point::<G>(env, &point, output).unwrap_or_else(|value| value)
@@ -71,7 +72,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
         Err(value) => return value,
     };
     match group_id {
-        0 => jni_helpers::validate_g1point(&input_bytes),
+        GROUP1 => jni_helpers::validate_g1point(&input_bytes),
         _ => jni_helpers::validate_g2point(&input_bytes),
     }
 }
@@ -93,7 +94,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     output: JByteArray,
 ) -> jint {
     match group_id {
-        0 => {
+        GROUP1 => {
             type G = G1;
             let point = group_elements_zero::<G>();
             jni_helpers::write_return_point(env, &point, output).unwrap_or_else(|value| value)
@@ -123,7 +124,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     output: JByteArray,
 ) -> jint {
     match group_id {
-        0 => {
+        GROUP1 => {
             type G = G1;
             let point = group_elements_generator::<G>();
             jni_helpers::write_return_point(env, &point, output).unwrap_or_else(|value| value)
@@ -156,7 +157,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     value2: JByteArray,
 ) -> jint {
     match group_id {
-        0 => {
+        GROUP1 => {
             type G = G1;
             jni_helpers::compare_points::<G>(&env, &value, &value2)
         }
@@ -181,7 +182,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     group_id: jint,
 ) -> jint {
     match group_id {
-        0 => GROUP1_ELEMENT_SIZE as jint,
+        GROUP1 => GROUP1_ELEMENT_SIZE as jint,
         _ => GROUP2_ELEMENT_SIZE as jint,
     }
 }
@@ -207,7 +208,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     output: JByteArray,
 ) -> jint {
     match group_id {
-        0 => {
+        GROUP1 => {
             type G = G1;
             jni_helpers::add_points::<G>(env, &value, &value2, output)
         }
@@ -240,7 +241,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     output: JByteArray,
 ) -> jint {
     match group_id {
-        0 => {
+        GROUP1 => {
             type G = G1;
             jni_helpers::multiply_point_and_scalar::<G>(env, &value, &value2, output)
         }
@@ -270,7 +271,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     output: JByteArray,
 ) -> jint {
     match group_id {
-        0 => {
+        GROUP1 => {
             type G = G1;
             jni_helpers::total_sum_points::<G>(env, values, output)
         }
@@ -300,7 +301,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     outputs: JObjectArray,
 ) -> jint {
     match group_id {
-        0 => {
+        GROUP1 => {
             type G = G1;
             jni_helpers::batch_multiply_points::<G>(env, values, outputs)
         }

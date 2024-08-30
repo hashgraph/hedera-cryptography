@@ -76,7 +76,10 @@ public class AltBn128GroupElement implements GroupElement {
     }
 
     /**
-     * checks if the received elements is the same subtype and belongs to the same group.
+     * Checks if the received elements is the same subtype and belongs to the same group.
+     * @param group expected group
+     * @param other instance to check
+     * @return  {@code other} instance cast to the expected subclass
      * @throws IllegalArgumentException if not.
      */
     static AltBn128GroupElement isSameAltBn128GroupElement(
