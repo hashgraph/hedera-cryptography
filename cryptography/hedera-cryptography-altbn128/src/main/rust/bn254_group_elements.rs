@@ -17,6 +17,7 @@ type G2 = G2Projective;
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
 /// * `input_seed`   the byte array of size GROUP2_ELEMENT_SIZE represents the group element
+/// * `group_id`  in which group to perform the operation
 /// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
 /// # Returns
 /// *   0    Success
@@ -52,6 +53,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
+/// * `group_id`  in which group to perform the operation
 /// * `value`   the byte that of size GROUP2_ELEMENT_AFFINE_SIZE represents the group element
 /// # Returns
 /// *   0    Success
@@ -76,8 +78,9 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 
 /// Returns the zero group element
 /// # Arguments
-/// * `env` - The JNI environment.
-/// * `_instance` - The Java instance calling this function.
+/// * `env` _ The JNI environment.
+/// * `_instance` _ The Java instance calling this function.
+/// * `group_id`  in which group to perform the operation
 /// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
 /// # Returns
 /// *   0    Success
@@ -107,6 +110,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
+/// * `group_id`  in which group to perform the operation
 /// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
 /// # Returns
 /// *   0    Success
@@ -136,6 +140,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
+/// * `group_id`  in which group to perform the operation
 /// * `value`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element
 /// * `value2`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element 2
 /// # Returns
@@ -166,6 +171,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
+/// * `group_id`  in which group to perform the operation
 /// # Returns
 /// *   the value of GROUP2_ELEMENT_SIZE constant
 #[no_mangle]
@@ -184,6 +190,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
+/// * `group_id`  in which group to perform the operation
 /// * `value`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element
 /// * `value2`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element 2
 /// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
@@ -216,6 +223,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
+/// * `group_id`  in which group to perform the operation
 /// * `value`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element
 /// * `value2`  the byte that represents the scalar
 /// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
@@ -247,6 +255,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
+/// * `group_id`  in which group to perform the operation
 /// * `values`   the byte matrix that represents the collection of group elements
 /// * `output`   the byte array that will be filled with the new point representing the result of the operation
 /// # Returns
@@ -276,6 +285,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
+/// * `group_id`  in which group to perform the operation
 /// * `values`   the byte matrix that represents the collection of group elements
 /// * `output`   the byte array that will be filled with the new point representing the result of the operation
 /// # Returns

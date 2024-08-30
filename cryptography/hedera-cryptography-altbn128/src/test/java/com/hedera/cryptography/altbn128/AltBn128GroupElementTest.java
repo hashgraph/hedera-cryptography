@@ -23,39 +23,48 @@ import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 class AltBn128GroupElementTest {
 
-    @Test
-    void zeroPlusZeroIsZero() {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void zeroPlusZeroIsZero(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
         assertEquals(group.zero(), group.zero().add(group.zero()));
     }
 
-    @Test
-    void generatorTimesTwoEqualsGeneratorPlusGenerator() {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void generatorTimesTwoEqualsGeneratorPlusGenerator(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
         var field = new AltBn128Field();
         assertEquals(
                 group.generator().multiply(field.fromLong(2)), group.generator().add(group.generator()));
     }
 
-    @Test
-    void generatorBatchAddedFourTimesEqualsGeneratorTimes4() {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void generatorBatchAddedFourTimesEqualsGeneratorTimes4(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
         var field = new AltBn128Field();
         assertEquals(
                 group.batchAdd(List.of(group.generator(), group.generator(), group.generator(), group.generator())),
                 group.generator().multiply(field.fromLong(4)));
     }
 
-    @Test
-    void generatorBatchAddedFourTimesAndZerosEqualsGeneratorTimes4() {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void generatorBatchAddedFourTimesAndZerosEqualsGeneratorTimes4(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
         var field = new AltBn128Field();
         assertEquals(
                 group.batchAdd(List.of(
@@ -68,16 +77,18 @@ class AltBn128GroupElementTest {
                 group.generator().multiply(field.fromLong(4)));
     }
 
-    @Test
-    void generatorPlusZeroIsGenerator() {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void generatorPlusZeroIsGenerator(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
         assertEquals(group.generator(), group.generator().add(group.zero()));
         assertEquals(group.generator(), group.zero().add(group.generator()));
     }
 
-    @Test
-    void toBytesAndPointAgain() {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void toBytesAndPointAgain(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
         assertEquals(group.zero(), group.fromBytes(group.zero().toBytes()));
         assertEquals(group.generator(), group.fromBytes(group.generator().toBytes()));
     }
@@ -96,18 +107,20 @@ class AltBn128GroupElementTest {
                                         "4082367875863433681332203403145435568316851327593401208105741076214120093531")));
     }
 
-    @Test
-    void fromInvalidPoint() {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void fromInvalidPoint(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
         assertThrows(
                 IllegalArgumentException.class,
                 () -> group.fromBytes(BigIntegerUtils.toLittleEndianBytes(
                         128, BigInteger.ONE, new BigInteger("10"), BigInteger.ONE, BigInteger.ONE)));
     }
 
-    @Test
-    void batchMultiply() {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void batchMultiply(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
         var field = new AltBn128Field();
         List<FieldElement> scalars =
                 IntStream.range(0, 100).boxed().map(field::fromLong).toList();
@@ -129,6 +142,7 @@ class AltBn128GroupElementTest {
         assertEquals(group.zero(), group.zero());
         final GroupElement zero = group.zero();
         assertTrue(zero.equals(zero));
+        assertNotEquals(group.zero(), new Object());
         assertNotEquals(group.zero(), group.generator());
         assertNotEquals(group.generator(), group.zero());
         assertNotEquals(group.generator(), null);
@@ -136,5 +150,52 @@ class AltBn128GroupElementTest {
         assertNotEquals(mock(GroupElement.class), group.generator());
         assertNotEquals(group.zero(), group2.zero());
         assertNotEquals(group.generator(), group2.generator());
+    }
+
+    @Test
+    void testHashCode() {
+        var group = new AltBn128Group(AltBN128CurveGroup.GROUP1);
+        var group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+        var set = new HashSet<GroupElement>();
+        set.add(group.zero());
+        set.add(group.zero());
+        assertEquals(1, set.size());
+        set.add(group2.zero());
+        assertEquals(2, set.size());
+    }
+
+    @Test
+    void itDoesNotAcceptOperationsBetweenDifferentElements() {
+        var group = new AltBn128Group(AltBN128CurveGroup.GROUP1);
+        var group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+        // Checks Disabled for now
+        // assertTrue(group2.zero().isSameGroup(group2.generator()));
+        // assertTrue(group.zero().isSameGroup(group.generator()));
+        // assertEquals(group, group2.getOppositeGroup());
+        // assertEquals(group2, group.getOppositeGroup());
+
+        assertThrows(IllegalArgumentException.class, () -> group.zero().add(group2.zero()));
+        assertThrows(IllegalArgumentException.class, () -> group2.zero().add(group.zero()));
+    }
+
+    @Test
+    void testSizes() {
+        var group = new AltBn128Group(AltBN128CurveGroup.GROUP1);
+        var group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+        assertEquals(group.elementSize(), group.zero().size());
+        assertEquals(group2.elementSize(), group2.zero().size());
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testCopy(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        Random rng = new SecureRandom();
+        final byte[] seed = new byte[group.seedSize()];
+        rng.nextBytes(seed);
+        var random = group.random(seed);
+
+        assertEquals(random, random.copy());
+        assertNotSame(random, random.copy());
     }
 }

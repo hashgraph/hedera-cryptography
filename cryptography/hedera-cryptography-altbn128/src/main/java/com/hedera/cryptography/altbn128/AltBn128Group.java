@@ -101,11 +101,9 @@ public class AltBn128Group implements Group {
     @Override
     public GroupElement batchAdd(@NonNull final Collection<GroupElement> elements) {
         Objects.requireNonNull(elements, "elements must not be null");
-        if (elements.stream().anyMatch(e -> !AltBn128GroupElement.class.isAssignableFrom(e.getClass()))) {
-            throw new IllegalArgumentException("elements must implement AltBn128Group2Element");
-        }
-        List<AltBn128GroupElement> elems =
-                elements.stream().map(AltBn128GroupElement.class::cast).toList();
+        List<AltBn128GroupElement> elems = elements.stream()
+                .map(e -> AltBn128GroupElement.isSameAltBn128GroupElement(this, e))
+                .toList();
         final byte[][] all = new byte[elems.size()][];
         for (int i = 0; i < elems.size(); i++) {
             all[i] = elems.get(i).getRepresentation();
@@ -126,11 +124,13 @@ public class AltBn128Group implements Group {
      */
     public List<GroupElement> batchMultiply(@NonNull final Collection<FieldElement> elements) {
         Objects.requireNonNull(elements, "elements must not be null");
-        if (elements.stream().anyMatch(e -> !AltBn128FieldElement.class.isAssignableFrom(e.getClass()))) {
-            throw new IllegalArgumentException("elements must implement AltBn128Group2Element");
+        List<AltBn128FieldElement> elems;
+        try {
+            elems = elements.stream().map(AltBn128FieldElement.class::cast).toList();
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("elements must implement AltBn128FieldElement");
         }
-        List<AltBn128FieldElement> elems =
-                elements.stream().map(AltBn128FieldElement.class::cast).toList();
+
         final byte[][] all = new byte[elems.size()][];
         for (int i = 0; i < elems.size(); i++) {
             all[i] = elems.get(i).getRepresentation();

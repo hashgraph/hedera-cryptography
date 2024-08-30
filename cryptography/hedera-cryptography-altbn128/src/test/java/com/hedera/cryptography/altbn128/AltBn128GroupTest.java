@@ -17,12 +17,19 @@
 package com.hedera.cryptography.altbn128;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
+import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 class AltBn128GroupTest {
     @Test
@@ -96,6 +103,25 @@ class AltBn128GroupTest {
         var group1 = new AltBn128Group(AltBN128CurveGroup.GROUP1);
         var group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         assertEquals(new AltBn128Group(AltBN128CurveGroup.GROUP2), group2);
+        assertEquals(group2, group2);
         assertNotEquals(group1, group2);
+        assertNotEquals(group1, new Object());
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void batchOps(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        List<FieldElement> scalars =
+                IntStream.range(0, 100).boxed().map(field::fromLong).toList();
+        List<GroupElement> results = new ArrayList<>();
+        assertDoesNotThrow(() -> results.addAll(group.batchMultiply(scalars)));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> group.batchMultiply(List.of(field.zero(), mock(FieldElement.class))));
+        assertThrows(
+                IllegalArgumentException.class, () -> group.batchAdd(List.of(group.zero(), mock(GroupElement.class))));
     }
 }

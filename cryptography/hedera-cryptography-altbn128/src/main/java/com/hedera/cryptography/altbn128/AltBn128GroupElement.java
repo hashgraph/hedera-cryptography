@@ -72,16 +72,17 @@ public class AltBn128GroupElement implements GroupElement {
     @Override
     public GroupElement add(@NonNull final GroupElement other) {
         return new AltBn128GroupElement(
-                group, facade.add(this.representation, getAltBn128GroupElement(other).representation));
+                group, facade.add(this.representation, isSameAltBn128GroupElement(this.group, other).representation));
     }
 
     /**
      * checks if the received elements is the same subtype and belongs to the same group.
      * @throws IllegalArgumentException if not.
      */
-    private AltBn128GroupElement getAltBn128GroupElement(final @NonNull GroupElement other) {
+    static AltBn128GroupElement isSameAltBn128GroupElement(
+            final @NonNull Group group, final @NonNull GroupElement other) {
         AltBn128GroupElement theOther = expectOrThrow(AltBn128GroupElement.class, other);
-        if (theOther.getGroup() != this.getGroup()) {
+        if (theOther.getGroup() != group) {
             throw new IllegalArgumentException("Elements do not belong to the same group");
         }
         return theOther;

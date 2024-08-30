@@ -81,6 +81,7 @@ pub fn write_return_scalar(env: JNIEnv, output: JByteArray, scalar: F) -> Result
     )
 }
 
+/// Utility function to extract the random seed from a JByteArray
 pub fn extract_random_seed(env: &JNIEnv, input_seed: &JByteArray) -> Result<[u8; 32], jint> {
     let input_seed_bytes = match env.convert_byte_array(&input_seed) {
         Ok(val) => val,
@@ -208,6 +209,7 @@ pub fn write_points_to_jobject_array<G: CurveGroup>(
     SUCCESS
 }
 
+/// Utility function to extract a vec u8 from a JByteArray
 pub fn from_jbytearray_to_vec(env: JNIEnv, value: &JByteArray) -> Result<Vec<u8>, jint> {
     let input_bytes = match env.convert_byte_array(&value) {
         Ok(val) => val,
@@ -216,6 +218,7 @@ pub fn from_jbytearray_to_vec(env: JNIEnv, value: &JByteArray) -> Result<Vec<u8>
     Ok(input_bytes)
 }
 
+/// Utility function to validate a g1 point
 pub fn validate_g1point(input_bytes: &Vec<u8>) -> i32 {
     let point: G1Affine =
         match group_elements_deserialize_and_validate::<G1Projective>(&input_bytes) {
@@ -233,6 +236,7 @@ pub fn validate_g1point(input_bytes: &Vec<u8>) -> i32 {
     }
 }
 
+/// Utility function to validate a g2 point
 pub fn validate_g2point(input_bytes: &Vec<u8>) -> i32 {
     let point: G2Affine =
         match group_elements_deserialize_and_validate::<G2Projective>(&input_bytes) {
@@ -250,6 +254,7 @@ pub fn validate_g2point(input_bytes: &Vec<u8>) -> i32 {
     }
 }
 
+/// Utility function to compare two points
 pub fn compare_points<G: CurveGroup>(env: &JNIEnv, value: &JByteArray, value2: &JByteArray) -> i32 {
     let point1 = match to_point::<G>(&env, &value) {
         Ok(value) => value,
@@ -264,6 +269,7 @@ pub fn compare_points<G: CurveGroup>(env: &JNIEnv, value: &JByteArray, value2: &
     (point1 == point2) as i32
 }
 
+/// Utility function to add two points
 pub fn add_points<G: CurveGroup>(
     env: JNIEnv,
     value: &JByteArray,
@@ -284,6 +290,7 @@ pub fn add_points<G: CurveGroup>(
     write_return_point(env, &point, output).unwrap_or_else(|value| value)
 }
 
+/// Utility function to multiply two points
 pub fn multiply_point_and_scalar<G: CurveGroup>(
     env: JNIEnv,
     value: &JByteArray,
@@ -304,6 +311,7 @@ pub fn multiply_point_and_scalar<G: CurveGroup>(
     write_return_point(env, &point, output).unwrap_or_else(|value| value)
 }
 
+/// Utility function to produce the total sum of N points
 pub fn total_sum_points<G: CurveGroup>(
     mut env: JNIEnv,
     values: JObjectArray,
@@ -319,6 +327,7 @@ pub fn total_sum_points<G: CurveGroup>(
     write_return_point(env, &point, output).unwrap_or_else(|value| value)
 }
 
+/// Utility function to batch multiply the generator to N scalars
 pub fn batch_multiply_points<G: CurveGroup>(
     mut env: JNIEnv,
     values: JObjectArray,
