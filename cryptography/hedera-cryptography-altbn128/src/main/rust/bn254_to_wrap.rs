@@ -96,6 +96,10 @@ pub fn scalars_from<G: CurveGroup>(value: u128) -> ScalarField<G> {
     ScalarField::<G>::from(value)
 }
 
+pub fn scalars_add<G: CurveGroup>(value: ScalarField<G>, value2: ScalarField<G>) -> ScalarField<G> {
+    value + value2
+}
+
 pub fn scalars_inverse<G: CurveGroup>(value: ScalarField<G>) -> ScalarField<G> {
     value.inverse().unwrap()
 }

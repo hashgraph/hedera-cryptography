@@ -23,7 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.hedera.cryptography.altbn128.AltBn128Exception;
-import com.hedera.cryptography.altbn128.adapter.FieldLibraryAdapter;
+import com.hedera.cryptography.altbn128.adapter.FieldElementsLibraryAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,50 +31,51 @@ class FieldFacadeTest {
 
     private static final int TEST_SIZE = 32;
     private static final int TEST_ERROR_RETURN_CODE = -10;
-    private FieldLibraryAdapter fieldLibraryAdapter;
+    private FieldElementsLibraryAdapter fieldElementsLibraryAdapter;
     private FieldFacade fieldFacade;
 
     @BeforeEach
     void setUp() {
-        fieldLibraryAdapter = mock(FieldLibraryAdapter.class);
-        when(fieldLibraryAdapter.fieldElementsSize()).thenReturn(TEST_SIZE);
-        when(fieldLibraryAdapter.fieldElementsRandomSeedSize()).thenReturn(TEST_SIZE);
-        fieldFacade = new FieldFacade(fieldLibraryAdapter);
+        fieldElementsLibraryAdapter = mock(FieldElementsLibraryAdapter.class);
+        when(fieldElementsLibraryAdapter.fieldElementsSize()).thenReturn(TEST_SIZE);
+        when(fieldElementsLibraryAdapter.randomSeedSize()).thenReturn(TEST_SIZE);
+        fieldFacade = new FieldFacade(fieldElementsLibraryAdapter);
     }
 
     @Test
     void testErrorFromBytes() {
-        when(fieldLibraryAdapter.fieldElementsFromBytes(any(), any())).thenReturn(TEST_ERROR_RETURN_CODE);
+        when(fieldElementsLibraryAdapter.fieldElementsFromBytes(any(), any())).thenReturn(TEST_ERROR_RETURN_CODE);
         assertThrows(AltBn128Exception.class, () -> fieldFacade.fromBytes(new byte[TEST_SIZE]));
     }
 
     @Test
     void testErrorFromLong() {
-        when(fieldLibraryAdapter.fieldElementsFromLong(eq(10L), any())).thenReturn(TEST_ERROR_RETURN_CODE);
+        when(fieldElementsLibraryAdapter.fieldElementsFromLong(eq(10L), any())).thenReturn(TEST_ERROR_RETURN_CODE);
         assertThrows(AltBn128Exception.class, () -> fieldFacade.fromLong(10));
     }
 
     @Test
     void testErrorFromSeed() {
-        when(fieldLibraryAdapter.fieldElementsFromRandomSeed(any(), any())).thenReturn(TEST_ERROR_RETURN_CODE);
+        when(fieldElementsLibraryAdapter.fieldElementsFromRandomSeed(any(), any()))
+                .thenReturn(TEST_ERROR_RETURN_CODE);
         assertThrows(AltBn128Exception.class, () -> fieldFacade.fromRandomSeed(new byte[TEST_SIZE]));
     }
 
     @Test
     void testErrorZero() {
-        when(fieldLibraryAdapter.fieldElementsZero(any())).thenReturn(TEST_ERROR_RETURN_CODE);
+        when(fieldElementsLibraryAdapter.fieldElementsZero(any())).thenReturn(TEST_ERROR_RETURN_CODE);
         assertThrows(AltBn128Exception.class, () -> fieldFacade.zero());
     }
 
     @Test
     void testErrorOne() {
-        when(fieldLibraryAdapter.fieldElementsOne(any())).thenReturn(TEST_ERROR_RETURN_CODE);
+        when(fieldElementsLibraryAdapter.fieldElementsOne(any())).thenReturn(TEST_ERROR_RETURN_CODE);
         assertThrows(AltBn128Exception.class, () -> fieldFacade.one());
     }
 
     @Test
     void testErrorEquals() {
-        when(fieldLibraryAdapter.fieldElementsEquals(any(), any())).thenReturn(TEST_ERROR_RETURN_CODE);
+        when(fieldElementsLibraryAdapter.fieldElementsEquals(any(), any())).thenReturn(TEST_ERROR_RETURN_CODE);
         assertThrows(AltBn128Exception.class, () -> fieldFacade.equals(new byte[TEST_SIZE], new byte[TEST_SIZE]));
     }
 }

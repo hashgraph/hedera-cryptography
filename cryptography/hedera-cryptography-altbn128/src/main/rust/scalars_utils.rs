@@ -1,3 +1,4 @@
+use ark_ec::{CurveConfig, CurveGroup};
 use ark_ff::{Field, One, PrimeField, Zero};
 use ark_serialize::CanonicalSerialize;
 use ark_std::UniformRand;
@@ -9,10 +10,16 @@ use rand::Rng;
 /// Fr defines the field for the scalars used in operations on the curve, typically corresponding to the prime order of a subgroup of points on the curve.
 
 pub type F = ark_bn254::Fr;
+pub type ScalarField<G> = <<G as CurveGroup>::Config as CurveConfig>::ScalarField;
 
 /// creates a scalar from an u8 array reference, if the integer represented by the input is bigger than the field the appropriate reduction is performed
 pub fn scalars_from_bytes(value: &[u8]) -> F {
     F::from_le_bytes_mod_order(&value)
+}
+
+/// Same as before but extracts F from the curve config
+pub fn scalars_curve_from_bytes<G: CurveGroup>(value: &[u8]) -> ScalarField<G> {
+    ScalarField::<G>::from_le_bytes_mod_order(&value)
 }
 
 /// creates an u8 vector out of a scalar

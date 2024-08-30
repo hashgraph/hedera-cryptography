@@ -24,11 +24,25 @@ import org.junit.jupiter.api.Test;
 class BigIntegerUtilsTest {
 
     @Test
-    void test() {
+    void testValidConversion() {
         BigInteger bigInt = new BigInteger("1234567890");
         int size = 32;
         byte[] result = BigIntegerUtils.toLittleEndianBytes(bigInt, size);
         BigInteger convertedBack = BigIntegerUtils.fromLittleEndianBytes(result);
         assertEquals(bigInt, convertedBack);
+    }
+
+    @Test
+    void testSmallerSize() {
+        BigInteger bigInt = new BigInteger("1234567890");
+        assertThrows(IllegalArgumentException.class, () -> BigIntegerUtils.toLittleEndianBytes(bigInt, 1));
+    }
+
+    @Test
+    void testSmallerSizeMultipleBigInts() {
+        BigInteger bigInt = new BigInteger("1");
+        BigInteger bigInt2 = new BigInteger("2");
+        assertThrows(IllegalArgumentException.class, () -> BigIntegerUtils.toLittleEndianBytes(1, bigInt, bigInt2));
+        assertDoesNotThrow(() -> BigIntegerUtils.toLittleEndianBytes(2, bigInt, bigInt2));
     }
 }
