@@ -1,61 +1,14 @@
+use crate::jni_helpers;
 use crate::scalars_utils::*;
 use jni::objects::{JByteArray, JObject};
-use jni::sys::{jbyte, jint, jlong};
+use jni::sys::{jint, jlong};
 use jni::JNIEnv;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 
-const SEED_SIZE: usize = 32;
 const FIELD_ELEMENT_SIZE: usize = 32;
-/// * 0     False
-/// * 1     True
-/// * 0     Success
-const SUCCESS: i32 = 0;
 /// * -5    Business Error: Scalar can not be inverted
 const BUSINESS_ERROR_CANNOT_PERFORM_INVERSE_OPERATION: i32 = -5;
-/// * -1001  Jni Error: Could not convert argument array to vector
-const JNI_ERROR_ARG_TO_VEC: i32 = -1001;
-/// * -1002  Rust error: Could not convert argument vector to an unsigned byte array
-const RUST_ERROR_COULD_NOT_TRANSFORM_ARGUMENT_DATA_TYPE: i32 = -1002;
-/// * -1003   Ark Error: Result cannot be serialized
-const ARK_ERROR_RESULT_SERIALIZATION: i32 = -1003;
-/// * -1004  Jni Error: Could not set the scalar in the output byte array
-const JNI_ERROR_COULD_NOT_SET_OUTPUT_BYTE_ARRAY: i32 = -1004;
-
-/// Utility function read a scalar form a JbyteArray, if the scalar is bigger than the field a reduction is performed
-fn to_scalar(env: &JNIEnv, value: &JByteArray) -> Result<F, i32> {
-    let input_bytes = match env.convert_byte_array(&value) {
-        Ok(val) => val,
-        Err(_) => return Err(JNI_ERROR_ARG_TO_VEC),
-    };
-
-    let input_array: [u8; FIELD_ELEMENT_SIZE] = match input_bytes.try_into() {
-        Ok(val) => val,
-        Err(_) => return Err(RUST_ERROR_COULD_NOT_TRANSFORM_ARGUMENT_DATA_TYPE),
-    };
-    let scalar = scalars_from_bytes(&input_array);
-    Ok(scalar)
-}
-
-/// Utility function to write the serialized representation of a scalar in an existing JByteArray
-fn write_return_scalar(env: JNIEnv, output: JByteArray, scalar: F) -> Result<jint, jint> {
-    let fe_bytes = match scalars_to_bytes(scalar) {
-        Ok(val) => val,
-        Err(_) => return Err(ARK_ERROR_RESULT_SERIALIZATION),
-    };
-
-    let transformed_vec: Vec<jbyte> = fe_bytes.iter().map(|&x| x as jbyte).collect();
-
-    let scalar_jbytes: [jbyte; FIELD_ELEMENT_SIZE] = match transformed_vec.as_slice().try_into() {
-        Ok(arr) => arr,
-        Err(_) => return Err(ARK_ERROR_RESULT_SERIALIZATION),
-    };
-
-    Ok(match env.set_byte_array_region(output, 0, &scalar_jbytes) {
-        Ok(_) => SUCCESS,
-        Err(_) => JNI_ERROR_COULD_NOT_SET_OUTPUT_BYTE_ARRAY,
-    })
-}
 
 /// JNI function to create a new random scalar from a seed value
 /// # Arguments
@@ -73,21 +26,16 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     input_seed: JByteArray,
     output: JByteArray,
 ) -> jint {
-    let input_seed_bytes = match env.convert_byte_array(&input_seed) {
-        Ok(val) => val,
-        Err(_) => return JNI_ERROR_ARG_TO_VEC,
-    };
-
-    let seed_array: [u8; SEED_SIZE] = match input_seed_bytes.try_into() {
-        Ok(val) => val,
-        Err(_) => return RUST_ERROR_COULD_NOT_TRANSFORM_ARGUMENT_DATA_TYPE,
+    let seed_array = match jni_helpers::extract_random_seed(&env, &input_seed) {
+        Ok(value) => value,
+        Err(value) => return value,
     };
 
     let mut rng = ChaCha8Rng::from_seed(seed_array);
 
     let scalar = scalars_from_random::<ChaCha8Rng>(&mut rng);
 
-    write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
+    jni_helpers::write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
 }
 
 /// JNI function to create a new scalar from a long
@@ -107,7 +55,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     output: JByteArray,
 ) -> jint {
     let scalar = scalars_from_u64(input_long as u64);
-    write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
+    jni_helpers::write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
 }
 
 /// JNI function to create a new scalar from a byte array
@@ -126,11 +74,11 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     value: JByteArray,
     output: JByteArray,
 ) -> jint {
-    let scalar = match to_scalar(&env, &value) {
+    let scalar = match jni_helpers::to_scalar(&env, &value) {
         Ok(value) => value,
         Err(value) => return value,
     };
-    write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
+    jni_helpers::write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
 }
 
 /// JNI function to create a zero value scalar
@@ -148,7 +96,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     output: JByteArray,
 ) -> jint {
     let scalar = scalars_zero();
-    write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
+    jni_helpers::write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
 }
 
 /// JNI function to create a one value scalar
@@ -166,7 +114,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     output: JByteArray,
 ) -> jint {
     let scalar = scalars_one();
-    write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
+    jni_helpers::write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
 }
 
 /// JNI function to return if the two representations of a field element are the same
@@ -186,12 +134,12 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     value: JByteArray,
     value2: JByteArray,
 ) -> jint {
-    let scalar = match to_scalar(&env, &value) {
+    let scalar = match jni_helpers::to_scalar(&env, &value) {
         Ok(value) => value,
         Err(value) => return value,
     };
 
-    let scalar2 = match to_scalar(&env, &value2) {
+    let scalar2 = match jni_helpers::to_scalar(&env, &value2) {
         Ok(value) => value,
         Err(value) => return value,
     };
@@ -213,20 +161,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     FIELD_ELEMENT_SIZE as jint
 }
 
-/// returns the size in bytes of the random seed to use
-/// # Arguments
-/// * `env` - The JNI environment.
-/// * `_instance` - The Java instance calling this function.
-/// # Returns
-/// *   the value of SEED_SIZE constant
-#[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_fieldElementsRandomSeedSize(
-    _env: JNIEnv,
-    _instance: JObject,
-) -> jint {
-    SEED_SIZE as jint
-}
-
 /// JNI function to add the value of two scalars
 /// # Arguments
 /// * `env` - The JNI environment.
@@ -245,18 +179,18 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     value2: JByteArray,
     output: JByteArray,
 ) -> jint {
-    let scalar1 = match to_scalar(&env, &value) {
+    let scalar1 = match jni_helpers::to_scalar(&env, &value) {
         Ok(value) => value,
         Err(value) => return value,
     };
 
-    let scalar2 = match to_scalar(&env, &value2) {
+    let scalar2 = match jni_helpers::to_scalar(&env, &value2) {
         Ok(value) => value,
         Err(value) => return value,
     };
 
     let scalar = scalars_add(scalar1, scalar2);
-    write_return_scalar(env, output, scalar).unwrap()
+    jni_helpers::write_return_scalar(env, output, scalar).unwrap()
 }
 
 /// JNI function to subtract the value of two scalars
@@ -277,18 +211,18 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     value2: JByteArray,
     output: JByteArray,
 ) -> jint {
-    let scalar1 = match to_scalar(&env, &value) {
+    let scalar1 = match jni_helpers::to_scalar(&env, &value) {
         Ok(value) => value,
         Err(value) => return value,
     };
 
-    let scalar2 = match to_scalar(&env, &value2) {
+    let scalar2 = match jni_helpers::to_scalar(&env, &value2) {
         Ok(value) => value,
         Err(value) => return value,
     };
 
     let scalar = scalars_minus(scalar1, scalar2);
-    write_return_scalar(env, output, scalar).unwrap()
+    jni_helpers::write_return_scalar(env, output, scalar).unwrap()
 }
 
 /// JNI function to multiply the value of two scalars
@@ -309,18 +243,18 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     value2: JByteArray,
     output: JByteArray,
 ) -> jint {
-    let scalar1 = match to_scalar(&env, &value) {
+    let scalar1 = match jni_helpers::to_scalar(&env, &value) {
         Ok(value) => value,
         Err(value) => return value,
     };
 
-    let scalar2 = match to_scalar(&env, &value2) {
+    let scalar2 = match jni_helpers::to_scalar(&env, &value2) {
         Ok(value) => value,
         Err(value) => return value,
     };
 
     let scalar = scalars_multiply(scalar1, scalar2);
-    write_return_scalar(env, output, scalar).unwrap()
+    jni_helpers::write_return_scalar(env, output, scalar).unwrap()
 }
 
 /// JNI function to invert a scalar represented in a byte array
@@ -339,7 +273,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     value: JByteArray,
     output: JByteArray,
 ) -> jint {
-    let scalar1 = match to_scalar(&env, &value) {
+    let scalar1 = match jni_helpers::to_scalar(&env, &value) {
         Ok(value) => value,
         Err(value) => return value,
     };
@@ -347,7 +281,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
         Ok(val) => val,
         Err(_) => return BUSINESS_ERROR_CANNOT_PERFORM_INVERSE_OPERATION,
     };
-    write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
+    jni_helpers::write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
 }
 
 /// JNI function to produce the pow operation between a scalar represented in a byte array and a long exponent
@@ -368,10 +302,10 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     exponent: jlong,
     output: JByteArray,
 ) -> jint {
-    let scalar1 = match to_scalar(&env, &value) {
+    let scalar1 = match jni_helpers::to_scalar(&env, &value) {
         Ok(value) => value,
         Err(value) => return value,
     };
     let scalar = scalars_pow(scalar1, exponent as u64);
-    write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
+    jni_helpers::write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
 }

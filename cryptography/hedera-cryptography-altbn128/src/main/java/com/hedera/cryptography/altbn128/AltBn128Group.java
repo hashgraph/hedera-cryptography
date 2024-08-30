@@ -18,7 +18,7 @@ package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.common.HashUtils;
-import com.hedera.cryptography.altbn128.facade.Group2Facade;
+import com.hedera.cryptography.altbn128.facade.GroupFacade;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
@@ -30,17 +30,22 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * The implementation of the second {@link Group} of {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
+ * The implementation of the two {@link Group} of {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
  */
-public class AltBn128Group2 implements Group {
-    private final Group2Facade facade;
+public class AltBn128Group implements Group {
+    private final GroupFacade facade;
+    private final AltBN128CurveGroup group;
 
     /**
-     * Creates an instance of a {@link Group2Facade} for this implementation.
+     * Creates an instance of a {@link GroupFacade} for this implementation.
+     * @param group  the actual group represented by this instance
      */
-    public AltBn128Group2() {
-        this.facade = new Group2Facade(
-                ArkBn254Adapter.getInstance(), ArkBn254Adapter.getInstance().fieldElementsSize());
+    public AltBn128Group(final @NonNull AltBN128CurveGroup group) {
+        this.group = Objects.requireNonNull(group, "group must not be null");
+        this.facade = new GroupFacade(
+                group.ordinal(),
+                ArkBn254Adapter.getInstance(),
+                ArkBn254Adapter.getInstance().fieldElementsSize());
     }
 
     /**
@@ -58,7 +63,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement generator() {
-        return new AltBn128Group2Element(this, facade.generator(), facade);
+        return new AltBn128GroupElement(this, facade.generator());
     }
 
     /**
@@ -67,7 +72,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement zero() {
-        return new AltBn128Group2Element(this, facade.zero(), facade);
+        return new AltBn128GroupElement(this, facade.zero());
     }
 
     /**
@@ -76,7 +81,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement random(@NonNull final byte[] seed) {
-        return new AltBn128Group2Element(this, facade.fromSeed(seed), facade);
+        return new AltBn128GroupElement(this, facade.fromSeed(seed));
     }
 
     /**
@@ -85,27 +90,25 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement fromHash(@NonNull final byte[] input) {
-        return new AltBn128Group2Element(this, facade.fromSeed(HashUtils.computeSha256(input)), facade);
+        return new AltBn128GroupElement(this, facade.fromSeed(HashUtils.computeSha256(input)));
     }
 
     /**
      * {@inheritDoc}
-     * @throws IllegalArgumentException if any of the elements is null or not an instance of {@link AltBn128Group2Element}
+     * @throws IllegalArgumentException if any of the elements is null or not an instance of {@link AltBn128GroupElement}
      */
     @NonNull
     @Override
     public GroupElement batchAdd(@NonNull final Collection<GroupElement> elements) {
         Objects.requireNonNull(elements, "elements must not be null");
-        if (elements.stream().anyMatch(e -> !AltBn128Group2Element.class.isAssignableFrom(e.getClass()))) {
-            throw new IllegalArgumentException("elements must implement AltBn128Group2Element");
-        }
-        List<AltBn128Group2Element> elems =
-                elements.stream().map(AltBn128Group2Element.class::cast).toList();
+        List<AltBn128GroupElement> elems = elements.stream()
+                .map(e -> AltBn128GroupElement.isSameAltBn128GroupElement(this, e))
+                .toList();
         final byte[][] all = new byte[elems.size()][];
         for (int i = 0; i < elems.size(); i++) {
             all[i] = elems.get(i).getRepresentation();
         }
-        return new AltBn128Group2Element(this, facade.batchAdd(all));
+        return new AltBn128GroupElement(this, facade.batchAdd(all));
     }
 
     /**
@@ -121,20 +124,38 @@ public class AltBn128Group2 implements Group {
      */
     public List<GroupElement> batchMultiply(@NonNull final Collection<FieldElement> elements) {
         Objects.requireNonNull(elements, "elements must not be null");
-        if (elements.stream().anyMatch(e -> !AltBn128FieldElement.class.isAssignableFrom(e.getClass()))) {
-            throw new IllegalArgumentException("elements must implement AltBn128Group2Element");
+        List<AltBn128FieldElement> elems;
+        try {
+            elems = elements.stream().map(AltBn128FieldElement.class::cast).toList();
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("elements must implement AltBn128FieldElement");
         }
-        List<AltBn128FieldElement> elems =
-                elements.stream().map(AltBn128FieldElement.class::cast).toList();
+
         final byte[][] all = new byte[elems.size()][];
         for (int i = 0; i < elems.size(); i++) {
             all[i] = elems.get(i).getRepresentation();
         }
-        final byte[][] g2Elements = facade.batchMultiply(all);
+        final byte[][] groupElements = facade.batchMultiply(all);
 
-        return Arrays.stream(g2Elements)
-                .map(rep -> (GroupElement) new AltBn128Group2Element(this, rep))
+        return Arrays.stream(groupElements)
+                .map(rep -> (GroupElement) new AltBn128GroupElement(this, rep))
                 .toList();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof final AltBn128Group that)) {
+            return false;
+        }
+        return group == that.group;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(group);
     }
 
     /**
@@ -147,7 +168,7 @@ public class AltBn128Group2 implements Group {
     @NonNull
     @Override
     public GroupElement fromBytes(@NonNull final byte[] bytes) {
-        return new AltBn128Group2Element(this, facade.fromBytes(bytes), facade);
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes));
     }
 
     /**
@@ -164,5 +185,14 @@ public class AltBn128Group2 implements Group {
     @Override
     public int elementSize() {
         return facade.size();
+    }
+
+    /**
+     * Returns the facade.
+     * Internal method
+     * @return the facade
+     */
+    GroupFacade getFacade() {
+        return facade;
     }
 }

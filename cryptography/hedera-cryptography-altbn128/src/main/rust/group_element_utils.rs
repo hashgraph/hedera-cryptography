@@ -1,5 +1,5 @@
-use ark_ec::{ CurveConfig, CurveGroup};
-use ark_serialize::{CanonicalDeserialize};
+use ark_ec::{CurveConfig, CurveGroup};
+use ark_serialize::CanonicalDeserialize;
 use rand::Rng;
 /// Generic utility functions to instantiate and operate with curve points
 
