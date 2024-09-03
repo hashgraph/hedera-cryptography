@@ -17,6 +17,7 @@
 package com.hedera.cryptography.altbn128.common;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Objects;
 
 /**
@@ -50,5 +51,18 @@ public class ValidationUtils {
             throw new IllegalArgumentException("Not the element");
         }
         return (T) parameter;
+    }
+
+    /**
+     * Validates the size of a byte array.
+     * @param data the byte array to validate.
+     * @param expectedSize the expected size of the array.
+     * @param message the error message to throw.
+     */
+    public static void validateSize(
+            @Nullable final byte[] data, final int expectedSize, @NonNull final String message) {
+        if (Objects.requireNonNull(data, "data must not be null").length != expectedSize) {
+            throw new IllegalArgumentException(message);
+        }
     }
 }

@@ -39,7 +39,7 @@ public interface BilinearPairing {
      * @return the first input element
      */
     @NonNull
-    GroupElement getInputElement1();
+    GroupElement first();
 
     /**
      * Get the second input element. This element is in the opposite group of the first input element
@@ -47,7 +47,7 @@ public interface BilinearPairing {
      * @return the second input element
      */
     @NonNull
-    GroupElement getInputElement2();
+    GroupElement second();
 
     /**
      * Compares two pairings.
