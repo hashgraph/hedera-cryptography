@@ -63,10 +63,10 @@ public class PairingFacade {
             @NonNull final byte[] point2,
             @NonNull final byte[] point3,
             @NonNull final byte[] point4) {
-        ValidationUtils.validateSize(point1, g1Size, "point1");
-        ValidationUtils.validateSize(point3, g1Size, "point3");
-        ValidationUtils.validateSize(point2, g2Size, "point2");
-        ValidationUtils.validateSize(point4, g2Size, "point4");
+        ValidationUtils.validateSize(point1, g1Size, "point1 must belong to group1");
+        ValidationUtils.validateSize(point3, g1Size, "point3 must belong to group1");
+        ValidationUtils.validateSize(point2, g2Size, "point2 must belong to group2");
+        ValidationUtils.validateSize(point4, g2Size, "point4 must belong to group2");
 
         final int result = adapter.pairingsEquals(point1, point2, point3, point4);
         if (result < GroupElementsLibraryAdapter.SUCCESS) {

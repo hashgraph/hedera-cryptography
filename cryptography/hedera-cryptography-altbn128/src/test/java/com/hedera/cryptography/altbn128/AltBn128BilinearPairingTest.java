@@ -45,5 +45,13 @@ class AltBn128BilinearPairingTest {
         // e(a×P, b×Q) = e(ab×P, Q)
         assertTrue(new AltBn128BilinearPairing(P.multiply(a), Q.multiply(b))
                 .compare(new AltBn128BilinearPairing(P.multiply(a.multiply(b)), Q)));
+
+        // e(b×Q,a×P) = e( Q,ab×P)
+        assertTrue(new AltBn128BilinearPairing(Q.multiply(b), P.multiply(a))
+                .compare(new AltBn128BilinearPairing(Q, P.multiply(a.multiply(b)))));
+
+        // e(a×P, b×Q) = e(P, ab×Q)
+        assertTrue(new AltBn128BilinearPairing(Q.multiply(b), P.multiply(a))
+                .compare(new AltBn128BilinearPairing(Q.multiply(a.multiply(b)), P)));
     }
 }

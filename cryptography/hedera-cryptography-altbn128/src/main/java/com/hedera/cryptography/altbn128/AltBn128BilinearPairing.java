@@ -16,8 +16,9 @@
 
 package com.hedera.cryptography.altbn128;
 
+import static com.hedera.cryptography.altbn128.common.ValidationUtils.expectOrThrow;
+
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
-import com.hedera.cryptography.altbn128.common.ValidationUtils;
 import com.hedera.cryptography.altbn128.facade.PairingFacade;
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.GroupElement;
@@ -36,8 +37,8 @@ public class AltBn128BilinearPairing implements BilinearPairing {
      * @param second second element of this pairing
      */
     public AltBn128BilinearPairing(@NonNull final GroupElement first, @NonNull final GroupElement second) {
-        this.first = ValidationUtils.expectOrThrow(AltBn128GroupElement.class, first);
-        this.second = ValidationUtils.expectOrThrow(AltBn128GroupElement.class, second);
+        this.first = expectOrThrow(AltBn128GroupElement.class, first);
+        this.second = expectOrThrow(AltBn128GroupElement.class, second);
         if (first.getGroup() == second.getGroup()) {
             throw new IllegalArgumentException("first and second groups must not be the same");
         }
@@ -66,15 +67,15 @@ public class AltBn128BilinearPairing implements BilinearPairing {
      */
     @Override
     public boolean compare(final @NonNull BilinearPairing pairing) {
-        AltBn128BilinearPairing other = ValidationUtils.expectOrThrow(AltBn128BilinearPairing.class, pairing);
-        AltBn128GroupElement point1 =
+        final AltBn128BilinearPairing other = expectOrThrow(AltBn128BilinearPairing.class, pairing);
+        final AltBn128GroupElement point1 =
                 ((AltBn128Group) first.getGroup()).getGroup() == AltBN128CurveGroup.GROUP1 ? first : second;
-        AltBn128GroupElement point2 = point1 == first ? second : first;
-        AltBn128GroupElement point3 =
+        final AltBn128GroupElement point2 = point1 == first ? second : first;
+        final AltBn128GroupElement point3 =
                 ((AltBn128Group) (other.first()).getGroup()).getGroup() == AltBN128CurveGroup.GROUP1
                         ? other.first()
                         : other.second();
-        AltBn128GroupElement point4 = point3 == other.first() ? other.second() : other.first();
+        final AltBn128GroupElement point4 = point3 == other.first() ? other.second() : other.first();
 
         final ArkBn254Adapter instance = ArkBn254Adapter.getInstance();
         return new PairingFacade(instance)
