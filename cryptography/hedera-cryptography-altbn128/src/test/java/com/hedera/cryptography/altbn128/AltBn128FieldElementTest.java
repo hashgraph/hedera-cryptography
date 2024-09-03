@@ -198,4 +198,17 @@ class AltBn128FieldElementTest {
         assertEquals(a, a.power(1));
         assertThrows(IllegalArgumentException.class, () -> a.power(-1));
     }
+
+    @Test
+    void fieldElementInvalidOperations() {
+        var field = new AltBn128Field();
+        assertThrows(IllegalArgumentException.class, () -> field.zero().add(mock(FieldElement.class)));
+        assertThrows(IllegalArgumentException.class, () -> field.zero().subtract(mock(FieldElement.class)));
+    }
+
+    @Test
+    void fieldGetGroup() {
+        var field = new AltBn128Field();
+        assertEquals(field, field.zero().getField());
+    }
 }
