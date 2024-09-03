@@ -107,6 +107,15 @@ class AltBn128GroupElementTest {
                                         "4082367875863433681332203403145435568316851327593401208105741076214120093531")));
     }
 
+    @Test
+    void g1GeneratorIsWellKnown() {
+        var group = new AltBn128Group(AltBN128CurveGroup.GROUP1);
+
+        assertEquals(
+                BigIntegerUtils.toBigIntegers(group.generator().toBytes(), 32),
+                List.of(new BigInteger("1"), new BigInteger("2")));
+    }
+
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void fromInvalidPoint(AltBN128CurveGroup gr) {
@@ -176,6 +185,8 @@ class AltBn128GroupElementTest {
 
         assertThrows(IllegalArgumentException.class, () -> group.zero().add(group2.zero()));
         assertThrows(IllegalArgumentException.class, () -> group2.zero().add(group.zero()));
+        assertThrows(IllegalArgumentException.class, () -> group2.zero().multiply(mock(FieldElement.class)));
+        assertThrows(IllegalArgumentException.class, () -> group.zero().multiply(mock(FieldElement.class)));
     }
 
     @Test

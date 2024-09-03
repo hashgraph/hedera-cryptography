@@ -60,8 +60,11 @@ public class AltBn128GroupElement implements GroupElement {
     @NonNull
     @Override
     public GroupElement multiply(@NonNull final FieldElement other) {
-        Objects.requireNonNull(other, "other must not be null");
-        return new AltBn128GroupElement(group, facade.scalarMul(this.representation, other.toBytes()));
+        return new AltBn128GroupElement(
+                group,
+                facade.scalarMul(
+                        this.representation,
+                        expectOrThrow(AltBn128FieldElement.class, other).toBytes()));
     }
 
     /**

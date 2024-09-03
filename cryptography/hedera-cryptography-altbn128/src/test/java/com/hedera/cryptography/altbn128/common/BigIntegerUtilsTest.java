@@ -45,4 +45,10 @@ class BigIntegerUtilsTest {
         assertThrows(IllegalArgumentException.class, () -> BigIntegerUtils.toLittleEndianBytes(1, bigInt, bigInt2));
         assertDoesNotThrow(() -> BigIntegerUtils.toLittleEndianBytes(2, bigInt, bigInt2));
     }
+
+    @Test
+    void testSmallerChunks() {
+        assertThrows(IllegalArgumentException.class, () -> BigIntegerUtils.toBigIntegers(new byte[] {1, 2, 3}, 2));
+        assertDoesNotThrow(() -> BigIntegerUtils.toBigIntegers(new byte[] {1, 2, 3}, 1));
+    }
 }
