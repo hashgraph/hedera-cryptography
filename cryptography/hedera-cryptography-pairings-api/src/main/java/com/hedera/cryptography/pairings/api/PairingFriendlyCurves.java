@@ -18,6 +18,9 @@ package com.hedera.cryptography.pairings.api;
 
 import com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.ServiceLoader;
@@ -76,5 +79,17 @@ public final class PairingFriendlyCurves {
 
         throw new NoSuchElementException(
                 "A PairingFriendlyCurveProvider implementation for " + curve + " was not found.");
+    }
+
+    /**
+     * @return all loaded and supported curves
+     */
+    @NonNull
+    public static Collection<Curve> allSupportedCurves() {
+        List<Curve> supportedCurves = new ArrayList<>();
+        for (final PairingFriendlyCurveProvider provider : InstanceHolder.LOADER) {
+            supportedCurves.add(provider.curve());
+        }
+        return supportedCurves;
     }
 }

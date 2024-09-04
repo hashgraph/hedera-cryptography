@@ -17,6 +17,9 @@
 package com.hedera.cryptography.pairings.signatures.api;
 
 import com.hedera.cryptography.pairings.api.Curve;
+import com.hedera.cryptography.pairings.api.Group;
+import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
+import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 
@@ -26,6 +29,7 @@ import java.util.Objects;
 public final class SignatureSchema {
     private final GroupAssignment groupAssignment;
     private final Curve curve;
+    private final PairingFriendlyCurve pairingFriendlyCurve;
 
     /**
      * Constructor
@@ -36,6 +40,7 @@ public final class SignatureSchema {
     private SignatureSchema(@NonNull final GroupAssignment groupAssignment, @NonNull final Curve curve) {
         this.groupAssignment = Objects.requireNonNull(groupAssignment, "groupAssignment must not be null");
         this.curve = Objects.requireNonNull(curve, "curve must not be null");
+        this.pairingFriendlyCurve = PairingFriendlyCurves.findInstance(curve).pairingFriendlyCurve();
     }
 
     /**
@@ -49,13 +54,37 @@ public final class SignatureSchema {
     }
 
     /**
-     * Returns the curve.
+     * Internal method
      *
      * @return the curve
      */
     @NonNull
-    public Curve getCurve() {
-        return curve;
+    PairingFriendlyCurve getPairingFriendlyCurve() {
+        return pairingFriendlyCurve;
+    }
+
+    /**
+     * Internal method
+     *
+     * @return the curve
+     */
+    @NonNull
+    Group getPublicKeyGroup() {
+        return groupAssignment == GroupAssignment.GROUP1_FOR_PUBLIC_KEY
+                ? pairingFriendlyCurve.group1()
+                : pairingFriendlyCurve.group2();
+    }
+
+    /**
+     * Internal method
+     *
+     * @return the curve
+     */
+    @NonNull
+    Group getSignatureGroup() {
+        return groupAssignment == GroupAssignment.GROUP1_FOR_SIGNING
+                ? pairingFriendlyCurve.group1()
+                : pairingFriendlyCurve.group2();
     }
 
     /**
@@ -68,6 +97,22 @@ public final class SignatureSchema {
     @NonNull
     public static SignatureSchema create(@NonNull final Curve curve, @NonNull final GroupAssignment groupAssignment) {
         return new SignatureSchema(groupAssignment, curve);
+    }
+
+    /**
+     * Returns a signature scheme out of a packed representation of this object
+     *
+     * @param idByte the group assignment
+     * @return the SignatureSchema instance
+     */
+    @NonNull
+    public static SignatureSchema create(final byte idByte) {
+        byte curveId = BytePacker.unpackCurveType(idByte);
+        final Curve curve = PairingFriendlyCurves.allSupportedCurves().stream()
+                .filter(c -> c.getId() == curveId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown curve id: " + idByte));
+        return new SignatureSchema(BytePacker.unpackGroupAssignment(idByte), curve);
     }
 
     /**

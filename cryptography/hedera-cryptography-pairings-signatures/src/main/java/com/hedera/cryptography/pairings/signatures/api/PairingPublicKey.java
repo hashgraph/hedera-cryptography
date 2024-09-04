@@ -15,9 +15,42 @@
  */
 
 package com.hedera.cryptography.pairings.signatures.api;
+
+import com.hedera.cryptography.pairings.api.GroupElement;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import java.nio.ByteBuffer;
+import java.util.Objects;
+
 /**
- *  A Prototype implementation of PairingPublicKey.
- *  This class will live in a different project once the implementation of the pairings-signature-library is completed.
- *  The package and interface will remain constant.
+ *  An elliptic curve public Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
  */
-public record PairingPublicKey() {}
+public record PairingPublicKey(GroupElement publicKey, SignatureSchema signatureSchema) {
+
+    /**
+     * Serializes this {@link PairingPublicKey} into a byte array.
+     *
+     * @return the serialized form of this object
+     */
+    @NonNull
+    public byte[] toBytes() {
+        final byte[] bytes = this.publicKey.toBytes();
+        final ByteBuffer buffer = ByteBuffer.allocate(bytes.length + 1);
+        buffer.put(this.signatureSchema.getIdByte());
+        buffer.put(bytes);
+        return buffer.array();
+    }
+
+    /**
+     * Returns a {@link PairingPublicKey} instance out of this object serialized form
+     * @param bytes the serialized form of this object
+     * @return a {@link PairingPublicKey} instance
+     */
+    @NonNull
+    public static PairingPublicKey fromBytes(@NonNull final byte[] bytes) {
+        final ByteBuffer buffer = ByteBuffer.wrap(Objects.requireNonNull(bytes, "bytes must not be null"));
+        final SignatureSchema schema = SignatureSchema.create(buffer.get(0));
+        final GroupElement sk = schema.getPublicKeyGroup()
+                .fromBytes(buffer.slice(1, bytes.length - 1).array());
+        return new PairingPublicKey(sk, schema);
+    }
+}
