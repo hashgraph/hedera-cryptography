@@ -1,4 +1,5 @@
 /**
+ *
  * This module provides cryptography primitives to create EC PublicKeys, EC PrivateKeys, and Signatures.
  */
 module com.hedera.cryptography.pairings.signatures {
@@ -6,4 +7,6 @@ module com.hedera.cryptography.pairings.signatures {
     requires static transitive com.github.spotbugs.annotations;
 
     exports com.hedera.cryptography.pairings.signatures.api;
+
+    uses com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
 }

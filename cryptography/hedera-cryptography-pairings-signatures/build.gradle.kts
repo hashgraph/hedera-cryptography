@@ -19,7 +19,9 @@ plugins {
     id("com.hedera.gradle.hedera-cryptography-publish")
 }
 
-testModuleInfo {
-    // requires("org.junit.jupiter.api")
+mainModuleInfo {
+    runtimeOnly("com.hedera.cryptography.altbn128")
     // requires("org.assertj.core")
 }
+
+testModuleInfo { requires("org.junit.jupiter.api") }
