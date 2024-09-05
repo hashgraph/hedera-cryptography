@@ -67,6 +67,14 @@ public final class SignatureSchema {
     }
 
     /**
+     * Returns the group assignment
+     * @return the group assignment
+     */
+    public GroupAssignment getGroupAssignment() {
+        return groupAssignment;
+    }
+
+    /**
      * Returns a signature scheme a curve and a groupAssignment
      *
      * @param bytes the array containing the representation in the first element
