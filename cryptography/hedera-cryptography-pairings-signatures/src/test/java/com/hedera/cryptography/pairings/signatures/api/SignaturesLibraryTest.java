@@ -21,7 +21,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import com.hedera.cryptography.pairings.api.curves.KnownCurves;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Random;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 
 class SignaturesLibraryTest {
@@ -82,5 +84,35 @@ class SignaturesLibraryTest {
         assertEquals(pk, PairingPublicKey.fromBytes(pk.toBytes()));
         assertThrows(IllegalArgumentException.class, () -> PairingPublicKey.fromBytes(invalidKey));
         assertThrows(IllegalArgumentException.class, () -> PairingPublicKey.fromBytes(invalidKey2));
+
+        flipEachBitAndDo(
+                sk.toBytes(),
+                val -> assertThrows(IllegalArgumentException.class, () -> PairingPublicKey.fromBytes(val)));
+        flipEachBitAndDo(
+                pk.toBytes(),
+                val -> assertThrows(IllegalArgumentException.class, () -> PairingPublicKey.fromBytes(val)));
+    }
+
+    /**
+     * Flip each byte of an array individually and invoke the consumer on each flip
+     * @param array the array with where the flipping will occur. The array is modified
+     * @param consumer the consumer to invoke on each flip
+     */
+    void flipEachBitAndDo(@NonNull byte[] array, final @NonNull Consumer<byte[]> consumer) {
+
+        for (int i = 0; i < array.length; i++) {
+            byte flippedByte = 0; // Temporary byte to store flipped bits
+            byte originalByte = array[i];
+            for (int bitPosition = 0; bitPosition < 8; bitPosition++) {
+                int currentBit = (array[i] >> bitPosition) & 1;
+
+                int flippedBit = currentBit == 0 ? 1 : 0;
+
+                flippedByte |= (byte) (flippedBit << bitPosition);
+                array[i] = flippedByte;
+                consumer.accept(array);
+            }
+            array[i] = originalByte;
+        }
     }
 }

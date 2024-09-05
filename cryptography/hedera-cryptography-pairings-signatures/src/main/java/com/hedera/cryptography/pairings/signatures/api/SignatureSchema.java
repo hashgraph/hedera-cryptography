@@ -75,7 +75,7 @@ public final class SignatureSchema {
     }
 
     /**
-     * Returns a signature scheme a curve and a groupAssignment
+     * Returns the signature scheme encoded in the byte array
      *
      * @param bytes the array containing the representation in the first element
      * @return the SignatureSchema instance
@@ -88,7 +88,7 @@ public final class SignatureSchema {
     }
 
     /**
-     * Returns a signature scheme a curve and a groupAssignment
+     * Returns a signature scheme corresponding to a curve and a groupAssignment
      *
      * @param groupAssignment the group assignment
      * @param curve           the curve
