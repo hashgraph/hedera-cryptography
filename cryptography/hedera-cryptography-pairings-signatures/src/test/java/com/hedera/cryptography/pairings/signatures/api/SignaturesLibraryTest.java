@@ -22,9 +22,13 @@ import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import com.hedera.cryptography.pairings.api.curves.KnownCurves;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class SignaturesLibraryTest {
 
@@ -38,9 +42,10 @@ class SignaturesLibraryTest {
                         .curve());
     }
 
-    @Test
-    void crateSignatureSchema() {
-        final var actual = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.GROUP1_FOR_PUBLIC_KEY);
+    @ParameterizedTest
+    @MethodSource("combinedParameters")
+    void crateSignatureSchema(GroupAssignment assignment) {
+        final var actual = SignatureSchema.create(Curve.ALT_BN128, assignment);
         assertNotNull(actual);
         assertNotNull(actual.getPairingFriendlyCurve());
 
@@ -48,12 +53,24 @@ class SignaturesLibraryTest {
                 PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve(),
                 actual.getPairingFriendlyCurve());
         final var g1 = actual.getPairingFriendlyCurve().group1();
-        assertEquals(g1, actual.getPublicKeyGroup());
-        final var other = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.GROUP1_FOR_SIGNING);
+        assertEquals(
+                g1,
+                assignment == GroupAssignment.GROUP1_FOR_PUBLIC_KEY
+                        ? actual.getPublicKeyGroup()
+                        : actual.getSignatureGroup());
+        final var other = SignatureSchema.create(
+                Curve.ALT_BN128,
+                assignment == GroupAssignment.GROUP1_FOR_SIGNING
+                        ? GroupAssignment.GROUP1_FOR_PUBLIC_KEY
+                        : GroupAssignment.GROUP1_FOR_SIGNING);
         assertNotNull(other);
         assertNotNull(other.getPairingFriendlyCurve());
         final var g2 = other.getPairingFriendlyCurve().group2();
-        assertEquals(g2, other.getPublicKeyGroup());
+        assertEquals(
+                g2,
+                assignment == GroupAssignment.GROUP1_FOR_PUBLIC_KEY
+                        ? other.getPublicKeyGroup()
+                        : other.getSignatureGroup());
 
         assertNotEquals(actual.getIdByte(), other.getIdByte());
 
@@ -61,9 +78,10 @@ class SignaturesLibraryTest {
         assertEquals(other, SignatureSchema.create(other.getIdByte()));
     }
 
-    @Test
-    void crateKeyPairTest() {
-        final var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.GROUP1_FOR_SIGNING);
+    @ParameterizedTest
+    @MethodSource("combinedParameters")
+    void crateKeyPairTest(GroupAssignment assignment) {
+        final var schema = SignatureSchema.create(Curve.ALT_BN128, assignment);
         final var rng = new Random();
 
         final var sk = PairingPrivateKey.create(schema, rng);
@@ -93,6 +111,33 @@ class SignaturesLibraryTest {
                 val -> assertThrows(IllegalArgumentException.class, () -> PairingPublicKey.fromBytes(val)));
     }
 
+    @ParameterizedTest
+    @MethodSource("combinedParameters")
+    void crateSignatureTest(GroupAssignment assignment) {
+        final var schema = SignatureSchema.create(Curve.ALT_BN128, assignment);
+        final var rng = new Random();
+
+        final var sk = PairingPrivateKey.create(schema, rng);
+
+        var message = new byte[256];
+        rng.nextBytes(message);
+
+        final var signature = sk.sign(message);
+        assertNotNull(signature);
+        assertNotNull(signature.toBytes());
+        assertEquals(signature, sk.sign(message));
+        flipEachBitAndDo(
+                signature.toBytes(),
+                val -> assertThrows(IllegalArgumentException.class, () -> PairingSignature.fromBytes(val)));
+
+        assertEquals(signature, PairingSignature.fromBytes(signature.toBytes()));
+
+        final byte[] invalidSignature = new byte[0];
+        final byte[] invalidSignature2 = new byte[] {schema.getIdByte(), 0, 0, 0, 0};
+        assertThrows(IllegalArgumentException.class, () -> PairingSignature.fromBytes(invalidSignature));
+        assertThrows(IllegalArgumentException.class, () -> PairingSignature.fromBytes(invalidSignature2));
+    }
+
     /**
      * Flip each byte of an array individually and invoke the consumer on each flip
      * @param array the array with where the flipping will occur. The array is modified
@@ -114,5 +159,9 @@ class SignaturesLibraryTest {
             }
             array[i] = originalByte;
         }
+    }
+
+    private static Stream<GroupAssignment> combinedParameters() {
+        return Arrays.stream(GroupAssignment.values());
     }
 }
