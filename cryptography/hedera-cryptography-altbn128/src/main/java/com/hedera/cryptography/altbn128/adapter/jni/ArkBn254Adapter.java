@@ -19,11 +19,13 @@ package com.hedera.cryptography.altbn128.adapter.jni;
 import com.hedera.common.nativesupport.SingletonLoader;
 import com.hedera.cryptography.altbn128.adapter.FieldElementsLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.GroupElementsLibraryAdapter;
+import com.hedera.cryptography.altbn128.adapter.PairingsLibraryAdapter;
 
 /**
  * This class serves as an adapter between the Java code and the native arkworks altBn128 Rust functions.
  **/
-public final class ArkBn254Adapter implements FieldElementsLibraryAdapter, GroupElementsLibraryAdapter {
+public final class ArkBn254Adapter
+        implements FieldElementsLibraryAdapter, GroupElementsLibraryAdapter, PairingsLibraryAdapter {
     /** Instance Holder for lazy loading and concurrency handling */
     private static final SingletonLoader<ArkBn254Adapter> INSTANCE_HOLDER =
             new SingletonLoader<>("libbn254", new ArkBn254Adapter());
@@ -259,4 +261,17 @@ public final class ArkBn254Adapter implements FieldElementsLibraryAdapter, Group
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int groupElementsBatchAdd(final int group, final byte[][] input, final byte[] output);
+
+    /**
+     * returns if the result of the pairings operation between the first two points is equals to the result of the pairings operation between the second two
+     * {@code value2} and {@code value4} should belong to opposite groups than {@code value1} {@code value3}
+     *
+     * @param value1 a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
+     * @param value2 a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
+     * @param value3 a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
+     * @param value4 a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
+     * @return 0 if false, 1 if true, or a less than zero error code if there was an error
+     */
+    public native int pairingsEquals(
+            final byte[] value1, final byte[] value2, final byte[] value3, final byte[] value4);
 }

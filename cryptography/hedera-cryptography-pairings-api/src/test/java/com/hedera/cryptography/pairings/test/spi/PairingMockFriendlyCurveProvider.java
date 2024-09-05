@@ -127,13 +127,13 @@ public class PairingMockFriendlyCurveProvider extends PairingFriendlyCurveProvid
             return new BilinearPairing() {
                 @NonNull
                 @Override
-                public GroupElement getInputElement1() {
+                public GroupElement first() {
                     return element1;
                 }
 
                 @NonNull
                 @Override
-                public GroupElement getInputElement2() {
+                public GroupElement second() {
                     return element2;
                 }
 

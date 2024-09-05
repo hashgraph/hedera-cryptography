@@ -195,4 +195,13 @@ public class AltBn128Group implements Group {
     GroupFacade getFacade() {
         return facade;
     }
+
+    /**
+     * Returns the curve group.
+     * Internal method
+     * @return the curve group.
+     */
+    AltBN128CurveGroup getGroup() {
+        return group;
+    }
 }
