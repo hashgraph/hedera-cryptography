@@ -21,6 +21,7 @@ import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Objects;
 
 /**
@@ -43,7 +44,6 @@ public final class SignatureSchema {
         this.pairingFriendlyCurve = PairingFriendlyCurves.findInstance(curve).pairingFriendlyCurve();
     }
 
-
     /**
      * Internal method
      *
@@ -64,6 +64,19 @@ public final class SignatureSchema {
         return groupAssignment == GroupAssignment.GROUP1_FOR_PUBLIC_KEY
                 ? pairingFriendlyCurve.group1()
                 : pairingFriendlyCurve.group2();
+    }
+
+    /**
+     * Returns a signature scheme a curve and a groupAssignment
+     *
+     * @param bytes the array containing the representation in the first element
+     * @return the SignatureSchema instance
+     */
+    @NonNull
+    public static SignatureSchema create(final @Nullable byte[] bytes) {
+        if (Objects.requireNonNull(bytes, "bytes must not be null").length == 0)
+            throw new IllegalArgumentException("bytes must not be empty");
+        return create(bytes[0]);
     }
 
     /**

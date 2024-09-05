@@ -100,15 +100,12 @@ public class PairingPrivateKey {
      */
     @NonNull
     public static PairingPrivateKey fromBytes(@NonNull final byte[] bytes) {
-        final SignatureSchema schema = ValidationUtils.getAndValidateSignatureSchema(bytes);
+        final SignatureSchema schema = SignatureSchema.create(bytes);
         final int keySize = schema.getPairingFriendlyCurve().field().elementSize();
-        if(bytes.length < keySize +1)
-            throw new IllegalArgumentException("The key representation is invalid");
-        byte[] buffer = Arrays.copyOfRange(bytes, 1, keySize+1);
+        if (bytes.length < keySize + 1) throw new IllegalArgumentException("The key representation is invalid");
+        byte[] buffer = Arrays.copyOfRange(bytes, 1, keySize + 1);
         try {
-            final FieldElement sk = schema.getPairingFriendlyCurve()
-                    .field()
-                    .fromBytes(buffer);
+            final FieldElement sk = schema.getPairingFriendlyCurve().field().fromBytes(buffer);
             return new PairingPrivateKey(sk, schema);
         } catch (PairingsException ex) {
             throw new IllegalArgumentException("The key representation is invalid");
@@ -123,8 +120,7 @@ public class PairingPrivateKey {
         if (!(o instanceof final PairingPrivateKey that)) {
             return false;
         }
-        return Objects.equals(privateKey, that.privateKey) && Objects.equals(signatureSchema,
-                that.signatureSchema);
+        return Objects.equals(privateKey, that.privateKey) && Objects.equals(signatureSchema, that.signatureSchema);
     }
 
     @Override
