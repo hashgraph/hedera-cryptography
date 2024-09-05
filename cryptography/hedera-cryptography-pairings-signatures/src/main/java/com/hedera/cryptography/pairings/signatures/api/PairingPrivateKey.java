@@ -18,8 +18,10 @@ package com.hedera.cryptography.pairings.signatures.api;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.pairings.api.PairingsException;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Random;
 
@@ -94,14 +96,39 @@ public class PairingPrivateKey {
      * Returns a {@link PairingPrivateKey} instance out of this object serialized form
      * @param bytes the serialized form of this object
      * @return a {@link PairingPrivateKey} instance
+     * @throws IllegalArgumentException if the key representation is invalid
      */
     @NonNull
     public static PairingPrivateKey fromBytes(@NonNull final byte[] bytes) {
-        final ByteBuffer buffer = ByteBuffer.wrap(Objects.requireNonNull(bytes, "bytes must not be null"));
-        final SignatureSchema schema = SignatureSchema.create(buffer.get(0));
-        final FieldElement sk = schema.getPairingFriendlyCurve()
-                .field()
-                .fromBytes(buffer.slice(1, bytes.length - 1).array());
-        return new PairingPrivateKey(sk, schema);
+        final SignatureSchema schema = ValidationUtils.getAndValidateSignatureSchema(bytes);
+        final int keySize = schema.getPairingFriendlyCurve().field().elementSize();
+        if(bytes.length < keySize +1)
+            throw new IllegalArgumentException("The key representation is invalid");
+        byte[] buffer = Arrays.copyOfRange(bytes, 1, keySize+1);
+        try {
+            final FieldElement sk = schema.getPairingFriendlyCurve()
+                    .field()
+                    .fromBytes(buffer);
+            return new PairingPrivateKey(sk, schema);
+        } catch (PairingsException ex) {
+            throw new IllegalArgumentException("The key representation is invalid");
+        }
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof final PairingPrivateKey that)) {
+            return false;
+        }
+        return Objects.equals(privateKey, that.privateKey) && Objects.equals(signatureSchema,
+                that.signatureSchema);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(privateKey, signatureSchema);
     }
 }

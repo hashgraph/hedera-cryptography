@@ -24,7 +24,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 
 /**
- * Represents a threshold signature schema predefined parameters that define the curve to use and the pairings group usage.
+ * Represents predefined parameters that define the curve and the pairings group to use.
  */
 public final class SignatureSchema {
     private final GroupAssignment groupAssignment;
@@ -43,15 +43,6 @@ public final class SignatureSchema {
         this.pairingFriendlyCurve = PairingFriendlyCurves.findInstance(curve).pairingFriendlyCurve();
     }
 
-    /**
-     * Returns the groupAssignment.
-     *
-     * @return the groupAssignment
-     */
-    @NonNull
-    public GroupAssignment getGroupAssignment() {
-        return groupAssignment;
-    }
 
     /**
      * Internal method
@@ -66,23 +57,11 @@ public final class SignatureSchema {
     /**
      * Internal method
      *
-     * @return the curve
+     * @return the group to use for PublicKey creation
      */
     @NonNull
     Group getPublicKeyGroup() {
         return groupAssignment == GroupAssignment.GROUP1_FOR_PUBLIC_KEY
-                ? pairingFriendlyCurve.group1()
-                : pairingFriendlyCurve.group2();
-    }
-
-    /**
-     * Internal method
-     *
-     * @return the curve
-     */
-    @NonNull
-    Group getSignatureGroup() {
-        return groupAssignment == GroupAssignment.GROUP1_FOR_SIGNING
                 ? pairingFriendlyCurve.group1()
                 : pairingFriendlyCurve.group2();
     }
@@ -113,6 +92,22 @@ public final class SignatureSchema {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown curve id: " + idByte));
         return new SignatureSchema(BytePacker.unpackGroupAssignment(idByte), curve);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof final SignatureSchema schema)) {
+            return false;
+        }
+        return groupAssignment == schema.groupAssignment && Objects.equals(curve, schema.curve);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(groupAssignment, curve);
     }
 
     /**
