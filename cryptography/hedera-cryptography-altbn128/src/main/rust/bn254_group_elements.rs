@@ -1,17 +1,15 @@
 use crate::group_element_utils::*;
 use crate::jni_helpers;
-use ark_bn254::{G1Projective, G2Projective};
 use jni::objects::{JByteArray, JObject, JObjectArray};
 use jni::sys::jint;
 use jni::JNIEnv;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
+use crate::jni_helpers::{G1, G2};
 
 const GROUP1_ELEMENT_SIZE: usize = 64;
 const GROUP2_ELEMENT_SIZE: usize = 128;
-const GROUP1: u8 = 0;
-type G1 = G1Projective;
-type G2 = G2Projective;
+const GROUP1: i32 = 0;
 
 /// JNI function to create a new random group element from a seed value
 /// # Arguments

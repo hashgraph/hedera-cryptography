@@ -18,6 +18,7 @@ package com.hedera.cryptography.pairings.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
+import java.util.Random;
 
 /**
  * Represents a mathematical group used in a pairing-based cryptography system.
@@ -66,6 +67,19 @@ public interface Group {
      */
     @NonNull
     GroupElement zero();
+
+    /**
+     * Creates a group element from a rng
+     *
+     * @param random the rng to use
+     * @return the new group element
+     */
+    @NonNull
+    default GroupElement random(Random random) {
+        byte[] seed = new byte[this.seedSize()];
+        random.nextBytes(seed);
+        return random(seed);
+    }
 
     /**
      * Creates a group element from a seed

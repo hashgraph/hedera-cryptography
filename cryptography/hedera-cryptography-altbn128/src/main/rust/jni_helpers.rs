@@ -10,6 +10,8 @@ use jni::objects::{JByteArray, JObjectArray};
 use jni::sys::{jbyte, jint, jsize};
 use jni::JNIEnv;
 
+pub(crate) type G1 = G1Projective;
+pub(crate) type G2 = G2Projective;
 /// * 0     False
 /// * 1     True
 /// * 0     Success

@@ -19,13 +19,13 @@ package com.hedera.cryptography.altbn128.facade;
 import com.hedera.cryptography.altbn128.AltBn128Exception;
 import com.hedera.cryptography.altbn128.adapter.FieldElementsLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.GroupElementsLibraryAdapter;
+import com.hedera.cryptography.altbn128.common.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * This class acts as a facade that simplifies the interaction for operating specifically with the second {@code Group}
- *  and its {@code GroupElement} {@code byte[]} representations.
+ * This class acts as a facade that simplifies the interaction for operating specifically with any of the alt-bn-128 {@code Group}s
+ *  and its {@code GroupElement}s {@code byte[]} representations.
  *  It abstracts the complexities of dealing with return codes and input and output parameters
  *  providing a higher-level interface easier to interact with from Java.
  **/
@@ -64,7 +64,7 @@ public final class GroupFacade {
      * @throws AltBn128Exception in case of error.
      */
     public byte[] fromSeed(@NonNull final byte[] seed) {
-        validateSize(seed, randomSeedSize, "Invalid random seed size");
+        ValidationUtils.validateSize(seed, randomSeedSize, "Invalid random seed size");
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsFromSeed(group, seed, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
@@ -127,8 +127,8 @@ public final class GroupFacade {
      * @throws AltBn128Exception in case of error.
      */
     public byte[] add(@NonNull final byte[] point1, @NonNull final byte[] point2) {
-        validateSize(point1, size, "Invalid point size");
-        validateSize(point2, size, "Invalid point size");
+        ValidationUtils.validateSize(point1, size, "Invalid point size");
+        ValidationUtils.validateSize(point2, size, "Invalid point size");
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsAdd(group, point1, point2, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
@@ -145,8 +145,8 @@ public final class GroupFacade {
      * @throws AltBn128Exception in case of error.
      */
     public byte[] scalarMul(@NonNull final byte[] point, @NonNull final byte[] scalar) {
-        validateSize(point, size, "Invalid point size");
-        validateSize(scalar, fieldElementsSize, "Invalid scalar size");
+        ValidationUtils.validateSize(point, size, "Invalid point size");
+        ValidationUtils.validateSize(scalar, fieldElementsSize, "Invalid scalar size");
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsScalarMul(group, point, scalar, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
@@ -167,7 +167,8 @@ public final class GroupFacade {
      * @throws AltBn128Exception in case of error.
      */
     public byte[] fromBytes(@NonNull final byte[] bytes) {
-        validateSize(Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
+        ValidationUtils.validateSize(
+                Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
 
         int result = adapter.groupElementsBytes(group, bytes);
         if (result == GroupElementsLibraryAdapter.NOT_IN_CURVE) {
@@ -197,19 +198,6 @@ public final class GroupFacade {
             throw new AltBn128Exception(result, "groupElementsBatchAdd in" + this.group);
         }
         return output;
-    }
-
-    /**
-     * Validates the size of a byte array.
-     * @param data the byte array to validate.
-     * @param expectedSize the expected size of the array.
-     * @param message the error message to throw.
-     */
-    private static void validateSize(
-            @Nullable final byte[] data, final int expectedSize, @NonNull final String message) {
-        if (Objects.requireNonNull(data, "data must not be null").length != expectedSize) {
-            throw new IllegalArgumentException(message);
-        }
     }
 
     /**
