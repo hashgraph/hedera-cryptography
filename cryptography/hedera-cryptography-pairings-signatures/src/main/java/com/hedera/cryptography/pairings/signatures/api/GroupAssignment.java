@@ -24,9 +24,27 @@ public enum GroupAssignment {
     /**
      * The group for signatures is the first group in the pairing, and the group for public keys is the second group.
      */
-    GROUP1_FOR_SIGNING,
+    GROUP1_FOR_SIGNING(0),
     /**
      * The group for signatures is the second group in the pairing, and the group for public keys is the first group.
      */
-    GROUP1_FOR_PUBLIC_KEY;
+    GROUP1_FOR_PUBLIC_KEY(1);
+
+    private final int id;
+
+    /**
+     * Generates a new instance and sets the id
+     * @param id the id of this instance
+     */
+    GroupAssignment(final int id) {
+        this.id = id;
+    }
+
+    /**
+     * Returns the id.
+     * @return the id.
+     */
+    public int getId() {
+        return id;
+    }
 }
