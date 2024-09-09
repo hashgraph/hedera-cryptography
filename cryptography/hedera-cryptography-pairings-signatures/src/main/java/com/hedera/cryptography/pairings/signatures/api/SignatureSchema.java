@@ -159,7 +159,7 @@ public final class SignatureSchema {
                 throw new IllegalArgumentException("Curve type must be between 0 and 127");
             }
 
-            final int assignmentValue = groupAssignment.ordinal() << 7;
+            final int assignmentValue = groupAssignment.getId() << 7;
             return (byte) (assignmentValue | (curveType & CURVE_MASK));
         }
 

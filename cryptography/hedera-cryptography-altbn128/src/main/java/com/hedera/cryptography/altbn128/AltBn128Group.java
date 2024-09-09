@@ -43,7 +43,7 @@ public class AltBn128Group implements Group {
     public AltBn128Group(final @NonNull AltBN128CurveGroup group) {
         this.group = Objects.requireNonNull(group, "group must not be null");
         this.facade = new GroupFacade(
-                group.ordinal(),
+                group.getId(),
                 ArkBn254Adapter.getInstance(),
                 ArkBn254Adapter.getInstance().fieldElementsSize());
     }

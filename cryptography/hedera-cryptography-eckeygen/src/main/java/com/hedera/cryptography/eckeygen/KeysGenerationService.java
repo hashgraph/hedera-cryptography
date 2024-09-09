@@ -101,7 +101,7 @@ public class KeysGenerationService {
         ByteString prefix = ByteString.copyFrom(new byte[] {signatureSchema.getIdByte(), 0, 0});
         ByteString sk = ByteString.copyFrom(skBytes);
         byte[] pkBytes = keyGen.generatePublicKey(
-                signatureSchema.getGroupAssignment().ordinal(),
+                signatureSchema.getGroupAssignment().getId(),
                 sk.substring(prefix.size()).toByteArray());
         return encodeToBase64(prefix.concat(ByteString.copyFrom(pkBytes)).toByteArray());
     }
