@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import java.util.Random;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class AltBn128BilinearPairingTest {
@@ -40,7 +41,7 @@ class AltBn128BilinearPairingTest {
         GroupElement Q = g2.random(rand);
 
         // e(a×P, b×Q) = e(P, ab×Q)
-        assertTrue(new AltBn128BilinearPairing(P.multiply(a), Q.multiply(b))
+        Assertions.assertTrue(new AltBn128BilinearPairing(P.multiply(a), Q.multiply(b))
                 .compare(new AltBn128BilinearPairing(P, Q.multiply(a.multiply(b)))));
         // e(a×P, b×Q) = e(ab×P, Q)
         assertTrue(new AltBn128BilinearPairing(P.multiply(a), Q.multiply(b))
