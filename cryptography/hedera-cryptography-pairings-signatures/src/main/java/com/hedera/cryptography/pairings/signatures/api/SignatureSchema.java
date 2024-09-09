@@ -61,7 +61,7 @@ public final class SignatureSchema {
      */
     @NonNull
     Group getPublicKeyGroup() {
-        return groupAssignment == GroupAssignment.GROUP1_FOR_PUBLIC_KEY
+        return groupAssignment == GroupAssignment.SHORT_PUBLIC_KEYS
                 ? pairingFriendlyCurve.group1()
                 : pairingFriendlyCurve.group2();
     }
@@ -73,7 +73,7 @@ public final class SignatureSchema {
      */
     @NonNull
     Group getSignatureGroup() {
-        return groupAssignment == GroupAssignment.GROUP1_FOR_PUBLIC_KEY
+        return groupAssignment == GroupAssignment.SHORT_PUBLIC_KEYS
                 ? pairingFriendlyCurve.group2()
                 : pairingFriendlyCurve.group1();
     }

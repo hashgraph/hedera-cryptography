@@ -55,20 +55,20 @@ class SignaturesLibraryTest {
         final var g1 = actual.getPairingFriendlyCurve().group1();
         assertEquals(
                 g1,
-                assignment == GroupAssignment.GROUP1_FOR_PUBLIC_KEY
+                assignment == GroupAssignment.SHORT_PUBLIC_KEYS
                         ? actual.getPublicKeyGroup()
                         : actual.getSignatureGroup());
         final var other = SignatureSchema.create(
                 Curve.ALT_BN128,
-                assignment == GroupAssignment.GROUP1_FOR_SIGNING
-                        ? GroupAssignment.GROUP1_FOR_PUBLIC_KEY
-                        : GroupAssignment.GROUP1_FOR_SIGNING);
+                assignment == GroupAssignment.SHORT_SIGNATURES
+                        ? GroupAssignment.SHORT_PUBLIC_KEYS
+                        : GroupAssignment.SHORT_SIGNATURES);
         assertNotNull(other);
         assertNotNull(other.getPairingFriendlyCurve());
         final var g2 = other.getPairingFriendlyCurve().group2();
         assertEquals(
                 g2,
-                assignment == GroupAssignment.GROUP1_FOR_PUBLIC_KEY
+                assignment == GroupAssignment.SHORT_PUBLIC_KEYS
                         ? other.getPublicKeyGroup()
                         : other.getSignatureGroup());
 
