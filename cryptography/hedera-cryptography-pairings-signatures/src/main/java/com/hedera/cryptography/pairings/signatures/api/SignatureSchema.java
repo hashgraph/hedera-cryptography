@@ -132,6 +132,14 @@ public final class SignatureSchema {
     }
 
     /**
+     * Returns the curve.
+     * @return the curve
+     */
+    public Curve getCurve() {
+        return curve;
+    }
+
+    /**
      * Get the ID byte representing this schema
      *
      * @return the ID byte
