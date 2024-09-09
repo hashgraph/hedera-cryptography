@@ -24,9 +24,27 @@ public enum AltBN128CurveGroup {
     /**
      *  G1
      */
-    GROUP1,
+    GROUP1(0),
     /**
      *  G2
      */
-    GROUP2
+    GROUP2(1);
+
+    private final int id;
+
+    /**
+     * Creates a new instance and sets the id.
+     * @param id the id of the group
+     */
+    AltBN128CurveGroup(final int id) {
+        this.id = id;
+    }
+
+    /**
+     * Return the group id.
+     * @return the group id
+     */
+    public int getId() {
+        return id;
+    }
 }
