@@ -1,2 +1,0 @@
-com.hedera.cryptography.pairings.test.spi.PairingMockFriendlyCurveProvider
-com.hedera.cryptography.pairings.test.spi.FailingPairingFriendlyCurveProvider

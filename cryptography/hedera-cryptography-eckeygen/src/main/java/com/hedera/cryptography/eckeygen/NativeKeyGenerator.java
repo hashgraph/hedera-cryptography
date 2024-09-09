@@ -42,6 +42,7 @@ public class NativeKeyGenerator implements KeyGenerator {
     }
 
     /**
+     * Returns the singleton instance of the native key generator.
      * @return the singleton instance of the native key generator.
      */
     public static NativeKeyGenerator getInstance() {
