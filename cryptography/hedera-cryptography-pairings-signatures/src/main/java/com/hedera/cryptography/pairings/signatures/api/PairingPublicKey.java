@@ -21,7 +21,6 @@ import static com.hedera.cryptography.pairings.signatures.api.ByteArrayConversio
 
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Objects;
 
 /**
  *  An elliptic curve public Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
@@ -47,21 +46,5 @@ public record PairingPublicKey(GroupElement publicKey, SignatureSchema signature
     @NonNull
     public static PairingPublicKey fromBytes(@NonNull final byte[] bytes) {
         return deserializePairingPublicKey(bytes);
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof final PairingPublicKey that)) {
-            return false;
-        }
-        return Objects.equals(publicKey, that.publicKey) && Objects.equals(signatureSchema, that.signatureSchema);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(publicKey, signatureSchema);
     }
 }
