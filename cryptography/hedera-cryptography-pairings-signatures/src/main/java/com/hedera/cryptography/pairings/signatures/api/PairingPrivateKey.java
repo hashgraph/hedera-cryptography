@@ -75,7 +75,7 @@ public class PairingPrivateKey {
     @NonNull
     public PairingSignature sign(final @NonNull byte[] message) {
         Objects.requireNonNull(message, "message must not be null");
-        return new PairingSignature();
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**
