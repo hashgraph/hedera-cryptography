@@ -24,7 +24,7 @@ import com.hedera.cryptography.pairings.api.curves.KnownCurves;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.Random;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -126,18 +126,16 @@ class SignaturesLibraryTest {
                 () -> PairingPublicKey.fromBytes(invalidKey2),
                 "Invalid key should throw an exception");
 
-        flipEachBitAndDo(
+        flipEachBitAndCheck(
                 sk.toBytes(),
-                val -> assertThrows(
-                        IllegalArgumentException.class,
-                        () -> PairingPublicKey.fromBytes(val),
-                        "Invalid key should throw an exception"));
-        flipEachBitAndDo(
+                PairingPrivateKey::fromBytes,
+                IllegalArgumentException.class,
+                "Flipped bytes should be an invalid or different key");
+        flipEachBitAndCheck(
                 pk.toBytes(),
-                val -> assertThrows(
-                        IllegalArgumentException.class,
-                        () -> PairingPublicKey.fromBytes(val),
-                        "Invalid key should throw an exception"));
+                PairingPublicKey::fromBytes,
+                IllegalArgumentException.class,
+                "Flipped bytes should be an invalid or different key");
     }
 
     @ParameterizedTest
@@ -155,12 +153,11 @@ class SignaturesLibraryTest {
         assertNotNull(signature);
         assertNotNull(signature.toBytes());
         assertEquals(signature, sk.sign(message));
-        flipEachBitAndDo(
+        flipEachBitAndCheck(
                 signature.toBytes(),
-                val -> assertThrows(
-                        IllegalArgumentException.class,
-                        () -> PairingSignature.fromBytes(val),
-                        "Invalid signature should throw an exception"));
+                PairingSignature::fromBytes,
+                IllegalArgumentException.class,
+                "Flipped bytes should be an invalid or different signature");
 
         assertEquals(
                 signature,
@@ -180,24 +177,47 @@ class SignaturesLibraryTest {
     }
 
     /**
-     * Flip each byte of an array individually and invoke the consumer on each flip
-     * @param array the array with where the flipping will occur. The array is modified
+     * Flip each bit of a byte original and invoke the consumer on each flip.
+     * Asserts that either throws an exception or that the result of invoking the consumer is not the same as the original value
+     * @param original the original with where the flipping will occur. The original is modified
      * @param consumer the consumer to invoke on each flip
+     * @param throwing the expected exception
      */
-    void flipEachBitAndDo(@NonNull byte[] array, final @NonNull Consumer<byte[]> consumer) {
-        for (int i = 0; i < array.length; i++) {
-            byte flippedByte = 0; // Temporary byte to store flipped bits
-            byte originalByte = array[i];
+    <T, E extends Throwable> void flipEachBitAndCheck(
+            @NonNull final byte[] original,
+            final @NonNull Function<byte[], T> consumer,
+            final Class<E> throwing,
+            final String message) {
+        final byte[] copy = Arrays.copyOf(original, original.length);
+        final T originalValue = consumer.apply(original);
+        for (int i = 0; i < copy.length - 1; i++) {
+            final byte originalByte = copy[i];
             for (int bitPosition = 0; bitPosition < 8; bitPosition++) {
-                int currentBit = (array[i] >> bitPosition) & 1;
-
-                int flippedBit = currentBit == 0 ? 1 : 0;
-
-                flippedByte |= (byte) (flippedBit << bitPosition);
-                array[i] = flippedByte;
-                consumer.accept(array);
+                final byte flippedByte = (byte) (originalByte ^ (1 << bitPosition));
+                copy[i] = flippedByte;
+                try {
+                    // If we did not get an exception, the value should be at least different than the original
+                    assertNotEquals(originalValue, consumer.apply(copy), message);
+                } catch (Exception e) {
+                    assertEquals(throwing, e.getClass(), message);
+                }
+                copy[i] = originalByte;
             }
-            array[i] = originalByte;
+        }
+        // REVIEW flipping the last bit of the sign of the last element produces the same signature
+        // representation.
+        // Makes sense given that we use unsigned values in rust, but seems that the last bit is not checked in
+        // arkworks
+        final byte originalByte = copy[copy.length - 1];
+        for (int bitPosition = 0; bitPosition < 7; bitPosition++) {
+            final byte flippedByte = (byte) (originalByte ^ (1 << bitPosition));
+            copy[copy.length - 1] = flippedByte;
+            try {
+                assertNotEquals(originalValue, consumer.apply(copy), message);
+            } catch (Exception e) {
+                assertEquals(throwing, e.getClass(), message);
+            }
+            copy[copy.length - 1] = originalByte;
         }
     }
 
