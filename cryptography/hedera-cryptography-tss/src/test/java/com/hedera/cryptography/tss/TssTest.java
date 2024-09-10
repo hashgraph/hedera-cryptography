@@ -136,12 +136,15 @@ class TssTest {
                 .build(SIGNATURE_SCHEMA);
 
         final TssService tssService = TssService.create(SIGNATURE_SCHEMA, new Random());
+        final PairingPrivateKey s = PairingPrivateKey.create(SIGNATURE_SCHEMA, new Random());
+        TssPublicShare mockPublic = mock(TssPublicShare.class);
+        when(mockPublic.publicKey()).thenReturn(s.createPublicKey());
         final List<TssPublicShare> publicShares =
                 List.of(mock(TssPublicShare.class), mock(TssPublicShare.class), mock(TssPublicShare.class));
         final PairingPublicKey ledgerID = tssService.aggregatePublicShares(publicShares);
         TssPrivateShare mock = mock(TssPrivateShare.class);
         when(mock.shareId()).thenReturn(mock(TssShareId.class));
-        when(mock.privateKey()).thenReturn(PairingPrivateKey.create(SIGNATURE_SCHEMA, new Random()));
+        when(mock.privateKey()).thenReturn(s);
         final List<TssPrivateShare> privateShares = List.of(mock);
 
         final SecureRandom random = new SecureRandom();
@@ -166,12 +169,12 @@ class TssTest {
         collectedSignatures.addAll(p2Signatures);
 
         final List<TssShareSignature> validSignatures = collectedSignatures.stream()
-                .filter(s -> tssService.verifySignature(p0sDirectory, publicShares, s))
+                .filter(sign -> tssService.verifySignature(p0sDirectory, publicShares, sign))
                 .toList();
 
         final PairingSignature signature = tssService.aggregateSignatures(validSignatures);
 
-        if (!signature.verifySignature(ledgerID, messageToSign)) {
+        if (!signature.verify(ledgerID, messageToSign)) {
             throw new IllegalStateException("Signature verification failed");
         }
     }
