@@ -39,43 +39,49 @@ class SignaturesLibraryTest {
                 KnownCurves.ALT_BN128,
                 PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
                         .pairingFriendlyCurve()
-                        .curve());
+                        .curve(),
+                "The pairing friendly curve should be ALT_BN128");
     }
 
     @ParameterizedTest
     @MethodSource("combinedParameters")
     void crateSignatureSchema(GroupAssignment assignment) {
         final var actual = SignatureSchema.create(Curve.ALT_BN128, assignment);
-        assertNotNull(actual);
-        assertNotNull(actual.getPairingFriendlyCurve());
+        assertNotNull(actual, "Should have created a SignatureSchema");
+        assertNotNull(actual.getPairingFriendlyCurve(), "Should have created a pairing friendly curve instance");
 
         assertEquals(
                 PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve(),
-                actual.getPairingFriendlyCurve());
+                actual.getPairingFriendlyCurve(),
+                "PairingFriendlyCurve should be a singleton");
         final var g1 = actual.getPairingFriendlyCurve().group1();
         assertEquals(
                 g1,
                 assignment == GroupAssignment.SHORT_PUBLIC_KEYS
                         ? actual.getPublicKeyGroup()
-                        : actual.getSignatureGroup());
+                        : actual.getSignatureGroup(),
+                "group1 assignment validation failed for: " + assignment);
         final var other = SignatureSchema.create(
                 Curve.ALT_BN128,
                 assignment == GroupAssignment.SHORT_SIGNATURES
                         ? GroupAssignment.SHORT_PUBLIC_KEYS
                         : GroupAssignment.SHORT_SIGNATURES);
-        assertNotNull(other);
-        assertNotNull(other.getPairingFriendlyCurve());
+        assertNotNull(other, "Should have created a SignatureSchema");
+        assertNotNull(other.getPairingFriendlyCurve(), "should have created a pairing friendly curve instance");
+        assertNotEquals(
+                actual.getIdByte(),
+                other.getIdByte(),
+                "different idBytes expected when different assignments are used");
         final var g2 = other.getPairingFriendlyCurve().group2();
         assertEquals(
                 g2,
-                assignment == GroupAssignment.SHORT_PUBLIC_KEYS
-                        ? other.getPublicKeyGroup()
-                        : other.getSignatureGroup());
+                assignment == GroupAssignment.SHORT_PUBLIC_KEYS ? other.getPublicKeyGroup() : other.getSignatureGroup(),
+                "group2 assignment validation failed for: " + assignment);
 
-        assertNotEquals(actual.getIdByte(), other.getIdByte());
-
-        assertEquals(actual, SignatureSchema.create(actual.getIdByte()));
-        assertEquals(other, SignatureSchema.create(other.getIdByte()));
+        assertEquals(
+                actual, SignatureSchema.create(actual.getIdByte()), "creation from idByte should return same instance");
+        assertEquals(
+                other, SignatureSchema.create(other.getIdByte()), "creation from idByte should return same instance");
     }
 
     @ParameterizedTest
@@ -88,27 +94,50 @@ class SignaturesLibraryTest {
         assertNotNull(sk);
         assertNotNull(sk.toBytes());
         assertNotNull(sk.createPublicKey());
-        assertNotNull(sk.toBytes());
 
         final var pk = sk.createPublicKey();
-        assertEquals(pk, sk.createPublicKey());
+        assertEquals(pk, sk.createPublicKey(), "public key should be deterministic");
 
         final byte[] invalidKey = new byte[0];
-        assertThrows(IllegalArgumentException.class, () -> PairingPrivateKey.fromBytes(invalidKey));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> PairingPrivateKey.fromBytes(invalidKey),
+                "Invalid key should throw an exception");
         final byte[] invalidKey2 = new byte[] {schema.getIdByte(), 0, 0, 0, 0};
-        assertThrows(IllegalArgumentException.class, () -> PairingPrivateKey.fromBytes(invalidKey2));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> PairingPrivateKey.fromBytes(invalidKey2),
+                "Invalid key should throw an exception");
 
-        assertEquals(sk, PairingPrivateKey.fromBytes(sk.toBytes()));
-        assertEquals(pk, PairingPublicKey.fromBytes(pk.toBytes()));
-        assertThrows(IllegalArgumentException.class, () -> PairingPublicKey.fromBytes(invalidKey));
-        assertThrows(IllegalArgumentException.class, () -> PairingPublicKey.fromBytes(invalidKey2));
+        assertEquals(
+                sk,
+                PairingPrivateKey.fromBytes(sk.toBytes()),
+                "Should be able to obtain the same key from its byte array representation");
+        assertEquals(
+                pk,
+                PairingPublicKey.fromBytes(pk.toBytes()),
+                "Should be able to obtain the same key from its byte array representation");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> PairingPublicKey.fromBytes(invalidKey),
+                "Invalid key should throw an exception");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> PairingPublicKey.fromBytes(invalidKey2),
+                "Invalid key should throw an exception");
 
         flipEachBitAndDo(
                 sk.toBytes(),
-                val -> assertThrows(IllegalArgumentException.class, () -> PairingPublicKey.fromBytes(val)));
+                val -> assertThrows(
+                        IllegalArgumentException.class,
+                        () -> PairingPublicKey.fromBytes(val),
+                        "Invalid key should throw an exception"));
         flipEachBitAndDo(
                 pk.toBytes(),
-                val -> assertThrows(IllegalArgumentException.class, () -> PairingPublicKey.fromBytes(val)));
+                val -> assertThrows(
+                        IllegalArgumentException.class,
+                        () -> PairingPublicKey.fromBytes(val),
+                        "Invalid key should throw an exception"));
     }
 
     @ParameterizedTest
@@ -128,14 +157,26 @@ class SignaturesLibraryTest {
         assertEquals(signature, sk.sign(message));
         flipEachBitAndDo(
                 signature.toBytes(),
-                val -> assertThrows(IllegalArgumentException.class, () -> PairingSignature.fromBytes(val)));
+                val -> assertThrows(
+                        IllegalArgumentException.class,
+                        () -> PairingSignature.fromBytes(val),
+                        "Invalid signature should throw an exception"));
 
-        assertEquals(signature, PairingSignature.fromBytes(signature.toBytes()));
+        assertEquals(
+                signature,
+                PairingSignature.fromBytes(signature.toBytes()),
+                "Should be able to obtain the same signature from its byte array representation");
 
         final byte[] invalidSignature = new byte[0];
         final byte[] invalidSignature2 = new byte[] {schema.getIdByte(), 0, 0, 0, 0};
-        assertThrows(IllegalArgumentException.class, () -> PairingSignature.fromBytes(invalidSignature));
-        assertThrows(IllegalArgumentException.class, () -> PairingSignature.fromBytes(invalidSignature2));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> PairingSignature.fromBytes(invalidSignature),
+                "Invalid signature should throw an exception");
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> PairingSignature.fromBytes(invalidSignature2),
+                "Invalid signature should throw an exception");
     }
 
     /**
@@ -144,7 +185,6 @@ class SignaturesLibraryTest {
      * @param consumer the consumer to invoke on each flip
      */
     void flipEachBitAndDo(@NonNull byte[] array, final @NonNull Consumer<byte[]> consumer) {
-
         for (int i = 0; i < array.length; i++) {
             byte flippedByte = 0; // Temporary byte to store flipped bits
             byte originalByte = array[i];
