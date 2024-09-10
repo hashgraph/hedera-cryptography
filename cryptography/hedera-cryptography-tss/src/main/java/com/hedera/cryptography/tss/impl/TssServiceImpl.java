@@ -108,7 +108,8 @@ public class TssServiceImpl implements TssService {
     @NonNull
     @Override
     public TssShareSignature sign(@NonNull final TssPrivateShare privateShare, @NonNull final byte[] message) {
-        return new TssShareSignature(privateShare.shareId(), new PairingSignature());
+        return new TssShareSignature(
+                privateShare.shareId(), privateShare.privateKey().sign(message));
     }
 
     @Override
@@ -122,6 +123,6 @@ public class TssServiceImpl implements TssService {
     @NonNull
     @Override
     public PairingSignature aggregateSignatures(@NonNull final List<TssShareSignature> partialSignatures) {
-        return new PairingSignature();
+        return PairingPrivateKey.create(signatureSchema, random).sign(new byte[partialSignatures.size()]);
     }
 }

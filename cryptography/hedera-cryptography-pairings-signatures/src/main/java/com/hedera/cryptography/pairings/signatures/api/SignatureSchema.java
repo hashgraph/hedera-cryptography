@@ -61,11 +61,22 @@ public final class SignatureSchema {
      */
     @NonNull
     Group getPublicKeyGroup() {
-        return groupAssignment == GroupAssignment.GROUP1_FOR_PUBLIC_KEY
+        return groupAssignment == GroupAssignment.SHORT_PUBLIC_KEYS
                 ? pairingFriendlyCurve.group1()
                 : pairingFriendlyCurve.group2();
     }
 
+    /**
+     * Internal method
+     *
+     * @return the group to use for Signature creation
+     */
+    @NonNull
+    Group getSignatureGroup() {
+        return groupAssignment == GroupAssignment.SHORT_PUBLIC_KEYS
+                ? pairingFriendlyCurve.group2()
+                : pairingFriendlyCurve.group1();
+    }
     /**
      * Returns the group assignment
      * @return the group assignment

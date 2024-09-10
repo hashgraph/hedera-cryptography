@@ -16,12 +16,11 @@
 
 package com.hedera.cryptography.pairings.signatures.api;
 
+import static com.hedera.cryptography.pairings.signatures.api.ByteArrayConversionUtils.deserializePairingPublicKey;
+import static com.hedera.cryptography.pairings.signatures.api.ByteArrayConversionUtils.serializePairingPublicKey;
+
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.pairings.api.PairingsException;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Objects;
 
 /**
  *  An elliptic curve public Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
@@ -35,11 +34,7 @@ public record PairingPublicKey(GroupElement publicKey, SignatureSchema signature
      */
     @NonNull
     public byte[] toBytes() {
-        final byte[] bytes = this.publicKey.toBytes();
-        final ByteBuffer buffer = ByteBuffer.allocate(bytes.length + 1);
-        buffer.put(this.signatureSchema.getIdByte());
-        buffer.put(bytes);
-        return buffer.array();
+        return serializePairingPublicKey(this);
     }
 
     /**
@@ -50,31 +45,6 @@ public record PairingPublicKey(GroupElement publicKey, SignatureSchema signature
      */
     @NonNull
     public static PairingPublicKey fromBytes(@NonNull final byte[] bytes) {
-        final SignatureSchema schema = SignatureSchema.create(bytes);
-        final int keySize = schema.getPublicKeyGroup().elementSize();
-        if (bytes.length < keySize + 1) throw new IllegalArgumentException("The key representation is invalid");
-        try {
-            byte[] buffer = Arrays.copyOfRange(bytes, 1, keySize + 1);
-            final GroupElement sk = schema.getPublicKeyGroup().fromBytes(buffer);
-            return new PairingPublicKey(sk, schema);
-        } catch (PairingsException ex) {
-            throw new IllegalArgumentException("The key representation is invalid");
-        }
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof final PairingPublicKey that)) {
-            return false;
-        }
-        return Objects.equals(publicKey, that.publicKey) && Objects.equals(signatureSchema, that.signatureSchema);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(publicKey, signatureSchema);
+        return deserializePairingPublicKey(bytes);
     }
 }

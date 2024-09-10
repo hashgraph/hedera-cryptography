@@ -16,6 +16,10 @@
 
 package com.hedera.cryptography.pairings.signatures.api;
 
+import static com.hedera.cryptography.pairings.signatures.api.ByteArrayConversionUtils.deserializePairingSignature;
+import static com.hedera.cryptography.pairings.signatures.api.ByteArrayConversionUtils.serializePairingSignature;
+
+import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
@@ -23,7 +27,28 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  *  This class will live in a different project once the implementation of the pairings-signature-library is completed.
  *  The package and interface will remain constant.
  */
-public record PairingSignature() {
+public record PairingSignature(@NonNull GroupElement signature, @NonNull SignatureSchema signatureSchema) {
+
+    /**
+     * Serializes this {@link PairingPrivateKey} into a byte array.
+     *
+     * @return the serialized form of this object
+     */
+    @NonNull
+    public byte[] toBytes() {
+        return serializePairingSignature(this);
+    }
+
+    /**
+     * Returns a {@link PairingSignature} instance out of this object serialized form
+     * @param bytes the serialized form of this object
+     * @return a {@link PairingSignature} instance
+     * @throws IllegalArgumentException if the key representation is invalid
+     */
+    @NonNull
+    public static PairingSignature fromBytes(@NonNull final byte[] bytes) {
+        return deserializePairingSignature(bytes);
+    }
 
     /**
      * Verify a signed message with the known public key.

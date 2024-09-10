@@ -24,11 +24,11 @@ public enum GroupAssignment {
     /**
      * The group for signatures is the first group in the pairing, and the group for public keys is the second group.
      */
-    GROUP1_FOR_SIGNING(0),
+    SHORT_SIGNATURES(0),
     /**
      * The group for signatures is the second group in the pairing, and the group for public keys is the first group.
      */
-    GROUP1_FOR_PUBLIC_KEY(1);
+    SHORT_PUBLIC_KEYS(1);
 
     private final int id;
 

@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 class KeysGenerationServiceTest {
 
     public static final SignatureSchema SIGNATURE_SCHEMA =
-            SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.GROUP1_FOR_SIGNING);
+            SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
 
     private static final byte[] SK =
             new byte[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1};

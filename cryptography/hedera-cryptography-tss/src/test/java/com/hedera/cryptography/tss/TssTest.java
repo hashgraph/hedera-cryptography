@@ -49,7 +49,7 @@ import org.mockito.Mockito;
 class TssTest {
 
     public static final SignatureSchema SIGNATURE_SCHEMA =
-            SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.GROUP1_FOR_SIGNING);
+            SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
 
     @Test
     void testGenesis() {
@@ -141,6 +141,7 @@ class TssTest {
         final PairingPublicKey ledgerID = tssService.aggregatePublicShares(publicShares);
         TssPrivateShare mock = mock(TssPrivateShare.class);
         when(mock.shareId()).thenReturn(mock(TssShareId.class));
+        when(mock.privateKey()).thenReturn(PairingPrivateKey.create(SIGNATURE_SCHEMA, new Random()));
         final List<TssPrivateShare> privateShares = List.of(mock);
 
         final SecureRandom random = new SecureRandom();
