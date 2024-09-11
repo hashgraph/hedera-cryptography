@@ -24,7 +24,9 @@ import com.hedera.cryptography.pairings.api.curves.KnownCurves;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -126,16 +128,12 @@ class SignaturesLibraryTest {
                 () -> PairingPublicKey.fromBytes(invalidKey2),
                 "Invalid key should throw an exception");
 
-        flipEachBitAndCheck(
+        flipEachBitAndConsume(
                 sk.toBytes(),
-                PairingPrivateKey::fromBytes,
-                IllegalArgumentException.class,
-                "Flipped bytes should be an invalid or different key");
-        flipEachBitAndCheck(
+                expected(sk, PairingPrivateKey::fromBytes, "Flipped bytes should be an invalid or different key"));
+        flipEachBitAndConsume(
                 pk.toBytes(),
-                PairingPublicKey::fromBytes,
-                IllegalArgumentException.class,
-                "Flipped bytes should be an invalid or different key");
+                expected(pk, PairingPublicKey::fromBytes, "Flipped bytes should be an invalid or different key"));
     }
 
     @ParameterizedTest
@@ -153,11 +151,12 @@ class SignaturesLibraryTest {
         assertNotNull(signature);
         assertNotNull(signature.toBytes());
         assertEquals(signature, sk.sign(message));
-        flipEachBitAndCheck(
+        flipEachBitAndConsume(
                 signature.toBytes(),
-                PairingSignature::fromBytes,
-                IllegalArgumentException.class,
-                "Flipped bytes should be an invalid or different signature");
+                expected(
+                        signature,
+                        PairingSignature::fromBytes,
+                        "Flipped bytes should be an invalid or different signature"));
 
         assertEquals(
                 signature,
@@ -176,31 +175,58 @@ class SignaturesLibraryTest {
                 "Invalid signature should throw an exception");
     }
 
+    @ParameterizedTest
+    @MethodSource("combinedParameters")
+    void verifySignatureTest(GroupAssignment assignment) {
+        final var schema = SignatureSchema.create(Curve.ALT_BN128, assignment);
+        final var rng = new Random();
+
+        final var sk = PairingPrivateKey.create(schema, rng);
+
+        var message = new byte[256];
+        rng.nextBytes(message);
+
+        final var signature = sk.sign(message);
+        assertNotNull(signature);
+        assertNotNull(signature.toBytes());
+        assertEquals(signature, sk.sign(message));
+
+        final PairingPublicKey publicKey = sk.createPublicKey();
+        assertTrue(signature.verify(publicKey, message), "signature should be valid");
+
+        IntStream.range(0, 256).forEach(i -> {
+            final var pk2 = PairingPrivateKey.create(schema, rng);
+            assertFalse(
+                    signature.verify(pk2.createPublicKey(), message),
+                    "No other public key should verify the signature");
+        });
+
+        flipEachBitAndConsume(signature.toBytes(), signatureFlippedBytes -> {
+            try {
+                // If we did not get an exception, the value should be at least not verifiable against the public key
+                assertFalse(
+                        publicKey.verifySignature(signatureFlippedBytes, message),
+                        "Invalid signature should be identified");
+            } catch (Exception e) {
+                assertEquals(IllegalArgumentException.class, e.getClass(), "Invalid signature should be identified");
+            }
+        });
+    }
+
     /**
      * Flip each bit of a byte original and invoke the consumer on each flip.
-     * Asserts that either throws an exception or that the result of invoking the consumer is not the same as the original value
      * @param original the original with where the flipping will occur. The original is modified
      * @param consumer the consumer to invoke on each flip
-     * @param throwing the expected exception
      */
-    <T, E extends Throwable> void flipEachBitAndCheck(
-            @NonNull final byte[] original,
-            final @NonNull Function<byte[], T> consumer,
-            final Class<E> throwing,
-            final String message) {
+    void flipEachBitAndConsume(@NonNull final byte[] original, final @NonNull Consumer<byte[]> consumer) {
         final byte[] copy = Arrays.copyOf(original, original.length);
-        final T originalValue = consumer.apply(original);
+
         for (int i = 0; i < copy.length - 1; i++) {
             final byte originalByte = copy[i];
             for (int bitPosition = 0; bitPosition < 8; bitPosition++) {
                 final byte flippedByte = (byte) (originalByte ^ (1 << bitPosition));
                 copy[i] = flippedByte;
-                try {
-                    // If we did not get an exception, the value should be at least different than the original
-                    assertNotEquals(originalValue, consumer.apply(copy), message);
-                } catch (Exception e) {
-                    assertEquals(throwing, e.getClass(), message);
-                }
+                consumer.accept(copy);
                 copy[i] = originalByte;
             }
         }
@@ -212,13 +238,30 @@ class SignaturesLibraryTest {
         for (int bitPosition = 0; bitPosition < 7; bitPosition++) {
             final byte flippedByte = (byte) (originalByte ^ (1 << bitPosition));
             copy[copy.length - 1] = flippedByte;
-            try {
-                assertNotEquals(originalValue, consumer.apply(copy), message);
-            } catch (Exception e) {
-                assertEquals(throwing, e.getClass(), message);
-            }
+            consumer.accept(copy);
             copy[copy.length - 1] = originalByte;
         }
+    }
+
+    /**
+     *  Asserts that either throws an IllegalArgumentException or that the result of invoking the consumer is not the same as the original value
+     *
+     * @param originalValue expected value to be different than this one
+     * @param creator the function that creates the elements out of an array
+     * @param message the message to show in case validation fails
+     * @param <T> the type of the comparison object
+     * @return a consumer that performs the check when requested
+     */
+    private <T> Consumer<byte[]> expected(
+            final T originalValue, final Function<byte[], T> creator, final String message) {
+        return bytes -> {
+            try {
+                // If we did not get an exception, the value should be at least different than the original
+                assertNotEquals(originalValue, creator.apply(bytes), message);
+            } catch (Exception e) {
+                assertEquals(IllegalArgumentException.class, e.getClass(), message);
+            }
+        };
     }
 
     private static Stream<GroupAssignment> combinedParameters() {
