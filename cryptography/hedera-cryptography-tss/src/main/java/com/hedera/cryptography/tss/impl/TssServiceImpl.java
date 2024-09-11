@@ -38,7 +38,7 @@ import java.util.Random;
 public class TssServiceImpl implements TssService {
     private final SignatureSchema signatureSchema;
     private final Random random;
-    private final PairingPublicKey aggregatedPublicKey;
+    private final PairingPrivateKey aggregatedPrivateKey;
 
     /**
      * Generates a new instance of this prototype implementation.
@@ -49,8 +49,7 @@ public class TssServiceImpl implements TssService {
     public TssServiceImpl(@NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {
         this.signatureSchema = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
         this.random = Objects.requireNonNull(random, "random must not be null");
-        this.aggregatedPublicKey =
-                PairingPrivateKey.create(signatureSchema, random).createPublicKey();
+        this.aggregatedPrivateKey = PairingPrivateKey.create(signatureSchema, random);
     }
 
     @NonNull
@@ -102,14 +101,13 @@ public class TssServiceImpl implements TssService {
     @NonNull
     @Override
     public PairingPublicKey aggregatePublicShares(@NonNull final List<TssPublicShare> publicShares) {
-        return aggregatedPublicKey;
+        return aggregatedPrivateKey.createPublicKey();
     }
 
     @NonNull
     @Override
     public TssShareSignature sign(@NonNull final TssPrivateShare privateShare, @NonNull final byte[] message) {
-        return new TssShareSignature(
-                privateShare.shareId(), privateShare.privateKey().sign(message));
+        return new TssShareSignature(privateShare.shareId(), aggregatedPrivateKey.sign(message));
     }
 
     @Override
@@ -123,6 +121,6 @@ public class TssServiceImpl implements TssService {
     @NonNull
     @Override
     public PairingSignature aggregateSignatures(@NonNull final List<TssShareSignature> partialSignatures) {
-        return PairingPrivateKey.create(signatureSchema, random).sign(new byte[partialSignatures.size()]);
+        return partialSignatures.getFirst().signature();
     }
 }

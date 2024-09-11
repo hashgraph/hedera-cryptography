@@ -19,7 +19,10 @@ package com.hedera.cryptography.pairings.signatures.api;
 import static com.hedera.cryptography.pairings.signatures.api.ByteArrayConversionUtils.deserializePairingSignature;
 import static com.hedera.cryptography.pairings.signatures.api.ByteArrayConversionUtils.serializePairingSignature;
 
+import com.hedera.cryptography.pairings.api.BilinearPairing;
+import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
@@ -66,7 +69,15 @@ public record PairingSignature(@NonNull GroupElement signature, @NonNull Signatu
      * @param message   the message that was signed
      * @return true if the signature is valid, false otherwise
      */
-    public boolean verifySignature(@NonNull final PairingPublicKey publicKey, @NonNull final byte[] message) {
-        return true;
+    public boolean verify(@NonNull final PairingPublicKey publicKey, @NonNull final byte[] message) {
+        if (publicKey.signatureSchema() != signatureSchema) {
+            throw new IllegalArgumentException("PublicKey does not match signatureSchema");
+        }
+        final Group signatureGroup = signatureSchema.getSignatureGroup();
+        final Group publicKeyGroup = signatureSchema.getPublicKeyGroup();
+        final PairingFriendlyCurve curve = signatureSchema.getPairingFriendlyCurve();
+        final BilinearPairing a = curve.pairingBetween(publicKey.publicKey(), signatureGroup.fromHash(message));
+        final BilinearPairing b = curve.pairingBetween(publicKeyGroup.generator(), signature);
+        return a.compare(b);
     }
 }

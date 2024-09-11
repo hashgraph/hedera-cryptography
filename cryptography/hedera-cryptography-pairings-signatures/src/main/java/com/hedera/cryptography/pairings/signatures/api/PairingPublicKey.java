@@ -47,4 +47,16 @@ public record PairingPublicKey(GroupElement publicKey, SignatureSchema signature
     public static PairingPublicKey fromBytes(@NonNull final byte[] bytes) {
         return deserializePairingPublicKey(bytes);
     }
+
+    /**
+     * Verifies a signature out of its byte array representation
+     * @param signature the serialized form of a signature
+     * @param message unsigned message to validate the signature
+     * @return true is the provided signature is a valid signature of the message
+     * @throws IllegalArgumentException if the signature representation is invalid
+     */
+    public boolean verifySignature(@NonNull final byte[] signature, @NonNull final byte[] message) {
+        final PairingSignature pairingSignature = PairingSignature.fromBytes(signature);
+        return pairingSignature.verify(this, message);
+    }
 }
