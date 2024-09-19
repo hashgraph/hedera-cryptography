@@ -23,8 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.hedera.cryptography.pairings.api.FieldElement;
 import java.security.SecureRandom;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -125,5 +129,25 @@ class AltBn128FieldTest {
         final byte[] value2 = new byte[field.elementSize() + 1];
         rng.nextBytes(value2);
         assertThrows(IllegalArgumentException.class, () -> field.fromBytes(value2));
+    }
+
+    @Test
+    void equalityAndHashCode() {
+        var field = new AltBn128Field();
+        Random rng = new SecureRandom();
+
+        List<Long> values = rng.longs(10000).boxed().toList();
+        Set<Long> filtered = Set.copyOf(values);
+
+        List<FieldElement> elements = values.stream().map(field::fromLong).toList();
+        Set<FieldElement> elementsFiltered = new HashSet<>(elements);
+
+        assertEquals(filtered.size(), elementsFiltered.size());
+
+        for (int i = 0; i < values.size(); i++) {
+            FieldElement element = field.fromLong(values.get(i));
+            assertEquals(elements.get(i), element);
+            assertEquals(elements.get(i).hashCode(), element.hashCode());
+        }
     }
 }
