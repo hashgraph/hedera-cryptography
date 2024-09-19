@@ -16,9 +16,12 @@
 
 plugins {
     id("com.hedera.gradle.java-module")
+    id("com.hedera.gradle.feature.rust")
     id("com.hedera.gradle.hedera-cryptography-publish")
     id("com.hedera.gradle.benchmark")
 }
+
+cargo { libname = "bn254" }
 
 testModuleInfo {
     requires("org.junit.jupiter.api")
