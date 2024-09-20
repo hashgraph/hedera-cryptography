@@ -20,9 +20,17 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hedera.common.nativesupport.jni.Greeter;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -132,5 +140,24 @@ class NativeLibraryTest {
         assertNotNull(library.locationInJar(), "Should have found location in jar");
         assertDoesNotThrow(() -> library.install(this.getClass()));
         assertEquals("Hello, World from C++!", new Greeter().getGreeting());
+    }
+
+    @Test
+    void testConcurrentLoading() throws InterruptedException {
+        int numThreads = 20;
+        final Callable<Void> callable = () -> {
+            NativeLibrary.withName("greeter").install(this.getClass());
+            return null;
+        };
+        try (final ExecutorService executor = Executors.newFixedThreadPool(numThreads)) {
+            final List<Future<Void>> futures = executor.invokeAll(Collections.nCopies(numThreads, callable));
+            executor.shutdown();
+            assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
+            for (final Future<Void> future : futures) {
+                assertTrue(future.isDone(), "All tasks should be done");
+                assertDoesNotThrow(() -> future.get(), "All tasks should have completed without an exception");
+            }
+        }
+        assertDoesNotThrow(() -> new Greeter().getGreeting(), "Should be able to invoke the native method");
     }
 }

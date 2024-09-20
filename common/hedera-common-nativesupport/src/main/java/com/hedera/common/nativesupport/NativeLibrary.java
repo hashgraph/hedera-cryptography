@@ -27,9 +27,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * <p>
@@ -41,7 +44,6 @@ import java.util.Objects;
  * The class provides mechanisms to extract the library from the JAR, store it in a temporary directory on the file system,
  * set appropriate file permissions, and finally load the library into the application.
  * <p>
- *     Warning: It is responsibility of the caller to assure the {@link NativeLibrary#install(InputStream)} is only called once per desired library.
  * @implNote Libraries are expected to be organized within the JAR file at {@code /software/<os>/<arch>/name}.
  * This path structure is used to construct the location of the library based on the current operating
  * system and architecture, ensuring only the correct version of the library is loaded according to the executing environment.
@@ -82,6 +84,14 @@ public class NativeLibrary {
      */
     private static final Map<OperatingSystem, String> DEFAULT_LIB_EXTENSIONS =
             Map.of(OperatingSystem.WINDOWS, "dll", OperatingSystem.LINUX, "so", OperatingSystem.DARWIN, "dylib");
+
+    /**
+     * A set of library names that were loaded this JVM. If the same library is loaded twice in a single JVM, it causes
+     * the JVM to crash.
+     */
+    private static final Set<String> loadedLibraries = new HashSet<>();
+    /** A lock that ensure a library is loaded only once */
+    private static final ReentrantLock loadingLock = new ReentrantLock();
 
     private final String name;
     private final Map<OperatingSystem, String> libExtensions;
@@ -192,25 +202,32 @@ public class NativeLibrary {
     /**
      * Unpackages the native library to a temporary dir, sets appropriate file permissions, and loads the library into
      * the JVM.
-     * <p>Warning: It is responsibility of the caller to assure this method is only called once per desired library.
      *
      * @param c the class whose module contains the native library
      * @throws IllegalStateException if the module does not open the package where the resource is located
      */
     public void install(@NonNull final Class<?> c) {
-        if (!c.getModule().isOpen(packageNameOfResource(), this.getClass().getModule())) {
-            // getResourceAsStream() will not throw an exception if the package is not opened, it will just return null
-            // so we manually check if the package is opened
-            throw new IllegalStateException("The module '%s' must open the package '%s' to module '%s'"
-                    .formatted(
-                            c.getModule().getName(),
-                            packageNameOfResource(),
-                            this.getClass().getModule().getName()));
-        }
         try {
+            loadingLock.lock();
+            if (loadedLibraries.contains(name())) {
+                // The library was already loaded in this JVM
+                return;
+            }
+            if (!c.getModule().isOpen(packageNameOfResource(), this.getClass().getModule())) {
+                // getResourceAsStream() will not throw an exception if the package is not opened, it will just return null
+                // so we manually check if the package is opened
+                throw new IllegalStateException("The module '%s' must open the package '%s' to module '%s'"
+                        .formatted(
+                                c.getModule().getName(),
+                                packageNameOfResource(),
+                                this.getClass().getModule().getName()));
+            }
             install(c.getModule().getResourceAsStream(locationInJar()));
+            loadedLibraries.add(name());
         } catch (IOException e) {
             throw new UncheckedIOException("Unable to load adapter " + name(), new IOException(e));
+        } finally {
+            loadingLock.unlock();
         }
     }
 
