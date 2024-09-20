@@ -15,6 +15,8 @@
  */
 
 import com.hedera.gradle.extensions.CargoExtension
+import com.hedera.gradle.services.TaskLockService
+import com.hedera.gradle.tasks.CargoBuildTask
 
 plugins { id("java") }
 
@@ -33,7 +35,19 @@ cargo.apply {
     verbose.convention(false)
 
     targets(
-        "darwin-x86-64",
-        "darwin-aarch64" /*, "linux-x86-64", "linux-aarch64", "win32-x86-64-msvc"*/
+        // "darwin-x86-64",
+        // "darwin-aarch64",
+        "linux-x86-64",
+        // "linux-aarch64",
+        // "win32-x86-64-msvc",
+    )
+}
+
+// Cargo might do installation work, do not run in parallel:
+tasks.withType<CargoBuildTask>().configureEach {
+    usesService(
+        gradle.sharedServices.registerIfAbsent("lock", TaskLockService::class) {
+            maxParallelUsages = 1
+        }
     )
 }
