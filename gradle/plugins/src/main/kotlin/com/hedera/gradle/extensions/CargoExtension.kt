@@ -42,7 +42,7 @@ abstract class CargoExtension {
     init {
         cargoCommand.convention(System.getProperty("user.home") + "/.cargo/bin/cargo")
         libname.convention(project.name)
-        release.convention(false)
+        release.convention(true)
 
         // Lifecycle task to only do all carg build tasks (mainly for testing)
         project.tasks.register("cargoBuild") {
