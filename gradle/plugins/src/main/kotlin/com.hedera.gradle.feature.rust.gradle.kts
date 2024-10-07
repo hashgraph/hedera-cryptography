@@ -24,10 +24,10 @@ plugins { id("java") }
 val cargo = project.extensions.create<CargoExtension>("cargo")
 
 cargo.targets(
-    // aarch64Darwin,
+    aarch64Darwin,
     aarch64Linux,
-    // x86Darwin,
-    // x86Linux,
+    x86Darwin,
+    x86Linux,
     // x86Windows
 )
 

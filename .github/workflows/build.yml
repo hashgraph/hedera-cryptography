@@ -48,6 +48,9 @@ jobs:
           distribution: temurin
           java-version: 21.0.4
 
+      - name: Setup Zig
+        uses: mlugg/setup-zig@a67e68dc5c8281d9608136d3d7ca1b282213e4ac  # v1.2.1
+
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@1fbea72663f6d4c03efaab13560c8a24cfd2a7cc # v1.9.0
         with:

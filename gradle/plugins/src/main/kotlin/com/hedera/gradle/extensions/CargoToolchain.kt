@@ -16,11 +16,7 @@
 
 package com.hedera.gradle.extensions
 
-enum class CargoToolchain(
-    val platform: String,
-    val target: String,
-    val folder: String
-) {
+enum class CargoToolchain(val platform: String, val target: String, val folder: String) {
     aarch64Darwin("darwin-aarch64", "aarch64-apple-darwin", "software/darwin/arm64"),
     aarch64Linux("linux-aarch64", "aarch64-unknown-linux-gnu", "software/linux/arm64"),
     x86Darwin("darwin-x86-64", "x86_64-apple-darwin", "software/darwin/amd64"),

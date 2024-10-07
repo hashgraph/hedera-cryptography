@@ -31,7 +31,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -72,6 +71,8 @@ abstract class CargoBuildTask : DefaultTask() {
 
     @TaskAction
     fun build() {
+        installCargoZigbuild()
+
         val defaultTargetTriple = defaultTargetTriple(rustcCommand.get())
         buildProjectForTarget(defaultTargetTriple)
 
@@ -95,6 +96,13 @@ abstract class CargoBuildTask : DefaultTask() {
         }
     }
 
+    private fun installCargoZigbuild() {
+        exec.exec {
+            workingDir = cargoToml.get().asFile.parentFile
+            commandLine = listOf(cargoCommand.get(), "install", "--locked", "cargo-zigbuild")
+        }
+    }
+
     private fun buildProjectForTarget(defaultTargetTriple: String) {
         exec.exec {
             workingDir = cargoToml.get().asFile.parentFile
@@ -106,7 +114,7 @@ abstract class CargoBuildTask : DefaultTask() {
                 theCommandLine.add(maybePlusSign + rustupChannel)
             }
 
-            theCommandLine.add("build")
+            theCommandLine.add("zigbuild")
 
             // Respect `verbose` if it is set; otherwise, log if asked to
             // with `--info` or `--debug` from the command line.

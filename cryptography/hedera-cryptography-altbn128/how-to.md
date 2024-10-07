@@ -1,32 +1,27 @@
 # Compilation
 
-Install rustup:
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
 ## Mac
-Install the cross-compiler
+Install `rustup` and `zig`
+
 ```bash
-  brew install zig
+  brew install rustup zig
 ```
 
 # How to compile
-## Manually
-Fist line compiles for all platforms that zigbuild has support:
-```bash
-  cargo zigbuild --target aarch64-unknown-linux-gnu --target x86_64-apple-darwin --target aarch64-apple-darwin --target aarch64-unknown-linux-gnu --target x86_64-unknown-linux-gnu --release
- ```
 
-Last one is windows that cannot be compiled with zig, but it can be compiled directly with rust
-```bash
-rustup target add x86_64-pc-windows-gnu
-cargo build --target x86_64-pc-windows-gnu
- ```
-## Using script [compile.sh](compile.sh)
+Compile is done as part of the Gradle build. For example:
 
 ```bash
-./compile.sh
- ```
+  ./gradlew assemble
+```
+
+creates all Jar files, which contain the compiled libraries
+
+To only do the rust compilation for all targets, you may run:
+
+```bash
+  ./gradlew cargoBuild
+```
 
 # Use with intellij
 
