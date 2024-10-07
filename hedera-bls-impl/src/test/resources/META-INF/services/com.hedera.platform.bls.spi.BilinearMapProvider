@@ -1,3 +1,0 @@
-com.hedera.platform.bls.impl.test.spi.Bls12381MockProvider
-com.hedera.platform.bls.impl.test.spi.Bls12381ExperimentalProvider
-com.hedera.platform.bls.impl.test.spi.Bls12381StubProvider
