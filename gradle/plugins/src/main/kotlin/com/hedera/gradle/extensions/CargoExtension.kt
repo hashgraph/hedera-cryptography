@@ -28,11 +28,8 @@ import org.gradle.kotlin.dsl.register
 @Suppress("LeakingThis")
 abstract class CargoExtension {
     abstract val cargoCommand: Property<String>
-    abstract val rustcCommand: Property<String>
-    abstract val rustupChannel: Property<String>
     abstract val libname: Property<String>
-    abstract val profile: Property<String>
-    abstract val verbose: Property<Boolean>
+    abstract val release: Property<Boolean>
 
     @get:Inject protected abstract val project: Project
 
@@ -44,10 +41,8 @@ abstract class CargoExtension {
 
     init {
         cargoCommand.convention(System.getProperty("user.home") + "/.cargo/bin/cargo")
-        rustcCommand.convention(System.getProperty("user.home") + "/.cargo/bin/rustc")
         libname.convention(project.name)
-        profile.convention("debug") // or "release"
-        verbose.convention(false)
+        release.convention(false)
 
         // Lifecycle task to only do all carg build tasks (mainly for testing)
         project.tasks.register("cargoBuild") {
@@ -70,13 +65,10 @@ abstract class CargoExtension {
                         layout.buildDirectory.dir("rustJniLibs/${target.platform}")
                     )
 
-                    cargoToml.set(layout.projectDirectory.file("Cargo.toml"))
-                    cargoCommand.set(this@CargoExtension.cargoCommand)
-                    rustcCommand.set(this@CargoExtension.rustcCommand)
-                    libname.set(this@CargoExtension.libname)
-                    profile.set(this@CargoExtension.profile)
-                    verbose.set(this@CargoExtension.verbose)
-                    rustupChannel.set(this@CargoExtension.rustupChannel)
+                    this.cargoToml.set(layout.projectDirectory.file("Cargo.toml"))
+                    this.cargoCommand.set(this@CargoExtension.cargoCommand)
+                    this.libname.set(this@CargoExtension.libname)
+                    this.release.set(this@CargoExtension.release)
                 }
 
             tasks.named("cargoBuild") { dependsOn(targetBuildTask) }

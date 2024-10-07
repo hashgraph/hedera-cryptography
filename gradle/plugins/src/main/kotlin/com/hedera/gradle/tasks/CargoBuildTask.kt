@@ -17,7 +17,6 @@
 package com.hedera.gradle.tasks
 
 import com.hedera.gradle.extensions.CargoToolchain
-import java.io.ByteArrayOutputStream
 import java.io.File
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
@@ -31,7 +30,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -43,11 +41,7 @@ abstract class CargoBuildTask : DefaultTask() {
 
     @get:Input abstract val libname: Property<String>
 
-    @get:Input abstract val profile: Property<String>
-
-    @get:Input abstract val verbose: Property<Boolean>
-
-    @get:Input @get:Optional abstract val rustupChannel: Property<String>
+    @get:Input abstract val release: Property<Boolean>
 
     @get:Input abstract val toolchain: Property<CargoToolchain>
 
@@ -61,8 +55,6 @@ abstract class CargoBuildTask : DefaultTask() {
 
     @get:OutputDirectory abstract val destinationDirectory: DirectoryProperty
 
-    @get:Internal abstract val rustcCommand: Property<String>
-
     @get:Internal abstract val cargoCommand: Property<String>
 
     @get:Inject protected abstract val exec: ExecOperations
@@ -72,19 +64,11 @@ abstract class CargoBuildTask : DefaultTask() {
     @TaskAction
     fun build() {
         installCargoZigbuild()
+        buildForTarget()
 
-        val defaultTargetTriple = defaultTargetTriple(rustcCommand.get())
-        buildProjectForTarget(defaultTargetTriple)
-
+        val profile = if (release.get()) "release" else "debug"
         val cargoOutputDir =
-            File(
-                cargoToml.get().asFile.parent,
-                if (toolchain.get().target == defaultTargetTriple) {
-                    "target/${profile.get()}"
-                } else {
-                    "target/${toolchain.get().target}/${profile.get()}"
-                }
-            )
+            File(cargoToml.get().asFile.parent, "target/${toolchain.get().target}/${profile}")
 
         files.copy {
             from(cargoOutputDir)
@@ -103,65 +87,20 @@ abstract class CargoBuildTask : DefaultTask() {
         }
     }
 
-    private fun buildProjectForTarget(defaultTargetTriple: String) {
+    private fun buildForTarget() {
         exec.exec {
             workingDir = cargoToml.get().asFile.parentFile
-            val theCommandLine = mutableListOf(cargoCommand.get())
 
-            if (rustupChannel.isPresent) {
-                val hasPlusSign = rustupChannel.get().startsWith("+")
-                val maybePlusSign = if (!hasPlusSign) "+" else ""
-                theCommandLine.add(maybePlusSign + rustupChannel)
-            }
+            commandLine =
+                listOf(cargoCommand.get(), "zigbuild", "--target=${toolchain.get().target}")
 
-            theCommandLine.add("zigbuild")
-
-            // Respect `verbose` if it is set; otherwise, log if asked to
-            // with `--info` or `--debug` from the command line.
-            if (verbose.get() || logger.isEnabled(LogLevel.INFO)) {
-                theCommandLine.add("--verbose")
+            if (release.get()) {
+                args("--release")
             }
-
-            if (profile.get() != "debug") {
-                // Cargo is rigid: it accepts "--release" for release (and
-                // nothing for dev).  This is a cheap way of allowing only
-                // two values.
-                theCommandLine.add("--${profile.get()}")
+            if (logger.isEnabled(LogLevel.INFO)) {
+                // For '--info' logging, turn on '--verbose'
+                args("--verbose")
             }
-            if (toolchain.get().target != defaultTargetTriple) {
-                // Only providing --target for the non-default targets means desktop builds
-                // can share the build cache with `cargo build`/`cargo test`/etc invocations,
-                // instead of requiring a large amount of redundant work.
-                theCommandLine.add("--target=${toolchain.get().target}")
-            }
-            commandLine = theCommandLine
         }
-    }
-
-    private fun defaultTargetTriple(rustc: String): String {
-        val stdout = ByteArrayOutputStream()
-        exec.exec {
-            standardOutput = stdout
-            commandLine = listOf(rustc, "--version", "--verbose")
-        }
-        val output = stdout.toString()
-
-        // The `rustc --version --verbose` output contains a number of lines like `key: value`.
-        // We're only interested in `host: `, which corresponds to the default target triple.
-        val triplePrefix = "host: "
-
-        val triple =
-            output
-                .split("\n")
-                .find { it.startsWith(triplePrefix) }
-                ?.substring(triplePrefix.length)
-                ?.trim()
-
-        if (triple == null) {
-            throw RuntimeException("Failed to parse `rustc -Vv` output!")
-        } else {
-            logger.info("Default rust target triple: $triple")
-        }
-        return triple
     }
 }
