@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: Apache-2.0
+plugins {
+    id("org.hiero.gradle.base.lifecycle")
+    id("org.hiero.gradle.base.jpms-modules")
+    id("org.hiero.gradle.check.spotless")
+    id("org.hiero.gradle.check.spotless-kotlin")
+}
+
+// define versions for gradle to grab dependencies
+dependencies.constraints {
+    api("com.github.spotbugs:spotbugs-annotations:4.7.3") {
+        because("com.github.spotbugs.annotations")
+    }
+    api("org.junit.jupiter:junit-jupiter-api:5.10.2") { because("org.junit.jupiter.api") }
+    api("org.junit.jupiter:junit-jupiter-engine:5.10.2") { because("org.junit.jupiter.engine") }
+    api("org.mockito:mockito-core:5.8.0") { because("org.mockito") }
+    api("org.mockito:mockito-junit-jupiter:5.8.0") { because("org.mockito.junit.jupiter") }
+    api("org.junit.jupiter:junit-jupiter-api:5.10.2") { because("org.junit.jupiter.api") }
+    api("jakarta.inject:jakarta.inject-api:2.0.1") { because("jakarta.inject") }
+    api("org.bouncycastle:bcprov-jdk18on:1.78.1") { because("org.bouncycastle.provider") }
+    api("com.google.code.gson:gson:2.8.6") { because("com.google.gson") }
+}

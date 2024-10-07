@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 name: Build
 
 on:
@@ -58,14 +59,11 @@ jobs:
       - name: Build software
         run: ./gradlew assemble --scan
 
-      - name: Spotless Check
-        run: ./gradlew spotlessCheck --scan --continue
-
-      - name: Dependency Scopes Check
-        run: ./gradlew checkAllModuleInfo --scan --continue
+      - name: Code Quality Checks
+        run: ./gradlew qualityCheck --continue --scan
 
       - name: Gradle Unit Test
-        run: ./gradlew :reports:testCodeCoverageReport test --scan --continue
+        run: ./gradlew :aggregation:testCodeCoverageReport test --continue --scan
 
       - name: Publish Unit Test Results
         uses: step-security/publish-unit-test-result-action@cc82caac074385ae176d39d2d143ad05e1130b2d # v2.18.0

@@ -1,0 +1,1 @@
+A set of libraries that provides the operations to sign and verify information using a Threshold Signature Scheme (TSS) and EC Cryptography.
