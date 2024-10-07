@@ -15,33 +15,21 @@
  */
 
 import com.hedera.gradle.extensions.CargoExtension
+import com.hedera.gradle.extensions.CargoToolchain.*
 import com.hedera.gradle.services.TaskLockService
 import com.hedera.gradle.tasks.CargoBuildTask
 
 plugins { id("java") }
 
-project.tasks.register("cargoBuild") {
-    group = "rust"
-    description = "Build library (all targets)"
-}
-
 val cargo = project.extensions.create<CargoExtension>("cargo")
 
-cargo.apply {
-    cargoCommand.convention(System.getProperty("user.home") + "/.cargo/bin/cargo")
-    rustcCommand.convention(System.getProperty("user.home") + "/.cargo/bin/rustc")
-    libname.convention(project.name)
-    profile.convention("debug") // or "release"
-    verbose.convention(false)
-
-    targets(
-        // "darwin-x86-64",
-        // "darwin-aarch64",
-        "linux-x86-64",
-        // "linux-aarch64",
-        // "win32-x86-64-msvc",
-    )
-}
+cargo.targets(
+    // aarch64Darwin,
+    aarch64Linux,
+    // x86Darwin,
+    // x86Linux,
+    // x86Windows
+)
 
 // Cargo might do installation work, do not run in parallel:
 tasks.withType<CargoBuildTask>().configureEach {

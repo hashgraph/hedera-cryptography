@@ -18,30 +18,14 @@ package com.hedera.gradle.extensions
 
 import com.hedera.gradle.tasks.CargoBuildTask
 import javax.inject.Inject
-import org.gradle.api.GradleException
+import org.gradle.api.Project
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.kotlin.dsl.register
 
-// See https://forge.rust-lang.org/platform-support.html.
-val toolchains =
-    listOf(
-        Toolchain("linux-x86-64", "x86_64-unknown-linux-gnu", "software/linux/amd64"),
-        Toolchain("linux-aarch64", "aarch64-unknown-linux-gnu", "software/linux/arm64"),
-        Toolchain("darwin-x86-64", "x86_64-apple-darwin", "software/darwin/amd64"),
-        Toolchain("darwin-aarch64", "aarch64-apple-darwin", "software/darwin/arm64"),
-        Toolchain("win32-x86-64-msvc", "x86_64-pc-windows-msvc", "software/windows/amd64")
-    )
-
-data class Toolchain(
-    @get:Input val platform: String,
-    @get:Input val target: String,
-    @get:Input val folder: String
-)
-
+@Suppress("LeakingThis")
 abstract class CargoExtension {
     abstract val cargoCommand: Property<String>
     abstract val rustcCommand: Property<String>
@@ -50,31 +34,40 @@ abstract class CargoExtension {
     abstract val profile: Property<String>
     abstract val verbose: Property<Boolean>
 
+    @get:Inject protected abstract val project: Project
+
     @get:Inject protected abstract val layout: ProjectLayout
 
     @get:Inject protected abstract val tasks: TaskContainer
 
     @get:Inject protected abstract val sourceSets: SourceSetContainer
 
-    fun targets(vararg targetNames: String) {
-        targetNames.forEach { target ->
-            val theToolchain = toolchains.find { it.platform == target }
-            if (theToolchain == null) {
-                throw GradleException(
-                    "Target $target is not recognized (recognized targets: ${toolchains.map { it.platform }.sorted()})."
-                )
-            }
+    init {
+        cargoCommand.convention(System.getProperty("user.home") + "/.cargo/bin/cargo")
+        rustcCommand.convention(System.getProperty("user.home") + "/.cargo/bin/rustc")
+        libname.convention(project.name)
+        profile.convention("debug") // or "release"
+        verbose.convention(false)
 
+        // Lifecycle task to only do all carg build tasks (mainly for testing)
+        project.tasks.register("cargoBuild") {
+            group = "rust"
+            description = "Build library (all targets)"
+        }
+    }
+
+    fun targets(vararg targets: CargoToolchain) {
+        targets.forEach { target ->
             val targetBuildTask =
                 tasks.register<CargoBuildTask>(
-                    "cargoBuild${target.replaceFirstChar(Char::titlecase)}"
+                    "cargoBuild${target.name.replaceFirstChar(Char::titlecase)}"
                 ) {
                     group = "rust"
                     description = "Build library ($target)"
-                    toolchain.set(theToolchain)
+                    toolchain.set(target)
                     sourcesDirectory.set(layout.projectDirectory.dir("src/main/rust"))
                     destinationDirectory.set(
-                        layout.buildDirectory.dir("rustJniLibs/${theToolchain.platform}")
+                        layout.buildDirectory.dir("rustJniLibs/${target.platform}")
                     )
 
                     cargoToml.set(layout.projectDirectory.file("Cargo.toml"))

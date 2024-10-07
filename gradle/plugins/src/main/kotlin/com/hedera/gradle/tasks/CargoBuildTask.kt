@@ -16,7 +16,7 @@
 
 package com.hedera.gradle.tasks
 
-import com.hedera.gradle.extensions.Toolchain
+import com.hedera.gradle.extensions.CargoToolchain
 import java.io.ByteArrayOutputStream
 import java.io.File
 import javax.inject.Inject
@@ -30,6 +30,7 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -49,11 +50,7 @@ abstract class CargoBuildTask : DefaultTask() {
 
     @get:Input @get:Optional abstract val rustupChannel: Property<String>
 
-    @get:Input abstract val rustcCommand: Property<String>
-
-    @get:Input abstract val cargoCommand: Property<String>
-
-    @get:Nested abstract val toolchain: Property<Toolchain>
+    @get:Input abstract val toolchain: Property<CargoToolchain>
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
@@ -64,6 +61,10 @@ abstract class CargoBuildTask : DefaultTask() {
     abstract val sourcesDirectory: DirectoryProperty
 
     @get:OutputDirectory abstract val destinationDirectory: DirectoryProperty
+
+    @get:Internal abstract val rustcCommand: Property<String>
+
+    @get:Internal abstract val cargoCommand: Property<String>
 
     @get:Inject protected abstract val exec: ExecOperations
 
