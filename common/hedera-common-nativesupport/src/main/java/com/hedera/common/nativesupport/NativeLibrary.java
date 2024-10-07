@@ -16,6 +16,7 @@
 
 package com.hedera.common.nativesupport;
 
+import com.hedera.common.nativesupport.internal.RunOnlyOnce;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
@@ -27,12 +28,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * <p>
@@ -85,13 +83,8 @@ public class NativeLibrary {
     private static final Map<OperatingSystem, String> DEFAULT_LIB_EXTENSIONS =
             Map.of(OperatingSystem.WINDOWS, "dll", OperatingSystem.LINUX, "so", OperatingSystem.DARWIN, "dylib");
 
-    /**
-     * A set of library names that were loaded this JVM. If the same library is loaded twice in a single JVM, it causes
-     * the JVM to crash.
-     */
-    private static final Set<String> loadedLibraries = new HashSet<>();
-    /** A lock that ensure a library is loaded only once */
-    private static final ReentrantLock loadingLock = new ReentrantLock();
+    /** Ensures that a library with a given name is loaded only once */
+    private static final RunOnlyOnce<String> runOnlyOnce = new RunOnlyOnce<>();
 
     private final String name;
     private final Map<OperatingSystem, String> libExtensions;
@@ -207,27 +200,25 @@ public class NativeLibrary {
      * @throws IllegalStateException if the module does not open the package where the resource is located
      */
     public void install(@NonNull final Class<?> c) {
+        if (!c.getModule().isOpen(packageNameOfResource(), this.getClass().getModule())) {
+            // getResourceAsStream() will not throw an exception if the package is not opened, it will just return null
+            // so we manually check if the package is opened
+            throw new IllegalStateException("The module '%s' must open the package '%s' to module '%s'"
+                    .formatted(
+                            c.getModule().getName(),
+                            packageNameOfResource(),
+                            this.getClass().getModule().getName()));
+        }
+        runOnlyOnce.runIfNeeded(
+                name,
+                () -> installUnchecked(c));
+    }
+
+    private void installUnchecked(@NonNull final Class<?> c) {
         try {
-            loadingLock.lock();
-            if (loadedLibraries.contains(name())) {
-                // The library was already loaded in this JVM
-                return;
-            }
-            if (!c.getModule().isOpen(packageNameOfResource(), this.getClass().getModule())) {
-                // getResourceAsStream() will not throw an exception if the package is not opened, it will just return null
-                // so we manually check if the package is opened
-                throw new IllegalStateException("The module '%s' must open the package '%s' to module '%s'"
-                        .formatted(
-                                c.getModule().getName(),
-                                packageNameOfResource(),
-                                this.getClass().getModule().getName()));
-            }
             install(c.getModule().getResourceAsStream(locationInJar()));
-            loadedLibraries.add(name());
         } catch (IOException e) {
             throw new UncheckedIOException("Unable to load adapter " + name(), new IOException(e));
-        } finally {
-            loadingLock.unlock();
         }
     }
 
