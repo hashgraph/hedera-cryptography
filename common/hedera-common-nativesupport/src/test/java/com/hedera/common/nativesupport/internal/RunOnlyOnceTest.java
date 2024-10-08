@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hedera.common.nativesupport.internal;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,16 +42,13 @@ class RunOnlyOnceTest {
         try (final ExecutorService executor = Executors.newFixedThreadPool(numThreads)) {
             for (int i = 0; i < 30; i++) {
                 final int key = i % 2;
-                final AtomicInteger counter = key == 0
-                        ? counter1
-                        : counter2;
-                futures.add(executor.submit(
-                        () -> runOnlyOnce.runIfNeeded(key, counter::incrementAndGet)
-                ));
+                final AtomicInteger counter = key == 0 ? counter1 : counter2;
+                futures.add(executor.submit(() -> runOnlyOnce.runIfNeeded(key, counter::incrementAndGet)));
             }
         }
         for (Future<?> future : futures) {
-            assertDoesNotThrow(() -> future.get(5, TimeUnit.SECONDS),
+            assertDoesNotThrow(
+                    () -> future.get(5, TimeUnit.SECONDS),
                     "Futures are expected to complete quickly and without exception");
         }
         assertEquals(1, counter1.get(), "Counter1 should have been incremented only once");
@@ -54,12 +67,12 @@ class RunOnlyOnceTest {
                 () -> runOnlyOnce.runIfNeeded(key, () -> {
                     throw new RuntimeException();
                 }),
-                "Exceptions should be propagated"
-        );
+                "Exceptions should be propagated");
         final AtomicBoolean ran = new AtomicBoolean(false);
-        assertDoesNotThrow(() -> runOnlyOnce.runIfNeeded(key, () -> ran.set(true)),
-                "This call should not throw an exception");
-        assertTrue(ran.get(),
+        assertDoesNotThrow(
+                () -> runOnlyOnce.runIfNeeded(key, () -> ran.set(true)), "This call should not throw an exception");
+        assertTrue(
+                ran.get(),
                 "Although the same keys is used twice, the first invocation threw an exception, so the second should run");
     }
 }

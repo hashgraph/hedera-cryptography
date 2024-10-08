@@ -209,9 +209,7 @@ public class NativeLibrary {
                             packageNameOfResource(),
                             this.getClass().getModule().getName()));
         }
-        runOnlyOnce.runIfNeeded(
-                name,
-                () -> installUnchecked(c));
+        runOnlyOnce.runIfNeeded(name, () -> installUnchecked(c));
     }
 
     /**
