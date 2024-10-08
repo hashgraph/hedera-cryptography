@@ -214,6 +214,9 @@ public class NativeLibrary {
                 () -> installUnchecked(c));
     }
 
+    /**
+     * Calls the {@link #install(InputStream)} method and catches any checked exceptions, rethrowing them as unchecked exceptions.
+     */
     private void installUnchecked(@NonNull final Class<?> c) {
         try {
             install(c.getModule().getResourceAsStream(locationInJar()));

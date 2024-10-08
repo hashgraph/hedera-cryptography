@@ -13,8 +13,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 class RunOnlyOnceTest {
+    /**
+     * Test that the runIfNeeded method only runs the provided action once for each key.
+     */
     @Test
-    void testRunIfNeeded() {
+    void concurrencyTest() {
         final int numThreads = 10;
         final RunOnlyOnce<Integer> runOnlyOnce = new RunOnlyOnce<>();
         final List<Future<?>> futures = new ArrayList<>();
@@ -27,14 +30,36 @@ class RunOnlyOnceTest {
                         ? counter1
                         : counter2;
                 futures.add(executor.submit(
-                        ()-> runOnlyOnce.runIfNeeded(key, counter::incrementAndGet)
+                        () -> runOnlyOnce.runIfNeeded(key, counter::incrementAndGet)
                 ));
             }
         }
         for (Future<?> future : futures) {
-            assertDoesNotThrow(()->future.get(5, TimeUnit.SECONDS));
+            assertDoesNotThrow(() -> future.get(5, TimeUnit.SECONDS),
+                    "Futures are expected to complete quickly and without exception");
         }
-        assertEquals(1, counter1.get());
-        assertEquals(1, counter2.get());
+        assertEquals(1, counter1.get(), "Counter1 should have been incremented only once");
+        assertEquals(1, counter2.get(), "Counter2 should have been incremented only once");
+    }
+
+    /**
+     * Tests exception handing in the runIfNeeded method.
+     */
+    @Test
+    void exceptionTest() {
+        final int key = 0;
+        final RunOnlyOnce<Integer> runOnlyOnce = new RunOnlyOnce<>();
+        assertThrows(
+                RuntimeException.class,
+                () -> runOnlyOnce.runIfNeeded(key, () -> {
+                    throw new RuntimeException();
+                }),
+                "Exceptions should be propagated"
+        );
+        final AtomicBoolean ran = new AtomicBoolean(false);
+        assertDoesNotThrow(() -> runOnlyOnce.runIfNeeded(key, () -> ran.set(true)),
+                "This call should not throw an exception");
+        assertTrue(ran.get(),
+                "Although the same keys is used twice, the first invocation threw an exception, so the second should run");
     }
 }
