@@ -16,14 +16,12 @@
 
 package com.hedera.cryptography.eckeygen;
 
-import com.google.protobuf.ByteString;
 import com.hedera.cryptography.pairings.signatures.api.PairingKeyPair;
 import com.hedera.cryptography.pairings.signatures.api.PairingPrivateKey;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Base64;
 import java.util.Objects;
 
 /**
@@ -47,11 +45,10 @@ public class KeysGenerationService {
      * @return a key pair
      */
     public PairingKeyPair generateKeyPair() throws NoSuchAlgorithmException {
-        final PairingPrivateKey pairingPrivateKey = PairingPrivateKey.create(signatureSchema,
-                SecureRandom.getInstanceStrong());
+        final PairingPrivateKey pairingPrivateKey =
+                PairingPrivateKey.create(signatureSchema, SecureRandom.getInstanceStrong());
         return new PairingKeyPair(pairingPrivateKey, pairingPrivateKey.createPublicKey());
     }
-
 
     /**
      * An exception thrown in case of generation error

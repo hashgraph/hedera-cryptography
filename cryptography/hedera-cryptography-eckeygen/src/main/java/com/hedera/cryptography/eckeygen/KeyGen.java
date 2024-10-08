@@ -50,8 +50,8 @@ public class KeyGen {
         // Empty method for static helper class
     }
 
-    private static final KeysGenerationService KEYS_SERVICE = new KeysGenerationService(
-            SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES));
+    private static final KeysGenerationService KEYS_SERVICE =
+            new KeysGenerationService(SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES));
 
     /**
      *  <p>Usage:
@@ -116,7 +116,8 @@ public class KeyGen {
     }
 
     private static void printHelp() {
-        System.out.println("""
+        System.out.println(
+                """
                 Usage:
                   --help                           Print this help message.
                   generate-keys <private-key-pem> <public-key-pem>

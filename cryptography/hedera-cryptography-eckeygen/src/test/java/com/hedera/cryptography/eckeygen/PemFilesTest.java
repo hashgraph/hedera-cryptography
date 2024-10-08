@@ -41,7 +41,9 @@ public class PemFilesTest {
             mockedFiles.when(() -> Files.readString(Path.of(path))).thenReturn(pemContent);
 
             final PairingPrivateKey privateKey = PemFiles.readPrivateKey(path);
-            assertEquals("MIIEvQIBADANBgkqhkiG9w0BAQEFAASCAmMwggJfAgEAAoGBALjYgFsPHqHWTzOt", Base64.getEncoder().encodeToString(privateKey.toBytes()));
+            assertEquals(
+                    "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCAmMwggJfAgEAAoGBALjYgFsPHqHWTzOt",
+                    Base64.getEncoder().encodeToString(privateKey.toBytes()));
         }
     }
 

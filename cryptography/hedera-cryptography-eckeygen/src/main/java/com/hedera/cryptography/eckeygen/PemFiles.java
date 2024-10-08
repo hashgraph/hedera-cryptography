@@ -80,13 +80,13 @@ public class PemFiles {
         return new FileRead(contents, pemType);
     }
 
-    public static Path writeKey(
-            @NonNull final String path, @NonNull final PairingPrivateKey privateKey) throws IOException {
+    public static Path writeKey(@NonNull final String path, @NonNull final PairingPrivateKey privateKey)
+            throws IOException {
         return writeKey(path, Base64.getEncoder().encodeToString(privateKey.toBytes()), PRIVATE_KEY);
     }
 
-    public static Path writeKey(
-            @NonNull final String path, @NonNull final PairingPublicKey publicKey) throws IOException {
+    public static Path writeKey(@NonNull final String path, @NonNull final PairingPublicKey publicKey)
+            throws IOException {
         return writeKey(path, Base64.getEncoder().encodeToString(publicKey.toBytes()), PemType.PUBLIC_KEY);
     }
 
