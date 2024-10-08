@@ -21,6 +21,7 @@ import static com.hedera.cryptography.pairings.signatures.api.ByteArrayConversio
 
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Base64;
 
 /**
  *  An elliptic curve public Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}

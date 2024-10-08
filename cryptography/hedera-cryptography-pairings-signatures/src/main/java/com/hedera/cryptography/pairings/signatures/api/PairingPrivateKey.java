@@ -22,6 +22,7 @@ import static com.hedera.cryptography.pairings.signatures.api.ByteArrayConversio
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.Random;
 

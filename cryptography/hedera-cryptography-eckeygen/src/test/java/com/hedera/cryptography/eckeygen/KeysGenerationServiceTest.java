@@ -16,19 +16,15 @@
 
 package com.hedera.cryptography.eckeygen;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import com.hedera.cryptography.eckeygen.KeysGenerationService.KeysServiceException;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
+import com.hedera.cryptography.pairings.signatures.api.PairingKeyPair;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
-import java.util.Base64;
+import java.security.NoSuchAlgorithmException;
 import org.junit.jupiter.api.Test;
 
 class KeysGenerationServiceTest {
@@ -36,51 +32,26 @@ class KeysGenerationServiceTest {
     public static final SignatureSchema SIGNATURE_SCHEMA =
             SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
 
-    private static final byte[] SK =
-            new byte[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1};
-    private static final byte[] PK = new byte[] {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6,
-        7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 4
-    };
-    private static final byte[][] PAIR = new byte[][] {SK, PK};
-
     @Test
-    public void testGenerateBase64KeyPair() {
+    public void testGenerateBase64KeyPair() throws NoSuchAlgorithmException {
         // Given
-        final KeyGenerator nativeKeyGenerator = mock(KeyGenerator.class);
-        when((nativeKeyGenerator.generateKeyPair(anyInt()))).thenReturn(PAIR);
-        KeysGenerationService ks = new KeysGenerationService(SIGNATURE_SCHEMA, nativeKeyGenerator);
+        KeysGenerationService ks = new KeysGenerationService(SIGNATURE_SCHEMA);
         // When
-        String[] keyPair = ks.generateBase64KeyPair();
+        final PairingKeyPair keyPair = ks.generateKeyPair();
 
         // then
         assertNotNull(keyPair);
-        assertNotNull(keyPair[0]);
-        assertNotNull(keyPair[1]);
+        assertNotNull(keyPair.privateKey());
+        assertNotNull(keyPair.publicKey());
     }
 
     @Test
     public void testGenerateBase64KeyPairError() {
         // Given
-        final KeyGenerator nativeKeyGenerator = mock(KeyGenerator.class);
-        when((nativeKeyGenerator.generateKeyPair(anyInt()))).thenReturn(null);
-        KeysGenerationService ks = new KeysGenerationService(SIGNATURE_SCHEMA, nativeKeyGenerator);
+        final SignatureSchema mockSchema = mock(SignatureSchema.class);
+        KeysGenerationService ks = new KeysGenerationService(mockSchema);
 
         // then
-        assertThrows(KeysServiceException.class, ks::generateBase64KeyPair);
-    }
-
-    @Test
-    public void testGenerateBase64KPublicKey() {
-        // Given
-        byte[] sk = new byte[] {SIGNATURE_SCHEMA.getIdByte(), 0, 0, 1, 2, 3};
-        final KeyGenerator nativeKeyGenerator = mock(KeyGenerator.class);
-        when((nativeKeyGenerator.generatePublicKey(anyInt(), any()))).thenReturn(new byte[] {4, 5, 6});
-        KeysGenerationService ks = new KeysGenerationService(SIGNATURE_SCHEMA, nativeKeyGenerator);
-        // When
-        String pk = ks.generateBase64KPublicKey(Base64.getEncoder().encodeToString(sk));
-
-        // then
-        assertEquals(Base64.getEncoder().encodeToString(new byte[] {SIGNATURE_SCHEMA.getIdByte(), 0, 0, 4, 5, 6}), pk);
+        assertThrows(NullPointerException.class, ks::generateKeyPair);
     }
 }
