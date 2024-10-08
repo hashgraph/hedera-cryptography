@@ -27,31 +27,15 @@ import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
 import java.security.NoSuchAlgorithmException;
 import org.junit.jupiter.api.Test;
 
-class KeysGenerationServiceTest {
-
-    public static final SignatureSchema SIGNATURE_SCHEMA =
-            SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
-
+class KeyGenTest {
     @Test
-    public void testGenerateBase64KeyPair() throws NoSuchAlgorithmException {
-        // Given
-        KeysGenerationService ks = new KeysGenerationService(SIGNATURE_SCHEMA);
+    public void testGenerateKeyPair() throws NoSuchAlgorithmException {
         // When
-        final PairingKeyPair keyPair = ks.generateKeyPair();
+        final PairingKeyPair keyPair = KeyGen.generateKeyPair();
 
         // then
         assertNotNull(keyPair);
         assertNotNull(keyPair.privateKey());
         assertNotNull(keyPair.publicKey());
-    }
-
-    @Test
-    public void testGenerateBase64KeyPairError() {
-        // Given
-        final SignatureSchema mockSchema = mock(SignatureSchema.class);
-        KeysGenerationService ks = new KeysGenerationService(mockSchema);
-
-        // then
-        assertThrows(NullPointerException.class, ks::generateKeyPair);
     }
 }
