@@ -19,8 +19,15 @@ package com.hedera.cryptography.eckeygen.pem;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 
-public record FileRead(@NonNull String contents, @NonNull PemType pemType) {
-    public FileRead {
+/**
+ * A parsed PEM file
+ *
+ * @param contents the contents of the file
+ * @param pemType  the type of the file
+ */
+public record ParsedPemFile(@NonNull String contents, @NonNull PemType pemType) {
+    /** Creates a new instance of this class */
+    public ParsedPemFile {
         Objects.requireNonNull(contents, "contents must not be null");
         Objects.requireNonNull(pemType, "pemType must not be null");
     }

@@ -19,7 +19,7 @@ package com.hedera.cryptography.eckeygen;
 import static com.hedera.cryptography.eckeygen.pem.PemType.PRIVATE_KEY;
 import static com.hedera.cryptography.eckeygen.pem.PemType.PUBLIC_KEY;
 
-import com.hedera.cryptography.eckeygen.pem.FileRead;
+import com.hedera.cryptography.eckeygen.pem.ParsedPemFile;
 import com.hedera.cryptography.eckeygen.pem.PemType;
 import com.hedera.cryptography.pairings.signatures.api.PairingPrivateKey;
 import com.hedera.cryptography.pairings.signatures.api.PairingPublicKey;
@@ -43,9 +43,16 @@ public class PemFiles {
         // Empty constructor for helper static classes
     }
 
+    /**
+     * Reads a private key from a PEM file.
+     *
+     * @param path The location of the file in the fileSystem
+     * @return the private key contained in the file
+     * @throws IOException In case of file reading error
+     */
     @NonNull
     public static PairingPrivateKey readPrivateKey(@NonNull final String path) throws IOException {
-        final FileRead fileRead = pemRead(path);
+        final ParsedPemFile fileRead = pemRead(Objects.requireNonNull(path));
         if (fileRead.pemType() != PRIVATE_KEY) {
             throw new IllegalArgumentException("File does not contain a private key");
         }
@@ -60,7 +67,7 @@ public class PemFiles {
      * @throws IOException In case of file reading error
      */
     @NonNull
-    private static FileRead pemRead(@NonNull final String path) throws IOException {
+    private static ParsedPemFile pemRead(@NonNull final String path) throws IOException {
         final String pemContent = Files.readString(Path.of(Objects.requireNonNull(path, "contents must not be null")));
         final PemType pemType;
         if (pemContent.contains(PRIVATE_KEY.getHeader())) {
@@ -77,14 +84,30 @@ public class PemFiles {
                 .replace(pemType.getFooter(), "")
                 .trim()
                 .replaceAll("\\s", "");
-        return new FileRead(contents, pemType);
+        return new ParsedPemFile(contents, pemType);
     }
 
+    /**
+     * Writes a private key to a PEM file.
+     *
+     * @param path       The location of the file to write to
+     * @param privateKey The private key to write
+     * @return the path of the file written
+     * @throws IOException In case of file writing error
+     */
     public static Path writeKey(@NonNull final String path, @NonNull final PairingPrivateKey privateKey)
             throws IOException {
         return writeKey(path, Base64.getEncoder().encodeToString(privateKey.toBytes()), PRIVATE_KEY);
     }
 
+    /**
+     * Writes a public key to a PEM file.
+     *
+     * @param path      The location of the file to write to
+     * @param publicKey The public key to write
+     * @return the path of the file written
+     * @throws IOException In case of file writing error
+     */
     public static Path writeKey(@NonNull final String path, @NonNull final PairingPublicKey publicKey)
             throws IOException {
         return writeKey(path, Base64.getEncoder().encodeToString(publicKey.toBytes()), PemType.PUBLIC_KEY);

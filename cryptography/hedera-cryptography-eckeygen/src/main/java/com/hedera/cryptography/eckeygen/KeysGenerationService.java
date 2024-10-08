@@ -43,6 +43,7 @@ public class KeysGenerationService {
      * Generates a Key Pair (private and public keys)
      *
      * @return a key pair
+     * @throws NoSuchAlgorithmException if no algorithm found to get a {@link SecureRandom} instance
      */
     public PairingKeyPair generateKeyPair() throws NoSuchAlgorithmException {
         final PairingPrivateKey pairingPrivateKey =
