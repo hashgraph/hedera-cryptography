@@ -18,7 +18,6 @@ package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import java.security.SecureRandom;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
