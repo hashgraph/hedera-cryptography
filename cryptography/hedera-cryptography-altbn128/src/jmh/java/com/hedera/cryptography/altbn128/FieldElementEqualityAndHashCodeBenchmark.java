@@ -36,7 +36,6 @@ import org.openjdk.jmh.infra.Blackhole;
 
 @State(Scope.Benchmark)
 public class FieldElementEqualityAndHashCodeBenchmark {
-    private List<Long> values;
     FieldElement a;
     FieldElement b;
 
