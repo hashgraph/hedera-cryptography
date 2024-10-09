@@ -16,6 +16,7 @@
 
 package com.hedera.common.nativesupport;
 
+import com.hedera.common.nativesupport.internal.RunOnlyOnce;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +42,6 @@ import java.util.Objects;
  * The class provides mechanisms to extract the library from the JAR, store it in a temporary directory on the file system,
  * set appropriate file permissions, and finally load the library into the application.
  * <p>
- *     Warning: It is responsibility of the caller to assure the {@link NativeLibrary#install(InputStream)} is only called once per desired library.
  * @implNote Libraries are expected to be organized within the JAR file at {@code /software/<os>/<arch>/name}.
  * This path structure is used to construct the location of the library based on the current operating
  * system and architecture, ensuring only the correct version of the library is loaded according to the executing environment.
@@ -82,6 +82,9 @@ public class NativeLibrary {
      */
     private static final Map<OperatingSystem, String> DEFAULT_LIB_EXTENSIONS =
             Map.of(OperatingSystem.WINDOWS, "dll", OperatingSystem.LINUX, "so", OperatingSystem.DARWIN, "dylib");
+
+    /** Ensures that a library with a given name is loaded only once */
+    private static final RunOnlyOnce<String> runOnlyOnce = new RunOnlyOnce<>();
 
     private final String name;
     private final Map<OperatingSystem, String> libExtensions;
@@ -192,7 +195,6 @@ public class NativeLibrary {
     /**
      * Unpackages the native library to a temporary dir, sets appropriate file permissions, and loads the library into
      * the JVM.
-     * <p>Warning: It is responsibility of the caller to assure this method is only called once per desired library.
      *
      * @param c the class whose module contains the native library
      * @throws IllegalStateException if the module does not open the package where the resource is located
@@ -207,6 +209,13 @@ public class NativeLibrary {
                             packageNameOfResource(),
                             this.getClass().getModule().getName()));
         }
+        runOnlyOnce.runIfNeeded(name, () -> installUnchecked(c));
+    }
+
+    /**
+     * Calls the {@link #install(InputStream)} method and catches any checked exceptions, rethrowing them as unchecked exceptions.
+     */
+    private void installUnchecked(@NonNull final Class<?> c) {
         try {
             install(c.getModule().getResourceAsStream(locationInJar()));
         } catch (IOException e) {
