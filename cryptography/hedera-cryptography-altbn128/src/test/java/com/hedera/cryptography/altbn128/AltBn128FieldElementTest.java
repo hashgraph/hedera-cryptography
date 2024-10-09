@@ -62,9 +62,9 @@ class AltBn128FieldElementTest {
         assertNotEquals(value, value3);
         assertFalse(value.equals(value3));
         assertFalse(value3.equals(value));
-        assertNotEquals(value, value4);
-        assertFalse(value.equals(value4));
-        assertFalse(value4.equals(value));
+        assertEquals(value, value4);
+        assertTrue(value.equals(value4));
+        assertTrue(value4.equals(value));
         assertNotEquals(value, mock(FieldElement.class));
         assertNotEquals(value, value5);
         assertFalse(value.equals(value5));

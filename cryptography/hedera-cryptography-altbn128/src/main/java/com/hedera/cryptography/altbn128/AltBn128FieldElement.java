@@ -158,7 +158,6 @@ public class AltBn128FieldElement implements FieldElement {
     @Override
     public boolean equals(final Object obj) {
         if (!(obj instanceof AltBn128FieldElement)) return false;
-        if (this.field != ((AltBn128FieldElement) obj).field) return false;
         if (this.representation.length != ((AltBn128FieldElement) obj).representation.length) return false;
 
         return Arrays.equals(this.representation, ((AltBn128FieldElement) obj).representation);
@@ -166,6 +165,6 @@ public class AltBn128FieldElement implements FieldElement {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.getClass(), this.field, Arrays.hashCode(this.representation));
+        return Objects.hash(this.getClass(), Arrays.hashCode(this.representation));
     }
 }

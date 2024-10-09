@@ -122,14 +122,14 @@ public class AltBn128GroupElement implements GroupElement {
         if (!(obj instanceof AltBn128GroupElement)) {
             return false;
         }
-        if (this.group != ((AltBn128GroupElement) obj).group) return false;
+        if (this.group.getGroup() != ((AltBn128GroupElement) obj).group.getGroup()) return false;
 
         return Arrays.equals(this.representation, ((AltBn128GroupElement) obj).representation);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.getClass(), this.group, Arrays.hashCode(this.representation));
+        return Objects.hash(this.getClass(), this.group.getGroup(), Arrays.hashCode(this.representation));
     }
 
     /**
