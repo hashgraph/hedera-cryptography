@@ -57,7 +57,8 @@ public final class CliArguments {
     }
 
     /**
-     * @return the command to execute
+     * Returns the command to execute
+     * @return the command
      */
     @NonNull
     public CliCommand command() {
@@ -65,7 +66,8 @@ public final class CliArguments {
     }
 
     /**
-     * @return the path to the private key file
+     * Returns the path to the private key file
+     * @return the path
      * @throws NullPointerException if the command does not require a private key file
      */
     @NonNull
@@ -74,7 +76,8 @@ public final class CliArguments {
     }
 
     /**
-     * @return the path to the public key file
+     * Returns the path to the public key file
+     * @return the path
      * @throws NullPointerException if the command does not require a public key file
      */
     @NonNull
