@@ -165,6 +165,6 @@ public class AltBn128FieldElement implements FieldElement {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.getClass(), Arrays.hashCode(this.representation));
+        return Arrays.hashCode(this.representation);
     }
 }

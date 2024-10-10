@@ -86,7 +86,7 @@ class AltBn128FieldElementTest {
         set.add(new AltBn128FieldElement(new byte[33], mock));
         assertEquals(2, set.size());
         set.add(new AltBn128FieldElement(new byte[32], mock(AltBn128Field.class)));
-        assertEquals(3, set.size());
+        assertEquals(2, set.size());
     }
 
     @Test

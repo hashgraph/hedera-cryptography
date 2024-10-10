@@ -129,7 +129,7 @@ public class AltBn128GroupElement implements GroupElement {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.getClass(), this.group.getGroup(), Arrays.hashCode(this.representation));
+        return Arrays.hashCode(this.representation);
     }
 
     /**
