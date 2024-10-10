@@ -37,7 +37,8 @@ public class PemFilesTest {
     public void testPemWriteRead() throws IOException {
 
         final Path keyPath = tempDir.resolve("test.pem");
-        final PairingPrivateKey originalKey = PairingPrivateKey.fromBytes(Base64.getDecoder().decode(BASE_64_KEY));
+        final PairingPrivateKey originalKey =
+                PairingPrivateKey.fromBytes(Base64.getDecoder().decode(BASE_64_KEY));
         String expectedContent = "-----BEGIN PRIVATE KEY-----\n" + BASE_64_KEY + "\n" + "-----END PRIVATE KEY-----";
 
         PemFiles.writeKey(keyPath, originalKey);
@@ -45,9 +46,7 @@ public class PemFilesTest {
         final String fileContents = Files.readString(keyPath);
         assertEquals(expectedContent, fileContents, "File contents should match expected");
         final PairingPrivateKey readKey = PemFiles.readPrivateKey(keyPath);
-        assertEquals(
-                BASE_64_KEY,
-                Base64.getEncoder().encodeToString(readKey.toBytes()));
+        assertEquals(BASE_64_KEY, Base64.getEncoder().encodeToString(readKey.toBytes()));
     }
 
     @Test
@@ -58,15 +57,17 @@ public class PemFilesTest {
 
     @Test
     public void testPemWriteWithNullPath() {
-        Exception exception = assertThrows(NullPointerException.class,
-                () -> PemFiles.writeKey(null, PairingPrivateKey.fromBytes(Base64.getDecoder().decode(BASE_64_KEY))));
+        Exception exception = assertThrows(
+                NullPointerException.class,
+                () -> PemFiles.writeKey(
+                        null, PairingPrivateKey.fromBytes(Base64.getDecoder().decode(BASE_64_KEY))));
         assertEquals("path must not be null", exception.getMessage());
     }
 
     @Test
     public void testPemWriteWithNullBase64Key() {
-        Exception exception = assertThrows(NullPointerException.class,
-                () -> PemFiles.writeKey(Path.of("test.pem"), (PairingPrivateKey) null));
+        Exception exception = assertThrows(
+                NullPointerException.class, () -> PemFiles.writeKey(Path.of("test.pem"), (PairingPrivateKey) null));
         assertEquals("key must not be null", exception.getMessage());
     }
 }

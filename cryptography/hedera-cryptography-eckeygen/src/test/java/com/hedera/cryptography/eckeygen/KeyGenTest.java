@@ -17,13 +17,8 @@
 package com.hedera.cryptography.eckeygen;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
 
-import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 import com.hedera.cryptography.pairings.signatures.api.PairingKeyPair;
-import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import org.junit.jupiter.api.Test;
@@ -34,7 +29,8 @@ class KeyGenTest {
         // When
         final PairingKeyPair keyPair = KeyGen.generateKeyPair();
 
-        System.out.println(Base64.getEncoder().encodeToString(keyPair.privateKey().toBytes()));
+        System.out.println(
+                Base64.getEncoder().encodeToString(keyPair.privateKey().toBytes()));
 
         // then
         assertNotNull(keyPair);

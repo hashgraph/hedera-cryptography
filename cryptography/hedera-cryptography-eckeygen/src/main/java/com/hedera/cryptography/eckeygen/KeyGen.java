@@ -24,7 +24,6 @@ import com.hedera.cryptography.pairings.signatures.api.PairingPublicKey;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
@@ -45,8 +44,8 @@ import java.security.SecureRandom;
  * <pre>{@code generate-public-key path/to/privateKey.pem path/to/publicKey.pem}</pre>
  */
 public class KeyGen {
-    private static final SignatureSchema SIGNATURE_SCHEMA = SignatureSchema.create(Curve.ALT_BN128,
-            GroupAssignment.SHORT_SIGNATURES);
+    private static final SignatureSchema SIGNATURE_SCHEMA =
+            SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
 
     /**
      * Empty method for static helper class
@@ -78,17 +77,20 @@ public class KeyGen {
             case PRINT_HELP -> printHelpAndExit();
             case GENERATE_KEYS -> {
                 if (Files.exists(cliArguments.privateKeyPath())) {
-                    error("The private key file already exists. Won't overwrite. Please delete %s %n",
+                    error(
+                            "The private key file already exists. Won't overwrite. Please delete %s %n",
                             cliArguments.privateKeyPath());
                 }
                 if (Files.exists(cliArguments.publicKeyPath())) {
-                    error("The public key file already exists. Won't overwrite. Please delete %s %n",
+                    error(
+                            "The public key file already exists. Won't overwrite. Please delete %s %n",
                             cliArguments.publicKeyPath());
                 }
                 final PairingKeyPair keyPair = generateKeyPair();
                 PemFiles.writeKey(cliArguments.privateKeyPath(), keyPair.privateKey());
                 PemFiles.writeKey(cliArguments.publicKeyPath(), keyPair.publicKey());
-                System.out.printf("Saved private and public key files into: %s and %s %n",
+                System.out.printf(
+                        "Saved private and public key files into: %s and %s %n",
                         cliArguments.privateKeyPath(), cliArguments.publicKeyPath());
             }
             case GENERATE_PUBLIC_KEY -> {
@@ -96,7 +98,8 @@ public class KeyGen {
                     error("The private key file does not exist. %s %n", cliArguments.privateKeyPath());
                 }
                 if (Files.exists(cliArguments.publicKeyPath())) {
-                    error("The public key file already exists. Won't overwrite. Please delete %s %n",
+                    error(
+                            "The public key file already exists. Won't overwrite. Please delete %s %n",
                             cliArguments.publicKeyPath());
                 }
                 final PairingPrivateKey privateKey = PemFiles.readPrivateKey(cliArguments.privateKeyPath());
@@ -116,7 +119,6 @@ public class KeyGen {
     private static void error(@NonNull final String message, @NonNull final Object... messageArgs) {
         System.err.printf(message, messageArgs);
         System.exit(1);
-
     }
 
     /**

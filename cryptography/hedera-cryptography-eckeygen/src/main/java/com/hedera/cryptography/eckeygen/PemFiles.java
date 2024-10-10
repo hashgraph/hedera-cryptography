@@ -96,7 +96,12 @@ public class PemFiles {
      */
     public static void writeKey(@NonNull final Path path, @NonNull final PairingPrivateKey privateKey)
             throws IOException {
-        writeKey(path, Base64.getEncoder().encodeToString(Objects.requireNonNull(privateKey, "key must not be null").toBytes()), PRIVATE_KEY);
+        writeKey(
+                path,
+                Base64.getEncoder()
+                        .encodeToString(Objects.requireNonNull(privateKey, "key must not be null")
+                                .toBytes()),
+                PRIVATE_KEY);
     }
 
     /**
@@ -108,7 +113,12 @@ public class PemFiles {
      */
     public static void writeKey(@NonNull final Path path, @NonNull final PairingPublicKey publicKey)
             throws IOException {
-        writeKey(path, Base64.getEncoder().encodeToString(Objects.requireNonNull(publicKey, "key must not be null").toBytes()), PemType.PUBLIC_KEY);
+        writeKey(
+                path,
+                Base64.getEncoder()
+                        .encodeToString(Objects.requireNonNull(publicKey, "key must not be null")
+                                .toBytes()),
+                PemType.PUBLIC_KEY);
     }
 
     /**
