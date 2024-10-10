@@ -46,7 +46,7 @@ public final class CliArguments {
     @NonNull
     public static CliArguments parse(@NonNull final String[] args) {
         if (args.length == 0 || args[0].equals("--help") || args.length != 3) {
-            new CliArguments(CliCommand.PRINT_HELP, null, null);
+            return new CliArguments(CliCommand.PRINT_HELP, null, null);
         }
         return switch (args[0]) {
             case "generate-keys" -> new CliArguments(CliCommand.GENERATE_KEYS, Path.of(args[1]), Path.of(args[2]));
