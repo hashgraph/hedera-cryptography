@@ -16,8 +16,9 @@
 
 package com.hedera.cryptography.eckeygen;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hedera.cryptography.pairings.signatures.api.PairingPrivateKey;
 import java.io.IOException;
