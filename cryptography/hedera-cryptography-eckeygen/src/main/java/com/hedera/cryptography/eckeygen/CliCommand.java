@@ -16,8 +16,20 @@
 
 package com.hedera.cryptography.eckeygen;
 
+/**
+ * The KeyGen commands
+ */
 public enum CliCommand {
+    /**
+     * Print the help message
+     */
     PRINT_HELP,
+    /**
+     * Generate a key pair
+     */
     GENERATE_KEYS,
+    /**
+     * Generate a public key from a private key
+     */
     GENERATE_PUBLIC_KEY
 }

@@ -129,7 +129,6 @@ public class PemFiles {
      * @param pemType eiter "PUBLIC KEY" or "PRIVATE KEY" string
      * @throws IOException In case of file reading error
      */
-    @NonNull
     private static void writeKey(
             @NonNull final Path path, @NonNull final String content, @NonNull final PemType pemType)
             throws IOException {

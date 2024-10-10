@@ -21,6 +21,9 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.Objects;
 
+/**
+ * Container for the command line arguments.
+ */
 public final class CliArguments {
     private final CliCommand command;
     private final Path privateKeyPath;
@@ -35,6 +38,12 @@ public final class CliArguments {
         this.publicKeyPath = publicKeyPath;
     }
 
+    /**
+     * Parse the command line arguments
+     * @param args the command line arguments passed to main()
+     * @return the parsed arguments
+     */
+    @NonNull
     public static CliArguments parse(@NonNull final String[] args) {
         if (args.length == 0 || args[0].equals("--help") || args.length != 3) {
             new CliArguments(CliCommand.PRINT_HELP, null, null);
@@ -47,16 +56,27 @@ public final class CliArguments {
         };
     }
 
+    /**
+     * @return the command to execute
+     */
     @NonNull
     public CliCommand command() {
         return command;
     }
 
+    /**
+     * @return the path to the private key file
+     * @throws NullPointerException if the command does not require a private key file
+     */
     @NonNull
     public Path privateKeyPath() {
         return Objects.requireNonNull(privateKeyPath);
     }
 
+    /**
+     * @return the path to the public key file
+     * @throws NullPointerException if the command does not require a public key file
+     */
     @NonNull
     public Path publicKeyPath() {
         return Objects.requireNonNull(publicKeyPath);

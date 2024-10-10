@@ -143,6 +143,7 @@ public class KeyGen {
      * @return a key pair
      * @throws NoSuchAlgorithmException if no algorithm found to get a {@link SecureRandom} instance
      */
+    @NonNull
     public static PairingKeyPair generateKeyPair() throws NoSuchAlgorithmException {
         final PairingPrivateKey pairingPrivateKey =
                 PairingPrivateKey.create(SIGNATURE_SCHEMA, SecureRandom.getInstanceStrong());

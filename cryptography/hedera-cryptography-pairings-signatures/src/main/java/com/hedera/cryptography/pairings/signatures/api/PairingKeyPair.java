@@ -19,9 +19,18 @@ package com.hedera.cryptography.pairings.signatures.api;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 
+/**
+ * Represents a pairing key pair.
+ *
+ * @param privateKey The private key
+ * @param publicKey  The public key
+ */
 public record PairingKeyPair(@NonNull PairingPrivateKey privateKey, @NonNull PairingPublicKey publicKey) {
     public PairingKeyPair {
         Objects.requireNonNull(privateKey, "privateKey cannot be null");
         Objects.requireNonNull(publicKey, "publicKey cannot be null");
+        if (privateKey.signatureSchema() != publicKey.signatureSchema()) {
+            throw new IllegalArgumentException("The private key and public key must have the same signature schema");
+        }
     }
 }
