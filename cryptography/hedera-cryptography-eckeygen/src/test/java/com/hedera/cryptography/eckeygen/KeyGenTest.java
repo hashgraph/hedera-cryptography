@@ -25,6 +25,7 @@ import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 import com.hedera.cryptography.pairings.signatures.api.PairingKeyPair;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import org.junit.jupiter.api.Test;
 
 class KeyGenTest {
@@ -32,6 +33,8 @@ class KeyGenTest {
     public void testGenerateKeyPair() throws NoSuchAlgorithmException {
         // When
         final PairingKeyPair keyPair = KeyGen.generateKeyPair();
+
+        System.out.println(Base64.getEncoder().encodeToString(keyPair.privateKey().toBytes()));
 
         // then
         assertNotNull(keyPair);

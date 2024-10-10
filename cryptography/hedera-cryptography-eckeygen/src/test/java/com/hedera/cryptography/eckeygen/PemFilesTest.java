@@ -23,80 +23,50 @@ import com.hedera.cryptography.pairings.signatures.api.PairingPrivateKey;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Base64;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.io.TempDir;
 
 public class PemFilesTest {
+    private static final String BASE_64_KEY = "AWUoGGXtbZQ8SSfe1LxzvTSmVCuom+DxxXnYx3riBRYl";
+
+    @TempDir
+    Path tempDir;
 
     @Test
-    public void testReadPrivateKey() throws IOException {
-        String path = "test.pem";
-        String pemContent = "-----BEGIN PRIVATE KEY-----\n"
-                + "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCAmMwggJfAgEAAoGBALjYgFsPHqHWTzOt\n" + "-----END PRIVATE KEY-----";
+    public void testPemWriteRead() throws IOException {
 
-        try (MockedStatic<Files> mockedFiles = Mockito.mockStatic(Files.class)) {
-            mockedFiles.when(() -> Files.readString(Path.of(path))).thenReturn(pemContent);
+        final Path keyPath = tempDir.resolve("test.pem");
+        final PairingPrivateKey originalKey = PairingPrivateKey.fromBytes(Base64.getDecoder().decode(BASE_64_KEY));
+        String expectedContent = "-----BEGIN PRIVATE KEY-----\n" + BASE_64_KEY + "\n" + "-----END PRIVATE KEY-----";
 
-            final PairingPrivateKey privateKey = PemFiles.readPrivateKey(path);
-            assertEquals(
-                    "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCAmMwggJfAgEAAoGBALjYgFsPHqHWTzOt",
-                    Base64.getEncoder().encodeToString(privateKey.toBytes()));
-        }
-    }
-
-    @Test
-    public void testPemWrite() throws IOException {
-        String path = "test.pem";
-        final PairingPrivateKey privateKey = PairingPrivateKey.fromBytes(
-                Base64.getDecoder().decode("MIIEvQIBADANBgkqhkiG9w0BAQEFAASCAmMwggJfAgEAAoGBALjYgFsPHqHWTzOt"));
-        String expectedContent = "-----BEGIN PRIVATE KEY-----\n"
-                + "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCAmMwggJfAgEAAoGBALjYgFsPHqHWTzOt\n" + "-----END PRIVATE KEY-----";
-
-        try (MockedStatic<Files> mockedFiles = Mockito.mockStatic(Files.class)) {
-            Path expectedPath = Path.of(path);
-            mockedFiles
-                    .when(() -> Files.write(
-                            eq(expectedPath),
-                            any(byte[].class),
-                            eq(StandardOpenOption.CREATE),
-                            eq(StandardOpenOption.TRUNCATE_EXISTING)))
-                    .thenReturn(expectedPath);
-
-            Path resultPath = PemFiles.writeKey(path, privateKey);
-            assertEquals(expectedPath, resultPath);
-
-            mockedFiles.verify(() -> Files.write(
-                    eq(expectedPath),
-                    eq(expectedContent.getBytes()),
-                    eq(StandardOpenOption.CREATE),
-                    eq(StandardOpenOption.TRUNCATE_EXISTING)));
-        }
+        PemFiles.writeKey(keyPath, originalKey);
+        assertTrue(keyPath.toFile().exists(), "Key should have been written to file");
+        final String fileContents = Files.readString(keyPath);
+        assertEquals(expectedContent, fileContents, "File contents should match expected");
+        final PairingPrivateKey readKey = PemFiles.readPrivateKey(keyPath);
+        assertEquals(
+                BASE_64_KEY,
+                Base64.getEncoder().encodeToString(readKey.toBytes()));
     }
 
     @Test
     public void testPemReadWithNullPath() {
-        Exception exception = assertThrows(NullPointerException.class, () -> {
-            PemFiles.readPrivateKey(null);
-        });
+        Exception exception = assertThrows(NullPointerException.class, () -> PemFiles.readPrivateKey(null));
         assertEquals("path must not be null", exception.getMessage());
     }
 
     @Test
     public void testPemWriteWithNullPath() {
-        Exception exception = assertThrows(NullPointerException.class, () -> {
-            PemFiles.writeKey(null, mock(PairingPrivateKey.class));
-        });
+        Exception exception = assertThrows(NullPointerException.class,
+                () -> PemFiles.writeKey(null, PairingPrivateKey.fromBytes(Base64.getDecoder().decode(BASE_64_KEY))));
         assertEquals("path must not be null", exception.getMessage());
     }
 
     @Test
     public void testPemWriteWithNullBase64Key() {
-        Exception exception = assertThrows(NullPointerException.class, () -> {
-            PemFiles.writeKey("test.pem", (PairingPrivateKey) null);
-        });
-        assertEquals("content must not be null", exception.getMessage());
+        Exception exception = assertThrows(NullPointerException.class,
+                () -> PemFiles.writeKey(Path.of("test.pem"), (PairingPrivateKey) null));
+        assertEquals("key must not be null", exception.getMessage());
     }
 }

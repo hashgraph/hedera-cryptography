@@ -73,45 +73,37 @@ public class KeyGen {
      * @throws Exception if something happened while generating the keys
      */
     public static void main(String[] args) throws Exception {
-        if (args.length == 0) {
-            printHelpAndExit();
-        }
-
-        final String commandName = args[0];
-        if (commandName.equals("--help") || args.length != 3) {
-            printHelpAndExit();
-        }
-
-        final String privateKeyLocation = args[1];
-        final Path privateKeyPath = Path.of(privateKeyLocation);
-        final String publicKeyLocation = args[2];
-        final Path publicKeyPath = Path.of(publicKeyLocation);
-        if (commandName.equals("generate-keys")) {
-
-            if (Files.exists(privateKeyPath)) {
-                error("The private key file already exists. Won't overwrite. Please delete %s %n",
-                        privateKeyLocation);
+        final CliArguments cliArguments = CliArguments.parse(args);
+        switch (cliArguments.command()) {
+            case PRINT_HELP -> printHelpAndExit();
+            case GENERATE_KEYS -> {
+                if (Files.exists(cliArguments.privateKeyPath())) {
+                    error("The private key file already exists. Won't overwrite. Please delete %s %n",
+                            cliArguments.privateKeyPath());
+                }
+                if (Files.exists(cliArguments.publicKeyPath())) {
+                    error("The public key file already exists. Won't overwrite. Please delete %s %n",
+                            cliArguments.publicKeyPath());
+                }
+                final PairingKeyPair keyPair = generateKeyPair();
+                PemFiles.writeKey(cliArguments.privateKeyPath(), keyPair.privateKey());
+                PemFiles.writeKey(cliArguments.publicKeyPath(), keyPair.publicKey());
+                System.out.printf("Saved private and public key files into: %s and %s %n",
+                        cliArguments.privateKeyPath(), cliArguments.publicKeyPath());
             }
-            if (Files.exists(publicKeyPath)) {
-                error("The public key file already exists. Won't overwrite. Please delete %s %n", publicKeyLocation);
+            case GENERATE_PUBLIC_KEY -> {
+                if (!Files.exists(cliArguments.privateKeyPath())) {
+                    error("The private key file does not exist. %s %n", cliArguments.privateKeyPath());
+                }
+                if (Files.exists(cliArguments.publicKeyPath())) {
+                    error("The public key file already exists. Won't overwrite. Please delete %s %n",
+                            cliArguments.publicKeyPath());
+                }
+                final PairingPrivateKey privateKey = PemFiles.readPrivateKey(cliArguments.privateKeyPath());
+                final PairingPublicKey publicKey = privateKey.createPublicKey();
+                PemFiles.writeKey(cliArguments.publicKeyPath(), publicKey);
+                System.out.printf("Saved public key file into: %s %n", cliArguments.publicKeyPath());
             }
-            final PairingKeyPair keyPair = generateKeyPair();
-            Path skPath = PemFiles.writeKey(privateKeyLocation, keyPair.privateKey());
-            Path pkPath = PemFiles.writeKey(publicKeyLocation, keyPair.publicKey());
-            System.out.printf("Saved private and public key files into: %s and %s %n", skPath, pkPath);
-        } else if (commandName.equals("generate-public-key")) {
-            if (!Files.exists(privateKeyPath)) {
-                error("The private key file does not exists. %s %n", privateKeyLocation);
-            }
-            if (Files.exists(publicKeyPath)) {
-                error("The public key file already exists. Won't overwrite. Please delete %s %n", publicKeyLocation);
-            }
-            final PairingPrivateKey privateKey = PemFiles.readPrivateKey(privateKeyLocation);
-            final PairingPublicKey publicKey = privateKey.createPublicKey();
-            Path pkPath = PemFiles.writeKey(publicKeyLocation, publicKey);
-            System.out.printf("Saved public key file into: %s %n", pkPath);
-        } else {
-            System.out.println("Invalid command or arguments. Use --help for usage information.");
         }
     }
 

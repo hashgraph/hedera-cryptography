@@ -51,8 +51,8 @@ public class PemFiles {
      * @throws IOException In case of file reading error
      */
     @NonNull
-    public static PairingPrivateKey readPrivateKey(@NonNull final String path) throws IOException {
-        final ParsedPemFile fileRead = pemRead(Objects.requireNonNull(path));
+    public static PairingPrivateKey readPrivateKey(@NonNull final Path path) throws IOException {
+        final ParsedPemFile fileRead = pemRead(Objects.requireNonNull(path, "path must not be null"));
         if (fileRead.pemType() != PRIVATE_KEY) {
             throw new IllegalArgumentException("File does not contain a private key");
         }
@@ -67,8 +67,8 @@ public class PemFiles {
      * @throws IOException In case of file reading error
      */
     @NonNull
-    private static ParsedPemFile pemRead(@NonNull final String path) throws IOException {
-        final String pemContent = Files.readString(Path.of(Objects.requireNonNull(path, "contents must not be null")));
+    private static ParsedPemFile pemRead(@NonNull final Path path) throws IOException {
+        final String pemContent = Files.readString(Objects.requireNonNull(path, "contents must not be null"));
         final PemType pemType;
         if (pemContent.contains(PRIVATE_KEY.getHeader())) {
             pemType = PRIVATE_KEY;
@@ -92,12 +92,11 @@ public class PemFiles {
      *
      * @param path       The location of the file to write to
      * @param privateKey The private key to write
-     * @return the path of the file written
      * @throws IOException In case of file writing error
      */
-    public static Path writeKey(@NonNull final String path, @NonNull final PairingPrivateKey privateKey)
+    public static void writeKey(@NonNull final Path path, @NonNull final PairingPrivateKey privateKey)
             throws IOException {
-        return writeKey(path, Base64.getEncoder().encodeToString(privateKey.toBytes()), PRIVATE_KEY);
+        writeKey(path, Base64.getEncoder().encodeToString(Objects.requireNonNull(privateKey, "key must not be null").toBytes()), PRIVATE_KEY);
     }
 
     /**
@@ -105,12 +104,11 @@ public class PemFiles {
      *
      * @param path      The location of the file to write to
      * @param publicKey The public key to write
-     * @return the path of the file written
      * @throws IOException In case of file writing error
      */
-    public static Path writeKey(@NonNull final String path, @NonNull final PairingPublicKey publicKey)
+    public static void writeKey(@NonNull final Path path, @NonNull final PairingPublicKey publicKey)
             throws IOException {
-        return writeKey(path, Base64.getEncoder().encodeToString(publicKey.toBytes()), PemType.PUBLIC_KEY);
+        writeKey(path, Base64.getEncoder().encodeToString(Objects.requireNonNull(publicKey, "key must not be null").toBytes()), PemType.PUBLIC_KEY);
     }
 
     /**
@@ -119,12 +117,11 @@ public class PemFiles {
      * @param path    The location of the file in the fileSystem
      * @param content The content to write to the file
      * @param pemType eiter "PUBLIC KEY" or "PRIVATE KEY" string
-     * @return the contents of where the file was written
      * @throws IOException In case of file reading error
      */
     @NonNull
-    private static Path writeKey(
-            @NonNull final String path, @NonNull final String content, @NonNull final PemType pemType)
+    private static void writeKey(
+            @NonNull final Path path, @NonNull final String content, @NonNull final PemType pemType)
             throws IOException {
         Objects.requireNonNull(pemType, "pemType must not be null");
         final String pemContent = pemType.getHeader()
@@ -132,11 +129,10 @@ public class PemFiles {
                 + pemType.getFooter();
 
         Files.write(
-                Path.of(Objects.requireNonNull(path, "contents must not be null")),
+                Objects.requireNonNull(path, "path must not be null"),
                 pemContent.getBytes(),
                 StandardOpenOption.CREATE,
                 StandardOpenOption.TRUNCATE_EXISTING);
-        return Path.of(path);
     }
 
     /**
