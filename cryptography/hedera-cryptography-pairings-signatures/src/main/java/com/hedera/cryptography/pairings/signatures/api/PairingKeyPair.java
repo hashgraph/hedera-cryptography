@@ -50,11 +50,10 @@ public record PairingKeyPair(@NonNull PairingPrivateKey privateKey, @NonNull Pai
      * @throws NoSuchAlgorithmException if no algorithm found to get a {@link SecureRandom} instance
      */
     @NonNull
-    public static PairingKeyPair generate(@NonNull SignatureSchema signatureSchema)
-            throws NoSuchAlgorithmException {
-        final PairingPrivateKey pairingPrivateKey =
-                PairingPrivateKey.create(Objects.requireNonNull(signatureSchema, "signatureSchema cannot be null"),
-                        SecureRandom.getInstanceStrong());
+    public static PairingKeyPair generate(@NonNull SignatureSchema signatureSchema) throws NoSuchAlgorithmException {
+        final PairingPrivateKey pairingPrivateKey = PairingPrivateKey.create(
+                Objects.requireNonNull(signatureSchema, "signatureSchema cannot be null"),
+                SecureRandom.getInstanceStrong());
         return new PairingKeyPair(pairingPrivateKey, pairingPrivateKey.createPublicKey());
     }
 }
