@@ -24,8 +24,6 @@ import com.hedera.cryptography.pairings.signatures.api.PairingPublicKey;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.nio.file.Files;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 
 /**
  * Key generation tool
@@ -86,7 +84,7 @@ public class KeyGen {
                             "The public key file already exists. Won't overwrite. Please delete %s %n",
                             cliArguments.publicKeyPath());
                 }
-                final PairingKeyPair keyPair = generateKeyPair();
+                final PairingKeyPair keyPair = PairingKeyPair.generate(SIGNATURE_SCHEMA);
                 PemFiles.writeKey(cliArguments.privateKeyPath(), keyPair.privateKey());
                 PemFiles.writeKey(cliArguments.publicKeyPath(), keyPair.publicKey());
                 System.out.printf(
@@ -135,18 +133,5 @@ public class KeyGen {
                                                            Generate a public key from a given private key PEM file and save it to the specified location.
                         """);
         System.exit(0);
-    }
-
-    /**
-     * Generates a Key Pair (private and public keys)
-     *
-     * @return a key pair
-     * @throws NoSuchAlgorithmException if no algorithm found to get a {@link SecureRandom} instance
-     */
-    @NonNull
-    public static PairingKeyPair generateKeyPair() throws NoSuchAlgorithmException {
-        final PairingPrivateKey pairingPrivateKey =
-                PairingPrivateKey.create(SIGNATURE_SCHEMA, SecureRandom.getInstanceStrong());
-        return new PairingKeyPair(pairingPrivateKey, pairingPrivateKey.createPublicKey());
     }
 }
