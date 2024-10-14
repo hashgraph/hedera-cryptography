@@ -17,11 +17,8 @@
 plugins {
     id("application")
     id("com.hedera.gradle.java-module")
-    id("com.hedera.gradle.feature.rust")
     id("com.hedera.gradle.hedera-cryptography-publish")
 }
-
-cargo { libname = "key_gen" }
 
 testModuleInfo {
     requires("org.junit.jupiter.api")
