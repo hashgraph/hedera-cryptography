@@ -16,57 +16,26 @@
 
 package com.hedera.cryptography.eckeygen;
 
+import static com.hedera.cryptography.eckeygen.pem.PemType.PRIVATE_KEY;
+import static com.hedera.cryptography.eckeygen.pem.PemType.PUBLIC_KEY;
+
+import com.hedera.cryptography.eckeygen.pem.ParsedPemFile;
+import com.hedera.cryptography.eckeygen.pem.PemType;
+import com.hedera.cryptography.pairings.signatures.api.PairingPrivateKey;
+import com.hedera.cryptography.pairings.signatures.api.PairingPublicKey;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Base64;
 import java.util.Objects;
 
 /**
- * Writes and reads the base64 string in Pem files according to <a href="https://datatracker.ietf.org/doc/html/rfc7468">...</a>
+ * Writes and reads the base64 string in Pem files according to <a
+ * href="https://datatracker.ietf.org/doc/html/rfc7468">...</a>
  */
 public class PemFiles {
-    private static final String HEADER_FORMAT = "-----BEGIN %s-----\n";
-    private static final String FOOTER_FORMAT = "-----END %s-----";
-    /**
-     * Subset of handled Pem File Types as defined in <a href="https://www.rfc-editor.org/rfc/rfc1422">rfc1422</a>
-     */
-    public enum PemType {
-
-        /**
-         * Represents a private key
-         */
-        PRIVATE_KEY("PRIVATE KEY"),
-
-        /**
-         * Represents a public key
-         */
-        PUBLIC_KEY("PUBLIC KEY");
-
-        private final String pemTypeName;
-
-        PemType(final String pemTypeName) {
-            this.pemTypeName = pemTypeName;
-        }
-
-        /**
-         * Returns the footer.
-         * @return the formatted footer
-         */
-        public String getFooter() {
-            return String.format(FOOTER_FORMAT, pemTypeName);
-        }
-
-        /**
-         * Returns the formatted header.
-         * @return the header
-         */
-        public String getHeader() {
-            return String.format(HEADER_FORMAT, pemTypeName);
-        }
-    }
-
     /**
      * Empty constructor for helper static classes
      */
@@ -75,37 +44,93 @@ public class PemFiles {
     }
 
     /**
+     * Reads a private key from a PEM file.
+     *
+     * @param path The location of the file in the fileSystem
+     * @return the private key contained in the file
+     * @throws IOException In case of file reading error
+     */
+    @NonNull
+    public static PairingPrivateKey readPrivateKey(@NonNull final Path path) throws IOException {
+        final ParsedPemFile fileRead = pemRead(Objects.requireNonNull(path, "path must not be null"));
+        if (fileRead.pemType() != PRIVATE_KEY) {
+            throw new IllegalArgumentException("File does not contain a private key");
+        }
+        return PairingPrivateKey.fromBytes(Base64.getDecoder().decode(fileRead.contents()));
+    }
+
+    /**
      * Reads the content of a PEM file.
      *
      * @param path The location of the file in the fileSystem
-     * @param pemType one of the accepted pem types
      * @return the base64 string contained in the PemFile
      * @throws IOException In case of file reading error
      */
     @NonNull
-    public static String pemRead(@NonNull final String path, @NonNull final PemType pemType) throws IOException {
-        Objects.requireNonNull(pemType, "pemType must not be null");
-        final String pemContent = Files.readString(Path.of(Objects.requireNonNull(path, "path must not be null")));
-        // Define PEM header and footer
-        final String header = pemType.getHeader();
-        final String footer = pemType.getFooter();
+    private static ParsedPemFile pemRead(@NonNull final Path path) throws IOException {
+        final String pemContent = Files.readString(Objects.requireNonNull(path, "contents must not be null"));
+        final PemType pemType;
+        if (pemContent.contains(PRIVATE_KEY.getHeader())) {
+            pemType = PRIVATE_KEY;
+        } else if (pemContent.contains(PUBLIC_KEY.getHeader())) {
+            pemType = PUBLIC_KEY;
+        } else {
+            throw new IllegalArgumentException("Invalid PEM file");
+        }
 
         // Remove header and footer
-        return pemContent.replace(header, "").replace(footer, "").trim().replaceAll("\\s", "");
+        final String contents = pemContent
+                .replace(pemType.getHeader(), "")
+                .replace(pemType.getFooter(), "")
+                .trim()
+                .replaceAll("\\s", "");
+        return new ParsedPemFile(contents, pemType);
+    }
+
+    /**
+     * Writes a private key to a PEM file.
+     *
+     * @param path       The location of the file to write to
+     * @param privateKey The private key to write
+     * @throws IOException In case of file writing error
+     */
+    public static void writeKey(@NonNull final Path path, @NonNull final PairingPrivateKey privateKey)
+            throws IOException {
+        writeKey(
+                path,
+                Base64.getEncoder()
+                        .encodeToString(Objects.requireNonNull(privateKey, "key must not be null")
+                                .toBytes()),
+                PRIVATE_KEY);
+    }
+
+    /**
+     * Writes a public key to a PEM file.
+     *
+     * @param path      The location of the file to write to
+     * @param publicKey The public key to write
+     * @throws IOException In case of file writing error
+     */
+    public static void writeKey(@NonNull final Path path, @NonNull final PairingPublicKey publicKey)
+            throws IOException {
+        writeKey(
+                path,
+                Base64.getEncoder()
+                        .encodeToString(Objects.requireNonNull(publicKey, "key must not be null")
+                                .toBytes()),
+                PemType.PUBLIC_KEY);
     }
 
     /**
      * Writes the content in a PEM file.
      *
-     * @param path The location of the file in the fileSystem
+     * @param path    The location of the file in the fileSystem
      * @param content The content to write to the file
      * @param pemType eiter "PUBLIC KEY" or "PRIVATE KEY" string
-     * @return the path of where the file was written
      * @throws IOException In case of file reading error
      */
-    @NonNull
-    public static Path pemWrite(
-            @NonNull final String path, @NonNull final String content, @NonNull final PemType pemType)
+    private static void writeKey(
+            @NonNull final Path path, @NonNull final String content, @NonNull final PemType pemType)
             throws IOException {
         Objects.requireNonNull(pemType, "pemType must not be null");
         final String pemContent = pemType.getHeader()
@@ -113,25 +138,21 @@ public class PemFiles {
                 + pemType.getFooter();
 
         Files.write(
-                Path.of(Objects.requireNonNull(path, "path must not be null")),
+                Objects.requireNonNull(path, "path must not be null"),
                 pemContent.getBytes(),
                 StandardOpenOption.CREATE,
                 StandardOpenOption.TRUNCATE_EXISTING);
-        return Path.of(path);
     }
 
     /**
-     *
-     * @implNote
-     * Generators MUST wrap the base64-encoded lines so that each line
-     *    consists of exactly 64 characters except for the final line, which
-     *    will encode the remainder of the data (within the 64-character line
-     *    boundary), and they MUST NOT emit extraneous whitespace.  Parsers MAY
-     *    handle other line sizes.  These requirements are consistent with PEM
-     * @param base64 the base64 string to format according to <a href="https://datatracker.ietf.org/doc/html/rfc7468">...</a>
+     * @param base64 the base64 string to format according to <a
+     *               href="https://datatracker.ietf.org/doc/html/rfc7468">...</a>
      * @return the formatted base64 string able to be written in a PEM file.
+     * @implNote Generators MUST wrap the base64-encoded lines so that each line consists of exactly 64 characters
+     * except for the final line, which will encode the remainder of the data (within the 64-character line boundary),
+     * and they MUST NOT emit extraneous whitespace.  Parsers MAY handle other line sizes.  These requirements are
+     * consistent with PEM
      */
-    //
     @NonNull
     private static String formatPemContent(@NonNull final String base64) {
         StringBuilder builder = new StringBuilder();
