@@ -41,7 +41,7 @@ import java.util.Objects;
  * <p>
  * The class provides mechanisms to extract the library from the JAR, store it in a temporary directory on the file system,
  * set appropriate file permissions, and finally load the library into the application.
- * <p>
+ *
  * @implNote Libraries are expected to be organized within the JAR file at {@code /software/<os>/<arch>/name}.
  * This path structure is used to construct the location of the library based on the current operating
  * system and architecture, ensuring only the correct version of the library is loaded according to the executing environment.

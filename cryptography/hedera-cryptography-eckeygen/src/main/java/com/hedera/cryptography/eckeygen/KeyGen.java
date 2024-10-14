@@ -16,17 +16,19 @@
 
 package com.hedera.cryptography.eckeygen;
 
-import com.hedera.cryptography.eckeygen.PemFiles.PemType;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
+import com.hedera.cryptography.pairings.signatures.api.PairingKeyPair;
+import com.hedera.cryptography.pairings.signatures.api.PairingPrivateKey;
+import com.hedera.cryptography.pairings.signatures.api.PairingPublicKey;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.nio.file.Files;
-import java.nio.file.Path;
 
 /**
  * Key generation tool
  *
- *<p>Usage:
+ * <p>Usage:
  *
  * <p>Display usage information:
  *
@@ -40,6 +42,8 @@ import java.nio.file.Path;
  * <pre>{@code generate-public-key path/to/privateKey.pem path/to/publicKey.pem}</pre>
  */
 public class KeyGen {
+    private static final SignatureSchema SIGNATURE_SCHEMA =
+            SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
 
     /**
      * Empty method for static helper class
@@ -48,80 +52,86 @@ public class KeyGen {
         // Empty method for static helper class
     }
 
-    private static final KeysGenerationService KEYS_SERVICE = new KeysGenerationService(
-            SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES),
-            NativeKeyGenerator.getInstance());
-
     /**
-     *  <p>Usage:
+     * <p>Usage:
      *
-     *   <p>Display usage information:
+     * <p>Display usage information:
      *
-     *   <pre>{@code  --help}</pre>
+     * <pre>{@code  --help}</pre>
      *
-     *   <p>Generating a Key Pair:
-     *   <pre>{@code generate-keys path/to/privateKey.pem path/to/publicKey.pem}</pre>
+     * <p>Generating a Key Pair:
+     * <pre>{@code generate-keys path/to/privateKey.pem path/to/publicKey.pem}</pre>
      *
-     *   <p>Generating a Public Key from an Existing Private Key:
+     * <p>Generating a Public Key from an Existing Private Key:
      *
-     *   <pre>{@code generate-public-key path/to/privateKey.pem path/to/publicKey.pem}</pre>
+     * <pre>{@code generate-public-key path/to/privateKey.pem path/to/publicKey.pem}</pre>
+     *
      * @param args depending on the command see examples above
      * @throws Exception if something happened while generating the keys
      */
     public static void main(String[] args) throws Exception {
-        if (args.length == 0) {
-            printHelp();
-            System.exit(0);
-        }
-
-        final String commandName = args[0];
-        if (commandName.equals("--help") || args.length != 3) {
-            printHelp();
-        }
-
-        final String privateKeyLocation = args[1];
-        final Path privateKeyPath = Path.of(privateKeyLocation);
-        final String publicKeyLocation = args[2];
-        final Path publicKeyPath = Path.of(publicKeyLocation);
-        if (commandName.equals("generate-keys")) {
-            String[] keyPair = KEYS_SERVICE.generateBase64KeyPair();
-            if (Files.exists(privateKeyPath)) {
-                System.err.printf(
-                        "The private key file already exists. Won't overwrite. Please delete %s %n",
-                        privateKeyLocation);
+        final CliArguments cliArguments = CliArguments.parse(args);
+        switch (cliArguments.command()) {
+            case PRINT_HELP -> printHelpAndExit();
+            case GENERATE_KEYS -> {
+                if (Files.exists(cliArguments.privateKeyPath())) {
+                    error(
+                            "The private key file already exists. Won't overwrite. Please delete %s %n",
+                            cliArguments.privateKeyPath());
+                }
+                if (Files.exists(cliArguments.publicKeyPath())) {
+                    error(
+                            "The public key file already exists. Won't overwrite. Please delete %s %n",
+                            cliArguments.publicKeyPath());
+                }
+                final PairingKeyPair keyPair = PairingKeyPair.generate(SIGNATURE_SCHEMA);
+                PemFiles.writeKey(cliArguments.privateKeyPath(), keyPair.privateKey());
+                PemFiles.writeKey(cliArguments.publicKeyPath(), keyPair.publicKey());
+                System.out.printf(
+                        "Saved private and public key files into: %s and %s %n",
+                        cliArguments.privateKeyPath(), cliArguments.publicKeyPath());
             }
-            if (Files.exists(publicKeyPath)) {
-                System.err.printf(
-                        "The public key file already exists. Won't overwrite. Please delete %s %n", publicKeyLocation);
+            case GENERATE_PUBLIC_KEY -> {
+                if (!Files.exists(cliArguments.privateKeyPath())) {
+                    error("The private key file does not exist. %s %n", cliArguments.privateKeyPath());
+                }
+                if (Files.exists(cliArguments.publicKeyPath())) {
+                    error(
+                            "The public key file already exists. Won't overwrite. Please delete %s %n",
+                            cliArguments.publicKeyPath());
+                }
+                final PairingPrivateKey privateKey = PemFiles.readPrivateKey(cliArguments.privateKeyPath());
+                final PairingPublicKey publicKey = privateKey.createPublicKey();
+                PemFiles.writeKey(cliArguments.publicKeyPath(), publicKey);
+                System.out.printf("Saved public key file into: %s %n", cliArguments.publicKeyPath());
             }
-            Path skPath = PemFiles.pemWrite(privateKeyLocation, keyPair[0], PemType.PRIVATE_KEY);
-            Path pkPath = PemFiles.pemWrite(publicKeyLocation, keyPair[1], PemType.PUBLIC_KEY);
-            System.out.printf("Saved private and public key files into: %s and %s %n", skPath, pkPath);
-        } else if (commandName.equals("generate-public-key")) {
-            if (!Files.exists(privateKeyPath)) {
-                System.err.printf("The private key file does not exists. %s %n", privateKeyLocation);
-            }
-            if (Files.exists(publicKeyPath)) {
-                System.err.printf(
-                        "The public key file already exists. Won't overwrite. Please delete %s %n", publicKeyLocation);
-            }
-            String base64PrivateKey = PemFiles.pemRead(privateKeyLocation, PemType.PRIVATE_KEY);
-            String publicKey = KEYS_SERVICE.generateBase64KPublicKey(base64PrivateKey);
-            Path pkPath = PemFiles.pemWrite(publicKeyLocation, publicKey, PemType.PUBLIC_KEY);
-            System.out.printf("Saved public key file into: %s %n", pkPath);
-        } else {
-            System.out.println("Invalid command or arguments. Use --help for usage information.");
         }
     }
 
-    private static void printHelp() {
-        System.out.println("Usage:");
-        System.out.println("  --help                           Print this help message.");
-        System.out.println("  generate-keys <private-key-pem> <public-key-pem>");
+    /**
+     * Prints an error message and exits
+     *
+     * @param message     the error message
+     * @param messageArgs the message arguments
+     */
+    private static void error(@NonNull final String message, @NonNull final Object... messageArgs) {
+        System.err.printf(message, messageArgs);
+        System.exit(1);
+    }
+
+    /**
+     * Prints the help message and exits
+     */
+    private static void printHelpAndExit() {
         System.out.println(
-                "                                   Generate a private and public key pair and save them to the specified locations.");
-        System.out.println("  generate-public-key <private-key-pem> <public-key-pem>");
-        System.out.println(
-                "                                   Generate a public key from a given private key PEM file and save it to the specified location.");
+                """
+                        Usage:
+                          --help                           Print this help message.
+                          generate-keys <private-key-pem> <public-key-pem>
+                                                           Generate a private and public key pair and save them to the specified locations.
+                          generate-public-key <private-key-pem> <public-key-pem>
+                                                           Generate a public key from a given private key PEM file and save it to the specified location.
+                        """);
+        System.exit(0);
     }
 }
