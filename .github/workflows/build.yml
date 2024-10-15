@@ -52,7 +52,7 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@11df97af8e8102fd60b60a77dfbf58d40cd843b8 # v1.10.1
         with:
           cache: false
-          target: x86_64-pc-windows-msvc # additional target, other Unix targets available by default
+          target: x86_64-pc-windows-msvc # additional target, Linux/Mac targets are configured as default
 
       - name: Setup Zig (Linux/Mac cross-compile)
         uses: mlugg/setup-zig@a67e68dc5c8281d9608136d3d7ca1b282213e4ac  # v1.2.1
