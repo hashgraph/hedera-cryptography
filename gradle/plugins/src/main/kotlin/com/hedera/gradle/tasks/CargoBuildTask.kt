@@ -38,7 +38,6 @@ import org.gradle.process.ExecOperations
 
 @CacheableTask
 abstract class CargoBuildTask : DefaultTask() {
-
     @get:Input abstract val libname: Property<String>
 
     @get:Input abstract val release: Property<Boolean>
@@ -55,7 +54,9 @@ abstract class CargoBuildTask : DefaultTask() {
 
     @get:OutputDirectory abstract val destinationDirectory: DirectoryProperty
 
-    @get:Internal abstract val cargoCommand: Property<String>
+    @get:Internal abstract val cargoBin: Property<String>
+
+    @get:Internal abstract val xwinFolder: Property<String>
 
     @get:Inject protected abstract val exec: ExecOperations
 
@@ -63,8 +64,10 @@ abstract class CargoBuildTask : DefaultTask() {
 
     @TaskAction
     fun build() {
-        installCargoZigbuild()
-        buildForTarget()
+        val buildsForWindows = toolchain.get() == CargoToolchain.x86Windows
+
+        installCargoCrossCompiler(buildsForWindows)
+        buildForTarget(buildsForWindows)
 
         val profile = if (release.get()) "release" else "debug"
         val cargoOutputDir =
@@ -80,19 +83,57 @@ abstract class CargoBuildTask : DefaultTask() {
         }
     }
 
-    private fun installCargoZigbuild() {
+    private fun installCargoCrossCompiler(buildsForWindows: Boolean) {
         exec.exec {
-            workingDir = cargoToml.get().asFile.parentFile
-            commandLine = listOf(cargoCommand.get(), "install", "--locked", "cargo-zigbuild")
+            val crossCompiler = if (buildsForWindows) "xwin" else "cargo-zigbuild"
+            commandLine = listOf(cargoBin.get() + "/cargo", "install", "--locked", crossCompiler)
+        }
+        if (buildsForWindows && !File(xwinFolder.get()).exists()) {
+            exec.exec {
+                commandLine =
+                    listOf(
+                        cargoBin.get() + "/xwin",
+                        "--accept-license",
+                        "splat",
+                        "--output",
+                        xwinFolder.get()
+                    )
+            }
         }
     }
 
-    private fun buildForTarget() {
+    private fun buildForTarget(buildsForWindows: Boolean) {
         exec.exec {
+            val buildCommand = if (buildsForWindows) "build" else "zigbuild"
+
             workingDir = cargoToml.get().asFile.parentFile
 
             commandLine =
-                listOf(cargoCommand.get(), "zigbuild", "--target=${toolchain.get().target}")
+                listOf(
+                    cargoBin.get() + "/cargo",
+                    buildCommand,
+                    "--target=${toolchain.get().target}"
+                )
+
+            if (buildsForWindows) {
+                // See https://github.com/Jake-Shadle/xwin/blob/main/xwin.dockerfile
+                val xwin = xwinFolder.get()
+                val clFlags =
+                    "-Wno-unused-command-line-argument -fuse-ld=lld-link /vctoolsdir $xwin/crt /winsdkdir $xwin/sdk"
+                environment("CC_x86_64_pc_windows_msvc", "clang-cl")
+                environment("CXX_x86_64_pc_windows_msvc", "clang-cl")
+                environment("AR_x86_64_pc_windows_msvc", "llvm-lib")
+                environment("WINEDEBUG", "-all")
+                environment("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUNNER", "wine")
+                environment("CL_FLAGS", clFlags)
+                environment("CFLAGS_x86_64_pc_windows_msvc", clFlags)
+                environment("CXXFLAGS_x86_64_pc_windows_msvc", clFlags)
+                environment("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER", "lld-link")
+                environment(
+                    "RUSTFLAGS",
+                    "-Lnative=$xwin/crt/lib/x86_64 -Lnative=$xwin/sdk/lib/um/x86_64 -Lnative=$xwin/sdk/lib/ucrt/x86_64"
+                )
+            }
 
             if (release.get()) {
                 args("--release")

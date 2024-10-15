@@ -48,13 +48,19 @@ jobs:
           distribution: temurin
           java-version: 21.0.4
 
-      - name: Setup Zig
-        uses: mlugg/setup-zig@a67e68dc5c8281d9608136d3d7ca1b282213e4ac  # v1.2.1
-
       - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@1fbea72663f6d4c03efaab13560c8a24cfd2a7cc # v1.9.0
+        uses: actions-rust-lang/setup-rust-toolchain@11df97af8e8102fd60b60a77dfbf58d40cd843b8 # v1.10.1
         with:
           cache: false
+          target: x86_64-pc-windows-msvc # additional target, other Unix targets available by default
+
+      - name: Setup Zig (Linux/Mac cross-compile)
+        uses: mlugg/setup-zig@a67e68dc5c8281d9608136d3d7ca1b282213e4ac  # v1.2.1
+
+      - name: Setup lld (Windows cross-compile) # https://github.com/Jake-Shadle/xwin/blob/main/xwin.dockerfile
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install lld
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808 # v4.1.0

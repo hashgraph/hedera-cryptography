@@ -4,7 +4,7 @@
 Install `rustup` and `zig`
 
 ```bash
-  brew install rustup zig
+  brew install rustup zig lld
 ```
 
 # How to compile

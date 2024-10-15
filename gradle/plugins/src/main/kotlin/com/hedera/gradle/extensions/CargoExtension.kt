@@ -27,7 +27,7 @@ import org.gradle.kotlin.dsl.register
 
 @Suppress("LeakingThis")
 abstract class CargoExtension {
-    abstract val cargoCommand: Property<String>
+    abstract val cargoBin: Property<String>
     abstract val libname: Property<String>
     abstract val release: Property<Boolean>
 
@@ -40,7 +40,7 @@ abstract class CargoExtension {
     @get:Inject protected abstract val sourceSets: SourceSetContainer
 
     init {
-        cargoCommand.convention(System.getProperty("user.home") + "/.cargo/bin/cargo")
+        cargoBin.convention(System.getProperty("user.home") + "/.cargo/bin")
         libname.convention(project.name)
         release.convention(true)
 
@@ -59,16 +59,23 @@ abstract class CargoExtension {
                 ) {
                     group = "rust"
                     description = "Build library ($target)"
-                    toolchain.set(target)
-                    sourcesDirectory.set(layout.projectDirectory.dir("src/main/rust"))
-                    destinationDirectory.set(
+                    toolchain.convention(target)
+                    sourcesDirectory.convention(layout.projectDirectory.dir("src/main/rust"))
+                    destinationDirectory.convention(
                         layout.buildDirectory.dir("rustJniLibs/${target.platform}")
                     )
 
-                    this.cargoToml.set(layout.projectDirectory.file("Cargo.toml"))
-                    this.cargoCommand.set(this@CargoExtension.cargoCommand)
-                    this.libname.set(this@CargoExtension.libname)
-                    this.release.set(this@CargoExtension.release)
+                    this.cargoToml.convention(layout.projectDirectory.file("Cargo.toml"))
+                    this.libname.convention(this@CargoExtension.libname)
+                    this.release.convention(this@CargoExtension.release)
+                    this.cargoBin.convention(this@CargoExtension.cargoBin)
+                    @Suppress("UnstableApiUsage")
+                    this.xwinFolder.convention(
+                        project.isolated.rootProject.projectDirectory
+                            .dir(".gradle/xwin")
+                            .asFile
+                            .absolutePath
+                    )
                 }
 
             tasks.named("cargoBuild") { dependsOn(targetBuildTask) }
