@@ -177,10 +177,7 @@ public class NativeLibrary {
         final OperatingSystem os = OperatingSystem.current();
         final Architecture arch = Architecture.current();
 
-        String libPrefix = libPrefixes.get(os);
-        if (libPrefix == null) {
-            libPrefix = "";
-        }
+        final String libPrefix = libPrefixes.getOrDefault(os, "");
 
         String libExtension = libExtensions.get(os);
         if (libExtension != null && !libExtension.isEmpty()) {

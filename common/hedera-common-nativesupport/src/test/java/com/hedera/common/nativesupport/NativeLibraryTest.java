@@ -50,7 +50,9 @@ class NativeLibraryTest {
     void testWithNameAndCustomExtensions(OperatingSystem operatingSystem, Architecture architecture) {
         final Map<OperatingSystem, String> extensions =
                 Map.of(OperatingSystem.WINDOWS, "win", OperatingSystem.LINUX, "lx", OperatingSystem.DARWIN, "dar");
-        NativeLibrary library = NativeLibrary.withName("custom", extensions, extensions);
+        final Map<OperatingSystem, String> prefixes =
+                Map.of(OperatingSystem.WINDOWS, "pwin", OperatingSystem.LINUX, "plx", OperatingSystem.DARWIN, "pdar");
+        NativeLibrary library = NativeLibrary.withName("custom", prefixes, extensions);
         assertNotNull(library);
 
         try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
@@ -63,7 +65,7 @@ class NativeLibraryTest {
                             .formatted(
                                     operatingSystem.name().toLowerCase(),
                                     architecture.name().toLowerCase(),
-                                    extensions.get(operatingSystem),
+                                    prefixes.get(operatingSystem),
                                     extensions.get(operatingSystem)),
                     library.locationInJar());
         }
@@ -79,9 +81,8 @@ class NativeLibraryTest {
 
     @ParameterizedTest
     @MethodSource("combinedParameters")
-    void testWithNameAndEmptyExtensions(OperatingSystem operatingSystem, Architecture architecture) {
-        final Map<OperatingSystem, String> extensions = Map.of();
-        NativeLibrary library = NativeLibrary.withName("custom", extensions, extensions);
+    void testWithNameAndEmptyPrefixAndExtensions(OperatingSystem operatingSystem, Architecture architecture) {
+        final NativeLibrary library = NativeLibrary.withName("custom", Map.of(), Map.of());
         assertNotNull(library);
 
         try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
@@ -101,9 +102,9 @@ class NativeLibraryTest {
     @ParameterizedTest
     @MethodSource("combinedParameters")
     void testWithNameAndBlankExtensions(OperatingSystem operatingSystem, Architecture architecture) {
-        final Map<OperatingSystem, String> extensions =
+        final Map<OperatingSystem, String> emptyStrings =
                 Map.of(OperatingSystem.WINDOWS, "", OperatingSystem.LINUX, "", OperatingSystem.DARWIN, "");
-        NativeLibrary library = NativeLibrary.withName("custom", extensions, extensions);
+        NativeLibrary library = NativeLibrary.withName("custom", emptyStrings, emptyStrings);
         assertNotNull(library);
 
         try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
