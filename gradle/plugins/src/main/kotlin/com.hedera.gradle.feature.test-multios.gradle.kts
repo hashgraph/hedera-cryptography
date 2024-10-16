@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2022-2024 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,9 @@
  * limitations under the License.
  */
 
-plugins {
-    id("com.hedera.gradle.java-module")
-    id("com.hedera.gradle.feature.rust")
-    id("com.hedera.gradle.hedera-cryptography-publish")
-    id("com.hedera.gradle.benchmark")
-    id("com.hedera.gradle.feature.test-multios")
-}
+plugins { id("java") }
 
-cargo { libname = "bn254" }
-
-testModuleInfo {
-    requires("org.junit.jupiter.api")
-    requires("org.mockito")
+tasks.test {
+    inputs.property("operatingSystemName", System.getProperty("os.name"))
+    inputs.property("operatingSystemArch", System.getProperty("os.arch"))
 }
