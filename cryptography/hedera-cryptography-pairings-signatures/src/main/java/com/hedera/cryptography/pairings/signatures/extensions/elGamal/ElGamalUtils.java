@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.tss.extensions.elGamal;
+package com.hedera.cryptography.pairings.signatures.extensions.elGamal;
 
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
@@ -112,13 +112,9 @@ public class ElGamalUtils {
         final FieldElement keyElement = decryptionPrivateKey.element();
         final Field keyField = keyElement.getField();
 
-        if (randomness.size() != keyField.elementSize()) {
-            throw new IllegalArgumentException("Invalid randomness size");
-        }
-
         final FieldElement zeroElement = keyField.fromLong(0L);
 
-        final byte[] output = new byte[keyField.seedSize()];
+        final byte[] output = new byte[cipherTextElements.size()];
         for (int i = 0; i < cipherTextElements.size(); i++) {
             final GroupElement chunkCiphertext = cipherTextElements.get(i);
             final GroupElement chunkRandomness = randomness.get(i);

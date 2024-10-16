@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.tss.extensions.elGamal;
+package com.hedera.cryptography.pairings.signatures.extensions.elGamal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,6 +22,7 @@ import com.hedera.cryptography.pairings.api.*;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
 import com.hedera.cryptography.pairings.signatures.api.PairingKeyPair;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
+import com.hedera.cryptography.pairings.signatures.extensions.elGamal.ElGamalUtils;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.Random;
