@@ -90,6 +90,8 @@ abstract class CargoBuildTask : DefaultTask() {
         }
         if (buildsForWindows && !File(xwinFolder.get()).exists()) {
             exec.exec {
+                // https://github.com/Jake-Shadle/xwin/issues/141#issuecomment-2416864318
+                environment("RAYON_NUM_THREADS", "1")
                 commandLine =
                     listOf(
                         cargoBin.get() + "/xwin",
