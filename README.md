@@ -18,3 +18,22 @@ This repository is separated into three main parts:
     - This module includes the rust side of a JNI interface
     - It serves to allow the `hedera-bls-impl` module to interact with
       the [zkcrypto BLS12_381](https://github.com/zkcrypto/bls12_381) rust library
+
+# Building
+
+The project is built with Gradle.
+
+## Requirements
+
+For the rust (cross-)compilation, you need to install `rustup`, `zig` and `lld`. On Mac, you can do that via:
+
+```
+brew install rustup zig lld
+rustup target add x86_64-pc-windows-msvc
+```
+
+## Build the project
+
+```
+./gradlew build
+```
