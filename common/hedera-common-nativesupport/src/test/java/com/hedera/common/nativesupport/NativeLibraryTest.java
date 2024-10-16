@@ -101,6 +101,29 @@ class NativeLibraryTest {
 
     @ParameterizedTest
     @MethodSource("combinedParameters")
+    void testWithOnlyOneOsPrefix(OperatingSystem operatingSystem, Architecture architecture) {
+        final Map<OperatingSystem, String> prefixes = Map.of(OperatingSystem.WINDOWS, "foo");
+        final NativeLibrary library = NativeLibrary.withName("custom", prefixes, Map.of());
+        assertNotNull(library);
+
+        try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
+                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class)) {
+            osStatic.when(OperatingSystem::current).thenReturn(operatingSystem);
+            archStatic.when(Architecture::current).thenReturn(architecture);
+
+            assertEquals(
+                    "software/%s/%s/%scustom"
+                            .formatted(
+                                    operatingSystem.name().toLowerCase(),
+                                    architecture.name().toLowerCase(),
+                                    prefixes.getOrDefault(operatingSystem, "")
+                            ),
+                    library.locationInJar());
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("combinedParameters")
     void testWithNameAndBlankExtensions(OperatingSystem operatingSystem, Architecture architecture) {
         final Map<OperatingSystem, String> emptyStrings =
                 Map.of(OperatingSystem.WINDOWS, "", OperatingSystem.LINUX, "", OperatingSystem.DARWIN, "");
