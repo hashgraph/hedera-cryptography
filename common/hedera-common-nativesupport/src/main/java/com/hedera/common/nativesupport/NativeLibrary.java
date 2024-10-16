@@ -86,7 +86,7 @@ public class NativeLibrary {
     /**
      * Default prefix for binary libraries per OS
      */
-    private static final Map<OperatingSystem, String> DEFAULT_LIB_PREFIX =
+    private static final Map<OperatingSystem, String> DEFAULT_LIB_PREFIXES =
             Map.of(OperatingSystem.WINDOWS, "", OperatingSystem.LINUX, "lib", OperatingSystem.DARWIN, "lib");
 
     /** Ensures that a library with a given name is loaded only once */
@@ -94,7 +94,7 @@ public class NativeLibrary {
 
     private final String name;
     private final Map<OperatingSystem, String> libExtensions;
-    private final Map<OperatingSystem, String> libPrefix;
+    private final Map<OperatingSystem, String> libPrefixes;
 
     /**
      *
@@ -106,11 +106,11 @@ public class NativeLibrary {
      */
     private NativeLibrary(
             @NonNull final String name,
-            @NonNull final Map<OperatingSystem, String> libPrefix,
+            @NonNull final Map<OperatingSystem, String> libPrefixes,
             @NonNull final Map<OperatingSystem, String> libExtensions) {
         this.name = Objects.requireNonNull(name, "name must not be null");
         this.libExtensions = Map.copyOf(Objects.requireNonNull(libExtensions, "libExtensions must not be null"));
-        this.libPrefix = Map.copyOf(Objects.requireNonNull(libPrefix, "libPrefix must not be null"));
+        this.libPrefixes = Map.copyOf(Objects.requireNonNull(libPrefixes, "libPrefixes must not be null"));
     }
 
     /**
@@ -123,9 +123,9 @@ public class NativeLibrary {
     @NonNull
     public static NativeLibrary withName(
             @NonNull final String name,
-            @NonNull final Map<OperatingSystem, String> libPrefix,
+            @NonNull final Map<OperatingSystem, String> libPrefixes,
             @NonNull final Map<OperatingSystem, String> libExtensions) {
-        return new NativeLibrary(name, libPrefix, libExtensions);
+        return new NativeLibrary(name, libPrefixes, libExtensions);
     }
 
     /**
@@ -136,7 +136,7 @@ public class NativeLibrary {
      */
     @NonNull
     public static NativeLibrary withName(@NonNull final String name) {
-        return withName(name, DEFAULT_LIB_PREFIX, DEFAULT_LIB_EXTENSIONS);
+        return withName(name, DEFAULT_LIB_PREFIXES, DEFAULT_LIB_EXTENSIONS);
     }
 
     /**
@@ -156,7 +156,7 @@ public class NativeLibrary {
      */
     @NonNull
     public String locationInJar() {
-        return locationInJar(this.name, this.libPrefix, this.libExtensions);
+        return locationInJar(this.name, this.libPrefixes, this.libExtensions);
     }
 
     /**
