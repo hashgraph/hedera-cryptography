@@ -35,11 +35,11 @@ import java.nio.file.Files;
  * <pre>{@code  --help}</pre>
  *
  * <p>Generating a Key Pair:
- * <pre>{@code generate-keys path/to/privateKey.pem path/to/publicKey.pem}</pre>
+ * <pre>{@code generate-keys path/to/element.pem path/to/element.pem}</pre>
  *
  * <p>Generating a Public Key from an Existing Private Key:
  *
- * <pre>{@code generate-public-key path/to/privateKey.pem path/to/publicKey.pem}</pre>
+ * <pre>{@code generate-public-key path/to/element.pem path/to/element.pem}</pre>
  */
 public class KeyGen {
     private static final SignatureSchema SIGNATURE_SCHEMA =
@@ -60,11 +60,11 @@ public class KeyGen {
      * <pre>{@code  --help}</pre>
      *
      * <p>Generating a Key Pair:
-     * <pre>{@code generate-keys path/to/privateKey.pem path/to/publicKey.pem}</pre>
+     * <pre>{@code generate-keys path/to/element.pem path/to/element.pem}</pre>
      *
      * <p>Generating a Public Key from an Existing Private Key:
      *
-     * <pre>{@code generate-public-key path/to/privateKey.pem path/to/publicKey.pem}</pre>
+     * <pre>{@code generate-public-key path/to/element.pem path/to/element.pem}</pre>
      *
      * @param args depending on the command see examples above
      * @throws Exception if something happened while generating the keys

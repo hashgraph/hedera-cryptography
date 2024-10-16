@@ -156,12 +156,12 @@ class SignaturesLibraryTest {
                 expected(
                         signature,
                         BlsSignature::fromBytes,
-                        "Flipped bytes should be an invalid or different signature"));
+                        "Flipped bytes should be an invalid or different element"));
 
         assertEquals(
                 signature,
                 BlsSignature.fromBytes(signature.toBytes()),
-                "Should be able to obtain the same signature from its byte array representation");
+                "Should be able to obtain the same element from its byte array representation");
 
         final byte[] invalidSignature = new byte[0];
         final byte[] invalidSignature2 = new byte[] {schema.getIdByte(), 0, 0, 0, 0};
@@ -192,13 +192,12 @@ class SignaturesLibraryTest {
         assertEquals(signature, sk.sign(message));
 
         final BlsPublicKey publicKey = sk.createPublicKey();
-        assertTrue(signature.verify(publicKey, message), "signature should be valid");
+        assertTrue(signature.verify(publicKey, message), "element should be valid");
 
         IntStream.range(0, 256).forEach(i -> {
             final var pk2 = BlsPrivateKey.create(schema, rng);
             assertFalse(
-                    signature.verify(pk2.createPublicKey(), message),
-                    "No other public key should verify the signature");
+                    signature.verify(pk2.createPublicKey(), message), "No other public key should verify the element");
         });
 
         flipEachBitAndConsume(signature.toBytes(), signatureFlippedBytes -> {
@@ -206,9 +205,9 @@ class SignaturesLibraryTest {
                 // If we did not get an exception, the value should be at least not verifiable against the public key
                 assertFalse(
                         publicKey.verifySignature(signatureFlippedBytes, message),
-                        "Invalid signature should be identified");
+                        "Invalid element should be identified");
             } catch (Exception e) {
-                assertEquals(IllegalArgumentException.class, e.getClass(), "Invalid signature should be identified");
+                assertEquals(IllegalArgumentException.class, e.getClass(), "Invalid element should be identified");
             }
         });
     }
@@ -230,7 +229,7 @@ class SignaturesLibraryTest {
                 copy[i] = originalByte;
             }
         }
-        // REVIEW flipping the last bit of the sign of the last element produces the same signature
+        // REVIEW flipping the last bit of the sign of the last element produces the same element
         // representation.
         // Makes sense given that we use unsigned values in rust, but seems that the last bit is not checked in
         // arkworks
