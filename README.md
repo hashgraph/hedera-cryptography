@@ -29,6 +29,7 @@ For the rust (cross-)compilation, you need to install `rustup`, `zig` and `lld`.
 
 ```
 brew install rustup zig lld
+rustup target add x86_64-pc-windows-msvc
 ```
 
 ## Build the project
