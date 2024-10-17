@@ -27,7 +27,14 @@ import java.util.Set;
  */
 public class RunOnlyOnce<T> {
     /** A set of keys which have already ran */
-    private final Set<T> alreadyRan = new HashSet<>();
+    private final Set<T> alreadyRan;
+
+    /**
+     * Constructor
+     */
+    public RunOnlyOnce() {
+        alreadyRan  = new HashSet<>();
+    }
 
     /**
      * Run the provided action only once for the given key. If the action has already been run for the key, the Runnable
