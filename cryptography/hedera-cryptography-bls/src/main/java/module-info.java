@@ -2,7 +2,7 @@
  *
  * This module provides cryptography primitives to create EC PublicKeys, EC PrivateKeys, and Signatures.
  */
-module com.hedera.cryptography.pairings.signatures {
+module com.hedera.cryptography.bls {
     requires transitive com.hedera.cryptography.pairings.api;
     requires static transitive com.github.spotbugs.annotations;
 

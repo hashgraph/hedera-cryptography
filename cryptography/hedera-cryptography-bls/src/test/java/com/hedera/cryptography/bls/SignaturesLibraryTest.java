@@ -154,9 +154,7 @@ class SignaturesLibraryTest {
         flipEachBitAndConsume(
                 signature.toBytes(),
                 expected(
-                        signature,
-                        BlsSignature::fromBytes,
-                        "Flipped bytes should be an invalid or different element"));
+                        signature, BlsSignature::fromBytes, "Flipped bytes should be an invalid or different element"));
 
         assertEquals(
                 signature,
