@@ -26,9 +26,7 @@ import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- *  A Prototype implementation of PairingSignature.
- *  This class will live in a different project once the implementation of the pairings-signature-library is completed.
- *  The package and interface will remain constant.
+ *  A bls signature for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
  */
 public record BlsSignature(@NonNull GroupElement signature, @NonNull SignatureSchema signatureSchema) {
 

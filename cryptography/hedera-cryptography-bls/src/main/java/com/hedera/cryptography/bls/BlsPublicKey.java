@@ -23,7 +23,7 @@ import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- *  An elliptic curve public Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
+ *  A bls public Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
  */
 public record BlsPublicKey(GroupElement publicKey, SignatureSchema signatureSchema) {
 

@@ -26,7 +26,7 @@ import java.util.Objects;
 import java.util.Random;
 
 /**
- *  An elliptic curve private Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
+ *  A bls private Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
  */
 public record BlsPrivateKey(@NonNull FieldElement privateKey, @NonNull SignatureSchema signatureSchema) {
 
