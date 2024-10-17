@@ -33,7 +33,7 @@ public class RunOnlyOnce<T> {
      * Constructor
      */
     public RunOnlyOnce() {
-        alreadyRan  = new HashSet<>();
+        alreadyRan = new HashSet<>();
     }
 
     /**
