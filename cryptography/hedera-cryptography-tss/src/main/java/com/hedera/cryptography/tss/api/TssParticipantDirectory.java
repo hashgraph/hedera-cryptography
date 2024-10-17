@@ -271,8 +271,7 @@ public final class TssParticipantDirectory {
             final List<Long> sortedParticipantIds =
                     participantEntries.keySet().stream().sorted().toList();
 
-            final Map<TssShareId, Long> sharesAllocationMap =
-                    new HashMap<>(); /*To keep track of each share id owner*/
+            final Map<TssShareId, Long> sharesAllocationMap = new HashMap<>(); /*To keep track of each share id owner*/
             final List<TssShareId> currentParticipantOwnedShareIds =
                     new ArrayList<>(); /*To keep track of the shares owned by the creator of this directory*/
             final Map<Long, PairingPublicKey> tssEncryptionPublicKeyMap =
