@@ -83,11 +83,18 @@ public class NativeLibrary {
     private static final Map<OperatingSystem, String> DEFAULT_LIB_EXTENSIONS =
             Map.of(OperatingSystem.WINDOWS, "dll", OperatingSystem.LINUX, "so", OperatingSystem.DARWIN, "dylib");
 
+    /**
+     * Default prefix for binary libraries per OS
+     */
+    private static final Map<OperatingSystem, String> DEFAULT_LIB_PREFIXES =
+            Map.of(OperatingSystem.WINDOWS, "", OperatingSystem.LINUX, "lib", OperatingSystem.DARWIN, "lib");
+
     /** Ensures that a library with a given name is loaded only once */
     private static final RunOnlyOnce<String> runOnlyOnce = new RunOnlyOnce<>();
 
     private final String name;
     private final Map<OperatingSystem, String> libExtensions;
+    private final Map<OperatingSystem, String> libPrefixes;
 
     /**
      *
@@ -97,9 +104,13 @@ public class NativeLibrary {
      * @param name the library to load.
      * @param libExtensions defaults extensions for each os to use to load the library
      */
-    private NativeLibrary(@NonNull String name, @NonNull Map<OperatingSystem, String> libExtensions) {
-        this.name = name;
-        this.libExtensions = Map.copyOf(libExtensions);
+    private NativeLibrary(
+            @NonNull final String name,
+            @NonNull final Map<OperatingSystem, String> libPrefixes,
+            @NonNull final Map<OperatingSystem, String> libExtensions) {
+        this.name = Objects.requireNonNull(name, "name must not be null");
+        this.libExtensions = Map.copyOf(Objects.requireNonNull(libExtensions, "libExtensions must not be null"));
+        this.libPrefixes = Map.copyOf(Objects.requireNonNull(libPrefixes, "libPrefixes must not be null"));
     }
 
     /**
@@ -111,8 +122,10 @@ public class NativeLibrary {
      */
     @NonNull
     public static NativeLibrary withName(
-            @NonNull final String name, @NonNull final Map<OperatingSystem, String> libExtensions) {
-        return new NativeLibrary(name, libExtensions);
+            @NonNull final String name,
+            @NonNull final Map<OperatingSystem, String> libPrefixes,
+            @NonNull final Map<OperatingSystem, String> libExtensions) {
+        return new NativeLibrary(name, libPrefixes, libExtensions);
     }
 
     /**
@@ -123,7 +136,7 @@ public class NativeLibrary {
      */
     @NonNull
     public static NativeLibrary withName(@NonNull final String name) {
-        return withName(name, DEFAULT_LIB_EXTENSIONS);
+        return withName(name, DEFAULT_LIB_PREFIXES, DEFAULT_LIB_EXTENSIONS);
     }
 
     /**
@@ -143,7 +156,7 @@ public class NativeLibrary {
      */
     @NonNull
     public String locationInJar() {
-        return locationInJar(this.name, this.libExtensions);
+        return locationInJar(this.name, this.libPrefixes, this.libExtensions);
     }
 
     /**
@@ -155,11 +168,16 @@ public class NativeLibrary {
      */
     @NonNull
     public static String locationInJar(
-            @NonNull final String libraryName, @NonNull final Map<OperatingSystem, String> libExtensions) {
+            @NonNull final String libraryName,
+            @NonNull final Map<OperatingSystem, String> libPrefixes,
+            @NonNull final Map<OperatingSystem, String> libExtensions) {
         Objects.requireNonNull(libraryName, "name must not be null");
+        Objects.requireNonNull(libPrefixes, "libPrefixes must not be null");
         Objects.requireNonNull(libExtensions, "libExtensions must not be null");
         final OperatingSystem os = OperatingSystem.current();
         final Architecture arch = Architecture.current();
+
+        final String libPrefix = libPrefixes.getOrDefault(os, "");
 
         String libExtension = libExtensions.get(os);
         if (libExtension != null && !libExtension.isEmpty()) {
@@ -173,6 +191,7 @@ public class NativeLibrary {
                 + RESOURCE_PATH_DELIMITER
                 + arch.name().toLowerCase(Locale.US)
                 + RESOURCE_PATH_DELIMITER
+                + libPrefix
                 + libraryName
                 + libExtension;
     }
