@@ -16,14 +16,11 @@
 
 package com.hedera.cryptography.tss.api;
 
-import com.hedera.cryptography.pairings.signatures.api.PairingPrivateKey;
-import com.hedera.cryptography.pairings.signatures.api.PairingPublicKey;
-import com.hedera.cryptography.pairings.signatures.api.PairingSignature;
-import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
-import com.hedera.cryptography.tss.impl.TssServiceImpl;
+import com.hedera.cryptography.bls.BlsPublicKey;
+import com.hedera.cryptography.bls.BlsSignature;
+import com.hedera.cryptography.bls.SignatureSchema;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
-import java.util.Random;
 
 /**
  * A Threshold Signature Scheme Service.
@@ -87,16 +84,6 @@ public interface TssService {
             @NonNull TssParticipantDirectory participantDirectory, @NonNull List<TssMessage> validTssMessages);
 
     /**
-     * Aggregate a threshold number of {@link TssPrivateShare}s.
-     *
-     * @param privateShares the private shares to aggregate
-     * @return the aggregate private key
-     * @throws IllegalStateException the list of private shares does not meet the required threshold.
-     */
-    @NonNull
-    PairingPrivateKey aggregatePrivateShares(@NonNull List<TssPrivateShare> privateShares);
-
-    /**
      * Compute all public shares for all the participants in the scheme.
      *
      * @param participantDirectory the participant directory that we should generate the public shares for
@@ -122,7 +109,7 @@ public interface TssService {
      * @return the interpolated public key
      */
     @NonNull
-    PairingPublicKey aggregatePublicShares(@NonNull List<TssPublicShare> publicShares);
+    BlsPublicKey aggregatePublicShares(@NonNull List<TssPublicShare> publicShares);
 
     /**
      * Sign a message using the private share's key.
@@ -154,15 +141,5 @@ public interface TssService {
      * @return the interpolated signature
      */
     @NonNull
-    PairingSignature aggregateSignatures(@NonNull List<TssShareSignature> partialSignatures);
-
-    /**
-     * Builder method that creates a default instance for this service
-     * @param signatureSchema predefined Curve and Group selections to use.
-     * @param random a source of randomness {@link java.util.Random}
-     * @return the default TssService instance
-     */
-    static TssService create(@NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {
-        return new TssServiceImpl(signatureSchema, random);
-    }
+    BlsSignature aggregateSignatures(@NonNull List<TssShareSignature> partialSignatures);
 }

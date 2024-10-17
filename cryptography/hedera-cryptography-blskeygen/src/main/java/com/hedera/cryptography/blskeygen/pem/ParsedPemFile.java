@@ -14,28 +14,21 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.tss.api;
+package com.hedera.cryptography.blskeygen.pem;
 
-import static java.util.Objects.requireNonNull;
-
-import com.hedera.cryptography.bls.BlsPrivateKey;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Objects;
 
 /**
- * A record that contains a share ID, and the corresponding private key.
+ * A parsed PEM file
  *
- * @param shareId the share ID
- * @param privateKey the private key
+ * @param contents the contents of the file
+ * @param pemType  the type of the file
  */
-public record TssPrivateShare(@NonNull TssShareId shareId, @NonNull BlsPrivateKey privateKey) {
-    /**
-     * Constructor
-     *
-     * @param shareId the share ID
-     * @param privateKey the private key
-     */
-    public TssPrivateShare {
-        requireNonNull(shareId, "shareId must not be null");
-        requireNonNull(shareId, "privateKey must not be null");
+public record ParsedPemFile(@NonNull String contents, @NonNull PemType pemType) {
+    /** Creates a new instance of this class */
+    public ParsedPemFile {
+        Objects.requireNonNull(contents, "contents must not be null");
+        Objects.requireNonNull(pemType, "pemType must not be null");
     }
 }
