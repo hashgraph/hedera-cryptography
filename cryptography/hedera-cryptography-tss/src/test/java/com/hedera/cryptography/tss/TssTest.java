@@ -19,12 +19,12 @@ package com.hedera.cryptography.tss;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.hedera.cryptography.bls.BlsPrivateKey;
+import com.hedera.cryptography.bls.BlsPublicKey;
+import com.hedera.cryptography.bls.BlsSignature;
+import com.hedera.cryptography.bls.GroupAssignment;
+import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
-import com.hedera.cryptography.pairings.signatures.api.PairingPrivateKey;
-import com.hedera.cryptography.pairings.signatures.api.PairingPublicKey;
-import com.hedera.cryptography.pairings.signatures.api.PairingSignature;
-import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssPrivateShare;
@@ -32,6 +32,7 @@ import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.api.TssShareId;
 import com.hedera.cryptography.tss.api.TssShareSignature;
+import com.hedera.cryptography.tss.impl.TssServiceTestImpl;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,25 +55,25 @@ class TssTest {
     @Test
     void testGenesis() {
         // Simulates the genesis process for a 3 participant network
-        final PairingPublicKey publicKey1 = mock(PairingPublicKey.class);
-        final PairingPublicKey publicKey2 = mock(PairingPublicKey.class);
-        final PairingPublicKey publicKey3 = mock(PairingPublicKey.class);
+        final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey3 = mock(BlsPublicKey.class);
 
         final TssParticipantDirectory p0sDirectory = TssParticipantDirectory.createBuilder()
-                .withSelf(0, Mockito.mock(PairingPrivateKey.class))
+                .withSelf(0, Mockito.mock(BlsPrivateKey.class))
                 .withParticipant(0, 1, publicKey1)
                 .withParticipant(1, 1, publicKey2)
                 .withParticipant(2, 1, publicKey3)
                 .withThreshold(2)
                 .build(SIGNATURE_SCHEMA);
 
-        final TssService tssService = TssService.create(SIGNATURE_SCHEMA, new Random());
+        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, new Random());
 
         // this message will contain a random share split in 3 parts
         final TssMessage p0Message = tssService.generateTssMessage(p0sDirectory);
 
         final TssParticipantDirectory p1sDirectory = TssParticipantDirectory.createBuilder()
-                .withSelf(1, mock(PairingPrivateKey.class))
+                .withSelf(1, mock(BlsPrivateKey.class))
                 .withParticipant(0, 1, publicKey1)
                 .withParticipant(1, 1, publicKey2)
                 .withParticipant(2, 1, publicKey3)
@@ -83,7 +84,7 @@ class TssTest {
         final TssMessage p1Message = tssService.generateTssMessage(p1sDirectory);
 
         final TssParticipantDirectory p2sDirectory = TssParticipantDirectory.createBuilder()
-                .withSelf(2, mock(PairingPrivateKey.class))
+                .withSelf(2, mock(BlsPrivateKey.class))
                 .withParticipant(0, 1, publicKey1)
                 .withParticipant(1, 1, publicKey2)
                 .withParticipant(2, 1, publicKey3)
@@ -116,32 +117,32 @@ class TssTest {
                 "Condition of threshold number of messages was not met");
 
         // Get the ledgerId
-        final PairingPublicKey ledgerId = tssService.aggregatePublicShares(publicShares);
+        final BlsPublicKey ledgerId = tssService.aggregatePublicShares(publicShares);
     }
 
     @Test
     void testSigning() {
         // given:
         // all this will be calculated at genesis
-        final PairingPublicKey publicKey1 = mock(PairingPublicKey.class);
-        final PairingPublicKey publicKey2 = mock(PairingPublicKey.class);
-        final PairingPublicKey publicKey3 = mock(PairingPublicKey.class);
+        final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey3 = mock(BlsPublicKey.class);
 
         final TssParticipantDirectory p0sDirectory = TssParticipantDirectory.createBuilder()
-                .withSelf(0, mock(PairingPrivateKey.class))
+                .withSelf(0, mock(BlsPrivateKey.class))
                 .withParticipant(0, 1, publicKey1)
                 .withParticipant(1, 1, publicKey2)
                 .withParticipant(2, 1, publicKey3)
                 .withThreshold(2)
                 .build(SIGNATURE_SCHEMA);
 
-        final TssService tssService = TssService.create(SIGNATURE_SCHEMA, new Random());
-        final PairingPrivateKey s = PairingPrivateKey.create(SIGNATURE_SCHEMA, new Random());
+        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, new Random());
+        final BlsPrivateKey s = BlsPrivateKey.create(SIGNATURE_SCHEMA, new Random());
         TssPublicShare mockPublic = mock(TssPublicShare.class);
         when(mockPublic.publicKey()).thenReturn(s.createPublicKey());
         final List<TssPublicShare> publicShares =
                 List.of(mock(TssPublicShare.class), mock(TssPublicShare.class), mock(TssPublicShare.class));
-        final PairingPublicKey ledgerID = tssService.aggregatePublicShares(publicShares);
+        final BlsPublicKey ledgerID = tssService.aggregatePublicShares(publicShares);
         TssPrivateShare mock = mock(TssPrivateShare.class);
         when(mock.shareId()).thenReturn(mock(TssShareId.class));
         when(mock.privateKey()).thenReturn(s);
@@ -172,7 +173,7 @@ class TssTest {
                 .filter(sign -> tssService.verifySignature(p0sDirectory, publicShares, sign))
                 .toList();
 
-        final PairingSignature signature = tssService.aggregateSignatures(validSignatures);
+        final BlsSignature signature = tssService.aggregateSignatures(validSignatures);
 
         if (!signature.verify(ledgerID, messageToSign)) {
             throw new IllegalStateException("Signature verification failed");
@@ -183,22 +184,22 @@ class TssTest {
     void rekeying() {
         // given:
         // all this will be calculated at genesis
-        final PairingPublicKey publicKey1 = mock(PairingPublicKey.class);
-        final PairingPublicKey publicKey2 = mock(PairingPublicKey.class);
-        final PairingPublicKey publicKey3 = mock(PairingPublicKey.class);
+        final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey3 = mock(BlsPublicKey.class);
 
         final TssParticipantDirectory p0sDirectory = TssParticipantDirectory.createBuilder()
-                .withSelf(0, mock(PairingPrivateKey.class))
+                .withSelf(0, mock(BlsPrivateKey.class))
                 .withParticipant(0, 1, publicKey1)
                 .withParticipant(1, 1, publicKey2)
                 .withParticipant(2, 1, publicKey3)
                 .withThreshold(2)
                 .build(SIGNATURE_SCHEMA);
 
-        final TssService tssService = TssService.create(SIGNATURE_SCHEMA, new Random());
+        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, new Random());
         final List<TssPublicShare> publicShares =
                 List.of(mock(TssPublicShare.class), mock(TssPublicShare.class), mock(TssPublicShare.class));
-        final PairingPublicKey ledgerID = tssService.aggregatePublicShares(publicShares);
+        final BlsPublicKey ledgerID = tssService.aggregatePublicShares(publicShares);
         final List<TssPrivateShare> oldP0PrivateShares = List.of(mock(TssPrivateShare.class));
 
         // then:
@@ -226,7 +227,7 @@ class TssTest {
                 "Condition of threshold number of messages was not met");
 
         // calculate the ledgerId out of the newly calculated publicShares
-        final PairingPublicKey ledgerId = tssService.aggregatePublicShares(newPublicShares);
+        final BlsPublicKey ledgerId = tssService.aggregatePublicShares(newPublicShares);
 
         if (!ledgerId.equals(ledgerID)) {
             throw new IllegalStateException("LedgerId must remain constant throughout the rekeying process");

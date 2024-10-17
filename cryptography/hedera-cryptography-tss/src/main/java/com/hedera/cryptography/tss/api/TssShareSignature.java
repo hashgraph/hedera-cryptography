@@ -18,7 +18,7 @@ package com.hedera.cryptography.tss.api;
 
 import static java.util.Objects.requireNonNull;
 
-import com.hedera.cryptography.pairings.signatures.api.PairingSignature;
+import com.hedera.cryptography.bls.BlsSignature;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
@@ -27,7 +27,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * @param shareId the share ID
  * @param signature the signature
  */
-public record TssShareSignature(@NonNull TssShareId shareId, @NonNull PairingSignature signature) {
+public record TssShareSignature(@NonNull TssShareId shareId, @NonNull BlsSignature signature) {
     /**
      * Constructor.
      *
