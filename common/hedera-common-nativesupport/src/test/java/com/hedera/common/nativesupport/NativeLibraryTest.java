@@ -116,8 +116,7 @@ class NativeLibraryTest {
                             .formatted(
                                     operatingSystem.name().toLowerCase(),
                                     architecture.name().toLowerCase(),
-                                    prefixes.getOrDefault(operatingSystem, "")
-                            ),
+                                    prefixes.getOrDefault(operatingSystem, "")),
                     library.locationInJar());
         }
     }
