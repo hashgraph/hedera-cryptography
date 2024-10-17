@@ -28,7 +28,7 @@ public final class ArkBn254Adapter
         implements FieldElementsLibraryAdapter, GroupElementsLibraryAdapter, PairingsLibraryAdapter {
     /** Instance Holder for lazy loading and concurrency handling */
     private static final SingletonLoader<ArkBn254Adapter> INSTANCE_HOLDER =
-            new SingletonLoader<>("libbn254", new ArkBn254Adapter());
+            new SingletonLoader<>("bn254", new ArkBn254Adapter());
 
     static {
         // Open the package to allow access to the native library
