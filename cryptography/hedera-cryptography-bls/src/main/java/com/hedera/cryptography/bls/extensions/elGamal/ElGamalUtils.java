@@ -201,12 +201,16 @@ public class ElGamalUtils {
      * Generates randomness consisting of one {@link FieldElement} for each byte of the size of a field element.
      *
      * @param random a source of randomness
+     * @param signatureSchema the {@link SignatureSchema} defining the group and field elements used in ElGamal encryption
      * @return a list of random field elements
      */
     // FUTURE - TSS (Maybe move somewhere else)
     public static List<FieldElement> generateEntropy(
             @NonNull final Random random, @NonNull final SignatureSchema signatureSchema) {
-        Field field = signatureSchema.getPairingFriendlyCurve().field();
+        Objects.requireNonNull(random, "random must not be null");
+        final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
+                .getPairingFriendlyCurve()
+                .field();
         return IntStream.range(0, field.elementSize())
                 .boxed()
                 .map(i -> field.random(random))
