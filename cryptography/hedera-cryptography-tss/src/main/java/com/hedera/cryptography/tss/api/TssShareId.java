@@ -25,7 +25,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  *
  * @param idElement the field element that represents the share ID
  */
-public record TssShareId(@NonNull Integer /*This will be a FieldElement from Pairings-Api*/ idElement) {
+public record TssShareId(@NonNull Long /*This will be a FieldElement from Pairings-Api*/ idElement) {
     /**
      * Constructor.
      *

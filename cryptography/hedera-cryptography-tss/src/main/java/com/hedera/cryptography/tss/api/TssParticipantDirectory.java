@@ -31,6 +31,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 /**
  * Represents a directory of participants in a Threshold Signature Scheme (TSS).
@@ -38,7 +39,7 @@ import java.util.stream.IntStream;
  * It is responsibility of the user to assign each participant with a different deterministic integer representation.</p>
  *
  *<p>The current participant is represented by a {@code self} entry, and includes {@code participantId}'s id and the tss decryption private key.</p>
- *<p>The expected {@code participantId} is the unique {@link Integer} identification for each participant executing the scheme.</p>
+ *<p>The expected {@code participantId} is the unique {@link Long} identification for each participant executing the scheme.</p>
  * <pre>{@code
  * PairingPrivateKey tssDecryptionPrivateKey = ...;
  * List<PairingPublicKey> tssEncryptionPublicKeys = ...;
@@ -57,9 +58,9 @@ import java.util.stream.IntStream;
  */
 public final class TssParticipantDirectory {
     /**
-     * A sorted list of unique integer representations of each participant in the protocol.
+     * A sorted list of unique long representations of each participant in the protocol.
      */
-    private final List<Integer> sortedParticipantIds;
+    private final List<Long> sortedParticipantIds;
     /**
      * The list of owned {@link TssShareId} by the participant that created this directory.
      */
@@ -67,11 +68,11 @@ public final class TssParticipantDirectory {
     /**
      * Stores the owner ({@code participantId}) of each {@link TssShareId} in the protocol.
      */
-    private final Map<TssShareId, Integer> shareAllocationMap;
+    private final Map<TssShareId, Long> shareAllocationMap;
     /**
      * Stores the {@link PairingPublicKey} of each {@code participantId} in the protocol.
      */
-    private final Map<Integer, PairingPublicKey> tssEncryptionPublicKeyMap;
+    private final Map<Long, PairingPublicKey> tssEncryptionPublicKeyMap;
     /**
      * The storage that holds the key to decrypt TssMessage parts intended for the participant that created this directory.
      * It is transient to assure it does not get serialized and exposed outside.
@@ -86,7 +87,7 @@ public final class TssParticipantDirectory {
      * Constructs a {@link TssParticipantDirectory} with the specified owned share IDs, share ownership map, public key
      * map, persistent pairing private key, and threshold.
      * <p>
-     * A unique integer represents each participant in the protocol and is used as {@code participantId}
+     * A unique long represents each participant in the protocol and is used as {@code participantId}
      *
      * @param sortedParticipantIds the sorted list of {@code participantId}s
      * @param currentParticipantOwnedShares the list of owned share IDs
@@ -97,10 +98,10 @@ public final class TssParticipantDirectory {
      * @param threshold the threshold value for the TSS
      */
     private TssParticipantDirectory(
-            @NonNull final List<Integer> sortedParticipantIds,
+            @NonNull final List<Long> sortedParticipantIds,
             @NonNull final List<TssShareId> currentParticipantOwnedShares,
-            @NonNull final Map<TssShareId, Integer> shareAllocationMap,
-            @NonNull final Map<Integer, PairingPublicKey> tssEncryptionPublicKeyMap,
+            @NonNull final Map<TssShareId, Long> shareAllocationMap,
+            @NonNull final Map<Long, PairingPublicKey> tssEncryptionPublicKeyMap,
             @NonNull final PrivateKeyStore tssEncryptionPrivateKeyStore,
             final int threshold) {
         this.sortedParticipantIds =
@@ -163,7 +164,7 @@ public final class TssParticipantDirectory {
      */
     public static class Builder {
         private SelfEntry selfEntry;
-        private final Map<Integer, ParticipantEntry> participantEntries = new HashMap<>();
+        private final Map<Long, ParticipantEntry> participantEntries = new HashMap<>();
         private int threshold;
 
         private Builder() {}
@@ -171,12 +172,12 @@ public final class TssParticipantDirectory {
         /**
          * Sets the self entry for the builder.
          *
-         * @param participantId the participant unique {@link Integer} representation
+         * @param participantId the participant unique {@link Long} representation
          * @param tssEncryptionPrivateKey the pairing private key used to decrypt tss share portions
          * @return the builder instance
          */
         @NonNull
-        public Builder withSelf(final int participantId, @NonNull final PairingPrivateKey tssEncryptionPrivateKey) {
+        public Builder withSelf(final long participantId, @NonNull final PairingPrivateKey tssEncryptionPrivateKey) {
             if (selfEntry != null) {
                 throw new IllegalArgumentException("There is already an for the current participant");
             }
@@ -203,7 +204,7 @@ public final class TssParticipantDirectory {
         /**
          * Adds a participant entry to the builder.
          *
-         * @param participantId the participant unique {@link Integer} representation
+         * @param participantId the participant unique {@link Long} representation
          * @param numberOfShares the number of shares
          * @param tssEncryptionPublicKey the pairing public key used to encrypt tss share portions designated to the participant represented by this entry
          * @return the builder instance
@@ -211,7 +212,7 @@ public final class TssParticipantDirectory {
          */
         @NonNull
         public Builder withParticipant(
-                final int participantId,
+                final long participantId,
                 final int numberOfShares,
                 @NonNull final PairingPublicKey tssEncryptionPublicKey) {
             if (participantEntries.containsKey(participantId))
@@ -250,16 +251,16 @@ public final class TssParticipantDirectory {
             }
 
             // Get the total number of shares of to distribute in the protocol
-            final int totalShares = participantEntries.values().stream()
-                    .map(ParticipantEntry::shareCount)
-                    .reduce(0, Integer::sum);
+            final long totalShares = participantEntries.values().stream()
+                    .mapToLong(ParticipantEntry::shareCount)
+                    .reduce(0, Long::sum);
 
             if (threshold > totalShares) {
                 throw new IllegalStateException("Threshold exceeds the number of shares");
             }
 
             // Create a sorted list of ShareId's from 1 to totalShares + 1
-            final List<TssShareId> ids = IntStream.range(1, totalShares + 1)
+            final List<TssShareId> ids = LongStream.range(1, totalShares + 1)
                     .boxed()
                     // In the future, when paring api is implemented, we need to:
                     // .map(schema.getField()::elementFromLong)
@@ -267,14 +268,13 @@ public final class TssParticipantDirectory {
                     .toList();
 
             // Create a sorted list of participants to make sure we assign the shares in the right order.
-            final List<Integer> sortedParticipantIds =
+            final List<Long> sortedParticipantIds =
                     participantEntries.keySet().stream().sorted().toList();
 
-            final Map<TssShareId, Integer> sharesAllocationMap =
-                    new HashMap<>(); /*To keep track of each share id owner*/
+            final Map<TssShareId, Long> sharesAllocationMap = new HashMap<>(); /*To keep track of each share id owner*/
             final List<TssShareId> currentParticipantOwnedShareIds =
                     new ArrayList<>(); /*To keep track of the shares owned by the creator of this directory*/
-            final Map<Integer, PairingPublicKey> tssEncryptionPublicKeyMap =
+            final Map<Long, PairingPublicKey> tssEncryptionPublicKeyMap =
                     new HashMap<>(); /*The encryption key of each participant*/
 
             final AtomicInteger assignedShares = new AtomicInteger(0); /*Counter for assigned shares*/
@@ -332,7 +332,7 @@ public final class TssParticipantDirectory {
      * Represents an entry for the participant executing the protocol, containing the ID and private key.
      * @param participantId identification of the participant
      */
-    private record SelfEntry(int participantId, @NonNull PrivateKeyStore tssEncryptionPrivateKeyStore) {
+    private record SelfEntry(long participantId, @NonNull PrivateKeyStore tssEncryptionPrivateKeyStore) {
         /**
          * Constructor
          * @param participantId identification of the participant
