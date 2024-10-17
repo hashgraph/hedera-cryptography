@@ -50,7 +50,9 @@ class NativeLibraryTest {
     void testWithNameAndCustomExtensions(OperatingSystem operatingSystem, Architecture architecture) {
         final Map<OperatingSystem, String> extensions =
                 Map.of(OperatingSystem.WINDOWS, "win", OperatingSystem.LINUX, "lx", OperatingSystem.DARWIN, "dar");
-        NativeLibrary library = NativeLibrary.withName("libcustom", extensions);
+        final Map<OperatingSystem, String> prefixes =
+                Map.of(OperatingSystem.WINDOWS, "pwin", OperatingSystem.LINUX, "plx", OperatingSystem.DARWIN, "pdar");
+        NativeLibrary library = NativeLibrary.withName("custom", prefixes, extensions);
         assertNotNull(library);
 
         try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
@@ -59,10 +61,11 @@ class NativeLibraryTest {
             archStatic.when(Architecture::current).thenReturn(architecture);
 
             assertEquals(
-                    "software/%s/%s/libcustom.%s"
+                    "software/%s/%s/%scustom.%s"
                             .formatted(
                                     operatingSystem.name().toLowerCase(),
                                     architecture.name().toLowerCase(),
+                                    prefixes.get(operatingSystem),
                                     extensions.get(operatingSystem)),
                     library.locationInJar());
         }
@@ -78,9 +81,8 @@ class NativeLibraryTest {
 
     @ParameterizedTest
     @MethodSource("combinedParameters")
-    void testWithNameAndEmptyExtensions(OperatingSystem operatingSystem, Architecture architecture) {
-        final Map<OperatingSystem, String> extensions = Map.of();
-        NativeLibrary library = NativeLibrary.withName("libcustom", extensions);
+    void testWithNameAndEmptyPrefixAndExtensions(OperatingSystem operatingSystem, Architecture architecture) {
+        final NativeLibrary library = NativeLibrary.withName("custom", Map.of(), Map.of());
         assertNotNull(library);
 
         try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
@@ -89,7 +91,7 @@ class NativeLibraryTest {
             archStatic.when(Architecture::current).thenReturn(architecture);
 
             assertEquals(
-                    "software/%s/%s/libcustom"
+                    "software/%s/%s/custom"
                             .formatted(
                                     operatingSystem.name().toLowerCase(),
                                     architecture.name().toLowerCase()),
@@ -99,10 +101,9 @@ class NativeLibraryTest {
 
     @ParameterizedTest
     @MethodSource("combinedParameters")
-    void testWithNameAndBlankExtensions(OperatingSystem operatingSystem, Architecture architecture) {
-        final Map<OperatingSystem, String> extensions =
-                Map.of(OperatingSystem.WINDOWS, "", OperatingSystem.LINUX, "", OperatingSystem.DARWIN, "");
-        NativeLibrary library = NativeLibrary.withName("libcustom", extensions);
+    void testWithOnlyOneOsPrefix(OperatingSystem operatingSystem, Architecture architecture) {
+        final Map<OperatingSystem, String> prefixes = Map.of(OperatingSystem.WINDOWS, "foo");
+        final NativeLibrary library = NativeLibrary.withName("custom", prefixes, Map.of());
         assertNotNull(library);
 
         try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
@@ -111,7 +112,30 @@ class NativeLibraryTest {
             archStatic.when(Architecture::current).thenReturn(architecture);
 
             assertEquals(
-                    "software/%s/%s/libcustom"
+                    "software/%s/%s/%scustom"
+                            .formatted(
+                                    operatingSystem.name().toLowerCase(),
+                                    architecture.name().toLowerCase(),
+                                    prefixes.getOrDefault(operatingSystem, "")),
+                    library.locationInJar());
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("combinedParameters")
+    void testWithNameAndBlankExtensions(OperatingSystem operatingSystem, Architecture architecture) {
+        final Map<OperatingSystem, String> emptyStrings =
+                Map.of(OperatingSystem.WINDOWS, "", OperatingSystem.LINUX, "", OperatingSystem.DARWIN, "");
+        NativeLibrary library = NativeLibrary.withName("custom", emptyStrings, emptyStrings);
+        assertNotNull(library);
+
+        try (MockedStatic<OperatingSystem> osStatic = Mockito.mockStatic(OperatingSystem.class);
+                MockedStatic<Architecture> archStatic = Mockito.mockStatic(Architecture.class)) {
+            osStatic.when(OperatingSystem::current).thenReturn(operatingSystem);
+            archStatic.when(Architecture::current).thenReturn(architecture);
+
+            assertEquals(
+                    "software/%s/%s/custom"
                             .formatted(
                                     operatingSystem.name().toLowerCase(),
                                     architecture.name().toLowerCase()),
@@ -128,14 +152,14 @@ class NativeLibraryTest {
 
     @Test
     void testInstallAndInvoke() {
-        // Load native library greeter.dll (Windows) or greeter.so (Linux) greeter.dylib (Mac)
+        // Load native library greeter.dll (Windows) or libgreeter.so (Linux) libgreeter.dylib (Mac)
         NativeLibrary.withName("greeter").install(this.getClass());
         assertDoesNotThrow(() -> new Greeter().getGreeting());
     }
 
     @Test
     void testInstallInvokeAndResult() {
-        // Load native library greeter.dll (Windows) or greeter.so (Linux) greeter.dylib (Mac)
+        // Load native library greeter.dll (Windows) or libgreeter.so (Linux) libgreeter.dylib (Mac)
         final NativeLibrary library = NativeLibrary.withName("greeter");
         assertNotNull(library.locationInJar(), "Should have found location in jar");
         assertDoesNotThrow(() -> library.install(this.getClass()));
