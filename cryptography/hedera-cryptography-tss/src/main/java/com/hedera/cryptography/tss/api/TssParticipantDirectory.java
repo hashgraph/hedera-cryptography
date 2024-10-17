@@ -19,9 +19,9 @@ package com.hedera.cryptography.tss.api;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
-import com.hedera.cryptography.pairings.signatures.api.PairingPrivateKey;
-import com.hedera.cryptography.pairings.signatures.api.PairingPublicKey;
-import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
+import com.hedera.cryptography.bls.BlsPrivateKey;
+import com.hedera.cryptography.bls.BlsPublicKey;
+import com.hedera.cryptography.bls.SignatureSchema;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,15 +64,15 @@ public final class TssParticipantDirectory {
     /**
      * The list of owned {@link TssShareId} by the participant that created this directory.
      */
-    private final List<TssShareId> currentParticipantOwnedShares;
+    private final List<TssShareId> currentParticipantOwnedShareIds;
     /**
      * Stores the owner ({@code participantId}) of each {@link TssShareId} in the protocol.
      */
     private final Map<TssShareId, Long> shareAllocationMap;
     /**
-     * Stores the {@link PairingPublicKey} of each {@code participantId} in the protocol.
+     * Stores the {@link BlsPublicKey} of each {@code participantId} in the protocol.
      */
-    private final Map<Long, PairingPublicKey> tssEncryptionPublicKeyMap;
+    private final Map<Long, BlsPublicKey> tssEncryptionPublicKeyMap;
     /**
      * The storage that holds the key to decrypt TssMessage parts intended for the participant that created this directory.
      * It is transient to assure it does not get serialized and exposed outside.
@@ -90,7 +90,7 @@ public final class TssParticipantDirectory {
      * A unique long represents each participant in the protocol and is used as {@code participantId}
      *
      * @param sortedParticipantIds the sorted list of {@code participantId}s
-     * @param currentParticipantOwnedShares the list of owned share IDs
+     * @param currentParticipantOwnedShareIds the list of owned share IDs
      * @param shareAllocationMap the map of share IDs to the {@code participantId} of each participant in the
      *                                  protocol.
      * @param tssEncryptionPublicKeyMap the map of participant IDs to public keys
@@ -99,15 +99,15 @@ public final class TssParticipantDirectory {
      */
     private TssParticipantDirectory(
             @NonNull final List<Long> sortedParticipantIds,
-            @NonNull final List<TssShareId> currentParticipantOwnedShares,
+            @NonNull final List<TssShareId> currentParticipantOwnedShareIds,
             @NonNull final Map<TssShareId, Long> shareAllocationMap,
-            @NonNull final Map<Long, PairingPublicKey> tssEncryptionPublicKeyMap,
+            @NonNull final Map<Long, BlsPublicKey> tssEncryptionPublicKeyMap,
             @NonNull final PrivateKeyStore tssEncryptionPrivateKeyStore,
             final int threshold) {
         this.sortedParticipantIds =
                 List.copyOf(Objects.requireNonNull(sortedParticipantIds, "sortedParticipantIds must not be null"));
-        this.currentParticipantOwnedShares = List.copyOf(Objects.requireNonNull(
-                currentParticipantOwnedShares, "currentParticipantOwnedShares must not be null"));
+        this.currentParticipantOwnedShareIds = List.copyOf(Objects.requireNonNull(
+                currentParticipantOwnedShareIds, "currentParticipantOwnedShareIds must not be null"));
         this.shareAllocationMap =
                 Map.copyOf(Objects.requireNonNull(shareAllocationMap, "shareAllocationMap must not be null"));
         this.tssEncryptionPublicKeyMap = Map.copyOf(
@@ -142,8 +142,8 @@ public final class TssParticipantDirectory {
      * @return the shares owned by the participant represented as self.
      */
     @NonNull
-    public List<TssShareId> getCurrentParticipantOwnedShares() {
-        return currentParticipantOwnedShares;
+    public List<TssShareId> getCurrentParticipantOwnedShareIds() {
+        return currentParticipantOwnedShareIds;
     }
 
     /**
@@ -177,7 +177,7 @@ public final class TssParticipantDirectory {
          * @return the builder instance
          */
         @NonNull
-        public Builder withSelf(final long participantId, @NonNull final PairingPrivateKey tssEncryptionPrivateKey) {
+        public Builder withSelf(final long participantId, @NonNull final BlsPrivateKey tssEncryptionPrivateKey) {
             if (selfEntry != null) {
                 throw new IllegalArgumentException("There is already an for the current participant");
             }
@@ -214,7 +214,7 @@ public final class TssParticipantDirectory {
         public Builder withParticipant(
                 final long participantId,
                 final int numberOfShares,
-                @NonNull final PairingPublicKey tssEncryptionPublicKey) {
+                @NonNull final BlsPublicKey tssEncryptionPublicKey) {
             if (participantEntries.containsKey(participantId))
                 throw new IllegalArgumentException(
                         "Participant with id " + participantId + " was previously added to the directory");
@@ -274,7 +274,7 @@ public final class TssParticipantDirectory {
             final Map<TssShareId, Long> sharesAllocationMap = new HashMap<>(); /*To keep track of each share id owner*/
             final List<TssShareId> currentParticipantOwnedShareIds =
                     new ArrayList<>(); /*To keep track of the shares owned by the creator of this directory*/
-            final Map<Long, PairingPublicKey> tssEncryptionPublicKeyMap =
+            final Map<Long, BlsPublicKey> tssEncryptionPublicKeyMap =
                     new HashMap<>(); /*The encryption key of each participant*/
 
             final AtomicInteger assignedShares = new AtomicInteger(0); /*Counter for assigned shares*/
@@ -311,14 +311,14 @@ public final class TssParticipantDirectory {
      * A class for storing the private key as protection for unintentional serialization or exposition of the data.
      */
     private static final class PrivateKeyStore {
-        transient PairingPrivateKey privateKey;
+        transient BlsPrivateKey privateKey;
 
-        public PrivateKeyStore(@NonNull final PairingPrivateKey privateKey) {
+        public PrivateKeyStore(@NonNull final BlsPrivateKey privateKey) {
             this.privateKey = privateKey;
         }
 
         @NonNull
-        private PairingPrivateKey getPrivateKey() {
+        private BlsPrivateKey getPrivateKey() {
             return privateKey;
         }
 
@@ -347,7 +347,7 @@ public final class TssParticipantDirectory {
      * @param shareCount number of shares owned by the participant represented by this record
      * @param tssEncryptionPublicKey the pairing public key used to encrypt tss share portions designated to the participant represented by this record
      */
-    private record ParticipantEntry(int shareCount, @NonNull PairingPublicKey tssEncryptionPublicKey) {
+    private record ParticipantEntry(int shareCount, @NonNull BlsPublicKey tssEncryptionPublicKey) {
         /**
          * Constructor
          *

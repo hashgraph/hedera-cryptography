@@ -21,9 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.cryptography.pairings.signatures.api.PairingPrivateKey;
-import com.hedera.cryptography.pairings.signatures.api.PairingPublicKey;
-import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
+import com.hedera.cryptography.bls.BlsPrivateKey;
+import com.hedera.cryptography.bls.BlsPublicKey;
+import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -33,8 +33,8 @@ class TssParticipantDirectoryTest {
     @Test
     void testInvalidThreshold() {
         final TssParticipantDirectory.Builder builder = TssParticipantDirectory.createBuilder();
-        final PairingPrivateKey privateKey = mock(PairingPrivateKey.class);
-        final PairingPublicKey publicKey = mock(PairingPublicKey.class);
+        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
+        final BlsPublicKey publicKey = mock(BlsPublicKey.class);
 
         builder.withSelf(1, privateKey);
         builder.withParticipant(1, 1, publicKey);
@@ -74,7 +74,7 @@ class TssParticipantDirectoryTest {
 
     @Test
     void testEmptyParticipants() {
-        final PairingPrivateKey privateKey = mock(PairingPrivateKey.class);
+        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
         final Exception exception = assertThrows(
                 IllegalStateException.class,
                 () -> TssParticipantDirectory.createBuilder()
@@ -90,8 +90,8 @@ class TssParticipantDirectoryTest {
 
     @Test
     void testParticipantsDoesNotContainSelf() {
-        final PairingPrivateKey privateKey = mock(PairingPrivateKey.class);
-        final PairingPublicKey publicKey = mock(PairingPublicKey.class);
+        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
+        final BlsPublicKey publicKey = mock(BlsPublicKey.class);
         final Exception exception = assertThrows(
                 IllegalStateException.class,
                 () -> TssParticipantDirectory.createBuilder()
@@ -110,8 +110,8 @@ class TssParticipantDirectoryTest {
 
     @Test
     void testValidConstruction() {
-        final PairingPrivateKey privateKey = mock(PairingPrivateKey.class);
-        final PairingPublicKey publicKey = mock(PairingPublicKey.class);
+        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
+        final BlsPublicKey publicKey = mock(BlsPublicKey.class);
         final TssParticipantDirectory directory = TssParticipantDirectory.createBuilder()
                 .withSelf(1, privateKey)
                 .withParticipant(1, 1, publicKey)
