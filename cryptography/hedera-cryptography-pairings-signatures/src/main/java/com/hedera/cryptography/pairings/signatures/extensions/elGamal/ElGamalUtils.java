@@ -142,7 +142,7 @@ public class ElGamalUtils {
                 .getPairingFriendlyCurve()
                 .field();
         final Group encryptionGroup = signatureSchema.getPublicKeyGroup();
-        Map<GroupElement, Byte> elGamalInverseSubstitutionTable = new HashMap<>();
+        final Map<GroupElement, Byte> elGamalInverseSubstitutionTable = new HashMap<>();
 
         for (byte i = Byte.MIN_VALUE; i < Byte.MAX_VALUE; i++) {
             elGamalInverseSubstitutionTable.put(encryptionGroup.generator().multiply(field.fromLong(i)), i);

@@ -20,29 +20,32 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.cryptography.pairings.api.*;
 import com.hedera.cryptography.pairings.signatures.api.GroupAssignment;
-import com.hedera.cryptography.pairings.signatures.api.PairingKeyPair;
+import com.hedera.cryptography.pairings.signatures.api.PairingPrivateKey;
+import com.hedera.cryptography.pairings.signatures.api.PairingPublicKey;
 import com.hedera.cryptography.pairings.signatures.api.SignatureSchema;
-import com.hedera.cryptography.pairings.signatures.extensions.elGamal.ElGamalUtils;
-import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 public class ElGamalUtilsTest {
+    static final Random INIT_RANDOM = new SecureRandom();
 
     @Test
-    public void testCompleteOperation() throws NoSuchAlgorithmException {
+    public void testCompleteOperation() {
         var schema = SignatureSchema.create(
                 Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS); // FUTURE TSS-Library: create a test-feature curve
 
-        final PairingKeyPair pair = PairingKeyPair.generate(schema);
+        final int seed = INIT_RANDOM.nextInt();
+        System.out.println("Seed used: " + seed);
+        final Random random = new Random(seed);
+        final PairingPrivateKey sk = PairingPrivateKey.create(schema, random);
+        final PairingPublicKey pk = sk.createPublicKey();
         final Map<Byte, FieldElement> substitutionTable = ElGamalUtils.elGamalSubstitutionTable(schema);
 
-        final var random = new Random();
-        final var sk = schema.getPairingFriendlyCurve().field().random(random);
+        final var secret = schema.getPairingFriendlyCurve().field().random(random);
         final var entropy = ElGamalUtils.generateEntropy(random, schema);
-        final var encryptedCipher =
-                ElGamalUtils.createCipherText(pair.publicKey(), substitutionTable, entropy, sk.toBytes());
+        final var encryptedCipher = ElGamalUtils.createCipherText(pk, substitutionTable, entropy, secret.toBytes());
 
         assertNotNull(encryptedCipher);
         assertEquals(schema.getPairingFriendlyCurve().field().elementSize(), encryptedCipher.size());
@@ -51,9 +54,9 @@ public class ElGamalUtilsTest {
         var entropy2 = entropy.stream()
                 .map(e -> schema.getPublicKeyGroup().generator().multiply(e))
                 .toList();
-        var recoveredSecret = ElGamalUtils.readCipherText(pair.privateKey(), entropy2, reverseTable, encryptedCipher);
+        var recoveredSecret = ElGamalUtils.readCipherText(sk, entropy2, reverseTable, encryptedCipher);
 
         assertNotNull(recoveredSecret);
-        assertEquals(sk, schema.getPairingFriendlyCurve().field().fromBytes(recoveredSecret));
+        assertEquals(secret, schema.getPairingFriendlyCurve().field().fromBytes(recoveredSecret));
     }
 }
