@@ -85,11 +85,16 @@ abstract class CargoBuildTask : DefaultTask() {
 
     private fun installCargoCrossCompiler(buildsForWindows: Boolean) {
         exec.exec {
-            val crossCompiler = if (buildsForWindows) "xwin" else "cargo-zigbuild"
+            // Pin version to latest 0.6.6 RC to due to issue
+            // https://github.com/Jake-Shadle/xwin/issues/141
+            // Version should be removed, once 0.6.6 or newer is officially available
+            val crossCompiler = if (buildsForWindows) "xwin@0.6.6-rc.2" else "cargo-zigbuild"
             commandLine = listOf(cargoBin.get() + "/cargo", "install", "--locked", crossCompiler)
         }
         if (buildsForWindows && !File(xwinFolder.get()).exists()) {
             exec.exec {
+                // https://github.com/Jake-Shadle/xwin/issues/141#issuecomment-2416864318
+                environment("RAYON_NUM_THREADS", "1")
                 commandLine =
                     listOf(
                         cargoBin.get() + "/xwin",

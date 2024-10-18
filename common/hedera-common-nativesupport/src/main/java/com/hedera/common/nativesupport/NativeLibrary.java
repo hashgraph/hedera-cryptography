@@ -252,7 +252,10 @@ public class NativeLibrary {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private void install(@NonNull final InputStream resourceStream) throws IOException {
         Objects.requireNonNull(resourceStream, "resourceStream must not be null");
-        final String fileName = Path.of(name).getFileName().toString();
+        final OperatingSystem os = OperatingSystem.current();
+        final String libName =
+                os == OperatingSystem.WINDOWS ? name + "." + libExtensions.get(OperatingSystem.WINDOWS) : name;
+        final String fileName = Path.of(libName).getFileName().toString();
         final Path tempDirectory = createTempDirectory();
         final Path tempFile = tempDirectory.resolve(fileName);
 
