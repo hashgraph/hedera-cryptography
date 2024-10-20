@@ -24,11 +24,27 @@ import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
- *  A bls signature for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
+ *  A bls element for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
+ * @param element the element
+ * @param signatureSchema a signature schema
  */
-public record BlsSignature(@NonNull GroupElement signature, @NonNull SignatureSchema signatureSchema) {
+public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSchema signatureSchema) {
+
+    /**
+     * Constructor.
+     * @param element the element
+     * @param signatureSchema a signature schema
+     */
+    public BlsSignature {
+        Objects.requireNonNull(element, "element must not be null");
+        Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
+    }
 
     /**
      * Serializes this {@link BlsPrivateKey} into a byte array.
@@ -52,30 +68,66 @@ public record BlsSignature(@NonNull GroupElement signature, @NonNull SignatureSc
     }
 
     /**
+     * Aggregates multiple {@link BlsSignature} into a single {@link BlsSignature} for efficient verification.
+     *<p>
+     * This method combines multiple signatures over the same message into a single aggregated
+     * signature, which retains the same size as a regular BLS signature.
+     * The aggregation is performed using elliptic curve point addition in the group defined by each signature schema,
+     * where each signature is a point on the curve.
+     *<p>
+     * An aggregated signature is indistinguishable from a non-aggregated signature in terms of size reducing the
+     * computational cost of verification.
+     *
+     * @param signatures A list of {@link BlsSignature}, where each signature is a point in the elliptic
+     *                   curve group.
+     * @return A single aggregated BLS signature.
+     * @throws NullPointerException if signatures is null.
+     * @throws IllegalArgumentException if there are not enough signatures to aggregate.
+     * @throws IllegalArgumentException if the signature schemas do not match.
+     */
+    public static BlsSignature aggregate(@NonNull final List<BlsSignature> signatures) {
+        if (Objects.requireNonNull(signatures, "signatures must not be null").size() < 2) {
+            throw new IllegalArgumentException("Not enough signatures to aggregate");
+        }
+        final Collection<SignatureSchema> s =
+                signatures.stream().map(BlsSignature::signatureSchema).collect(Collectors.toSet());
+        if (s.size() > 1) {
+            throw new IllegalArgumentException("signatures must not contain more than one schema");
+        }
+        final SignatureSchema schema = s.stream().findFirst().orElseThrow();
+        final List<GroupElement> elements =
+                signatures.stream().map(BlsSignature::element).toList();
+        final GroupElement aggregatedElement = schema.getSignatureGroup().batchAdd(elements);
+        return new BlsSignature(aggregatedElement, schema);
+    }
+
+    /**
      * Verify a signed message with the known public key.
      * <p>
-     * To verify a signature, we need to ensure that the message m was signed with the corresponding private key “sk”
+     * To verify a element, we need to ensure that the message m was signed with the corresponding private key “sk”
      * for the given public key “pk”.
      * <p>
-     * The signature is considered valid only if the pairing between the generator of the public key group and the
-     * signature “σ” is equal to the pairing between the public key and the message hashed to the signature key group.
+     * The element is considered valid only if the pairing between the generator of the public key group and the
+     * element “σ” is equal to the pairing between the public key and the message hashed to the element key group.
      * <p>
      * Mathematically, this verification can be expressed like this:
      * e(pk, H(m)) = e([sk]g1, H(m)) = e(g1, H(m))^(sk) = e(g1, [sk]H(m)) = e(g1, σ).
      *
      * @param publicKey the public key to verify with
      * @param message   the message that was signed
-     * @return true if the signature is valid, false otherwise
+     * @return true if the element is valid, false otherwise
      */
     public boolean verify(@NonNull final BlsPublicKey publicKey, @NonNull final byte[] message) {
+        Objects.requireNonNull(publicKey, "publicKeyÒ must not be null");
+        Objects.requireNonNull(message, "message must not be null");
         if (publicKey.signatureSchema() != signatureSchema) {
             throw new IllegalArgumentException("PublicKey does not match signatureSchema");
         }
         final Group signatureGroup = signatureSchema.getSignatureGroup();
         final Group publicKeyGroup = signatureSchema.getPublicKeyGroup();
         final PairingFriendlyCurve curve = signatureSchema.getPairingFriendlyCurve();
-        final BilinearPairing a = curve.pairingBetween(publicKey.publicKey(), signatureGroup.fromHash(message));
-        final BilinearPairing b = curve.pairingBetween(publicKeyGroup.generator(), signature);
+        final BilinearPairing a = curve.pairingBetween(publicKey.element(), signatureGroup.fromHash(message));
+        final BilinearPairing b = curve.pairingBetween(publicKeyGroup.generator(), element);
         return a.compare(b);
     }
 }

@@ -18,20 +18,21 @@ package com.hedera.cryptography.tss.api;
 
 import static java.util.Objects.requireNonNull;
 
+import com.hedera.cryptography.pairings.api.FieldElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * The ID of a TSS share.
  *
- * @param idElement the field element that represents the share ID
+ * @param id the field privateKey that represents the share ID
  */
-public record TssShareId(@NonNull Long /*This will be a FieldElement from Pairings-Api*/ idElement) {
+public record TssShareId(@NonNull FieldElement id) {
     /**
      * Constructor.
      *
-     * @param idElement the field element that represents the share ID
+     * @param id the field privateKey that represents the share ID
      */
     public TssShareId {
-        requireNonNull(idElement, "idElement must not be null");
+        requireNonNull(id, "id must not be null");
     }
 }

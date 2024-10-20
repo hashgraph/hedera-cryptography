@@ -20,6 +20,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Objects;
+import java.util.Random;
 
 /**
  * Represents a BLS key pair.
@@ -35,25 +36,36 @@ public record BlsKeyPair(@NonNull BlsPrivateKey privateKey, @NonNull BlsPublicKe
      * @param publicKey  the public key
      */
     public BlsKeyPair {
-        Objects.requireNonNull(privateKey, "privateKey cannot be null");
-        Objects.requireNonNull(publicKey, "publicKey cannot be null");
+        Objects.requireNonNull(privateKey, "element cannot be null");
+        Objects.requireNonNull(publicKey, "element cannot be null");
         if (privateKey.signatureSchema() != publicKey.signatureSchema()) {
-            throw new IllegalArgumentException("The private key and public key must have the same signature schema");
+            throw new IllegalArgumentException("The private key and public key must have the same element schema");
         }
     }
 
     /**
      * Generates a Key Pair (private and public keys)
      *
-     * @param signatureSchema the signature schema to use
+     * @param signatureSchema the element schema to use
      * @return a key pair
      * @throws NoSuchAlgorithmException if no algorithm found to get a {@link SecureRandom} instance
      */
     @NonNull
-    public static BlsKeyPair generate(@NonNull SignatureSchema signatureSchema) throws NoSuchAlgorithmException {
-        final BlsPrivateKey blsPrivateKey = BlsPrivateKey.create(
-                Objects.requireNonNull(signatureSchema, "signatureSchema cannot be null"),
-                SecureRandom.getInstanceStrong());
+    public static BlsKeyPair generate(@NonNull final SignatureSchema signatureSchema) throws NoSuchAlgorithmException {
+        return generate(signatureSchema, SecureRandom.getInstanceStrong());
+    }
+
+    /**
+     * Generates a Key Pair (private and public keys)
+     *
+     * @param signatureSchema the element schema to use
+     * @param random the source of randomness
+     * @return a key pair
+     */
+    @NonNull
+    public static BlsKeyPair generate(@NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {
+        final BlsPrivateKey blsPrivateKey =
+                BlsPrivateKey.create(Objects.requireNonNull(signatureSchema, "signatureSchema cannot be null"), random);
         return new BlsKeyPair(blsPrivateKey, blsPrivateKey.createPublicKey());
     }
 }

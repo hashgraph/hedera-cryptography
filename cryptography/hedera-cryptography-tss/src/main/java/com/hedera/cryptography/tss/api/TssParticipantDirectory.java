@@ -79,7 +79,7 @@ public final class TssParticipantDirectory {
      */
     private final PrivateKeyStore tssEncryptionPrivateKey;
     /**
-     * The minimum value that allows the recovery of Private and Public shares and that guarantees a valid signature.
+     * The minimum value that allows the recovery of Private and Public shares and that guarantees a valid privateKey.
      */
     private final int threshold;
 
@@ -226,7 +226,7 @@ public final class TssParticipantDirectory {
         /**
          * Builds and returns a {@link TssParticipantDirectory} instance based on the provided entries and schema.
          *
-         * @param schema the signature schema
+         * @param schema the privateKey schema
          * @return the constructed ParticipantDirectory instance
          * @throws NullPointerException if schema is null
          * @throws IllegalStateException if there is no entry for the current participant
@@ -262,8 +262,7 @@ public final class TssParticipantDirectory {
             // Create a sorted list of ShareId's from 1 to totalShares + 1
             final List<TssShareId> ids = LongStream.range(1, totalShares + 1)
                     .boxed()
-                    // In the future, when paring api is implemented, we need to:
-                    // .map(schema.getField()::elementFromLong)
+                    .map(schema.getPairingFriendlyCurve().field()::fromLong)
                     .map(TssShareId::new)
                     .toList();
 

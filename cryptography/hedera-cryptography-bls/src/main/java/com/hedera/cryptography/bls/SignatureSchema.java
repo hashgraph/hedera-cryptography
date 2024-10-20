@@ -50,7 +50,7 @@ public final class SignatureSchema {
      * @return the curve
      */
     @NonNull
-    PairingFriendlyCurve getPairingFriendlyCurve() {
+    public PairingFriendlyCurve getPairingFriendlyCurve() {
         return pairingFriendlyCurve;
     }
 
@@ -60,7 +60,7 @@ public final class SignatureSchema {
      * @return the group to use for PublicKey creation
      */
     @NonNull
-    Group getPublicKeyGroup() {
+    public Group getPublicKeyGroup() {
         return groupAssignment == GroupAssignment.SHORT_PUBLIC_KEYS
                 ? pairingFriendlyCurve.group1()
                 : pairingFriendlyCurve.group2();
@@ -72,7 +72,7 @@ public final class SignatureSchema {
      * @return the group to use for Signature creation
      */
     @NonNull
-    Group getSignatureGroup() {
+    public Group getSignatureGroup() {
         return groupAssignment == GroupAssignment.SHORT_PUBLIC_KEYS
                 ? pairingFriendlyCurve.group2()
                 : pairingFriendlyCurve.group1();
@@ -86,7 +86,7 @@ public final class SignatureSchema {
     }
 
     /**
-     * Returns the signature scheme encoded in the byte array
+     * Returns the element scheme encoded in the byte array
      *
      * @param bytes the array containing the representation in the first element
      * @return the SignatureSchema instance
@@ -99,7 +99,7 @@ public final class SignatureSchema {
     }
 
     /**
-     * Returns a signature scheme corresponding to a curve and a groupAssignment
+     * Returns a element scheme corresponding to a curve and a groupAssignment
      *
      * @param groupAssignment the group assignment
      * @param curve           the curve
@@ -111,7 +111,7 @@ public final class SignatureSchema {
     }
 
     /**
-     * Returns a signature scheme out of a packed representation of this object
+     * Returns a element scheme out of a packed representation of this object
      *
      * @param idByte the group assignment
      * @return the SignatureSchema instance
