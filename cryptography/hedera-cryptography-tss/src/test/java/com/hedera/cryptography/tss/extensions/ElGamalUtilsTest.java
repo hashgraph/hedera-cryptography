@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.bls.extensions.elGamal;
+package com.hedera.cryptography.tss.extensions;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,6 +23,7 @@ import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.*;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Random;
@@ -34,6 +35,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 public class ElGamalUtilsTest {
     static final Random INIT_RANDOM = new SecureRandom();
+    static final SignatureSchema schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
 
     private static Stream<Integer> randomSeeds() {
         return IntStream.range(0, 100).map(i -> INIT_RANDOM.nextInt()).boxed();
@@ -42,9 +44,6 @@ public class ElGamalUtilsTest {
     @ParameterizedTest
     @MethodSource("randomSeeds")
     public void testCompleteOperation(int seed) {
-        var schema = SignatureSchema.create(
-                Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS); // FUTURE TSS-Library: create a test-feature curve
-
         System.out.println("Seed used: " + seed);
         final Random random = new Random(seed);
         final BlsPrivateKey sk = BlsPrivateKey.create(schema, random);
@@ -52,7 +51,7 @@ public class ElGamalUtilsTest {
         final Map<Byte, FieldElement> substitutionTable = ElGamalUtils.elGamalSubstitutionTable(schema);
 
         final var secret = schema.getPairingFriendlyCurve().field().random(random);
-        final var entropy = ElGamalUtils.generateEntropy(random, schema);
+        final var entropy = ElGamalUtils.generateEntropy(random, secret.size(), schema);
         final var encryptedCipher = ElGamalUtils.createCipherText(pk, substitutionTable, entropy, secret.toBytes());
 
         assertNotNull(encryptedCipher);
@@ -75,10 +74,7 @@ public class ElGamalUtilsTest {
 
     @Test
     public void invalidKeyCannotRecoverTheSecret() {
-        var schema = SignatureSchema.create(
-                Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS); // FUTURE TSS-Library: create a test-feature curve
-
-        var seed = INIT_RANDOM.nextLong();
+        var seed = INIT_RANDOM.nextInt();
         System.out.println("Seed used: " + seed);
         final Random random = new Random(seed);
         final BlsPrivateKey sk = BlsPrivateKey.create(schema, random);
@@ -86,7 +82,7 @@ public class ElGamalUtilsTest {
         final Map<Byte, FieldElement> substitutionTable = ElGamalUtils.elGamalSubstitutionTable(schema);
 
         final var secret = schema.getPairingFriendlyCurve().field().fromBytes(SECRET);
-        final var entropy = ElGamalUtils.generateEntropy(random, schema);
+        final var entropy = ElGamalUtils.generateEntropy(random, secret.size(), schema);
         final var encryptedCipher = ElGamalUtils.createCipherText(pk, substitutionTable, entropy, secret.toBytes());
 
         assertNotNull(encryptedCipher);
@@ -97,17 +93,14 @@ public class ElGamalUtilsTest {
         var entropy2 = entropy.stream()
                 .map(e -> schema.getPublicKeyGroup().generator().multiply(e))
                 .toList();
-        var recoveredSecret = ElGamalUtils.readCipherText(sk1, entropy2, reverseTable, encryptedCipher);
 
-        assertNotNull(recoveredSecret);
-        assertNotEquals(secret, schema.getPairingFriendlyCurve().field().fromBytes(recoveredSecret));
+        var recoveredSecret = ElGamalUtils.readCipherText(sk1, entropy2, reverseTable, encryptedCipher);
+        assertTrue(recoveredSecret == null
+                || !secret.equals(schema.getPairingFriendlyCurve().field().fromBytes(recoveredSecret)));
     }
 
     @Test
     public void invalidRandomnessCannotRecoverTheSecret() {
-        var schema = SignatureSchema.create(
-                Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS); // FUTURE TSS-Library: create a test-feature curve
-
         var seed = INIT_RANDOM.nextLong();
         System.out.println("Seed used: " + seed);
         final Random random = new Random(seed);
@@ -116,19 +109,52 @@ public class ElGamalUtilsTest {
         final Map<Byte, FieldElement> substitutionTable = ElGamalUtils.elGamalSubstitutionTable(schema);
 
         final var secret = schema.getPairingFriendlyCurve().field().fromBytes(SECRET);
-        final var entropy = ElGamalUtils.generateEntropy(random, schema);
+        final var entropy = ElGamalUtils.generateEntropy(random, secret.size(), schema);
         final var encryptedCipher = ElGamalUtils.createCipherText(pk, substitutionTable, entropy, secret.toBytes());
 
         assertNotNull(encryptedCipher);
         assertEquals(schema.getPairingFriendlyCurve().field().elementSize(), encryptedCipher.size());
 
         var reverseTable = ElGamalUtils.elGamalReverseSubstitutionTable(schema);
-        var entropy2 = ElGamalUtils.generateEntropy(random, schema).stream()
+        var entropy2 = ElGamalUtils.generateEntropy(random, secret.size(), schema).stream()
+                .map(e -> schema.getPublicKeyGroup().generator().multiply(e))
+                .toList();
+        var recoveredSecret = ElGamalUtils.readCipherText(sk, entropy2, reverseTable, encryptedCipher);
+        assertTrue(recoveredSecret == null
+                || !secret.equals(schema.getPairingFriendlyCurve().field().fromBytes(recoveredSecret)));
+    }
+
+    @Test
+    public void testRecoverText() {
+
+        final int seed = INIT_RANDOM.nextInt();
+        System.out.println("Seed used: " + seed);
+        final Random random = new Random(seed);
+        final BlsPrivateKey sk = BlsPrivateKey.create(schema, random);
+        final BlsPublicKey pk = sk.createPublicKey();
+        final Map<Byte, FieldElement> substitutionTable = ElGamalUtils.elGamalSubstitutionTable(schema);
+
+        final var secret =
+                """
+                If you can't explain it simply, you don't understand it well enough.
+
+                Albert Einstein
+                """;
+
+        final var entropy = ElGamalUtils.generateEntropy(random, secret.length(), schema);
+        final var encryptedCipher =
+                ElGamalUtils.createCipherText(pk, substitutionTable, entropy, secret.getBytes(StandardCharsets.UTF_8));
+
+        assertNotNull(encryptedCipher);
+        assertEquals(secret.length(), encryptedCipher.size());
+
+        var reverseTable = ElGamalUtils.elGamalReverseSubstitutionTable(schema);
+        var entropy2 = entropy.stream()
                 .map(e -> schema.getPublicKeyGroup().generator().multiply(e))
                 .toList();
         var recoveredSecret = ElGamalUtils.readCipherText(sk, entropy2, reverseTable, encryptedCipher);
 
         assertNotNull(recoveredSecret);
-        assertNotEquals(secret, schema.getPairingFriendlyCurve().field().fromBytes(recoveredSecret));
+        assertEquals(secret, new String(recoveredSecret, StandardCharsets.UTF_8));
     }
 }

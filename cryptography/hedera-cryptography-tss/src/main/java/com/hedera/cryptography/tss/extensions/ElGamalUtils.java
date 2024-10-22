@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.bls.extensions.elGamal;
+package com.hedera.cryptography.tss.extensions;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
@@ -24,6 +24,7 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,13 +45,10 @@ public class ElGamalUtils {
     /**
      * Creates an ElGamal ciphertext from a {@code byte[]} value, chunking it byte by byte, and encrypting each chunk.
      *
-     * @implNote  <p>The method divides the input {@code value} into byte-sized chunks, then encrypts each chunk using the
+     * <p>The method divides the input {@code value} into byte-sized chunks, then encrypts each chunk using the
      * provided {@code encryptionPublicKey}, the preprocessed {@code elGamalDirectSubstitutionTable}, and the
      * provided {@code randomness}.
      *
-     * @implNote <p>Its responsibility of the caller setting up a valid and compatible elGamalDirectSubstitutionTable and reverseSubstitution table in each operation,
-     * being the easiest way to call  {@link ElGamalUtils#elGamalSubstitutionTable(SignatureSchema)}
-     * or {@link ElGamalUtils#elGamalReverseSubstitutionTable(SignatureSchema)}
      *
      * @param encryptionPublicKey the public key used for encryption
      * @param elGamalDirectSubstitutionTable a preprocessed substitution table mapping byte values to {@link FieldElement} values
@@ -58,6 +56,9 @@ public class ElGamalUtils {
      * @param value the byte array to encrypt
      * @return a list of {@link GroupElement} representing the encrypted ciphertext chunks
      * @throws IllegalArgumentException if the size of {@code randomness} does not match the length of the {@code value}
+     * @implNote Its responsibility of the caller setting up a valid and compatible elGamalDirectSubstitutionTable and reverseSubstitution table in each operation,
+     * being the easiest way to call  {@link ElGamalUtils#elGamalSubstitutionTable(SignatureSchema)}
+     * or {@link ElGamalUtils#elGamalReverseSubstitutionTable(SignatureSchema)}
      */
     @NonNull
     public static List<GroupElement> createCipherText(
@@ -87,15 +88,10 @@ public class ElGamalUtils {
 
     /**
      * Decrypts a list of ElGamal-encrypted ciphertext chunks to recover the original byte array value using brute force.
-     *
-     * @implNote <p>This method performs decryption by using the {@code decryptionPrivateKey} and the preprocessed {@code elGamalInverseSubstitutionTable}
-     * to convert each encrypted chunk back to its original value. It uses the provided {@code randomness} to unmask each ciphertext chunk
-     * during the process.
-     *
-     * @implNote <p>Its responsibility of the caller setting up a valid and compatible elGamalDirectSubstitutionTable and reverseSubstitution table in each operation,
-     * being the easiest way to call {@link ElGamalUtils#elGamalSubstitutionTable(SignatureSchema)}
-     * or {@link ElGamalUtils#elGamalReverseSubstitutionTable(SignatureSchema)}
-     *
+     *<p>
+     * In cases input parameters not matching the ones that produced the encrypted values, or dishonest decryption attempt,
+     * this method will either provide an invalid byte[] as result or return null, with no guarantees of which.
+     * <p>
      * <p><strong>Note:</strong> It is the responsibility of the caller to ensure compatibility between curve and groups.
      * All elements must belong to the same configuration.
      *
@@ -103,11 +99,15 @@ public class ElGamalUtils {
      * @param cipherTextElements the list of {@link GroupElement} representing the ciphertext chunks to decrypt
      * @param elGamalInverseSubstitutionTable the preprocessed inverse substitution table used for brute-force decryption
      * @param randomness the list of random {@link GroupElement} values used during encryption
-     * @return the decrypted byte array
+     * @return the decrypted byte array in honest decryption attempts, no guarantees of the obtained result otherwise.
      * @throws IllegalArgumentException if the size of {@code randomness} does not match the size of {@code cipherTextElements}
      * @throws NullPointerException if any of the parameters is null
+     * @implNote This method performs decryption by using the {@code decryptionPrivateKey} and the preprocessed {@code elGamalInverseSubstitutionTable}
+     * to convert each encrypted chunk back to its original value. It uses the provided {@code randomness} to unmask each ciphertext chunk
+     * during the process. <p>Its responsibility of the caller setting up a valid and compatible elGamalDirectSubstitutionTable and reverseSubstitution table in each operation,
+     * being the easiest way to call {@link ElGamalUtils#elGamalSubstitutionTable(SignatureSchema)} or {@link ElGamalUtils#elGamalReverseSubstitutionTable(SignatureSchema)}
      */
-    @NonNull
+    @Nullable
     public static byte[] readCipherText(
             @NonNull final BlsPrivateKey decryptionPrivateKey,
             @NonNull final List<GroupElement> randomness,
@@ -136,18 +136,7 @@ public class ElGamalUtils {
 
             Byte value = elGamalInverseSubstitutionTable.get(commitment);
             if (value == null) {
-                // Check this:
-                // We are in a scenario where decryption of the value has failed.
-                // There are two possible approaches to handle this situation:
-                // 1. Return a random value to ensure the process remains consistent,
-                //    even though the decryption was unsuccessful.
-                // 2. Fail fast by throwing an exception.
-                //
-                // The issue with the second approach (throwing an exception) is that in some cases,
-                // even with an invalid decryption key, we may still produce valid commitments.
-                // If users rely solely on the exception to detect decryption failure, they might be misled,
-                // since the absence of an exception does not always indicate successful decryption.
-                value = (byte) (i % Byte.MAX_VALUE);
+                return null;
             }
             output[i] = value;
         }
@@ -164,6 +153,7 @@ public class ElGamalUtils {
      * @param signatureSchema the {@link SignatureSchema} defining the group and field elements used in ElGamal encryption
      * @return a map of {@link GroupElement} to byte values used for decryption
      */
+    @NonNull
     public static Map<GroupElement, Byte> elGamalReverseSubstitutionTable(
             @NonNull final SignatureSchema signatureSchema) {
         final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
@@ -188,6 +178,7 @@ public class ElGamalUtils {
      * @param signatureSchema the {@link SignatureSchema} defining the group and field elements used in ElGamal encryption
      * @return a map of byte values to {@link FieldElement} used for encryption
      */
+    @NonNull
     public static Map<Byte, FieldElement> elGamalSubstitutionTable(@NonNull final SignatureSchema signatureSchema) {
         final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
                 .getPairingFriendlyCurve()
@@ -198,22 +189,22 @@ public class ElGamalUtils {
     }
 
     /**
-     * Generates randomness consisting of one {@link FieldElement} for each byte of the size of a field element.
+     * Generates randomness consisting of length number of {@link FieldElement}s
      *
      * @param random a source of randomness
-     * @param signatureSchema the {@link SignatureSchema} defining the group and field elements used in ElGamal encryption
+     * @param length The length of the resulting list
+     * @param signatureSchema the {@link SignatureSchema} defining the group and field elements used in ElGamal
+     *                        encryption
      * @return a list of random field elements
      */
+    @NonNull
     // FUTURE - TSS (Maybe move somewhere else)
     public static List<FieldElement> generateEntropy(
-            @NonNull final Random random, @NonNull final SignatureSchema signatureSchema) {
+            @NonNull final Random random, final int length, @NonNull final SignatureSchema signatureSchema) {
         Objects.requireNonNull(random, "random must not be null");
         final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
                 .getPairingFriendlyCurve()
                 .field();
-        return IntStream.range(0, field.elementSize())
-                .boxed()
-                .map(i -> field.random(random))
-                .toList();
+        return IntStream.range(0, length).boxed().map(i -> field.random(random)).toList();
     }
 }
