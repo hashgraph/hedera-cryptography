@@ -60,7 +60,7 @@ jobs:
       - name: Setup lld (Windows cross-compile)
         run: |
           sudo apt-get update
-          sudo apt-get -y install lld libc6-dev
+          sudo apt-get -y install lld
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808 # v4.1.0
@@ -89,7 +89,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        os: [windows-2022, macos-13, macos-14]
+        os: [windows-2022]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Harden Runner
