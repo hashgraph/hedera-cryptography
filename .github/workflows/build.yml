@@ -89,7 +89,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        os: [windows-2022]
+        os: [windows-2022, macos-13, macos-14]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Harden Runner
