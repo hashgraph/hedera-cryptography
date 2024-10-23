@@ -36,8 +36,8 @@ public record BlsKeyPair(@NonNull BlsPrivateKey privateKey, @NonNull BlsPublicKe
      * @param publicKey  the public key
      */
     public BlsKeyPair {
-        Objects.requireNonNull(privateKey, "element cannot be null");
-        Objects.requireNonNull(publicKey, "element cannot be null");
+        Objects.requireNonNull(privateKey, "privateKey cannot be null");
+        Objects.requireNonNull(publicKey, "publicKey cannot be null");
         if (privateKey.signatureSchema() != publicKey.signatureSchema()) {
             throw new IllegalArgumentException("The private key and public key must have the same element schema");
         }

@@ -55,6 +55,9 @@ public record TssShareSignature(@NonNull TssShareId shareId, @NonNull BlsSignatu
      */
     public static TssShareSignature of(final int id, @NonNull final BlsSignature signature) {
         requireNonNull(signature, "signature must not be null");
+        if (id <= 0) {
+            throw new IllegalArgumentException("id must be greater than 0");
+        }
         return new TssShareSignature(
                 new TssShareId(signature
                         .signatureSchema()

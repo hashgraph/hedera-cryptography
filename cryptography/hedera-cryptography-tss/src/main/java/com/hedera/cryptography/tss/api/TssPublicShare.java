@@ -55,6 +55,9 @@ public record TssPublicShare(@NonNull TssShareId shareId, @NonNull BlsPublicKey 
      */
     public static TssPublicShare of(final int id, @NonNull final BlsPublicKey publicKey) {
         requireNonNull(publicKey, "publicKey must not be null");
+        if (id <= 0) {
+            throw new IllegalArgumentException("id must be greater than 0");
+        }
         return new TssPublicShare(
                 new TssShareId(publicKey
                         .signatureSchema()

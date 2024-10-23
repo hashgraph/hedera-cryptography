@@ -24,10 +24,8 @@ import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  *  A bls element for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
@@ -89,12 +87,10 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
         if (Objects.requireNonNull(signatures, "signatures must not be null").size() < 2) {
             throw new IllegalArgumentException("Not enough signatures to aggregate");
         }
-        final Collection<SignatureSchema> s =
-                signatures.stream().map(BlsSignature::signatureSchema).collect(Collectors.toSet());
-        if (s.size() > 1) {
-            throw new IllegalArgumentException("signatures must not contain more than one schema");
+        if (signatures.stream().map(BlsSignature::signatureSchema).distinct().count() > 1) {
+            throw new IllegalArgumentException("All signatures should have the same schema");
         }
-        final SignatureSchema schema = s.stream().findFirst().orElseThrow();
+        final SignatureSchema schema = signatures.getFirst().signatureSchema();
         final List<GroupElement> elements =
                 signatures.stream().map(BlsSignature::element).toList();
         final GroupElement aggregatedElement = schema.getSignatureGroup().batchAdd(elements);
@@ -104,18 +100,18 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
     /**
      * Verify a signed message with the known public key.
      * <p>
-     * To verify a element, we need to ensure that the message m was signed with the corresponding private key “sk”
+     * To verify a signature, we need to ensure that the message m was signed with the corresponding private key “sk”
      * for the given public key “pk”.
      * <p>
-     * The element is considered valid only if the pairing between the generator of the public key group and the
-     * element “σ” is equal to the pairing between the public key and the message hashed to the element key group.
+     * The signature is considered valid only if the pairing between the generator of the public key group and the
+     * signature “σ” is equal to the pairing between the public key and the message hashed to the element key group.
      * <p>
      * Mathematically, this verification can be expressed like this:
      * e(pk, H(m)) = e([sk]g1, H(m)) = e(g1, H(m))^(sk) = e(g1, [sk]H(m)) = e(g1, σ).
      *
      * @param publicKey the public key to verify with
      * @param message   the message that was signed
-     * @return true if the element is valid, false otherwise
+     * @return true if the signature is valid, false otherwise
      */
     public boolean verify(@NonNull final BlsPublicKey publicKey, @NonNull final byte[] message) {
         Objects.requireNonNull(publicKey, "publicKeyÒ must not be null");

@@ -49,6 +49,9 @@ public record TssPrivateShare(@NonNull TssShareId shareId, @NonNull BlsPrivateKe
      */
     public static TssPrivateShare of(final int id, @NonNull final BlsPrivateKey privateKey) {
         requireNonNull(privateKey, "privateKey must not be null");
+        if (id <= 0) {
+            throw new IllegalArgumentException("id must be greater than 0");
+        }
         return new TssPrivateShare(new TssShareId(privateKey.element().field().fromLong(id)), privateKey);
     }
 

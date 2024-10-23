@@ -21,10 +21,8 @@ import static com.hedera.cryptography.bls.ByteArrayConversionUtils.serializePair
 
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  *  A bls public Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
@@ -72,7 +70,7 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
      * The aggregation is performed using elliptic curve point addition in the group defined by each signature schema,
      * where each signature is a point on the curve.
      *<p>
-     * An aggregated signature is indistinguishable from a non-aggregated signature in terms of size reducing the
+     * An aggregated public key is indistinguishable from a non-aggregated public key in terms of size, reducing the
      * computational cost of verification.
      *
      * @param publicKeys A list of {@link BlsPublicKey}, where each signature is a point in the elliptic
@@ -86,12 +84,10 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
         if (Objects.requireNonNull(publicKeys, "publicKeys must not be null").size() < 2) {
             throw new IllegalArgumentException("Not enough publicKeys to aggregate");
         }
-        final Collection<SignatureSchema> s =
-                publicKeys.stream().map(BlsPublicKey::signatureSchema).collect(Collectors.toSet());
-        if (s.size() > 1) {
-            throw new IllegalArgumentException("publicKeys must not contain more than one schema");
+        if (publicKeys.stream().map(BlsPublicKey::signatureSchema).distinct().count() > 1) {
+            throw new IllegalArgumentException("All keys should have the same schema");
         }
-        final SignatureSchema schema = s.stream().findFirst().orElseThrow();
+        final SignatureSchema schema = publicKeys.getFirst().signatureSchema();
         final List<GroupElement> elements =
                 publicKeys.stream().map(BlsPublicKey::element).toList();
         final GroupElement aggregatedElement = schema.getPublicKeyGroup().batchAdd(elements);
