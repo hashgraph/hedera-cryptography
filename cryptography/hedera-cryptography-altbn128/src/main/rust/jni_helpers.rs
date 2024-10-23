@@ -1,11 +1,8 @@
-use crate::group_element_utils::{
-    group_elements_add, group_elements_batch_multiply, group_elements_deserialize,
-    group_elements_deserialize_and_validate, group_elements_scalar_multiply,
-    group_elements_serialize, group_elements_total_sum,
-};
+use crate::group_element_utils::{group_elements_add, group_elements_batch_multiply, group_elements_deserialize, group_elements_deserialize_and_validate, group_elements_scalar_multiply, canonical_serialize, group_elements_total_sum};
 use crate::scalars_utils::{scalars_curve_from_bytes, scalars_from_bytes, scalars_to_bytes, F};
 use ark_bn254::{G1Affine, G1Projective, G2Affine, G2Projective};
 use ark_ec::{CurveConfig, CurveGroup};
+use ark_serialize::CanonicalSerialize;
 use jni::objects::{JByteArray, JObjectArray};
 use jni::sys::{jbyte, jint, jsize};
 use jni::JNIEnv;
@@ -98,12 +95,12 @@ pub fn extract_random_seed(env: &JNIEnv, input_seed: &JByteArray) -> Result<[u8;
 }
 
 /// Utility function to write the serialized representation of a point in an existing JByteArray
-pub fn write_return_point<G: CurveGroup>(
+pub fn write_return_point<G: CanonicalSerialize>(
     env: JNIEnv,
     point: &G,
     output: JByteArray,
 ) -> Result<jint, jint> {
-    let ge_bytes = match group_elements_serialize::<G>(&point) {
+    let ge_bytes = match canonical_serialize::<G>(&point) {
         Ok(val) => val,
         Err(_) => return Err(ARK_ERROR_RESULT_SERIALIZATION),
     };
@@ -193,7 +190,7 @@ pub fn write_points_to_jobject_array<G: CurveGroup>(
     results: Vec<G>,
 ) -> i32 {
     for (i, entry) in results.iter().enumerate() {
-        let ge_bytes = match group_elements_serialize::<G>(&entry) {
+        let ge_bytes = match canonical_serialize::<G>(&entry) {
             Ok(val) => val,
             Err(_) => return ARK_ERROR_RESULT_SERIALIZATION,
         };

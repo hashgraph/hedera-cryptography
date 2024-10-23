@@ -1,6 +1,9 @@
-use ark_ec::{CurveConfig, CurveGroup};
-use ark_serialize::CanonicalDeserialize;
+use ark_ec::{AffineRepr, CurveConfig, CurveGroup};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use rand::Rng;
+use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
+use ark_ff::{Field, PrimeField};
+
 /// Generic utility functions to instantiate and operate with curve points
 
 /// The Scalar field. It is the same Fr as bn254_field_elements. Fr is always [0,1,...r-1].
@@ -57,8 +60,7 @@ pub fn group_elements_batch_multiply<G: CurveGroup>(values: Vec<ScalarField<G>>)
 /// (De)/Serialization
 /// ******************
 
-/// returns the byte representation of a point in projective representation
-pub fn group_elements_serialize<G: CurveGroup>(element: &G) -> Result<Vec<u8>, String> {
+pub fn canonical_serialize<S: CanonicalSerialize>(element: &S) -> Result<Vec<u8>, String> {
     let mut serialized = Vec::new();
     match element.serialize_uncompressed(&mut serialized) {
         Ok(_) => Ok(serialized),
@@ -82,4 +84,26 @@ pub fn group_elements_deserialize_and_validate<G: CurveGroup>(
         Ok(val) => Ok(val),
         Err(err) => Err(err.to_string()),
     }
+}
+
+pub fn x_coordinate_from_hash<G: CurveGroup>( candidate_hash: &[u8])->Option<G::BaseField>{
+    if G::BaseField::extension_degree() == 1 {
+        // if the order is 1 the op is simpler
+        let f = <G::BaseField as Field>::BasePrimeField::from_be_bytes_mod_order(
+            &candidate_hash,
+        );
+        G::BaseField::from_base_prime_field_elems(&[f])
+    } else {
+        G::BaseField::from_random_bytes(&candidate_hash)
+    }
+}
+
+pub fn point_from_x<CC: SWCurveConfig>(x: CC::BaseField) -> Option<Affine<CC>> {
+    if let Some(p) = Affine::<CC>::get_point_from_x_unchecked(x, false){
+        let scaled = p.mul_by_cofactor();
+        if scaled.is_zero() {
+            return None;
+        }
+        Some(scaled)
+    }else { None }
 }

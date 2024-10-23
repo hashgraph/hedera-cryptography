@@ -1,3 +1,4 @@
+ use ark_bn254::{G1Affine, G2Affine};
 use crate::group_element_utils::*;
 use crate::jni_helpers;
 use jni::objects::{JByteArray, JObject, JObjectArray};
@@ -6,7 +7,6 @@ use jni::JNIEnv;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 use crate::jni_helpers::{G1, G2};
-
 const GROUP1_ELEMENT_SIZE: usize = 64;
 const GROUP2_ELEMENT_SIZE: usize = 128;
 const GROUP1: i32 = 0;
@@ -45,6 +45,31 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
             let point = group_elements_from_random::<G, ChaCha8Rng>(&mut rng);
             jni_helpers::write_return_point::<G>(env, &point, output).unwrap_or_else(|value| value)
         }
+    }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_groupElementsFromHash(
+    env: JNIEnv,
+    _instance: JObject,
+    group_id: jint,
+    input_x: JByteArray,
+    output: JByteArray,
+) -> jint {
+    let hash_array = match jni_helpers::extract_random_seed(&env, &input_x) {
+        Ok(value) => value,
+        Err(value) => return value,
+    };
+
+    if group_id == GROUP1 {
+        let x = x_coordinate_from_hash::<G1>(&hash_array).unwrap();
+        let point = point_from_x::<ark_bn254::g1::Config>(x).unwrap();
+        jni_helpers::write_return_point::<G1Affine>(env, &point, output).unwrap_or_else(|value| value)
+
+    } else {
+        let x = x_coordinate_from_hash::<G2>(&hash_array).unwrap();
+        let point = point_from_x::<ark_bn254::g2::Config>(x).unwrap();
+        jni_helpers::write_return_point::<G2Affine>(env, &point, output).unwrap_or_else(|value| value)
     }
 }
 
