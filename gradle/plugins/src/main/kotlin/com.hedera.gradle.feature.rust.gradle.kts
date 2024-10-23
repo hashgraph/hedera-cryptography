@@ -23,7 +23,9 @@ plugins { id("java") }
 
 val cargo = project.extensions.create<CargoExtension>("cargo")
 
-cargo.targets(aarch64Darwin, aarch64Linux, x86Darwin, x86Linux, x86Windows)
+// cargo.targets(aarch64Darwin, aarch64Linux, x86Darwin, x86Linux, x86Windows)
+// temporarily disable mac compilation because it's failing on GitHub actions
+cargo.targets(aarch64Linux, x86Linux, x86Windows)
 
 // Cargo might do installation work, do not run in parallel:
 tasks.withType<CargoBuildTask>().configureEach {

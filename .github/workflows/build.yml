@@ -89,7 +89,9 @@ jobs:
     needs: build
     strategy:
       matrix:
-        os: [windows-2022, macos-13, macos-14]
+        # os: [windows-2022, macos-13, macos-14]
+        # temporarily disable mac compilation because it's failing on GitHub actions
+        os: [windows-2022]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Harden Runner
