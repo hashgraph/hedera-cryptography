@@ -69,7 +69,7 @@ class TssTest {
 
         final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, new Random());
 
-        // this message will contain a random share split in 3 parts
+        // this message will contain a sharedRandomness share split in 3 parts
         final TssMessage p0Message = tssService.generateTssMessage(p0sDirectory);
 
         final TssParticipantDirectory p1sDirectory = TssParticipantDirectory.createBuilder()
@@ -80,7 +80,7 @@ class TssTest {
                 .withThreshold(2)
                 .build(SIGNATURE_SCHEMA);
 
-        // this message will contain a random share split in 3 parts
+        // this message will contain a sharedRandomness share split in 3 parts
         final TssMessage p1Message = tssService.generateTssMessage(p1sDirectory);
 
         final TssParticipantDirectory p2sDirectory = TssParticipantDirectory.createBuilder()
@@ -91,7 +91,7 @@ class TssTest {
                 .withThreshold(2)
                 .build(SIGNATURE_SCHEMA);
 
-        // this message will contain a random share split in 3 parts
+        // this message will contain a sharedRandomness share split in 3 parts
         final TssMessage p2Message = tssService.generateTssMessage(p2sDirectory);
 
         // Some other piece will distribute messages across all participants
