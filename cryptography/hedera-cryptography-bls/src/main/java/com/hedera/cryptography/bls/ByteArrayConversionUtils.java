@@ -84,7 +84,7 @@ class ByteArrayConversionUtils {
      */
     @NonNull
     static byte[] serializePairingPrivateKey(@NonNull final BlsPrivateKey value) {
-        return new Serializer(() -> value.privateKey().toBytes(), value.signatureSchema()).toBytes();
+        return new Serializer(() -> value.element().toBytes(), value.signatureSchema()).toBytes();
     }
 
     /**
@@ -95,7 +95,7 @@ class ByteArrayConversionUtils {
      */
     @NonNull
     static byte[] serializePairingPublicKey(@NonNull final BlsPublicKey value) {
-        return new Serializer(() -> value.publicKey().toBytes(), value.signatureSchema()).toBytes();
+        return new Serializer(() -> value.element().toBytes(), value.signatureSchema()).toBytes();
     }
 
     /**
@@ -106,7 +106,7 @@ class ByteArrayConversionUtils {
      */
     @NonNull
     static byte[] serializePairingSignature(@NonNull final BlsSignature value) {
-        return new Serializer(() -> value.signature().toBytes(), value.signatureSchema()).toBytes();
+        return new Serializer(() -> value.element().toBytes(), value.signatureSchema()).toBytes();
     }
 
     private record Serializer(Supplier<byte[]> bytesExtractor, SignatureSchema signatureSchema) {

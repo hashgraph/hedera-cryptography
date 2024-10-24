@@ -30,7 +30,7 @@ public interface FieldElement {
      * @return true if the fields are the same, otherwise false
      */
     default boolean isSameField(@NonNull final FieldElement otherElement) {
-        return otherElement.getField().equals(getField());
+        return otherElement.field().equals(field());
     }
 
     /**
@@ -39,7 +39,7 @@ public interface FieldElement {
      * @return the size of the field element
      */
     default int size() {
-        return getField().elementSize();
+        return field().elementSize();
     }
 
     /**
@@ -48,7 +48,7 @@ public interface FieldElement {
      * @return the field
      */
     @NonNull
-    Field getField();
+    Field field();
 
     /**
      * Adds another field element to this one

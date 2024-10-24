@@ -82,6 +82,8 @@ public final class PairingFriendlyCurves {
     }
 
     /**
+     * Returns all loaded and supported curves.
+     *
      * @return all loaded and supported curves
      */
     @NonNull

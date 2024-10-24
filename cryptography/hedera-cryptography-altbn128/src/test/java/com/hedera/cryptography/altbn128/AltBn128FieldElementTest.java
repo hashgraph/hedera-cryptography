@@ -209,6 +209,6 @@ class AltBn128FieldElementTest {
     @Test
     void fieldGetGroup() {
         var field = new AltBn128Field();
-        assertEquals(field, field.zero().getField());
+        assertEquals(field, field.zero().field());
     }
 }

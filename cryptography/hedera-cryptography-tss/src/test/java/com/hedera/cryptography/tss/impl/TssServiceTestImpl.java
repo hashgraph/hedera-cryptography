@@ -17,16 +17,14 @@
 package com.hedera.cryptography.tss.impl;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
-import com.hedera.cryptography.bls.BlsPublicKey;
-import com.hedera.cryptography.bls.BlsSignature;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssPrivateShare;
 import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
-import com.hedera.cryptography.tss.api.TssShareSignature;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
@@ -37,8 +35,6 @@ import java.util.Random;
  */
 public class TssServiceTestImpl implements TssService {
     private final SignatureSchema signatureSchema;
-    private final Random random;
-    private final BlsPrivateKey aggregatedPrivateKey;
 
     /**
      * Generates a new instance of this prototype implementation.
@@ -48,8 +44,6 @@ public class TssServiceTestImpl implements TssService {
      */
     public TssServiceTestImpl(@NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {
         this.signatureSchema = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
-        this.random = Objects.requireNonNull(random, "random must not be null");
-        this.aggregatedPrivateKey = BlsPrivateKey.create(signatureSchema, random);
     }
 
     @NonNull
@@ -72,49 +66,30 @@ public class TssServiceTestImpl implements TssService {
         return true;
     }
 
+    @Override
+    public boolean verifyTssMessage(
+            @NonNull final TssParticipantDirectory participantDirectory,
+            @Nullable final List<TssPublicShare> publicShares,
+            @NonNull final TssMessage tssMessage) {
+        return false;
+    }
+
     @NonNull
     @Override
-    public List<TssPrivateShare> decryptPrivateShares(
+    public List<TssPrivateShare> obtainPrivateShares(
             @NonNull final TssParticipantDirectory participantDirectory,
             @NonNull final List<TssMessage> validTssMessages) {
         return participantDirectory.getCurrentParticipantOwnedShareIds().stream()
-                .map(sid -> new TssPrivateShare(sid, BlsPrivateKey.create(signatureSchema, random)))
+                .map(sid -> new TssPrivateShare(sid, new BlsPrivateKey(sid.id(), signatureSchema)))
                 .toList();
     }
 
     @NonNull
     @Override
-    public List<TssPublicShare> computePublicShares(
+    public List<TssPublicShare> obtainPublicShares(
             @NonNull final TssParticipantDirectory participantDirectory, @NonNull final List<TssMessage> tssMessages) {
         return participantDirectory.getShareIds().stream()
-                .map(sid -> new TssPublicShare(
-                        sid, BlsPrivateKey.create(signatureSchema, random).createPublicKey()))
+                .map(sid -> new TssPublicShare(sid, new BlsPrivateKey(sid.id(), signatureSchema).createPublicKey()))
                 .toList();
-    }
-
-    @NonNull
-    @Override
-    public BlsPublicKey aggregatePublicShares(@NonNull final List<TssPublicShare> publicShares) {
-        return aggregatedPrivateKey.createPublicKey();
-    }
-
-    @NonNull
-    @Override
-    public TssShareSignature sign(@NonNull final TssPrivateShare privateShare, @NonNull final byte[] message) {
-        return new TssShareSignature(privateShare.shareId(), aggregatedPrivateKey.sign(message));
-    }
-
-    @Override
-    public boolean verifySignature(
-            @NonNull final TssParticipantDirectory participantDirectory,
-            @NonNull final List<TssPublicShare> publicShares,
-            @NonNull final TssShareSignature signature) {
-        return true;
-    }
-
-    @NonNull
-    @Override
-    public BlsSignature aggregateSignatures(@NonNull final List<TssShareSignature> partialSignatures) {
-        return partialSignatures.getFirst().signature();
     }
 }

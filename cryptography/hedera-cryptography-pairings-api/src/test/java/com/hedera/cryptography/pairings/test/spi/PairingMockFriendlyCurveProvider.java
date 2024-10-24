@@ -149,7 +149,7 @@ public class PairingMockFriendlyCurveProvider extends PairingFriendlyCurveProvid
         /** {@inheritDoc} */
         @NonNull
         @Override
-        public Field getField() {
+        public Field field() {
             return field;
         }
 
