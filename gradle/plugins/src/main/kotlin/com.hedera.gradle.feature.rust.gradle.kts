@@ -24,6 +24,9 @@ plugins { id("java") }
 
 val cargo = project.extensions.create<CargoExtension>("cargo")
 
+// TODO: https://github.com/hashgraph/hedera-cryptography/issues/94
+// Remove the conditional compilation once the ticket is addressed.
+// It seems to be a problem with llc liker when zig is executed in the github runners
 if (Os.isFamily(Os.FAMILY_MAC)) {
     cargo.targets(aarch64Darwin, aarch64Linux, x86Darwin, x86Linux, x86Windows)
 } else {
