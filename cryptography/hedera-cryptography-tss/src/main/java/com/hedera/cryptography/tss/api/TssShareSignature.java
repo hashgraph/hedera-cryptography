@@ -39,7 +39,7 @@ public record TssShareSignature(@NonNull TssShareId shareId, @NonNull BlsSignatu
      * Constructor.
      *
      * @param shareId   the share ID
-     * @param signature the privateKey
+     * @param signature the signature
      */
     public TssShareSignature {
         requireNonNull(shareId, "shareId must not be null");

@@ -4,7 +4,7 @@
  *   to produce an aggregate signature that can be used to sign messages and an aggregate public key that can be used to verify that signature.
  */
 module com.hedera.cryptography.tss {
-    requires transitive com.hedera.cryptography.pairings.signatures;
+    requires transitive com.hedera.cryptography.bls;
     requires static transitive com.github.spotbugs.annotations;
 
     exports com.hedera.cryptography.tss.api;
