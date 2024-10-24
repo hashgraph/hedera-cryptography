@@ -24,7 +24,6 @@ plugins { id("java") }
 
 val cargo = project.extensions.create<CargoExtension>("cargo")
 
-// temporarily disable mac compilation ON THE PIPELINE because it's failing on GitHub actions
 if (Os.isFamily(Os.FAMILY_MAC)) {
     cargo.targets(aarch64Darwin, aarch64Linux, x86Darwin, x86Linux, x86Windows)
 } else {
