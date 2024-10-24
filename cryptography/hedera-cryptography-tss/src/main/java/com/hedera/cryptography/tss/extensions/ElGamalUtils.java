@@ -91,7 +91,6 @@ public class ElGamalUtils {
      *<p>
      * In cases input parameters not matching the ones that produced the encrypted values, or dishonest decryption attempt,
      * this method will either provide an invalid byte[] as result or return null, with no guarantees of which.
-     * <p>
      * <p><strong>Note:</strong> It is the responsibility of the caller to ensure compatibility between curve and groups.
      * All elements must belong to the same configuration.
      *
@@ -123,7 +122,7 @@ public class ElGamalUtils {
         Objects.requireNonNull(elGamalInverseSubstitutionTable, "elGamalInverseSubstitutionTable must not be null");
 
         final FieldElement keyElement = decryptionPrivateKey.element();
-        final Field keyField = keyElement.getField();
+        final Field keyField = keyElement.field();
 
         final FieldElement zeroElement = keyField.fromLong(0L);
 
