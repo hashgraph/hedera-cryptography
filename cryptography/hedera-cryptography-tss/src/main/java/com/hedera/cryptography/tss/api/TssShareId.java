@@ -24,13 +24,13 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 /**
  * The ID of a TSS share.
  *
- * @param id the field privateKey that represents the share ID
+ * @param id the {@link FieldElement} that represents the share ID
  */
 public record TssShareId(@NonNull FieldElement id) {
     /**
      * Constructor.
      *
-     * @param id the field privateKey that represents the share ID
+     * @param id the {@link FieldElement} that represents the share ID
      */
     public TssShareId {
         requireNonNull(id, "id must not be null");

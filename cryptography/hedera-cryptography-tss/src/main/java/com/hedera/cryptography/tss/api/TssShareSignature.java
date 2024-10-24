@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  * It's a BLS signature with an owner.
  *
  * @param shareId the share ID
- * @param signature the privateKey
+ * @param signature the signature
  */
 public record TssShareSignature(@NonNull TssShareId shareId, @NonNull BlsSignature signature) {
     /**

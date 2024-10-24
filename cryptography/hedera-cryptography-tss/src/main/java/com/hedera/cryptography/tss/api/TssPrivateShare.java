@@ -58,7 +58,7 @@ public record TssPrivateShare(@NonNull TssShareId shareId, @NonNull BlsPrivateKe
     /**
      * Sign a message using the private share's key.
      * @param message the message to sign
-     * @return the privateKey
+     * @return the {@link TssShareSignature}
      */
     @NonNull
     public TssShareSignature sign(@NonNull final byte[] message) {

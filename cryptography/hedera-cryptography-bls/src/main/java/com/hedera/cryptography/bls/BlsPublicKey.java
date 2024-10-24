@@ -27,14 +27,14 @@ import java.util.Objects;
 /**
  *  A bls public Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
  * @param element a GroupElement
- * @param signatureSchema the signature schema
+ * @param signatureSchema the signatureSchema
  */
 public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSchema signatureSchema) {
 
     /**
      * Constructor
      * @param element the element
-     * @param signatureSchema the signature schema
+     * @param signatureSchema the signatureSchema
      */
     public BlsPublicKey {
         Objects.requireNonNull(element, "element must not be null");
@@ -68,7 +68,7 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
      * This method combines multiple public keys into a single aggregated
      * public key, which retains the same size as a regular {@link BlsPublicKey} .
      * The aggregation is performed using elliptic curve point addition in the group defined by each signature schema,
-     * where each signature is a point on the curve.
+     * where each publicKey is a point on the curve.
      *<p>
      * An aggregated public key is indistinguishable from a non-aggregated public key in terms of size, reducing the
      * computational cost of verification.
@@ -95,11 +95,11 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
     }
 
     /**
-     * Verifies an element out of its byte array representation
-     * @param signature the serialized form of an element
-     * @param message unsigned message to validate the element
-     * @return true is the provided element is a valid element of the message
-     * @throws IllegalArgumentException if the element representation is invalid
+     * Verifies a signature out of its byte array representation
+     * @param signature the serialized form of a signature
+     * @param message unsigned message to validate the signature
+     * @return true is the provided signature is a valid signature of the message
+     * @throws IllegalArgumentException if the signature representation is invalid
      */
     public boolean verifySignature(@NonNull final byte[] signature, @NonNull final byte[] message) {
         final BlsSignature blsSignature = BlsSignature.fromBytes(signature);

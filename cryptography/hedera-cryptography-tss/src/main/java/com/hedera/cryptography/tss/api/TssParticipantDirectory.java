@@ -79,7 +79,7 @@ public final class TssParticipantDirectory {
      */
     private final PrivateKeyStore tssEncryptionPrivateKey;
     /**
-     * The minimum value that allows the recovery of Private and Public shares and that guarantees a valid privateKey.
+     * The minimum value that allows the recovery of Private and Public shares and that guarantees a valid signature.
      */
     private final int threshold;
 
@@ -226,7 +226,7 @@ public final class TssParticipantDirectory {
         /**
          * Builds and returns a {@link TssParticipantDirectory} instance based on the provided entries and schema.
          *
-         * @param schema the privateKey schema
+         * @param schema the signatureSchema
          * @return the constructed ParticipantDirectory instance
          * @throws NullPointerException if schema is null
          * @throws IllegalStateException if there is no entry for the current participant

@@ -39,14 +39,14 @@ public record BlsKeyPair(@NonNull BlsPrivateKey privateKey, @NonNull BlsPublicKe
         Objects.requireNonNull(privateKey, "privateKey cannot be null");
         Objects.requireNonNull(publicKey, "publicKey cannot be null");
         if (privateKey.signatureSchema() != publicKey.signatureSchema()) {
-            throw new IllegalArgumentException("The private key and public key must have the same element schema");
+            throw new IllegalArgumentException("The private key and public key must have the same signatureSchema");
         }
     }
 
     /**
      * Generates a Key Pair (private and public keys)
      *
-     * @param signatureSchema the element schema to use
+     * @param signatureSchema the signature to use
      * @return a key pair
      * @throws NoSuchAlgorithmException if no algorithm found to get a {@link SecureRandom} instance
      */

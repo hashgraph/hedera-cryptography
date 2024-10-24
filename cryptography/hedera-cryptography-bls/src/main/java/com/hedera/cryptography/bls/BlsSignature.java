@@ -104,7 +104,7 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
      * for the given public key “pk”.
      * <p>
      * The signature is considered valid only if the pairing between the generator of the public key group and the
-     * signature “σ” is equal to the pairing between the public key and the message hashed to the element key group.
+     * signature “σ” is equal to the pairing between the public key and the message hashed to the signature group.
      * <p>
      * Mathematically, this verification can be expressed like this:
      * e(pk, H(m)) = e([sk]g1, H(m)) = e(g1, H(m))^(sk) = e(g1, [sk]H(m)) = e(g1, σ).

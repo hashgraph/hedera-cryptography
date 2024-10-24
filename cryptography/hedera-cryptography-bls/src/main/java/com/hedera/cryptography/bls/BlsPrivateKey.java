@@ -28,7 +28,7 @@ import java.util.Random;
 /**
  *  A bls private Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
  * @param element the element
- * @param signatureSchema the signature schema
+ * @param signatureSchema the signatureSchema
  */
 public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSchema signatureSchema) {
     /**
@@ -47,7 +47,7 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
      *
      * @param signatureSchema   The implementing curve type
      * @param random The environment secureRandom to use
-     * @return a element for that CurveType
+     * @return a privateKey for that CurveType
      */
     @NonNull
     public static BlsPrivateKey create(@NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {
@@ -72,10 +72,10 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
     }
 
     /**
-     * Signs a message and returns the element
+     * Signs a message and returns the signature
      *
      * @param message the message to sign
-     * @return the element of the message represented by {@code message}
+     * @return the signature of the message represented by {@code message}
      */
     @NonNull
     public BlsSignature sign(final @NonNull byte[] message) {
