@@ -29,7 +29,10 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-// FUTURE maybe use https://github.com/PoslavskySV/rings to match values against another implementation.
+// FUTURE work:Given that the polynomial is defined for a finite field, it is not possible to easily test it.
+// By using an alternative finite field implementation, we can calculate a reference polynomial with the second library
+// and contrast the result of the two of them as a testing mechanism.
+// possibly investigate: https://github.com/PoslavskySV/rings
 class PolynomialTest {
 
     private static final Random ROOT_RNG = new SecureRandom();
