@@ -88,7 +88,7 @@ public final class SignatureSchema {
     /**
      * Returns the signature scheme encoded in the byte array
      *
-     * @param bytes the array containing the representation in the first signature
+     * @param bytes the array containing the representation in the first element
      * @return the SignatureSchema instance
      */
     @NonNull
