@@ -67,7 +67,7 @@ public class AltBn128FieldElement implements FieldElement {
      */
     @NonNull
     @Override
-    public Field getField() {
+    public Field field() {
         return this.field;
     }
 

@@ -50,7 +50,7 @@ public final class SignatureSchema {
      * @return the curve
      */
     @NonNull
-    PairingFriendlyCurve getPairingFriendlyCurve() {
+    public PairingFriendlyCurve getPairingFriendlyCurve() {
         return pairingFriendlyCurve;
     }
 
@@ -60,7 +60,7 @@ public final class SignatureSchema {
      * @return the group to use for PublicKey creation
      */
     @NonNull
-    Group getPublicKeyGroup() {
+    public Group getPublicKeyGroup() {
         return groupAssignment == GroupAssignment.SHORT_PUBLIC_KEYS
                 ? pairingFriendlyCurve.group1()
                 : pairingFriendlyCurve.group2();
@@ -72,7 +72,7 @@ public final class SignatureSchema {
      * @return the group to use for Signature creation
      */
     @NonNull
-    Group getSignatureGroup() {
+    public Group getSignatureGroup() {
         return groupAssignment == GroupAssignment.SHORT_PUBLIC_KEYS
                 ? pairingFriendlyCurve.group2()
                 : pairingFriendlyCurve.group1();
@@ -88,7 +88,7 @@ public final class SignatureSchema {
     /**
      * Returns the signature scheme encoded in the byte array
      *
-     * @param bytes the array containing the representation in the first element
+     * @param bytes the array containing the representation in the first signature
      * @return the SignatureSchema instance
      */
     @NonNull

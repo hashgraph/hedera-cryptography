@@ -22,7 +22,8 @@ import com.hedera.cryptography.bls.BlsPrivateKey;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * A record that contains a share ID, and the corresponding private key.
+ * Represents a secret portion of a shared key.
+ * It's a BLS private key with an owner.
  *
  * @param shareId the share ID
  * @param privateKey the private key
@@ -36,6 +37,31 @@ public record TssPrivateShare(@NonNull TssShareId shareId, @NonNull BlsPrivateKe
      */
     public TssPrivateShare {
         requireNonNull(shareId, "shareId must not be null");
-        requireNonNull(shareId, "privateKey must not be null");
+        requireNonNull(privateKey, "privateKey must not be null");
+    }
+
+    /**
+     * Creates a new instance.
+     *
+     * @param id id
+     * @param privateKey the private key
+     * @return a new {@link TssPrivateShare}
+     */
+    public static TssPrivateShare of(final int id, @NonNull final BlsPrivateKey privateKey) {
+        requireNonNull(privateKey, "privateKey must not be null");
+        if (id <= 0) {
+            throw new IllegalArgumentException("id must be greater than 0");
+        }
+        return new TssPrivateShare(new TssShareId(privateKey.element().field().fromLong(id)), privateKey);
+    }
+
+    /**
+     * Sign a message using the private share's key.
+     * @param message the message to sign
+     * @return the {@link TssShareSignature}
+     */
+    @NonNull
+    public TssShareSignature sign(@NonNull final byte[] message) {
+        return new TssShareSignature(this.shareId(), this.privateKey().sign(message));
     }
 }

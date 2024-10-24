@@ -19,16 +19,34 @@ package com.hedera.cryptography.tss;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.pairings.api.Field;
+import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 class TssParticipantDirectoryTest {
+
+    private SignatureSchema signatureSchema;
+
+    @BeforeEach
+    void setUp() {
+        signatureSchema = mock(SignatureSchema.class);
+        var curve = mock(PairingFriendlyCurve.class);
+        when(signatureSchema.getPairingFriendlyCurve()).thenReturn(curve);
+        final Field field = mock(Field.class);
+        when(curve.field()).thenReturn(field);
+        when(field.fromLong(anyLong())).thenReturn(mock(FieldElement.class));
+    }
 
     @Test
     void testInvalidThreshold() {
@@ -64,9 +82,7 @@ class TssParticipantDirectoryTest {
     void testEmptyBuilder() {
         final TssParticipantDirectory.Builder builder = TssParticipantDirectory.createBuilder();
         final Exception exception = assertThrows(
-                IllegalStateException.class,
-                () -> builder.build(mock(SignatureSchema.class)),
-                "participant check did not work");
+                IllegalStateException.class, () -> builder.build(signatureSchema), "participant check did not work");
         assertTrue(
                 exception.getMessage().contains("There should be an entry for the current participant"),
                 "participant check did not work");
@@ -80,7 +96,7 @@ class TssParticipantDirectoryTest {
                 () -> TssParticipantDirectory.createBuilder()
                         .withSelf(1, privateKey)
                         .withThreshold(1)
-                        .build(mock(SignatureSchema.class)),
+                        .build(signatureSchema),
                 "participant check did not work");
 
         assertTrue(
@@ -98,7 +114,7 @@ class TssParticipantDirectoryTest {
                         .withSelf(1, privateKey)
                         .withParticipant(2, 1, publicKey)
                         .withThreshold(1)
-                        .build(mock(SignatureSchema.class)),
+                        .build(signatureSchema),
                 "participant check did not work");
 
         assertTrue(
@@ -116,7 +132,7 @@ class TssParticipantDirectoryTest {
                 .withSelf(1, privateKey)
                 .withParticipant(1, 1, publicKey)
                 .withThreshold(1)
-                .build(mock(SignatureSchema.class));
+                .build(signatureSchema);
 
         assertNotNull(directory, "directory should not be null");
     }
