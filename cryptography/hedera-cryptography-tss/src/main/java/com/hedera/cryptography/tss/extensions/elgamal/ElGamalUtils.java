@@ -230,7 +230,7 @@ public class ElGamalUtils {
             chunkRandomness.add(publicKeyGenerator.multiply(randomElement));
         }
 
-        final Map<TssShareId, List<GroupElement>> multiEncryptedValues = new HashMap<>();
+        final Map<Integer, List<GroupElement>> multiEncryptedValues = new HashMap<>();
         for (int i = 0; i < ids.size(); i++) {
             final TssShareId id = ids.get(i);
             final FieldElement secret = secrets.get(i);
@@ -238,7 +238,8 @@ public class ElGamalUtils {
             if (pk == null) {
                 throw new IllegalArgumentException("Key not present for share: " + id);
             }
-            multiEncryptedValues.put(id, createCipherText(pk, elGamalSubstitutionTable, randomness, secret.toBytes()));
+            multiEncryptedValues.put(
+                    i + 1, createCipherText(pk, elGamalSubstitutionTable, randomness, secret.toBytes()));
         }
         return new CiphertextTable(List.copyOf(chunkRandomness), Map.copyOf(multiEncryptedValues));
     }

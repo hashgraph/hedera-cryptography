@@ -18,12 +18,10 @@ package com.hedera.cryptography.tss.extensions.elgamal;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.tss.api.TssShareId;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * A {@link CiphertextTable} contains an encrypted share from an individual secret, to each existing share.
@@ -32,7 +30,7 @@ import java.util.Map.Entry;
  * @param shareCiphertexts the contained share ciphertexts, in order of the share IDs
  */
 public record CiphertextTable(
-        @NonNull List<GroupElement> sharedRandomness, @NonNull Map<TssShareId, List<GroupElement>> shareCiphertexts) {
+        @NonNull List<GroupElement> sharedRandomness, @NonNull Map<Integer, List<GroupElement>> shareCiphertexts) {
 
     /**
      * Combines this representation into a compressed representation still containing all the information.
@@ -42,39 +40,23 @@ public record CiphertextTable(
      */
     @NonNull
     public CombinedCiphertext combine(@NonNull final FieldElement base) {
-        //        let c1 = ctxt.ramdomness
-        //            .iter().enumerate().fold(
-        //                G::Affine::zero(),
-        //                |acc, (j, c1_j)|
-        //                    acc.add(c1_j.mul(&G::ScalarField::from(256u64).pow([j as u64])).into_affine())
-        //                .into_affine()
-        //            );
         final List<GroupElement> ramdomness = new ArrayList<>();
 
         for (int i = 0; i < this.sharedRandomness().size(); i++) {
             ramdomness.add(this.sharedRandomness().get(i).multiply(base.power(i)));
         }
-        final GroupElement c0 = ramdomness.getFirst().getGroup().batchAdd(ramdomness);
-        //        let mut c2 = Vec::new();
-        //        for receiver_i_ctxt in ctxt.ciphertexts.iter() {
-        //            let c2_i = receiver_i_ctxt
-        //                .iter().enumerate().fold(
-        //                    G::Affine::zero(),
-        //                    |acc, (j, c2_ij)|
-        //                        acc.add(c2_ij.mul(&G::ScalarField::from(256u64).pow([j as u64])).into_affine())
-        //                    .into_affine()
-        //                );
-        //            c2.push(c2_i);
-        //        }
-        final List<GroupElement> c1 = new ArrayList<>();
-        for (final Entry<TssShareId, List<GroupElement>> entry :
-                this.shareCiphertexts().entrySet()) {
-            final List<GroupElement> shared = new ArrayList<>();
-            for (int i = 0; i < entry.getValue().size(); i++) {
-                shared.add(entry.getValue().get(i).multiply(base.power(i)));
+        final GroupElement c1 = ramdomness.getFirst().getGroup().batchAdd(ramdomness);
+        final List<GroupElement> c2 = new ArrayList<>();
+
+        for (int i = 0; i < this.shareCiphertexts().size(); i++) {
+            final List<GroupElement> ctxt_i = this.shareCiphertexts().get(i + 1);
+            final List<GroupElement> c2_is = new ArrayList<>();
+            for (int j = 0; j < ctxt_i.size(); j++) {
+                final GroupElement c2_ij = ctxt_i.get(j);
+                c2_is.add(c2_ij.multiply(base.power(j)));
             }
-            c1.add(shared.getFirst().getGroup().batchAdd(shared));
+            c2.add(c2_is.getFirst().getGroup().batchAdd(c2_is));
         }
-        return new CombinedCiphertext(c0, c1);
+        return new CombinedCiphertext(c1, c2);
     }
 }
