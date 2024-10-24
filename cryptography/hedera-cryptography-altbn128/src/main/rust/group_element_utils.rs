@@ -86,7 +86,7 @@ pub fn group_elements_deserialize_and_validate<G: CurveGroup>(
     }
 }
 
-pub fn x_coordinate_from_hash<G: CurveGroup>( candidate_hash: &[u8])->Option<G::BaseField>{
+pub fn x_coordinate_from_hash<G: SWCurveConfig>( candidate_hash: &[u8])->Option<G::BaseField>{
     if G::BaseField::extension_degree() == 1 {
         // if the order is 1 the op is simpler
         let f = <G::BaseField as Field>::BasePrimeField::from_be_bytes_mod_order(

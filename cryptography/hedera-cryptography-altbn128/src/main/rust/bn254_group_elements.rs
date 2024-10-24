@@ -1,5 +1,6 @@
- use ark_bn254::{G1Affine, G2Affine};
-use crate::group_element_utils::*;
+ //use ark_bn254::{G1Affine, G2Affine};
+ use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
+ use crate::group_element_utils::*;
 use crate::jni_helpers;
 use jni::objects::{JByteArray, JObject, JObjectArray};
 use jni::sys::jint;
@@ -10,6 +11,9 @@ use crate::jni_helpers::{G1, G2};
 const GROUP1_ELEMENT_SIZE: usize = 64;
 const GROUP2_ELEMENT_SIZE: usize = 128;
 const GROUP1: i32 = 0;
+
+ type G1Config = ark_bn254::g1::Config;
+ type G2Config = ark_bn254::g2::Config;
 
 /// JNI function to create a new random group element from a seed value
 /// # Arguments
@@ -62,16 +66,27 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     };
 
     if group_id == GROUP1 {
-        let x = x_coordinate_from_hash::<G1>(&hash_array).unwrap();
-        let point = point_from_x::<ark_bn254::g1::Config>(x).unwrap();
-        jni_helpers::write_return_point::<G1Affine>(env, &point, output).unwrap_or_else(|value| value)
-
+        elements_from_hash_generic::<G1Config>(env, &hash_array, output)
     } else {
-        let x = x_coordinate_from_hash::<G2>(&hash_array).unwrap();
-        let point = point_from_x::<ark_bn254::g2::Config>(x).unwrap();
-        jni_helpers::write_return_point::<G2Affine>(env, &point, output).unwrap_or_else(|value| value)
+        elements_from_hash_generic::<G2Config>(env, &hash_array, output)
     }
 }
+
+ pub fn elements_from_hash_generic<CC: SWCurveConfig>(
+     env: JNIEnv,
+     hash_array: &[u8],
+     output: JByteArray,
+ ) -> jint {
+     let x_option = x_coordinate_from_hash::<CC>(&hash_array);
+     if x_option.is_none() {
+         return jni_helpers::BUSINESS_ERROR_POINT_NOT_IN_CURVE;
+     }
+     let point_option = point_from_x::<CC>(x_option.unwrap());
+        if point_option.is_none() {
+            return jni_helpers::BUSINESS_ERROR_POINT_NOT_IN_CURVE;
+        }
+     jni_helpers::write_return_point::<Affine<CC>>(env, &point_option.unwrap(), output).unwrap_or_else(|value| value)
+ }
 
 /// JNI function that determines if a byte array representation of a group element is valid
 /// # Arguments

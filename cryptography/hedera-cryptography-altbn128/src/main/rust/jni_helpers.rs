@@ -36,7 +36,7 @@ const JNI_ERROR_COULD_SET_RESULT_DATA_IN_MATRIX: i32 = -1010;
 const JNI_ERROR_COULD_NOT_TRANSFORM_RESULT_ELEMENT: i32 = -1011;
 pub type ScalarField<G> = <<G as CurveGroup>::Config as CurveConfig>::ScalarField;
 /// * -4    Business Error: Point is not in the curve
-const BUSINESS_ERROR_POINT_NOT_IN_CURVE: i32 = -4;
+pub(crate) const BUSINESS_ERROR_POINT_NOT_IN_CURVE: i32 = -4;
 
 /// Utility function read a scalar form a JByteArray, if the scalar is bigger than the field a reduction is performed
 pub fn to_scalar_from_curve<G: CurveGroup>(
