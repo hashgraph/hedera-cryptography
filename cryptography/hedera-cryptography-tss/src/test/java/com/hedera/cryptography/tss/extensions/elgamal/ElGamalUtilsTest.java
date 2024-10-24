@@ -187,7 +187,7 @@ public class ElGamalUtilsTest {
         var table = ElGamalUtils.ciphertextTable(schema, random, elGamalEncryptionKeys, ids, secrets);
 
         for (int i = 0; i < ids.size(); i++) {
-            var ecVal = table.shareCiphertexts().get(ids.get(i));
+            var ecVal = table.shareCiphertexts().get(i + 1);
             var dc = ElGamalUtils.readCipherText(sks.get(i), table.sharedRandomness(), inverse, ecVal);
             assertNotNull(ecVal);
             assertNotNull(dc);
