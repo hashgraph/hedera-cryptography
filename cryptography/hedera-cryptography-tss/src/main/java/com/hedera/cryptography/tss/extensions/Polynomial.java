@@ -54,8 +54,9 @@ public record Polynomial(@NonNull List<FieldElement> coefficients) {
     }
 
     /**
-     * Creates a random degree t polynomial with a fixed point at x = 0.
-     * The polynomial generated here has t+1 number of coefficients: {@code a_0, a_1, ..., a_t} such that {@code p(x) = a_0 + a_1 * x + a_2 * x^2 + ... + a_t * x^t}
+     * Creates a random degree d polynomial with a fixed point at x = 0.
+     * The polynomial generated here has d+1 number of coefficients: {@code a_0, a_1, ..., a_d} such that: <br/>
+     * {@code p(x) = a_0 + a_1 * x + a_2 * x^2 + ... + a_d * x^d}
      *
      * @param random    a source of randomness
      * @param fixedValue the fixedValue to embed in the polynomial
@@ -74,7 +75,7 @@ public record Polynomial(@NonNull List<FieldElement> coefficients) {
         if (degree <= 0) {
             throw new IllegalArgumentException("degree must be positive");
         }
-        final List<FieldElement> coefficients = new ArrayList<>(degree);
+        final List<FieldElement> coefficients = new ArrayList<>(degree + 1);
 
         // the fixedValue is embedded at x = 0
         coefficients.add(fixedValue);

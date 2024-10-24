@@ -47,10 +47,12 @@ public interface Field {
     }
 
     /**
-     * Creates a new field element from a long
+     * Creates a new field element from a positive long value.
+     * If {@code inputLong} is larger than the modulus p of this Field, this method performs the appropriate reduction.
      *
-     * @param inputLong the long to use to create the field element
+     * @param inputLong the positive long to use to create the field element
      * @return the new field element
+     * @throws IllegalArgumentException if the value is negative
      */
     @NonNull
     FieldElement fromLong(long inputLong);
@@ -74,10 +76,12 @@ public interface Field {
     FieldElement fromBytes(@NonNull byte[] bytes);
 
     /**
-     * Creates a field element from a {@link BigInteger}
+     * Creates a field element from a positive {@link BigInteger} value.
+     * If {@code bigInteger} is larger than the modulus p of this Field, this method performs the appropriate reduction.
      *
      * @param bigInteger the scalar
      * @return the new field element
+     * @throws IllegalArgumentException if the value is negative
      */
     @NonNull
     FieldElement fromBigInteger(@NonNull BigInteger bigInteger);

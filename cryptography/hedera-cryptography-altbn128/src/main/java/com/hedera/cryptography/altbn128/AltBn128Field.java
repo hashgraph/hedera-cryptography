@@ -74,6 +74,9 @@ public class AltBn128Field implements Field {
     @NonNull
     @Override
     public FieldElement fromBigInteger(@NonNull final BigInteger bigInteger) {
+        if (bigInteger.signum() == -1) {
+            throw new IllegalArgumentException("BigInteger cannot be negative");
+        }
         return new AltBn128FieldElement(
                 facade.fromBytes(ByteArrayUtils.toLittleEndianBytes(bigInteger, facade.size())), this);
     }
