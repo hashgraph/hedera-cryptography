@@ -50,7 +50,7 @@ public class ElGamalUtilsTest {
         final Random random = new Random(seed);
         final BlsPrivateKey sk = BlsPrivateKey.create(schema, random);
         final BlsPublicKey pk = sk.createPublicKey();
-        final ElGamalSubstitutionTable<Byte, FieldElement> substitutionTable =
+        final ElGamalSubstitutionTable<FieldElement, Byte> substitutionTable =
                 ElGamalUtils.elGamalSubstitutionTable(schema);
 
         final var secret = schema.getPairingFriendlyCurve().field().random(random);
@@ -82,7 +82,7 @@ public class ElGamalUtilsTest {
         final Random random = new Random(seed);
         final BlsPrivateKey sk = BlsPrivateKey.create(schema, random);
         final BlsPublicKey pk = sk.createPublicKey();
-        final ElGamalSubstitutionTable<Byte, FieldElement> substitutionTable =
+        final ElGamalSubstitutionTable<FieldElement, Byte> substitutionTable =
                 ElGamalUtils.elGamalSubstitutionTable(schema);
 
         final var secret = schema.getPairingFriendlyCurve().field().fromBytes(SECRET);
@@ -110,7 +110,7 @@ public class ElGamalUtilsTest {
         final Random random = new Random(seed);
         final BlsPrivateKey sk = BlsPrivateKey.create(schema, random);
         final BlsPublicKey pk = sk.createPublicKey();
-        final ElGamalSubstitutionTable<Byte, FieldElement> substitutionTable =
+        final ElGamalSubstitutionTable<FieldElement, Byte> substitutionTable =
                 ElGamalUtils.elGamalSubstitutionTable(schema);
 
         final var secret = schema.getPairingFriendlyCurve().field().fromBytes(SECRET);
@@ -137,7 +137,7 @@ public class ElGamalUtilsTest {
         final Random random = new Random(seed);
         final BlsPrivateKey sk = BlsPrivateKey.create(schema, random);
         final BlsPublicKey pk = sk.createPublicKey();
-        final ElGamalSubstitutionTable<Byte, FieldElement> substitutionTable =
+        final ElGamalSubstitutionTable<FieldElement, Byte> substitutionTable =
                 ElGamalUtils.elGamalSubstitutionTable(schema);
 
         final var secret =

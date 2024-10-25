@@ -29,6 +29,8 @@ import java.util.Objects;
 
 /**
  * A substitution table to create and read CipherTexts
+ * @param <T> Target type
+ * @param <S> Source type
  */
 public interface ElGamalSubstitutionTable<T, S> {
 
@@ -38,7 +40,7 @@ public interface ElGamalSubstitutionTable<T, S> {
      * @return the replacement value given corresponding to the key or null if not found.
      */
     @Nullable
-    S get(@NonNull T key);
+    T get(@NonNull S key);
 
     /**
      * Generates a substitution table mapping byte values to their corresponding {@link FieldElement} values.
@@ -49,7 +51,7 @@ public interface ElGamalSubstitutionTable<T, S> {
      * @return a map of byte values to {@link FieldElement} used for encryption
      */
     @NonNull
-    static ElGamalSubstitutionTable<Byte, FieldElement> direct(@NonNull final SignatureSchema signatureSchema) {
+    static ElGamalSubstitutionTable<FieldElement, Byte> direct(@NonNull final SignatureSchema signatureSchema) {
         final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
                 .getPairingFriendlyCurve()
                 .field();
@@ -71,7 +73,7 @@ public interface ElGamalSubstitutionTable<T, S> {
      * @return a map of {@link GroupElement} to byte values used for decryption
      */
     @NonNull
-    static ElGamalSubstitutionTable<GroupElement, Byte> inverse(@NonNull final SignatureSchema signatureSchema) {
+    static ElGamalSubstitutionTable<Byte, GroupElement> inverse(@NonNull final SignatureSchema signatureSchema) {
         final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
                 .getPairingFriendlyCurve()
                 .field();
@@ -90,7 +92,7 @@ public interface ElGamalSubstitutionTable<T, S> {
      * An implementation of the table
      * @param table the support for the table instance
      */
-    record Direct(Map<Byte, FieldElement> table) implements ElGamalSubstitutionTable<Byte, FieldElement> {
+    record Direct(Map<Byte, FieldElement> table) implements ElGamalSubstitutionTable<FieldElement, Byte> {
         public FieldElement get(@NonNull final Byte key) {
             return table.get(key);
         }
@@ -100,7 +102,7 @@ public interface ElGamalSubstitutionTable<T, S> {
      * An implementation of the table
      * @param table the support for the table instance
      */
-    record Inverse(Map<GroupElement, Byte> table) implements ElGamalSubstitutionTable<GroupElement, Byte> {
+    record Inverse(Map<GroupElement, Byte> table) implements ElGamalSubstitutionTable<Byte, GroupElement> {
         public Byte get(@NonNull final GroupElement key) {
             return table.get(key);
         }

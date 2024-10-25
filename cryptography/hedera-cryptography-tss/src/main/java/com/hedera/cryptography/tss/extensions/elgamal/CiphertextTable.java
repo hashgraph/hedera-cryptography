@@ -24,10 +24,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A {@link CiphertextTable} contains an encrypted share from an individual secret, to each existing share.
+ * A {@link CiphertextTable} contains for each share an encrypted secret, and the sharedRandomness that was used to produce the encrypted values.
  *
  * @param sharedRandomness a shared randomness for all the messages in {@code shareCiphertexts}
- * @param shareCiphertexts the contained share ciphertexts, in order of the share IDs
+ * @param shareCiphertexts a {@link com.hedera.cryptography.tss.api.TssShareId} to ciphertext table
  */
 public record CiphertextTable(
         @NonNull List<GroupElement> sharedRandomness, @NonNull Map<Integer, List<GroupElement>> shareCiphertexts) {

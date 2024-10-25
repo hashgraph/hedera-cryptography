@@ -60,7 +60,7 @@ public class ElGamalUtils {
     @NonNull
     public static List<GroupElement> createCipherText(
             @NonNull final BlsPublicKey encryptionPublicKey,
-            @NonNull final ElGamalSubstitutionTable<Byte, FieldElement> elGamalDirectSubstitutionTable,
+            @NonNull final ElGamalSubstitutionTable<FieldElement, Byte> elGamalDirectSubstitutionTable,
             @NonNull final List<FieldElement> randomness,
             @NonNull final byte[] value) {
 
@@ -106,7 +106,7 @@ public class ElGamalUtils {
     public static byte[] readCipherText(
             @NonNull final BlsPrivateKey decryptionPrivateKey,
             @NonNull final List<GroupElement> randomness,
-            @NonNull final ElGamalSubstitutionTable<GroupElement, Byte> elGamalInverseSubstitutionTable,
+            @NonNull final ElGamalSubstitutionTable<Byte, GroupElement> elGamalInverseSubstitutionTable,
             @NonNull final List<GroupElement> cipherTextElements) {
 
         Objects.requireNonNull(decryptionPrivateKey, "decryptionPrivateKey must not be null");
@@ -149,7 +149,7 @@ public class ElGamalUtils {
      * @return a map of {@link GroupElement} to byte values used for decryption
      */
     @NonNull
-    public static ElGamalSubstitutionTable<GroupElement, Byte> elGamalReverseSubstitutionTable(
+    public static ElGamalSubstitutionTable<Byte, GroupElement> elGamalReverseSubstitutionTable(
             @NonNull final SignatureSchema signatureSchema) {
         return ElGamalSubstitutionTable.inverse(signatureSchema);
     }
@@ -163,7 +163,7 @@ public class ElGamalUtils {
      * @return a map of byte values to {@link FieldElement} used for encryption
      */
     @NonNull
-    public static ElGamalSubstitutionTable<Byte, FieldElement> elGamalSubstitutionTable(
+    public static ElGamalSubstitutionTable<FieldElement, Byte> elGamalSubstitutionTable(
             @NonNull final SignatureSchema signatureSchema) {
         return ElGamalSubstitutionTable.direct(signatureSchema);
     }
@@ -210,7 +210,7 @@ public class ElGamalUtils {
         final Group publicKeyGroup = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
                 .getPublicKeyGroup();
         final GroupElement publicKeyGenerator = publicKeyGroup.generator();
-        final ElGamalSubstitutionTable<Byte, FieldElement> elGamalSubstitutionTable =
+        final ElGamalSubstitutionTable<FieldElement, Byte> elGamalSubstitutionTable =
                 ElGamalUtils.elGamalSubstitutionTable(signatureSchema);
         if (Objects.requireNonNull(elGamalEncryptionKeys, "elGamalEncryptionKeys must not be null")
                 .isEmpty()) {
