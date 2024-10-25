@@ -17,17 +17,20 @@
 package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
-import com.hedera.cryptography.altbn128.common.HashUtils;
 import com.hedera.cryptography.altbn128.facade.GroupFacade;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
  * The implementation of the two {@link Group} of {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
@@ -35,6 +38,13 @@ import java.util.Objects;
 public class AltBn128Group implements Group {
     private final GroupFacade facade;
     private final AltBN128CurveGroup group;
+
+    static {
+        // add provider only if it's not in the JVM
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+    }
 
     /**
      * Creates an instance of a {@link GroupFacade} for this implementation.
@@ -90,7 +100,22 @@ public class AltBn128Group implements Group {
     @NonNull
     @Override
     public GroupElement fromHash(@NonNull final byte[] input) {
-        return new AltBn128GroupElement(this, facade.fromSeed(HashUtils.computeSha256(input)));
+        final MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("Keccak-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        byte[] candidate = input;
+        for (int i = 0; i < 1000; i++) {
+            digest.update(candidate);
+            candidate = digest.digest();
+            final byte[] element = facade.fromHash(candidate);
+            if (element != null) {
+                return new AltBn128GroupElement(this, element);
+            }
+        }
+        throw new RuntimeException("Could not find a valid group element");
     }
 
     /**

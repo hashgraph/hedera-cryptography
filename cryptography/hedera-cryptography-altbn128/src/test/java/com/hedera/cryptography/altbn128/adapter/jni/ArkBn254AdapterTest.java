@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hedera.cryptography.altbn128.adapter.jni;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -5,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.hedera.cryptography.altbn128.AltBN128CurveGroup;
 import com.hedera.cryptography.altbn128.adapter.GroupElementsLibraryAdapter;
 import java.util.Arrays;
-import java.util.HexFormat;
 import java.util.Random;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
@@ -13,7 +28,7 @@ import org.junit.jupiter.api.Test;
 class ArkBn254AdapterTest {
 
     @Test
-    void groupElementsFromHashTest(){
+    void groupElementsFromHashTest() {
         // setup
         final ArkBn254Adapter adapter = ArkBn254Adapter.getInstance();
         final int groupId = AltBN128CurveGroup.GROUP1.getId();
@@ -24,7 +39,9 @@ class ArkBn254AdapterTest {
         new Random(0).nextBytes(hash);
         final int result1 = adapter.groupElementsFromHash(groupId, hash, output);
         assertEquals(GroupElementsLibraryAdapter.SUCCESS, result1, "we expect the method to return success");
-        assertNotEquals(0, IntStream.range(0, output.length).map(i -> output[i]).sum(),
+        assertNotEquals(
+                0,
+                IntStream.range(0, output.length).map(i -> output[i]).sum(),
                 "the output is expected to be populated, if it was untouched, its sum would be 0");
 
         // cleanup
@@ -33,7 +50,7 @@ class ArkBn254AdapterTest {
 
         // failure case
         final int result2 = adapter.groupElementsFromHash(groupId, hash, output);
-        assertNotEquals(GroupElementsLibraryAdapter.SUCCESS, result2, "an array of all zeros should not be a valid hash");
+        assertNotEquals(
+                GroupElementsLibraryAdapter.SUCCESS, result2, "an array of all zeros should not be a valid hash");
     }
-
 }
