@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.tss.extensions;
+package com.hedera.cryptography.tss.extensions.elgamal;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
@@ -23,6 +23,7 @@ import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.tss.api.TssShareId;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.ArrayList;
@@ -31,8 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * A utility class for performing ElGamal encryption and decryption operations.
@@ -41,6 +40,7 @@ import java.util.stream.IntStream;
  * It also provides utility methods for generating these substitution tables for encryption and decryption.
  */
 public class ElGamalUtils {
+    public final int TOTAL_NUMBER_OF_ELEMENTS = -Byte.MIN_VALUE + Byte.MAX_VALUE + 1;
 
     /**
      * Creates an ElGamal ciphertext from a {@code byte[]} value, chunking it byte by byte, and encrypting each chunk.
@@ -56,14 +56,11 @@ public class ElGamalUtils {
      * @param value the byte array to encrypt
      * @return a list of {@link GroupElement} representing the encrypted ciphertext chunks
      * @throws IllegalArgumentException if the size of {@code randomness} does not match the length of the {@code value}
-     * @implNote Its responsibility of the caller setting up a valid and compatible elGamalDirectSubstitutionTable and reverseSubstitution table in each operation,
-     * being the easiest way to call  {@link ElGamalUtils#elGamalSubstitutionTable(SignatureSchema)}
-     * or {@link ElGamalUtils#elGamalReverseSubstitutionTable(SignatureSchema)}
      */
     @NonNull
     public static List<GroupElement> createCipherText(
             @NonNull final BlsPublicKey encryptionPublicKey,
-            @NonNull final Map<Byte, FieldElement> elGamalDirectSubstitutionTable,
+            @NonNull final ElGamalSubstitutionTable<FieldElement, Byte> elGamalDirectSubstitutionTable,
             @NonNull final List<FieldElement> randomness,
             @NonNull final byte[] value) {
 
@@ -103,14 +100,13 @@ public class ElGamalUtils {
      * @throws NullPointerException if any of the parameters is null
      * @implNote This method performs decryption by using the {@code decryptionPrivateKey} and the preprocessed {@code elGamalInverseSubstitutionTable}
      * to convert each encrypted chunk back to its original value. It uses the provided {@code randomness} to unmask each ciphertext chunk
-     * during the process. <p>Its responsibility of the caller setting up a valid and compatible elGamalDirectSubstitutionTable and reverseSubstitution table in each operation,
-     * being the easiest way to call {@link ElGamalUtils#elGamalSubstitutionTable(SignatureSchema)} or {@link ElGamalUtils#elGamalReverseSubstitutionTable(SignatureSchema)}
+     * during the process.
      */
     @Nullable
     public static byte[] readCipherText(
             @NonNull final BlsPrivateKey decryptionPrivateKey,
             @NonNull final List<GroupElement> randomness,
-            @NonNull final Map<GroupElement, Byte> elGamalInverseSubstitutionTable,
+            @NonNull final ElGamalSubstitutionTable<Byte, GroupElement> elGamalInverseSubstitutionTable,
             @NonNull final List<GroupElement> cipherTextElements) {
 
         Objects.requireNonNull(decryptionPrivateKey, "decryptionPrivateKey must not be null");
@@ -153,20 +149,9 @@ public class ElGamalUtils {
      * @return a map of {@link GroupElement} to byte values used for decryption
      */
     @NonNull
-    public static Map<GroupElement, Byte> elGamalReverseSubstitutionTable(
+    public static ElGamalSubstitutionTable<Byte, GroupElement> elGamalReverseSubstitutionTable(
             @NonNull final SignatureSchema signatureSchema) {
-        final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
-                .getPairingFriendlyCurve()
-                .field();
-        final Group encryptionGroup = signatureSchema.getPublicKeyGroup();
-        final Map<GroupElement, Byte> elGamalInverseSubstitutionTable = new HashMap<>();
-
-        for (byte i = Byte.MIN_VALUE; i < Byte.MAX_VALUE; i++) {
-            elGamalInverseSubstitutionTable.put(encryptionGroup.generator().multiply(field.fromLong(i)), i);
-        }
-        elGamalInverseSubstitutionTable.put(
-                encryptionGroup.generator().multiply(field.fromLong(Byte.MAX_VALUE)), Byte.MAX_VALUE);
-        return elGamalInverseSubstitutionTable;
+        return ElGamalSubstitutionTable.inverse(signatureSchema);
     }
 
     /**
@@ -178,13 +163,9 @@ public class ElGamalUtils {
      * @return a map of byte values to {@link FieldElement} used for encryption
      */
     @NonNull
-    public static Map<Byte, FieldElement> elGamalSubstitutionTable(@NonNull final SignatureSchema signatureSchema) {
-        final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
-                .getPairingFriendlyCurve()
-                .field();
-        return IntStream.rangeClosed(Byte.MIN_VALUE, Byte.MAX_VALUE)
-                .boxed()
-                .collect(Collectors.toMap(i -> (byte) (int) i, i -> field.fromLong(i)));
+    public static ElGamalSubstitutionTable<FieldElement, Byte> elGamalSubstitutionTable(
+            @NonNull final SignatureSchema signatureSchema) {
+        return ElGamalSubstitutionTable.direct(signatureSchema);
     }
 
     /**
@@ -197,13 +178,69 @@ public class ElGamalUtils {
      * @return a list of random field elements
      */
     @NonNull
-    // FUTURE - TSS (Maybe move somewhere else)
     public static List<FieldElement> generateEntropy(
             @NonNull final Random random, final int length, @NonNull final SignatureSchema signatureSchema) {
         Objects.requireNonNull(random, "random must not be null");
         final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
                 .getPairingFriendlyCurve()
                 .field();
-        return IntStream.range(0, length).boxed().map(i -> field.random(random)).toList();
+        final List<FieldElement> randomness = new ArrayList<>();
+        for (int i = 0; i < length; i++) {
+            randomness.add(field.random(random));
+        }
+        return List.copyOf(randomness);
+    }
+
+    /**
+     * Creates a {@link CiphertextTable} from two coordinate lists of ids and secret value.
+     *
+     * @param signatureSchema the element schema
+     * @param random the rng instance to use
+     * @param elGamalEncryptionKeys the element schema
+     * @param secrets the unencrypted messages to encrypt
+     * @return a {@link CiphertextTable}
+     */
+    public static CiphertextTable ciphertextTable(
+            @NonNull final SignatureSchema signatureSchema,
+            @NonNull final Random random,
+            @NonNull final Map<TssShareId, BlsPublicKey> elGamalEncryptionKeys,
+            @NonNull final List<TssShareId> ids,
+            @NonNull final List<FieldElement> secrets) {
+
+        final Group publicKeyGroup = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
+                .getPublicKeyGroup();
+        final GroupElement publicKeyGenerator = publicKeyGroup.generator();
+        final ElGamalSubstitutionTable<FieldElement, Byte> elGamalSubstitutionTable =
+                ElGamalUtils.elGamalSubstitutionTable(signatureSchema);
+        if (Objects.requireNonNull(elGamalEncryptionKeys, "elGamalEncryptionKeys must not be null")
+                .isEmpty()) {
+            throw new IllegalArgumentException("Invalid elGamalEncryptionKeys");
+        }
+        if (Objects.requireNonNull(ids, "ids must not be null").isEmpty()
+                || ids.size()
+                        != Objects.requireNonNull(secrets, "secrets must not be null")
+                                .size()) {
+            throw new IllegalArgumentException("Invalid ids size");
+        }
+        final List<FieldElement> randomness = ElGamalUtils.generateEntropy(
+                random, signatureSchema.getPairingFriendlyCurve().field().elementSize(), signatureSchema);
+
+        final List<GroupElement> chunkRandomness = new ArrayList<>();
+        for (final FieldElement randomElement : randomness) {
+            chunkRandomness.add(publicKeyGenerator.multiply(randomElement));
+        }
+
+        final Map<Integer, List<GroupElement>> multiEncryptedValues = new HashMap<>();
+        for (int i = 0; i < ids.size(); i++) {
+            final TssShareId id = ids.get(i);
+            final FieldElement secret = secrets.get(i);
+            final BlsPublicKey pk = elGamalEncryptionKeys.get(id);
+            if (pk == null) {
+                throw new IllegalArgumentException("Key not present for share: " + id);
+            }
+            multiEncryptedValues.put(
+                    i + 1, createCipherText(pk, elGamalSubstitutionTable, randomness, secret.toBytes()));
+        }
+        return new CiphertextTable(List.copyOf(chunkRandomness), Map.copyOf(multiEncryptedValues));
     }
 }
