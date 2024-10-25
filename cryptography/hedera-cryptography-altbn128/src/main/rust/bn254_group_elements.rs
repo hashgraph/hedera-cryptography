@@ -14,6 +14,7 @@
 // limitations under the License.
 //
 
+use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
 use crate::group_element_utils::*;
 use crate::jni_helpers;
 use jni::objects::{JByteArray, JObject, JObjectArray};
