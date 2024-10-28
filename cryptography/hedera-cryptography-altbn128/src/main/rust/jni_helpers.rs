@@ -14,11 +14,7 @@
 // limitations under the License.
 //
 
-use crate::group_element_utils::{
-    group_elements_add, group_elements_batch_multiply, group_elements_deserialize,
-    group_elements_deserialize_and_validate, group_elements_scalar_multiply,
-    group_elements_serialize, group_elements_total_sum,
-};
+use crate::group_element_utils::{canonical_serialize, group_elements_add, group_elements_batch_multiply, group_elements_deserialize, group_elements_deserialize_and_validate, group_elements_scalar_multiply, group_elements_total_sum};
 use crate::scalars_utils::{scalars_curve_from_bytes, scalars_from_bytes, scalars_to_bytes, F};
 use ark_bn254::{G1Affine, G1Projective, G2Affine, G2Projective};
 use ark_ec::{CurveConfig, CurveGroup};
