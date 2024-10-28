@@ -54,6 +54,8 @@ class ArkBn254AdapterTest {
         // failure case
         final int result2 = adapter.groupElementsFromXCoordinate(groupId, xCoordinate, output);
         assertNotEquals(
-                GroupElementsLibraryAdapter.SUCCESS, result2, "an array of all zeros should not be a valid x coordinate");
+                GroupElementsLibraryAdapter.SUCCESS,
+                result2,
+                "an array of all zeros should not be a valid x coordinate");
     }
 }

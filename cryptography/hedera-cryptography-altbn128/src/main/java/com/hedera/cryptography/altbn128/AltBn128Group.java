@@ -40,6 +40,7 @@ public class AltBn128Group implements Group {
     private static final String KECCAK_256 = "Keccak-256";
     /** The number of times to rehash in {@link #hashToCurve(byte[])} */
     private static final int HASH_RETRIES = 255;
+
     private final GroupFacade facade;
     private final AltBN128CurveGroup group;
 
