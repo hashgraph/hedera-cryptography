@@ -75,19 +75,18 @@ public final class GroupFacade {
     }
 
     /**
-     * Attempts to create a point from a hash
-     * @param hash the hash array
+     * Attempts to create a point from an x coordinate
+     * @param xCoordinate the x coordinate array
      * @return the byte array representation of the point or null if the point is not in the curve.
      * @throws AltBn128Exception in case of error
      */
-    public @Nullable byte[] fromHash(@NonNull final byte[] hash) {
-        ValidationUtils.validateSize(hash, randomSeedSize, "Invalid random seed size");
+    public @Nullable byte[] fromXCoordinate(@NonNull final byte[] xCoordinate) {
         final byte[] output = new byte[size];
-        final int result = adapter.groupElementsFromSeed(group, hash, output);
+        final int result = adapter.groupElementsFromXCoordinate(group, xCoordinate, output);
         return switch (result) {
             case GroupElementsLibraryAdapter.SUCCESS -> output;
             case GroupElementsLibraryAdapter.NOT_IN_CURVE -> null;
-            default -> throw new AltBn128Exception(result, "groupElementsFromSeed in" + this.group);
+            default -> throw new AltBn128Exception(result, "fromXCoordinate in" + this.group);
         };
     }
 

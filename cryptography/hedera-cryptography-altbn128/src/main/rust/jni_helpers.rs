@@ -110,8 +110,8 @@ pub fn extract_random_seed(env: &JNIEnv, input_seed: &JByteArray) -> Result<[u8;
     Ok(seed_array)
 }
 
-/// Utility function to write the serialized representation of a point in an existing JByteArray
-pub fn write_return_point<G: CanonicalSerialize>(
+/// Utility function to write the serialized representation in an existing JByteArray
+pub fn serialize_to_jbytearray<G: CanonicalSerialize>(
     env: JNIEnv,
     point: &G,
     output: JByteArray,
@@ -302,7 +302,7 @@ pub fn add_points<G: CurveGroup>(
     };
 
     let point = group_elements_add(point1, point2);
-    write_return_point(env, &point, output).unwrap_or_else(|value| value)
+    serialize_to_jbytearray(env, &point, output).unwrap_or_else(|value| value)
 }
 
 /// Utility function to multiply two points
@@ -323,7 +323,7 @@ pub fn multiply_point_and_scalar<G: CurveGroup>(
     };
 
     let point = group_elements_scalar_multiply(point1, value);
-    write_return_point(env, &point, output).unwrap_or_else(|value| value)
+    serialize_to_jbytearray(env, &point, output).unwrap_or_else(|value| value)
 }
 
 /// Utility function to produce the total sum of N points
@@ -339,7 +339,7 @@ pub fn total_sum_points<G: CurveGroup>(
 
     let point = group_elements_total_sum(points);
 
-    write_return_point(env, &point, output).unwrap_or_else(|value| value)
+    serialize_to_jbytearray(env, &point, output).unwrap_or_else(|value| value)
 }
 
 /// Utility function to batch multiply the generator to N scalars

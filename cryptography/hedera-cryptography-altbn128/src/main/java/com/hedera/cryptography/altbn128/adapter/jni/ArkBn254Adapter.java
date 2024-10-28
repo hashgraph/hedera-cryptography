@@ -175,7 +175,7 @@ public final class ArkBn254Adapter
      */
     public native int groupElementsFromSeed(final int group, final byte[] input, final byte[] output);
 
-    public native int groupElementsFromHash(final int group, final byte[] input, final byte[] output);
+    public native int groupElementsFromXCoordinate(final int group, final byte[] input, final byte[] output);
 
     /**
      * Returns the GroupElement byte internal representation of the point at infinity

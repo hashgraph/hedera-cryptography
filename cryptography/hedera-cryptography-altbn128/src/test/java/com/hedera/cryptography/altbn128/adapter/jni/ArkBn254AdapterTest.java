@@ -27,17 +27,20 @@ import org.junit.jupiter.api.Test;
 
 class ArkBn254AdapterTest {
 
+    /**
+     * Tests the {@link ArkBn254Adapter#groupElementsFromXCoordinate(int, byte[], byte[])} method.
+     */
     @Test
-    void groupElementsFromHashTest() {
+    void groupElementsFromXCoordinateTest() {
         // setup
         final ArkBn254Adapter adapter = ArkBn254Adapter.getInstance();
         final int groupId = AltBN128CurveGroup.GROUP1.getId();
-        final byte[] hash = new byte[32];
+        final byte[] xCoordinate = new byte[32];
         final byte[] output = new byte[adapter.groupElementsSize(groupId)];
 
         // success case
-        new Random(0).nextBytes(hash);
-        final int result1 = adapter.groupElementsFromHash(groupId, hash, output);
+        new Random(0).nextBytes(xCoordinate);
+        final int result1 = adapter.groupElementsFromXCoordinate(groupId, xCoordinate, output);
         assertEquals(GroupElementsLibraryAdapter.SUCCESS, result1, "we expect the method to return success");
         assertNotEquals(
                 0,
@@ -45,12 +48,12 @@ class ArkBn254AdapterTest {
                 "the output is expected to be populated, if it was untouched, its sum would be 0");
 
         // cleanup
-        Arrays.fill(hash, (byte) 0);
+        Arrays.fill(xCoordinate, (byte) 0);
         Arrays.fill(output, (byte) 0);
 
         // failure case
-        final int result2 = adapter.groupElementsFromHash(groupId, hash, output);
+        final int result2 = adapter.groupElementsFromXCoordinate(groupId, xCoordinate, output);
         assertNotEquals(
-                GroupElementsLibraryAdapter.SUCCESS, result2, "an array of all zeros should not be a valid hash");
+                GroupElementsLibraryAdapter.SUCCESS, result2, "an array of all zeros should not be a valid x coordinate");
     }
 }

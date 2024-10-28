@@ -19,6 +19,10 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use rand::Rng;
 use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
 use ark_ff::{Field, PrimeField};
+use jni::JNIEnv;
+use jni::objects::JByteArray;
+use jni::sys::jint;
+use crate::jni_helpers;
 
 /// Generic utility functions to instantiate and operate with curve points
 
@@ -102,6 +106,7 @@ pub fn group_elements_deserialize_and_validate<G: CurveGroup>(
     }
 }
 
+/// returns the x coordinate of a point if the point is in the curve
 pub fn x_coordinate_from_hash<G: SWCurveConfig>( candidate_hash: &[u8])->Option<G::BaseField>{
     if G::BaseField::extension_degree() == 1 {
         // if the order is 1 the op is simpler
@@ -114,6 +119,7 @@ pub fn x_coordinate_from_hash<G: SWCurveConfig>( candidate_hash: &[u8])->Option<
     }
 }
 
+/// returns the point from an x coordinate if the point is in the curve
 pub fn point_from_x<CC: SWCurveConfig>(x: CC::BaseField) -> Option<Affine<CC>> {
     if let Some(p) = Affine::<CC>::get_point_from_x_unchecked(x, false){
         let scaled = p.mul_by_cofactor();
@@ -122,4 +128,21 @@ pub fn point_from_x<CC: SWCurveConfig>(x: CC::BaseField) -> Option<Affine<CC>> {
         }
         Some(scaled)
     }else { None }
+}
+
+/// returns the point from a hash if the point is in the curve
+pub fn elements_from_hash_generic<CC: SWCurveConfig>(
+    env: JNIEnv,
+    hash_array: &[u8],
+    output: JByteArray,
+) -> jint {
+    let x_option = x_coordinate_from_hash::<CC>(&hash_array);
+    if x_option.is_none() {
+        return jni_helpers::BUSINESS_ERROR_POINT_NOT_IN_CURVE;
+    }
+    let point_option = point_from_x::<CC>(x_option.unwrap());
+       if point_option.is_none() {
+           return jni_helpers::BUSINESS_ERROR_POINT_NOT_IN_CURVE;
+       }
+    jni_helpers::serialize_to_jbytearray::<Affine<CC>>(env, &point_option.unwrap(), output).unwrap_or_else(|value| value)
 }

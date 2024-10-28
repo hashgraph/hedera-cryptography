@@ -324,7 +324,7 @@ public class PairingMockFriendlyCurveProvider extends PairingFriendlyCurveProvid
         /** {@inheritDoc} */
         @NonNull
         @Override
-        public GroupElement fromHash(@NonNull final byte[] input) {
+        public GroupElement hashToCurve(@NonNull final byte[] input) {
             return new TestGroupElement(this);
         }
 
