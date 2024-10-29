@@ -79,7 +79,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// *   -4   Business Error: Point is not in the curve
 /// * A less than 0 error code in case of error
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_groupElementsFromHash(
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_groupElementsFromXCoordinate(
     env: JNIEnv,
     _instance: JObject,
     group_id: jint,
