@@ -106,16 +106,16 @@ pub fn group_elements_deserialize_and_validate<G: CurveGroup>(
     }
 }
 
-/// returns the x coordinate of a point if the point is in the curve
-pub fn x_coordinate_from_hash<G: SWCurveConfig>( candidate_hash: &[u8])->Option<G::BaseField>{
+/// Converts a u8 array into the BaseField representation of the group (the field where the coordinates are represented) if there is such representation
+pub fn coordinate_from_hash<G: SWCurveConfig>( candidate: &[u8])->Option<G::BaseField>{
     if G::BaseField::extension_degree() == 1 {
         // if the order is 1 the op is simpler
         let f = <G::BaseField as Field>::BasePrimeField::from_be_bytes_mod_order(
-            &candidate_hash,
+            &candidate,
         );
         G::BaseField::from_base_prime_field_elems(&[f])
     } else {
-        G::BaseField::from_random_bytes(&candidate_hash)
+        G::BaseField::from_random_bytes(&candidate)
     }
 }
 
