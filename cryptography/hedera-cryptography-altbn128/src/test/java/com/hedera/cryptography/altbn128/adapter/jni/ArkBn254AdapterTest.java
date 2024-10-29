@@ -39,7 +39,8 @@ class ArkBn254AdapterTest {
         final byte[] output = new byte[adapter.groupElementsSize(groupId)];
 
         // success case
-        final byte[] xCoordinate = HexFormat.of().parseHex("60b420bb3851d9d47acb933dbe70399bf6c92da33af01d4fb770e98c0325f41d");
+        final byte[] xCoordinate =
+                HexFormat.of().parseHex("60b420bb3851d9d47acb933dbe70399bf6c92da33af01d4fb770e98c0325f41d");
         final int result1 = adapter.groupElementsFromXCoordinate(groupId, xCoordinate, output);
         assertEquals(GroupElementsLibraryAdapter.SUCCESS, result1, "we expect the method to return success");
         assertNotEquals(
