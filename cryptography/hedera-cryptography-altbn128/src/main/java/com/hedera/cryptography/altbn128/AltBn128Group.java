@@ -123,7 +123,7 @@ public class AltBn128Group implements Group {
                 return new AltBn128GroupElement(this, element);
             }
         }
-        throw new RuntimeException("Could not find a valid group element after %d tries".formatted(HASH_RETRIES));
+        throw new AltBn128Exception("Could not find a valid group element after %d tries".formatted(HASH_RETRIES));
     }
 
     /**

@@ -20,28 +20,25 @@ import com.hedera.cryptography.pairings.api.PairingsException;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * A {@link PairingsException} In the context of this implementation.
- * Stores the result code returned by the underlying arkworks operation, and the operation resulting in error.
+ * A {@link PairingsException} thrown by the com.hedera.cryptography.altbn128 implementation
  */
 public class AltBn128Exception extends PairingsException {
-
     /**
-     * The result code from the rust operation
-     */
-    final transient int result;
-    /**
-     * The underlying arkworks operation
-     */
-    final transient String operationName;
-
-    /**
-     * Creates a {@link PairingsException} In the context of this implementation.
-     * @param result The result code from the rust operation
+     * Creates as a consequence of a failed rust JNI call
+     *
+     * @param result        The result code from the rust operation
      * @param operationName The underlying arkworks operation
      */
     public AltBn128Exception(final int result, final @NonNull String operationName) {
         super("result=" + result + ", operationName=" + operationName);
-        this.result = result;
-        this.operationName = operationName;
+    }
+
+    /**
+     * Creates a general ALT-BN-128 exception
+     *
+     * @param message The message
+     */
+    public AltBn128Exception(@NonNull final String message) {
+        super(message);
     }
 }
