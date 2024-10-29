@@ -16,12 +16,13 @@
 
 package com.hedera.cryptography.altbn128.adapter.jni;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.hedera.cryptography.altbn128.AltBN128CurveGroup;
 import com.hedera.cryptography.altbn128.adapter.GroupElementsLibraryAdapter;
 import java.util.Arrays;
-import java.util.Random;
+import java.util.HexFormat;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
@@ -35,11 +36,10 @@ class ArkBn254AdapterTest {
         // setup
         final ArkBn254Adapter adapter = ArkBn254Adapter.getInstance();
         final int groupId = AltBN128CurveGroup.GROUP1.getId();
-        final byte[] xCoordinate = new byte[32];
         final byte[] output = new byte[adapter.groupElementsSize(groupId)];
 
         // success case
-        new Random(0).nextBytes(xCoordinate);
+        final byte[] xCoordinate = HexFormat.of().parseHex("60b420bb3851d9d47acb933dbe70399bf6c92da33af01d4fb770e98c0325f41d");
         final int result1 = adapter.groupElementsFromXCoordinate(groupId, xCoordinate, output);
         assertEquals(GroupElementsLibraryAdapter.SUCCESS, result1, "we expect the method to return success");
         assertNotEquals(
@@ -48,11 +48,10 @@ class ArkBn254AdapterTest {
                 "the output is expected to be populated, if it was untouched, its sum would be 0");
 
         // cleanup
-        Arrays.fill(xCoordinate, (byte) 0);
         Arrays.fill(output, (byte) 0);
 
         // failure case
-        final int result2 = adapter.groupElementsFromXCoordinate(groupId, xCoordinate, output);
+        final int result2 = adapter.groupElementsFromXCoordinate(groupId, new byte[32], output);
         assertNotEquals(
                 GroupElementsLibraryAdapter.SUCCESS,
                 result2,

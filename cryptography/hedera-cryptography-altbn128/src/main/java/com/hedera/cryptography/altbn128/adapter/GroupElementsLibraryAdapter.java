@@ -50,8 +50,8 @@ public interface GroupElementsLibraryAdapter extends RandomElementsAdapter {
      * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal
      *               representation of the point, if the given x coordinate is not in the curve, the output will be
      *               unchanged
-     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#SUCCESS} if
-     * the point is not in the curve, or a less than zero error code if there was an error
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE}
+     * if the point is not in the curve, or a less than zero error code if there was an error
      */
     int groupElementsFromXCoordinate(final int group, final byte[] input, final byte[] output);
 

@@ -175,6 +175,17 @@ public final class ArkBn254Adapter
      */
     public native int groupElementsFromSeed(final int group, final byte[] input, final byte[] output);
 
+    /**
+     * Attempts to obtain a GroupElement byte internal representation from a given x coordinate
+     *
+     * @param group  on which of the groups of the curve to perform the operation
+     * @param input  a 256-bit byte array of that represents an x coordinate
+     * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal
+     *               representation of the point, if the given x coordinate is not in the curve, the output will be
+     *               unchanged
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE}
+     * if the point is not in the curve, or a less than zero error code if there was an error
+     */
     public native int groupElementsFromXCoordinate(final int group, final byte[] input, final byte[] output);
 
     /**

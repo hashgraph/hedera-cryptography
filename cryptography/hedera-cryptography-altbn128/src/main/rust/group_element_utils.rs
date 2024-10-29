@@ -107,7 +107,7 @@ pub fn group_elements_deserialize_and_validate<G: CurveGroup>(
 }
 
 /// Converts a u8 array into the BaseField representation of the group (the field where the coordinates are represented) if there is such representation
-pub fn coordinate_from_hash<G: SWCurveConfig>( candidate: &[u8])->Option<G::BaseField>{
+pub fn coordinate_from_bytes<G: SWCurveConfig>(candidate: &[u8]) ->Option<G::BaseField>{
     if G::BaseField::extension_degree() == 1 {
         // if the order is 1 the op is simpler
         let f = <G::BaseField as Field>::BasePrimeField::from_be_bytes_mod_order(
@@ -136,7 +136,7 @@ pub fn elements_from_hash_generic<CC: SWCurveConfig>(
     hash_array: &[u8],
     output: JByteArray,
 ) -> jint {
-    let x_option = x_coordinate_from_hash::<CC>(&hash_array);
+    let x_option = coordinate_from_bytes::<CC>(&hash_array);
     if x_option.is_none() {
         return jni_helpers::BUSINESS_ERROR_POINT_NOT_IN_CURVE;
     }
