@@ -20,6 +20,7 @@ import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,7 +35,7 @@ public class Utils {
      * @param element an element to write as string
      * @return a string representation of the following FieldElement
      */
-    public static String toString(FieldElement element) {
+    public static @NonNull String toString(final @NonNull FieldElement element) {
         return Arrays.toString(unsigned(element.toBytes()));
     }
 
@@ -43,7 +44,7 @@ public class Utils {
      * @param element an element to write as string
      * @return a string representation of the following GroupElement
      */
-    public static String toString(GroupElement element) {
+    public static @NonNull String toString(final @NonNull GroupElement element) {
         var half = element.size() / 2;
         var arr = unsigned(element.toBytes());
         return "[" + Arrays.toString(Arrays.copyOf(arr, half))
@@ -55,7 +56,7 @@ public class Utils {
      * @param element a list of elements to write as string
      * @return a string representation of the following list of  FieldElement
      */
-    public static String toStringFieldElements(List<FieldElement> element) {
+    public static @NonNull String toStringFieldElements(final @NonNull List<FieldElement> element) {
         return element.stream()
                 .map(e -> Arrays.toString(unsigned(e.toBytes())))
                 .toList()
@@ -67,7 +68,7 @@ public class Utils {
      * @param element a list of elements to write as string
      * @return a string representation of the following list of  GroupElement
      */
-    public static String toStringGroupElements(List<GroupElement> element) {
+    public static @NonNull String toStringGroupElements(final @NonNull List<GroupElement> element) {
         return element.stream()
                 .map(e -> Arrays.toString(unsigned(e.toBytes())))
                 .toList()
@@ -80,7 +81,7 @@ public class Utils {
      * @param bytes the original byte array to reinterpret.
      * @return the reinterpreted array as unsigned values
      */
-    public static int[] unsigned(byte[] bytes) {
+    public static @NonNull int[] unsigned(final @NonNull byte[] bytes) {
         int[] result = new int[bytes.length];
         for (int i = 0; i < bytes.length; i++) {
             result[i] = Byte.toUnsignedInt(bytes[i]);
@@ -94,7 +95,7 @@ public class Utils {
      * @return a byte[] array represented
      * @throws IllegalArgumentException if any of the values is negative or out of range to be represented by a byte
      */
-    public static byte[] fromUnsigned(int... bytes) {
+    public static @NonNull byte[] fromUnsigned(final @NonNull int... bytes) {
         byte[] result = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) {
             if (bytes[i] < 0 || bytes[i] > 255) {
@@ -111,7 +112,7 @@ public class Utils {
      * @param uBytes the unsigned byte[] values
      * @return a FieldElements value
      */
-    public static FieldElement fieldElement(Field field, int... uBytes) {
+    public static @NonNull FieldElement fieldElement(final @NonNull Field field, final @NonNull int... uBytes) {
         return field.fromBytes(fromUnsigned(uBytes));
     }
 
@@ -121,7 +122,7 @@ public class Utils {
      * @param uBytes the unsigned byte[] values
      * @return a GroupElement value
      */
-    public static GroupElement groupElement(Group group, int... uBytes) {
+    public static @NonNull GroupElement groupElement(Group group, int... uBytes) {
         return group.fromBytes(fromUnsigned(uBytes));
     }
 
@@ -131,7 +132,8 @@ public class Utils {
      * @param uBytes the unsigned list of byte[] values
      * @return a list of FieldElements values
      */
-    public static List<FieldElement> fieldElements(final Field field, final int[]... uBytes) {
+    public static @NonNull List<FieldElement> fieldElements(
+            final @NonNull Field field, final @NonNull int[]... uBytes) {
         final List<FieldElement> elements = new ArrayList<>();
         for (int[] elementUbyte : uBytes) {
             elements.add(fieldElement(field, elementUbyte));
