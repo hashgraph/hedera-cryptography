@@ -80,7 +80,7 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
     @NonNull
     public BlsSignature sign(final @NonNull byte[] message) {
         final GroupElement o =
-                signatureSchema.getSignatureGroup().fromHash(message).multiply(this.element);
+                signatureSchema.getSignatureGroup().hashToCurve(message).multiply(this.element);
         return new BlsSignature(o, signatureSchema);
     }
 

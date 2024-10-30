@@ -122,7 +122,7 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
         final Group signatureGroup = signatureSchema.getSignatureGroup();
         final Group publicKeyGroup = signatureSchema.getPublicKeyGroup();
         final PairingFriendlyCurve curve = signatureSchema.getPairingFriendlyCurve();
-        final BilinearPairing a = curve.pairingBetween(publicKey.element(), signatureGroup.fromHash(message));
+        final BilinearPairing a = curve.pairingBetween(publicKey.element(), signatureGroup.hashToCurve(message));
         final BilinearPairing b = curve.pairingBetween(publicKeyGroup.generator(), element);
         return a.compare(b);
     }
