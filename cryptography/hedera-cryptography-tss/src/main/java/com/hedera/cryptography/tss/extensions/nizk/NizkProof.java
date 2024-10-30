@@ -103,8 +103,8 @@ public class NizkProof {
         }
         final GroupElement y = yAggregator.multiply(rho).add(a);
 
-        // compute x' := RO(F, A, Y)
-        final byte[] hash = HashUtils.computeSha256(f.toBytes(), a.toBytes(), y.toBytes());
+        // compute x' := RO(x, F, A, Y)
+        final byte[] hash = HashUtils.computeSha256(x.toBytes(), f.toBytes(), a.toBytes(), y.toBytes());
         final FieldElement xPrime = field.random(hash);
 
         // compute z_r = x' * r + rho
@@ -135,8 +135,8 @@ public class NizkProof {
         final byte[] statementHash =
                 Objects.requireNonNull(statement, "statement must not be null").hash();
         final FieldElement x = field.random(statementHash);
-        // compute x' := RO(F, A, Y)
-        final byte[] hash = HashUtils.computeSha256(this.f.toBytes(), this.a.toBytes(), this.y.toBytes());
+        // compute x' := RO(x, F, A, Y)
+        final byte[] hash = HashUtils.computeSha256(x.toBytes(), this.f.toBytes(), this.a.toBytes(), this.y.toBytes());
         final FieldElement xPrime = field.random(hash);
         GroupElement lhs;
         GroupElement rhs;
