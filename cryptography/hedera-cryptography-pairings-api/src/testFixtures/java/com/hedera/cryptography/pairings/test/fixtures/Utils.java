@@ -45,8 +45,8 @@ public class Utils {
      * @return a string representation of the following GroupElement
      */
     public static @NonNull String toString(final @NonNull GroupElement element) {
-        var half = element.size() / 2;
-        var arr = unsigned(element.toBytes());
+        final var half = element.size() / 2;
+        final var arr = unsigned(element.toBytes());
         return "[" + Arrays.toString(Arrays.copyOf(arr, half))
                 + Arrays.toString(Arrays.copyOfRange(arr, half, arr.length)) + "]";
     }
@@ -82,7 +82,7 @@ public class Utils {
      * @return the reinterpreted array as unsigned values
      */
     public static @NonNull int[] unsigned(final @NonNull byte[] bytes) {
-        int[] result = new int[bytes.length];
+        final int[] result = new int[bytes.length];
         for (int i = 0; i < bytes.length; i++) {
             result[i] = Byte.toUnsignedInt(bytes[i]);
         }
@@ -96,7 +96,7 @@ public class Utils {
      * @throws IllegalArgumentException if any of the values is negative or out of range to be represented by a byte
      */
     public static @NonNull byte[] fromUnsigned(final @NonNull int... bytes) {
-        byte[] result = new byte[bytes.length];
+        final byte[] result = new byte[bytes.length];
         for (int i = 0; i < bytes.length; i++) {
             if (bytes[i] < 0 || bytes[i] > 255) {
                 throw new IllegalArgumentException();
