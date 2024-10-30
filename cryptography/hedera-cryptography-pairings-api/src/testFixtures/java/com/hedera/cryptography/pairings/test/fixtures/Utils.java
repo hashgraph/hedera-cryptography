@@ -47,6 +47,8 @@ public class Utils {
      * @return a string representation of the following GroupElement
      */
     public static @NonNull String toString(final @NonNull GroupElement element) {
+        // Each coordinate occupies half of the array,
+        // we split the array in two to print the individual coordinates
         final var half = element.size() / 2;
         final var arr = unsigned(element.toBytes());
         return "[" + Arrays.toString(Arrays.copyOf(arr, half))
