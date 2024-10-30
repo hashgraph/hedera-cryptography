@@ -16,8 +16,6 @@
 
 package com.hedera.cryptography.altbn128;
 
-import static com.hedera.cryptography.altbn128.common.HashUtils.computeSha256;
-
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.facade.GroupFacade;
 import com.hedera.cryptography.pairings.api.FieldElement;
