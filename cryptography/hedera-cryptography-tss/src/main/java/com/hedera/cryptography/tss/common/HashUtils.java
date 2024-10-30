@@ -17,13 +17,14 @@
 package com.hedera.cryptography.tss.common;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 
 /** Static utility hashing operations */
 public final class HashUtils {
+
+    public static final String ALGORITHM = "SHA-256";
 
     /**
      * private constructor to ensure static access
@@ -42,7 +43,7 @@ public final class HashUtils {
     public static byte[] computeSha256(final @NonNull byte[] message) {
         Objects.requireNonNull(message, "message must not be null");
         try {
-            final MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            final MessageDigest digest = MessageDigest.getInstance(ALGORITHM);
             digest.update(message);
             return digest.digest();
         } catch (final NoSuchAlgorithmException e) {
@@ -60,14 +61,14 @@ public final class HashUtils {
     public static byte[] computeSha256(@NonNull final byte[]... messages) {
         if (Objects.requireNonNull(messages, "messages must not be null").length == 0)
             throw new IllegalArgumentException("messages must not be empty");
-        final var size = messages[0].length;
-        final ByteBuffer bf = ByteBuffer.allocate(size * messages.length);
-        for (final byte[] element : messages) {
-            if (element.length != size) {
-                throw new IllegalArgumentException("all messages must have the same length");
+        try {
+            final MessageDigest digest = MessageDigest.getInstance(ALGORITHM);
+            for (final byte[] element : messages) {
+                digest.update(element);
             }
-            bf.put(element);
+            return digest.digest();
+        } catch (final NoSuchAlgorithmException e) {
+            throw new IllegalArgumentException("Could not hash message", e);
         }
-        return computeSha256(bf.array());
     }
 }

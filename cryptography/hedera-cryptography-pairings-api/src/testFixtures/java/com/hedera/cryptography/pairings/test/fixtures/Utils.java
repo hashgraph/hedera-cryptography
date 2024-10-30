@@ -26,8 +26,10 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Utility functions to work with FieldElements and GroupElements
+ * Utility functions to work with FieldElements and GroupElements.
+ * All methods in this class are meant as debugging tools when we need to compare behaviours with rust.
  */
+@SuppressWarnings("unused")
 public class Utils {
 
     /**
@@ -135,8 +137,8 @@ public class Utils {
     public static @NonNull List<FieldElement> fieldElements(
             final @NonNull Field field, final @NonNull int[]... uBytes) {
         final List<FieldElement> elements = new ArrayList<>();
-        for (int[] elementUbyte : uBytes) {
-            elements.add(fieldElement(field, elementUbyte));
+        for (int[] elementUByte : uBytes) {
+            elements.add(fieldElement(field, elementUByte));
         }
         return elements;
     }
