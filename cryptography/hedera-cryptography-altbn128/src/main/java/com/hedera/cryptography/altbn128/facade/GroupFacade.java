@@ -21,6 +21,7 @@ import com.hedera.cryptography.altbn128.adapter.FieldElementsLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.GroupElementsLibraryAdapter;
 import com.hedera.cryptography.altbn128.common.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Objects;
 
 /**
@@ -71,6 +72,22 @@ public final class GroupFacade {
             throw new AltBn128Exception(result, "groupElementsFromSeed in" + this.group);
         }
         return output;
+    }
+
+    /**
+     * Attempts to create a point from an x coordinate
+     * @param xCoordinate the x coordinate array
+     * @return the byte array representation of the point or null if the point is not in the curve.
+     * @throws AltBn128Exception in case of error
+     */
+    public @Nullable byte[] fromXCoordinate(@NonNull final byte[] xCoordinate) {
+        final byte[] output = new byte[size];
+        final int result = adapter.groupElementsFromXCoordinate(group, xCoordinate, output);
+        return switch (result) {
+            case GroupElementsLibraryAdapter.SUCCESS -> output;
+            case GroupElementsLibraryAdapter.NOT_IN_CURVE -> null;
+            default -> throw new AltBn128Exception(result, "fromXCoordinate in" + this.group);
+        };
     }
 
     /**

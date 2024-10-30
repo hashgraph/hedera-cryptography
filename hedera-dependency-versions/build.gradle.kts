@@ -43,4 +43,7 @@ dependencies.constraints {
     api("org.mockito:mockito-junit-jupiter:5.8.0") {
         because("org.mockito.junit.jupiter")
     }
+    api("org.bouncycastle:bcprov-jdk18on:1.78.1") {
+        because("org.bouncycastle.provider")
+    }
 }

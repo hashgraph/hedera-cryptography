@@ -29,7 +29,6 @@ class AltBn128Test {
 
     @Test
     void fullCircuit() {
-
         final AltBn128 curve = new AltBn128();
         final var rng = new Random();
         final Group group2 = curve.group2();
@@ -39,7 +38,7 @@ class AltBn128Test {
 
         FieldElement sk = curve.field().random(rng);
         GroupElement pk = group2.generator().multiply(sk);
-        GroupElement mk = group1.fromHash(msg);
+        GroupElement mk = group1.hashToCurve(msg);
 
         assertEquals(KnownCurves.ALT_BN128, curve.curve());
         assertEquals(group2, curve.getOtherGroup(group1));

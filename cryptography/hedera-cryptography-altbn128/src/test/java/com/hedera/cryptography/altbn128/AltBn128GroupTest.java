@@ -78,13 +78,13 @@ class AltBn128GroupTest {
     }
 
     @Test
-    void createGroupElementFromHashIsNotNull() {
+    void createGroupElementHashToCurveIsNotNull() {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         Random rng = new SecureRandom();
         final byte[] message = new byte[1024];
         rng.nextBytes(message);
 
-        assertNotNull(group.fromHash(message));
+        assertNotNull(group.hashToCurve(message));
     }
 
     @Test
