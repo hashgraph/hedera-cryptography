@@ -41,7 +41,7 @@ public class SignatureAggregationBenchmarks {
     public static final int MESSAGE_SIZE = 1024;
     public static final int RANDOM_SEED = 1;
 
-    @Param({"2", "4", "8", "16", "32"})
+    @Param({"32", "256", "1024"})
     public int numSignatures;
 
     @Param({"SHORT_SIGNATURES", "SHORT_PUBLIC_KEYS"})
@@ -55,7 +55,17 @@ public class SignatureAggregationBenchmarks {
                 SignatureSchema.create(Curve.ALT_BN128, groupAssignment), numSignatures);
         signatures = BlsTestUtils.bulkSign(keyPairs, BlsTestUtils.randomBytes(RANDOM_SEED, MESSAGE_SIZE));
     }
+/*
+Results on M1 Max MacBook Pro:
 
+Benchmark                                            (groupAssignment)  (numSignatures)  Mode  Cnt  Score   Error  Units
+SignatureAggregationBenchmarks.serializeDeserialize   SHORT_SIGNATURES               32  avgt    2  0.024          ms/op
+SignatureAggregationBenchmarks.serializeDeserialize   SHORT_SIGNATURES              256  avgt    2  0.172          ms/op
+SignatureAggregationBenchmarks.serializeDeserialize   SHORT_SIGNATURES             1024  avgt    2  0.703          ms/op
+SignatureAggregationBenchmarks.serializeDeserialize  SHORT_PUBLIC_KEYS               32  avgt    2  0.043          ms/op
+SignatureAggregationBenchmarks.serializeDeserialize  SHORT_PUBLIC_KEYS              256  avgt    2  0.336          ms/op
+SignatureAggregationBenchmarks.serializeDeserialize  SHORT_PUBLIC_KEYS             1024  avgt    2  1.414          ms/op
+*/
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
