@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.altbn128.common;
+package com.hedera.cryptography.utils.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.hedera.cryptography.utils.ValidationUtils;
 import org.junit.jupiter.api.Test;
 
 class ValidationUtilsTest {
 
     @Test
     void testInvalidInheritance() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            ValidationUtils.expectOrThrow(Dog.class, new Cat());
-        });
-        assertThrows(IllegalArgumentException.class, () -> {
-            ValidationUtils.expectOrThrow(Dog.class, new Animal());
-        });
+        assertThrows(IllegalArgumentException.class, () -> ValidationUtils.expectOrThrow(Dog.class, new Cat()));
+        assertThrows(IllegalArgumentException.class, () -> ValidationUtils.expectOrThrow(Dog.class, new Animal()));
     }
 
     @Test

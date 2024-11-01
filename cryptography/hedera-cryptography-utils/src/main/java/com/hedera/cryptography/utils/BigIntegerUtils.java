@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.altbn128.common;
+package com.hedera.cryptography.utils;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;

@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.altbn128.common;
+package com.hedera.cryptography.utils.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.hedera.cryptography.utils.BigIntegerUtils;
 import java.math.BigInteger;
 import org.junit.jupiter.api.Test;
 
