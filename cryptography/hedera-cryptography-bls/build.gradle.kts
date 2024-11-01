@@ -17,6 +17,8 @@
 plugins {
     id("com.hedera.gradle.java-module")
     id("com.hedera.gradle.hedera-cryptography-publish")
+    id("com.hedera.gradle.benchmark")
+    id("com.hedera.gradle.feature.test-fixtures")
 }
 
 mainModuleInfo {
@@ -27,4 +29,8 @@ mainModuleInfo {
 testModuleInfo {
     requires("org.junit.jupiter.api")
     requires("org.mockito")
+}
+
+jmhModuleInfo {
+    requires("com.hedera.cryptography.bls.testFixtures")
 }

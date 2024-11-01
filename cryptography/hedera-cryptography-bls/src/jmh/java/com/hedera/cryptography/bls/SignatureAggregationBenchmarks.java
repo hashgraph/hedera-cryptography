@@ -1,0 +1,65 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.hedera.cryptography.bls;
+
+import com.hedera.cryptography.bls.test.fixtures.BlsTestUtils;
+import com.hedera.cryptography.pairings.api.Curve;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Param;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.infra.Blackhole;
+
+@State(Scope.Benchmark)
+@Fork(value = 1)
+@Warmup(iterations = 1, time = 5)
+@Measurement(iterations = 2, time = 10)
+public class SignatureAggregationBenchmarks {
+    public static final int MESSAGE_SIZE = 1024;
+    public static final int RANDOM_SEED = 1;
+
+    @Param({"2", "4", "8", "16", "32"})
+    public int numSignatures;
+
+    @Param({"SHORT_SIGNATURES", "SHORT_PUBLIC_KEYS"})
+    public GroupAssignment groupAssignment;
+
+    private List<BlsSignature> signatures;
+
+    @Setup
+    public void setup() {
+        final List<BlsKeyPair> keyPairs = BlsTestUtils.generateKeyPairs(
+                SignatureSchema.create(Curve.ALT_BN128, groupAssignment), numSignatures);
+        signatures = BlsTestUtils.bulkSign(keyPairs, BlsTestUtils.randomBytes(RANDOM_SEED, MESSAGE_SIZE));
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    public void serializeDeserialize(final Blackhole bh) {
+        bh.consume(BlsSignature.aggregate(signatures));
+    }
+}
