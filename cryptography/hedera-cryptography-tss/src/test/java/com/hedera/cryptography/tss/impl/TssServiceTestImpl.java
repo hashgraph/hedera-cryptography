@@ -79,7 +79,7 @@ public class TssServiceTestImpl implements TssService {
     public List<TssPrivateShare> obtainPrivateShares(
             @NonNull final TssParticipantDirectory participantDirectory,
             @NonNull final List<TssMessage> validTssMessages) {
-        return participantDirectory.getCurrentParticipantOwnedShareIds().stream()
+        return participantDirectory.getOwnedShareIds().stream()
                 .map(sid -> new TssPrivateShare(
                         sid,
                         new BlsPrivateKey(

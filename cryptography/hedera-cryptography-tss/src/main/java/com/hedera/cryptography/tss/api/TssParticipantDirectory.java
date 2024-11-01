@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -62,18 +61,22 @@ public final class TssParticipantDirectory {
     private final Integer currentParticipantId;
     /**
      * a list of all participants ids in the directory.
+     * The values in this list can be non-consecutive values but Must be Sorted.
      */
     private final List<Integer> participantIds;
     /**
-     * The list of owned TssShareId by the participant that created this directory.
+     * The list of owned Shares by the participant that created this directory.
      */
-    private final List<Integer> currentParticipantOwnedShareIds;
+    private final List<Integer> ownedShareIds;
     /**
      * Stores the owner {@code participantId} of each TssShareId in the protocol.
+     * index 0 represents share with id 1.
+     * Shares are assigned sequentially.
      */
     private final Integer[] shareAllocationTable;
     /**
-     * Stores the {@link BlsPublicKey} of each {@code participantId} in the protocol.
+     * Stores the {@link BlsPublicKey} of each {@code participant} in the protocol.
+     * There is one BlsPublicKey per participant
      */
     private final BlsPublicKey[] tssEncryptionPublicKeyTable;
     /**
@@ -81,21 +84,17 @@ public final class TssParticipantDirectory {
      * It is transient to assure it does not get serialized and exposed outside.
      */
     private final transient BlsPrivateKey tssDecryptionPrivateKey;
-
     /**
      * The minimum value that allows the recovery of Private and Public shares and that guarantees a valid signature.
      */
     private final int threshold;
 
     /**
-     * Constructs a {@link TssParticipantDirectory} with the specified owned share IDs, share ownership map, public key
-     * map, persistent pairing private key, and threshold.
-     * <p>
-     * A unique long represents each participant in the protocol and is used as {@code participantId}
+     * Constructs a {@link TssParticipantDirectory}.
      *
      * @param currentParticipantId the participant owning this directory
      * @param participantIds list of participants ids
-     * @param currentParticipantOwnedShareIds the list of owned share IDs
+     * @param ownedShareIds the list of owned share IDs
      * @param shareAllocationTable share ids per participant
      * @param tssEncryptionPublicKeyTable participant IDs to public keys
      * @param tssDecryptionPrivateKey key to decrypt TssMessage parts intended
@@ -104,14 +103,14 @@ public final class TssParticipantDirectory {
     public TssParticipantDirectory(
             @NonNull final Integer currentParticipantId,
             @NonNull final List<Integer> participantIds,
-            @NonNull final List<Integer> currentParticipantOwnedShareIds,
+            @NonNull final List<Integer> ownedShareIds,
             @NonNull final Integer[] shareAllocationTable,
             @NonNull final BlsPublicKey[] tssEncryptionPublicKeyTable,
             @NonNull final BlsPrivateKey tssDecryptionPrivateKey,
             final int threshold) {
         this.currentParticipantId = currentParticipantId;
         this.participantIds = participantIds;
-        this.currentParticipantOwnedShareIds = currentParticipantOwnedShareIds;
+        this.ownedShareIds = ownedShareIds;
         this.shareAllocationTable = shareAllocationTable;
         this.tssEncryptionPublicKeyTable = tssEncryptionPublicKeyTable;
         this.tssDecryptionPrivateKey = tssDecryptionPrivateKey;
@@ -139,17 +138,17 @@ public final class TssParticipantDirectory {
 
     /**
      * Returns the shares owned by the participant represented as self.
-     *
+     * This returns the numeric value of the share, not the index.
      * @return the shares owned by the participant represented as self.
      */
     @NonNull
-    public List<Integer> getCurrentParticipantOwnedShareIds() {
-        return currentParticipantOwnedShareIds;
+    public List<Integer> getOwnedShareIds() {
+        return ownedShareIds;
     }
 
     /**
      * Return the list of all the shareIds.
-     *
+     * In this list, the first share has value of 1.
      * @return the list of all the shareIds
      */
     @NonNull
@@ -158,14 +157,16 @@ public final class TssParticipantDirectory {
     }
 
     /**
-     * Returns a map that associates tssShareId to its owner {@link BlsPublicKey}
+     * Returns a table that associates tssShareId to it's owner {@link BlsPublicKey}
+     * In this table, the first share is located in index 0.
      * @return a tssEncryptionPublicKeyMap
      */
     @NonNull
-    public Map<Integer, BlsPublicKey> tssEncryptionPublicKeyMap() {
-        return IntStream.range(1, tssEncryptionPublicKeyTable.length)
+    public BlsPublicKey[] tssEncryptionPublicKeyTable() {
+        return IntStream.range(0, tssEncryptionPublicKeyTable.length)
                 .boxed()
-                .collect(Collectors.toMap(i -> i, i -> tssEncryptionPublicKeyTable[i]));
+                .map(i -> tssEncryptionPublicKeyTable[shareAllocationTable[i]])
+                .toArray(BlsPublicKey[]::new);
     }
 
     /**

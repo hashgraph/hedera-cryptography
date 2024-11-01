@@ -197,7 +197,7 @@ public class ElGamalUtils {
      *
      * @param signatureSchema the element schema
      * @param random the rng instance to use
-     * @param elGamalEncryptionKeys the element schema
+     * @param elGamalEncryptionKeys a BlsPublicKey table for each share. its base 0. so index 0 represents the bls key of share with value 1
      * @param secrets the unencrypted messages to encrypt
      * @return a {@link CiphertextTable}
      */
