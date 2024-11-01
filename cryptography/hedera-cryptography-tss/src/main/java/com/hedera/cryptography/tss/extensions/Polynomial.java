@@ -88,7 +88,6 @@ public record Polynomial(@NonNull List<FieldElement> coefficients) {
 
     /**
      * Evaluate the polynomial at a given value.
-     * <p>
      *
      * @param value the value at which to evaluate the polynomial
      * @return the value of the polynomial at the given value
