@@ -16,10 +16,11 @@
 
 package com.hedera.cryptography.altbn128.facade;
 
+import static com.hedera.cryptography.utils.ValidationUtils.validateSize;
+
 import com.hedera.cryptography.altbn128.AltBn128Exception;
 import com.hedera.cryptography.altbn128.adapter.FieldElementsLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.GroupElementsLibraryAdapter;
-import com.hedera.cryptography.altbn128.common.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Objects;
@@ -65,7 +66,7 @@ public final class GroupFacade {
      * @throws AltBn128Exception in case of error.
      */
     public byte[] fromSeed(@NonNull final byte[] seed) {
-        ValidationUtils.validateSize(seed, randomSeedSize, "Invalid random seed size");
+        validateSize(seed, randomSeedSize, "Invalid random seed size");
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsFromSeed(group, seed, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
@@ -144,8 +145,8 @@ public final class GroupFacade {
      * @throws AltBn128Exception in case of error.
      */
     public byte[] add(@NonNull final byte[] point1, @NonNull final byte[] point2) {
-        ValidationUtils.validateSize(point1, size, "Invalid point size");
-        ValidationUtils.validateSize(point2, size, "Invalid point size");
+        validateSize(point1, size, "Invalid point size");
+        validateSize(point2, size, "Invalid point size");
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsAdd(group, point1, point2, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
@@ -162,8 +163,8 @@ public final class GroupFacade {
      * @throws AltBn128Exception in case of error.
      */
     public byte[] scalarMul(@NonNull final byte[] point, @NonNull final byte[] scalar) {
-        ValidationUtils.validateSize(point, size, "Invalid point size");
-        ValidationUtils.validateSize(scalar, fieldElementsSize, "Invalid scalar size");
+        validateSize(point, size, "Invalid point size");
+        validateSize(scalar, fieldElementsSize, "Invalid scalar size");
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsScalarMul(group, point, scalar, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
@@ -184,8 +185,7 @@ public final class GroupFacade {
      * @throws AltBn128Exception in case of error.
      */
     public byte[] fromBytes(@NonNull final byte[] bytes) {
-        ValidationUtils.validateSize(
-                Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
+        validateSize(Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
 
         int result = adapter.groupElementsBytes(group, bytes);
         if (result == GroupElementsLibraryAdapter.NOT_IN_CURVE) {

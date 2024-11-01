@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.utils.BigIntegerUtils;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.HashSet;

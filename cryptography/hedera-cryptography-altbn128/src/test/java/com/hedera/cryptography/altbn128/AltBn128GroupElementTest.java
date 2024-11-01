@@ -19,9 +19,9 @@ package com.hedera.cryptography.altbn128;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.BigIntegerUtils;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;

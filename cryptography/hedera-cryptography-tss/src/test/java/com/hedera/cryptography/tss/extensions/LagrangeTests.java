@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 public class LagrangeTests {
 
     @Test
+    @SuppressWarnings("unchecked")
     void testInvalidInvocationsGroupElementValues() {
         assertThrows(NullPointerException.class, () -> Lagrange.recoverGroupElement(null, null));
         assertThrows(NullPointerException.class, () -> Lagrange.recoverGroupElement(null, mock(List.class)));
@@ -54,6 +55,7 @@ public class LagrangeTests {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void testInvalidInvocationsFieldElementValues() {
         assertThrows(NullPointerException.class, () -> Lagrange.recoverFieldElement(null, null));
         assertThrows(NullPointerException.class, () -> Lagrange.recoverFieldElement(null, mock(List.class)));
