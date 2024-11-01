@@ -58,18 +58,18 @@ public class SignatureAggregationBenchmarks {
 /*
 Results on M1 Max MacBook Pro:
 
-Benchmark                                            (groupAssignment)  (numSignatures)  Mode  Cnt  Score   Error  Units
-SignatureAggregationBenchmarks.serializeDeserialize   SHORT_SIGNATURES               32  avgt    2  0.024          ms/op
-SignatureAggregationBenchmarks.serializeDeserialize   SHORT_SIGNATURES              256  avgt    2  0.172          ms/op
-SignatureAggregationBenchmarks.serializeDeserialize   SHORT_SIGNATURES             1024  avgt    2  0.703          ms/op
-SignatureAggregationBenchmarks.serializeDeserialize  SHORT_PUBLIC_KEYS               32  avgt    2  0.043          ms/op
-SignatureAggregationBenchmarks.serializeDeserialize  SHORT_PUBLIC_KEYS              256  avgt    2  0.336          ms/op
-SignatureAggregationBenchmarks.serializeDeserialize  SHORT_PUBLIC_KEYS             1024  avgt    2  1.414          ms/op
+Benchmark                                 (groupAssignment)  (numSignatures)  Mode  Cnt  Score   Error  Units
+SignatureAggregationBenchmarks.aggregate   SHORT_SIGNATURES               32  avgt    2  0.024          ms/op
+SignatureAggregationBenchmarks.aggregate   SHORT_SIGNATURES              256  avgt    2  0.172          ms/op
+SignatureAggregationBenchmarks.aggregate   SHORT_SIGNATURES             1024  avgt    2  0.703          ms/op
+SignatureAggregationBenchmarks.aggregate  SHORT_PUBLIC_KEYS               32  avgt    2  0.043          ms/op
+SignatureAggregationBenchmarks.aggregate  SHORT_PUBLIC_KEYS              256  avgt    2  0.336          ms/op
+SignatureAggregationBenchmarks.aggregate  SHORT_PUBLIC_KEYS             1024  avgt    2  1.414          ms/op
 */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
-    public void serializeDeserialize(final Blackhole bh) {
+    public void aggregate(final Blackhole bh) {
         bh.consume(BlsSignature.aggregate(signatures));
     }
 }
