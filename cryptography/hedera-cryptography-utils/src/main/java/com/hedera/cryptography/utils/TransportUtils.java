@@ -62,7 +62,8 @@ public class TransportUtils {
          * @return The Serializer instance for method chaining.
          */
         @NonNull
-        public <T> Serializer putSameSize(@NonNull final List<T> list, @NonNull final Function<T, byte[]> serializer) {
+        public <T> Serializer putListSameSize(
+                @NonNull final List<T> list, @NonNull final Function<T, byte[]> serializer) {
             var totalSize = Objects.requireNonNull(list).size();
             Objects.requireNonNull(serializer);
             put(totalSize);
@@ -192,7 +193,7 @@ public class TransportUtils {
          * @throws IllegalStateException if there are not enough bytes to read.
          */
         @NonNull
-        public <T> List<T> readList(@NonNull final Function<byte[], T> f, final int size) {
+        public <T> List<T> readListSameSize(@NonNull final Function<byte[], T> f, final int size) {
             canRead(Integer.BYTES);
             var elements = readInt();
             canRead(elements * size);

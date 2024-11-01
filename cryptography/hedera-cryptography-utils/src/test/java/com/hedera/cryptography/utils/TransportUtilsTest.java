@@ -59,10 +59,10 @@ class TransportUtilsTest {
     void testListSerialization() {
         List<String> strings = List.of("apples", "banana", "cherry");
         Serializer serializer = new Serializer();
-        serializer.putSameSize(strings, s -> s.getBytes(StandardCharsets.UTF_8));
+        serializer.putListSameSize(strings, s -> s.getBytes(StandardCharsets.UTF_8));
 
         Deserializer deserializer = new Deserializer(serializer.toBytes());
-        var deserializedStrings = deserializer.readList(s -> new String(s, StandardCharsets.UTF_8), 6);
+        var deserializedStrings = deserializer.readListSameSize(s -> new String(s, StandardCharsets.UTF_8), 6);
 
         assertEquals(strings, deserializedStrings);
     }
@@ -84,10 +84,11 @@ class TransportUtilsTest {
     void testSerializationEmptyList() {
         List<String> emptyList = List.of();
         Serializer serializer = new Serializer();
-        serializer.putSameSize(emptyList, s -> s.getBytes(StandardCharsets.UTF_8));
+        serializer.putListSameSize(emptyList, s -> s.getBytes(StandardCharsets.UTF_8));
 
         Deserializer deserializer = new Deserializer(serializer.toBytes());
-        List<String> deserializedList = deserializer.readList(bytes -> new String(bytes, StandardCharsets.UTF_8), 0);
+        List<String> deserializedList =
+                deserializer.readListSameSize(bytes -> new String(bytes, StandardCharsets.UTF_8), 0);
 
         assertTrue(deserializedList.isEmpty());
     }
@@ -102,5 +103,13 @@ class TransportUtilsTest {
 
         // Trying to read beyond the available data should throw an exception
         assertThrows(IllegalStateException.class, deserializer::readByte);
+    }
+
+    @Test
+    void testCannotReread() {
+        Serializer serializer = new Serializer();
+        serializer.put((byte) 42);
+        serializer.toBytes();
+        assertThrows(IllegalStateException.class, serializer::toBytes);
     }
 }
