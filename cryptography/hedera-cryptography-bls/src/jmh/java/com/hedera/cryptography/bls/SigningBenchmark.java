@@ -42,11 +42,8 @@ public class SigningBenchmark {
     @Param({"32", "1024", "16384"})
     public int messageSize;
 
-    @Param({"-1", "0", "1"})
+    @Param({"0", "10000000"})
     public int randomSeed;
-
-    @Param({"32", "256", "1024"})
-    public int numSignatures;
 
     @Param({"SHORT_SIGNATURES", "SHORT_PUBLIC_KEYS"})
     public GroupAssignment groupAssignment;
@@ -63,65 +60,23 @@ public class SigningBenchmark {
 /*
 Results on M1 Max MacBook Pro:
 
-Benchmark              (groupAssignment)  (messageSize)  (numSignatures)  (randomSeed)   Mode  Cnt      Score   Error  Units
-SigningBenchmark.sign   SHORT_SIGNATURES             32               32            -1  thrpt    2  11166.299          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES             32               32             0  thrpt    2  10801.528          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES             32               32             1  thrpt    2  10846.852          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES             32              256            -1  thrpt    2  10928.348          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES             32              256             0  thrpt    2  10824.737          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES             32              256             1  thrpt    2  11004.491          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES             32             1024            -1  thrpt    2  10651.376          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES             32             1024             0  thrpt    2  10995.799          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES             32             1024             1  thrpt    2  11043.231          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES           1024               32            -1  thrpt    2  10757.248          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES           1024               32             0  thrpt    2  11725.378          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES           1024               32             1  thrpt    2  11738.462          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES           1024              256            -1  thrpt    2  10950.515          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES           1024              256             0  thrpt    2  11827.454          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES           1024              256             1  thrpt    2  11936.017          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES           1024             1024            -1  thrpt    2  10955.297          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES           1024             1024             0  thrpt    2  11791.377          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES           1024             1024             1  thrpt    2  11929.633          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES          16384               32            -1  thrpt    2   8413.714          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES          16384               32             0  thrpt    2   7827.172          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES          16384               32             1  thrpt    2   8860.038          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES          16384              256            -1  thrpt    2   8400.454          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES          16384              256             0  thrpt    2   7754.323          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES          16384              256             1  thrpt    2   8900.231          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES          16384             1024            -1  thrpt    2   8402.799          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES          16384             1024             0  thrpt    2   7634.318          ops/s
-SigningBenchmark.sign   SHORT_SIGNATURES          16384             1024             1  thrpt    2   8866.074          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS             32               32            -1  thrpt    2   2148.329          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS             32               32             0  thrpt    2   2095.291          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS             32               32             1  thrpt    2   2197.261          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS             32              256            -1  thrpt    2   2189.478          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS             32              256             0  thrpt    2   2142.401          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS             32              256             1  thrpt    2   2181.239          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS             32             1024            -1  thrpt    2   2162.919          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS             32             1024             0  thrpt    2   2105.050          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS             32             1024             1  thrpt    2   2163.465          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS           1024               32            -1  thrpt    2   2174.879          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS           1024               32             0  thrpt    2   2158.156          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS           1024               32             1  thrpt    2   2146.812          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS           1024              256            -1  thrpt    2   2165.618          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS           1024              256             0  thrpt    2   2138.571          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS           1024              256             1  thrpt    2   2165.079          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS           1024             1024            -1  thrpt    2   2182.321          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS           1024             1024             0  thrpt    2   2154.209          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS           1024             1024             1  thrpt    2   2156.712          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS          16384               32            -1  thrpt    2   2019.860          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS          16384               32             0  thrpt    2   1940.249          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS          16384               32             1  thrpt    2   1895.564          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS          16384              256            -1  thrpt    2   1987.619          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS          16384              256             0  thrpt    2   1945.064          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS          16384              256             1  thrpt    2   2072.364          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS          16384             1024            -1  thrpt    2   1876.663          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS          16384             1024             0  thrpt    2   1990.017          ops/s
-SigningBenchmark.sign  SHORT_PUBLIC_KEYS          16384             1024             1  thrpt    2   2068.259          ops/s
+Benchmark              (groupAssignment)  (messageSize)  (randomSeed)  Mode  Cnt  Score   Error  Units
+SigningBenchmark.sign   SHORT_SIGNATURES             32             0  avgt    2  0.090          ms/op
+SigningBenchmark.sign   SHORT_SIGNATURES             32      10000000  avgt    2  0.096          ms/op
+SigningBenchmark.sign   SHORT_SIGNATURES           1024             0  avgt    2  0.085          ms/op
+SigningBenchmark.sign   SHORT_SIGNATURES           1024      10000000  avgt    2  0.091          ms/op
+SigningBenchmark.sign   SHORT_SIGNATURES          16384             0  avgt    2  0.127          ms/op
+SigningBenchmark.sign   SHORT_SIGNATURES          16384      10000000  avgt    2  0.110          ms/op
+SigningBenchmark.sign  SHORT_PUBLIC_KEYS             32             0  avgt    2  0.463          ms/op
+SigningBenchmark.sign  SHORT_PUBLIC_KEYS             32      10000000  avgt    2  0.465          ms/op
+SigningBenchmark.sign  SHORT_PUBLIC_KEYS           1024             0  avgt    2  0.459          ms/op
+SigningBenchmark.sign  SHORT_PUBLIC_KEYS           1024      10000000  avgt    2  0.451          ms/op
+SigningBenchmark.sign  SHORT_PUBLIC_KEYS          16384             0  avgt    2  0.502          ms/op
+SigningBenchmark.sign  SHORT_PUBLIC_KEYS          16384      10000000  avgt    2  0.487          ms/op
 */
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.SECONDS)
+    @BenchmarkMode(Mode.AverageTime)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
     public void sign(final Blackhole bh) {
         bh.consume(keyPair.privateKey().sign(message));
     }
