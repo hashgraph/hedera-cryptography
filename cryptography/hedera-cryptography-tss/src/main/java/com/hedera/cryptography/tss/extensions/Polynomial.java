@@ -27,7 +27,7 @@ import java.util.Random;
 /**
  * A polynomial, represented as a list of coefficients where each {@code coefficients[i]} corresponds to the coefficient for {@code x^i}.
  * @implNote it is responsibility of the user that the {@link FieldElement} instances are compatible with each-other.
- *  Otherwise, it might fail on the {@link #evaluate(FieldElement)} method depending on the implementation of {@link FieldElement}
+ *  Otherwise, it might fail on the {@link #evaluate(long)} method depending on the implementation of {@link FieldElement}
  * @param coefficients the coefficients of the polynomial.
  */
 public record Polynomial(@NonNull List<FieldElement> coefficients) {
@@ -89,19 +89,17 @@ public record Polynomial(@NonNull List<FieldElement> coefficients) {
     /**
      * Evaluate the polynomial at a given value.
      * <p>
-     * This uses Horner's method for polynomial evaluation.
      *
      * @param value the value at which to evaluate the polynomial
      * @return the value of the polynomial at the given value
      */
     @NonNull
-    public FieldElement evaluate(@NonNull final FieldElement value) {
-        final Field field =
-                Objects.requireNonNull(value, "value must not be null").field();
-
+    public FieldElement evaluate(final long value) {
+        final Field field = coefficients.getFirst().field();
+        final FieldElement fieldElement = field.fromLong(value);
         FieldElement result = field.fromLong(0L);
         for (int i = 0; i < coefficients.size(); i++) {
-            result = result.add(coefficients.get(i).multiply(value.power(i)));
+            result = result.add(coefficients.get(i).multiply(fieldElement.power(i)));
         }
 
         return result;
