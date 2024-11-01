@@ -16,8 +16,8 @@
 
 package com.hedera.cryptography.bls;
 
-import static com.hedera.cryptography.bls.ByteArrayConversionUtils.deserializePairingSignature;
-import static com.hedera.cryptography.bls.ByteArrayConversionUtils.serializePairingSignature;
+import static com.hedera.cryptography.bls.SerializationUtils.deserializePairingSignature;
+import static com.hedera.cryptography.bls.SerializationUtils.serializePairingSignature;
 
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Group;

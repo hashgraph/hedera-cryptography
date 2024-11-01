@@ -16,8 +16,8 @@
 
 package com.hedera.cryptography.bls;
 
-import static com.hedera.cryptography.bls.ByteArrayConversionUtils.deserializePairingPublicKey;
-import static com.hedera.cryptography.bls.ByteArrayConversionUtils.serializePairingPublicKey;
+import static com.hedera.cryptography.bls.SerializationUtils.deserializePairingPublicKey;
+import static com.hedera.cryptography.bls.SerializationUtils.serializePairingPublicKey;
 
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;

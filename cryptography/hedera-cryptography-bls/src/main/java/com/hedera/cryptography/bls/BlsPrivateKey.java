@@ -16,9 +16,10 @@
 
 package com.hedera.cryptography.bls;
 
-import static com.hedera.cryptography.bls.ByteArrayConversionUtils.deserializePairingPrivateKey;
-import static com.hedera.cryptography.bls.ByteArrayConversionUtils.serializePairingPrivateKey;
+import static com.hedera.cryptography.bls.SerializationUtils.deserializePairingPrivateKey;
+import static com.hedera.cryptography.bls.SerializationUtils.serializePairingPrivateKey;
 
+import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -51,10 +52,16 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
      */
     @NonNull
     public static BlsPrivateKey create(@NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {
-        final FieldElement sk = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
+        final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
                 .getPairingFriendlyCurve()
-                .field()
-                .random(Objects.requireNonNull(random, "random must not be null"));
+                .field();
+        Objects.requireNonNull(random, "random must not be null");
+        final FieldElement zero = field.fromLong(0);
+        final FieldElement one = field.fromLong(1);
+        FieldElement sk = field.random(random);
+        while (sk.equals(zero) || sk.equals(one)) {
+            sk = field.random(random);
+        }
         return new BlsPrivateKey(sk, signatureSchema);
     }
 
