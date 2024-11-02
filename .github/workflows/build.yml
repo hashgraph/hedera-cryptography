@@ -122,3 +122,17 @@ jobs:
 
       - name: Gradle Unit Test
         run: ./gradlew test --scan --continue
+
+  analyze:
+    name: Analyze
+    uses: ./.github/workflows/zxc-code-analysis.yaml
+    needs:
+      - build
+      - test-cross-platform
+    if: ${{ (github.event_name == 'push') && !failure() && !cancelled() }}
+    with:
+      custom-job-label: Source Code
+      enable-snyk-scan: true
+      snyk-org-identifier: hedera-services
+    secrets:
+      snyk-token: ${{ secrets.SNYK_TOKEN }}
