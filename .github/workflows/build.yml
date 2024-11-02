@@ -21,6 +21,8 @@ permissions:
   issues: read
   checks: write
   pull-requests: write
+  actions: read
+  statuses: write
 
 env:
   LC_ALL: C.UTF-8
