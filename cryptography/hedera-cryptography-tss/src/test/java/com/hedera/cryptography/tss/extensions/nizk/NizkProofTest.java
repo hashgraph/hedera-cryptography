@@ -24,13 +24,12 @@ import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.tss.api.TssShareId;
+import com.hedera.cryptography.tss.api.TssEncryptionKeyResolver;
 import com.hedera.cryptography.tss.extensions.FeldmanCommitment;
 import com.hedera.cryptography.tss.extensions.Polynomial;
 import com.hedera.cryptography.tss.extensions.elgamal.ElGamalUtils;
 import java.security.SecureRandom;
 import java.util.Random;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
@@ -49,17 +48,12 @@ public class NizkProofTest {
         final var numParticipants = 19;
         final var threshold = 4;
 
-        final var ids = IntStream.range(1, numParticipants + 1)
-                .boxed()
-                .map(schema.getPairingFriendlyCurve().field()::fromLong)
-                .toList();
-        final var shareIds = ids.stream().map(TssShareId::new).toList();
+        final var ids = IntStream.range(1, numParticipants + 1).boxed().toList();
         final var privateKeys =
                 ids.stream().map(i -> BlsPrivateKey.create(schema, random)).toList();
         final var publicKeys =
                 privateKeys.stream().map(BlsPrivateKey::createPublicKey).toList();
-        final var elGamalEncryptionKeys =
-                IntStream.range(0, ids.size()).boxed().collect(Collectors.toMap(shareIds::get, publicKeys::get));
+        final TssEncryptionKeyResolver elGamalEncryptionKeys = share -> publicKeys.get(share - 1);
 
         // A d degree polynomial is defined by d + 1 coefficients: a_0, a_1, ..., a_d
         // such that p(x) = a_0 + a_1 * x + a_2 * x^2 + ... + a_d * x^d
@@ -68,10 +62,10 @@ public class NizkProofTest {
         final var secrets = ids.stream().map(polynomial::evaluate).toList();
 
         final var entropy = ElGamalUtils.generateEntropy(random, field.elementSize(), schema);
-        final var cipherTable = ElGamalUtils.ciphertextTable(schema, entropy, elGamalEncryptionKeys, shareIds, secrets);
+        final var cipherTable = ElGamalUtils.ciphertextTable(schema, entropy, elGamalEncryptionKeys, secrets);
         final var combinedCipher = cipherTable.combine(field.fromLong(ElGamalUtils.TOTAL_NUMBER_OF_ELEMENTS));
         final var polyCommitment = FeldmanCommitment.create(group, polynomial);
-        final var statement = new NizkStatement(shareIds, elGamalEncryptionKeys, polyCommitment, combinedCipher);
+        final var statement = new NizkStatement(ids, elGamalEncryptionKeys, polyCommitment, combinedCipher);
         final var witness = NizkWitness.create(entropy, secrets);
         final var proof = NizkProof.prove(schema, random, statement, witness);
         // The verification of the same statement should be correct
@@ -81,22 +75,24 @@ public class NizkProofTest {
         // Try wrong public keys
         final var elGamalEncryptionWrongKeys = IntStream.range(0, ids.size())
                 .boxed()
-                .collect(Collectors.toMap(
-                        shareIds::get, i -> new BlsPublicKey(group.generator().multiply(field.fromLong(i)), schema)));
+                .map(i -> new BlsPublicKey(group.generator().multiply(field.fromLong(i)), schema))
+                .toList();
+        final TssEncryptionKeyResolver wrongTssEncryptionKeyResolver =
+                tssShareId -> elGamalEncryptionWrongKeys.get(tssShareId - 1);
         assertFalse(proof.verify(
-                schema, new NizkStatement(shareIds, elGamalEncryptionWrongKeys, polyCommitment, combinedCipher)));
+                schema, new NizkStatement(ids, wrongTssEncryptionKeyResolver, polyCommitment, combinedCipher)));
         // Try wrong commitment
-        final var wrongCommitmentCoeff = polyCommitment.commitmentCoefficients().stream()
+        final var wrongCommitmentCoefficients = polyCommitment.commitmentCoefficients().stream()
                 .map(e -> e.add(group.generator()))
                 .toList();
-        final var wrongCommitment = new FeldmanCommitment(wrongCommitmentCoeff);
-        assertFalse(proof.verify(
-                schema, new NizkStatement(shareIds, elGamalEncryptionKeys, wrongCommitment, combinedCipher)));
+        final var wrongCommitment = new FeldmanCommitment(wrongCommitmentCoefficients);
+        assertFalse(
+                proof.verify(schema, new NizkStatement(ids, elGamalEncryptionKeys, wrongCommitment, combinedCipher)));
         // Try wrong combinedCipher
         final var wrongCipherTable =
-                ElGamalUtils.ciphertextTable(schema, entropy, elGamalEncryptionWrongKeys, shareIds, secrets);
+                ElGamalUtils.ciphertextTable(schema, entropy, wrongTssEncryptionKeyResolver, secrets);
         final var wrongCombinedCipher = wrongCipherTable.combine(field.fromLong(ElGamalUtils.TOTAL_NUMBER_OF_ELEMENTS));
         assertFalse(proof.verify(
-                schema, new NizkStatement(shareIds, elGamalEncryptionKeys, wrongCommitment, wrongCombinedCipher)));
+                schema, new NizkStatement(ids, elGamalEncryptionKeys, wrongCommitment, wrongCombinedCipher)));
     }
 }

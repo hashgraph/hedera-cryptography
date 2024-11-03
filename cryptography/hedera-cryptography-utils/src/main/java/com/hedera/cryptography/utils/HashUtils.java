@@ -43,7 +43,7 @@ public final class HashUtils {
      * @return 256-bit hash
      */
     @NonNull
-    public static byte[] computeSha256(final @NonNull byte[] message) {
+    public static byte[] computeHash(final @NonNull byte[] message) {
         Objects.requireNonNull(message, "message must not be null");
         return getHashCalculator(SHA256).append(message).hash();
     }

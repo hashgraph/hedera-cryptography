@@ -18,38 +18,35 @@ package com.hedera.cryptography.tss.extensions.nizk;
 
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.tss.api.TssShareId;
-import com.hedera.cryptography.tss.common.HashUtils;
+import com.hedera.cryptography.tss.api.TssEncryptionKeyResolver;
 import com.hedera.cryptography.tss.extensions.FeldmanCommitment;
 import com.hedera.cryptography.tss.extensions.elgamal.CombinedCiphertext;
+import com.hedera.cryptography.utils.HashUtils;
+import com.hedera.cryptography.utils.HashUtils.HashCalculator;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
  * The public part of a Nizk proof.
  *
- * @param ids a list of tssIds, should be consecutive and each id value should match the index in the list.
+ * @param tssShareIds a list of tssIds, should be consecutive and each id value should match the index in the list.
  * @param tssEncryptionKeys a Map to retrieve the corresponding tssEncryptionKey of the participant owning the share
  * @param polynomialCommitment a {@link FeldmanCommitment}
  * @param combinedCiphertext a {@link CombinedCiphertext}
  */
 public record NizkStatement(
-        @NonNull List<TssShareId> ids,
-        @NonNull Map<TssShareId, BlsPublicKey> tssEncryptionKeys,
+        @NonNull List<Integer> tssShareIds,
+        @NonNull TssEncryptionKeyResolver tssEncryptionKeys,
         @NonNull FeldmanCommitment polynomialCommitment,
         @NonNull CombinedCiphertext combinedCiphertext) {
     /**
      * Constructor.
      */
     public NizkStatement {
-        if (Objects.requireNonNull(ids).isEmpty()) throw new IllegalArgumentException("ids cannot be empty");
-        if (Objects.requireNonNull(tssEncryptionKeys).isEmpty())
-            throw new IllegalArgumentException("tssEncryptionKeys cannot be empty");
-        if (ids.size() != tssEncryptionKeys.size())
-            throw new IllegalArgumentException("ids.size() != tssEncryptionKeys.size()");
+        if (Objects.requireNonNull(tssShareIds).isEmpty())
+            throw new IllegalArgumentException("tssShareIds cannot be empty");
+        Objects.requireNonNull(tssEncryptionKeys);
     }
 
     /**
@@ -58,27 +55,20 @@ public record NizkStatement(
      */
     @NonNull
     public byte[] hash() {
-        final TssShareId id1 = ids().getFirst();
-        final int fieldSize = id1.id().size();
-        final int groupSize = tssEncryptionKeys().get(id1).element().size();
-        final int size = (ids.size()) * fieldSize
-                + (tssEncryptionKeys.size()
-                                + polynomialCommitment.commitmentCoefficients().size()
-                                + combinedCiphertext.values().size()
-                                + 1)
-                        * groupSize;
-        ByteBuffer bf = ByteBuffer.allocate(size);
-        for (TssShareId id : ids) {
-            bf.put(id.id().toBytes());
-            bf.put(tssEncryptionKeys.get(id).element().toBytes());
+
+        final HashCalculator calculator = HashUtils.getHashCalculator(HashUtils.SHA256);
+        for (Integer shareIds : tssShareIds) {
+            calculator.append(shareIds);
+            final BlsPublicKey publicKey = tssEncryptionKeys.resolveTssEncryptionKey(shareIds);
+            calculator.append(publicKey.element().toBytes());
         }
         for (GroupElement coefficient : polynomialCommitment.commitmentCoefficients()) {
-            bf.put(coefficient.toBytes());
+            calculator.append(coefficient.toBytes());
         }
         for (GroupElement cv : combinedCiphertext.values()) {
-            bf.put(cv.toBytes());
+            calculator.append(cv.toBytes());
         }
-        bf.put(combinedCiphertext.randomness().toBytes());
-        return HashUtils.computeSha256(bf.array());
+        calculator.append(combinedCiphertext.randomness().toBytes());
+        return calculator.hash();
     }
 }

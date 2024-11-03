@@ -31,7 +31,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-/** Static utility {@link BigInteger} operations */
+/** Static utility {@link Byte[]} operations */
 public class ByteArrayUtils {
 
     /**
