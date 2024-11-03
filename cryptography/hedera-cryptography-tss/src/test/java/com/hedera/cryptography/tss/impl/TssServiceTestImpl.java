@@ -65,7 +65,8 @@ public class TssServiceTestImpl implements TssService {
 
             @NonNull
             @Override
-            public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory tssParticipantDirectory,
+            public TssMessage generateTssMessage(
+                    @NonNull final TssParticipantDirectory tssParticipantDirectory,
                     @NonNull final TssPrivateShare privateShare) {
                 return () -> new byte[0];
             }
