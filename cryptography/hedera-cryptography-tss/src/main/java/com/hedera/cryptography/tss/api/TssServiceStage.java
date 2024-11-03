@@ -19,7 +19,21 @@ package com.hedera.cryptography.tss.api;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 
+/**
+ * A TssService Stage.
+ */
 public interface TssServiceStage {
+
+    /**
+     * Generate a {@link TssMessage} for a {@code tssParticipantDirectory}, for the specified {@link TssPrivateShare}.
+     *
+     * @param tssParticipantDirectory the participant directory that we should generate the message for
+     * @param privateShare       the secret to use for generating new keys
+     * @return a TssMessage for the requested share.
+     */
+    @NonNull
+    TssMessage generateTssMessage(
+            @NonNull TssParticipantDirectory tssParticipantDirectory, @NonNull TssPrivateShare privateShare);
 
     /**
      * Compute all private shares that belongs to this participant from a threshold minimum number of {@link TssMessage}s.

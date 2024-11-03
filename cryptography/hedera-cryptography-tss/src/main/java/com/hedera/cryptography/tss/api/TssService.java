@@ -36,7 +36,7 @@ public interface TssService {
      *
      * @return the genesis stage.
      */
-    TssServiceGenesisStage getGenesisStage();
+    TssServiceGenesisStage genesisStage();
 
     /**
      * Returns the rekey stage.
@@ -44,5 +44,5 @@ public interface TssService {
      *
      * @return the rekey stage.
      */
-    TssServiceRekeyStage getRekeyStage();
+    TssServiceRekeyStage rekeyStage();
 }

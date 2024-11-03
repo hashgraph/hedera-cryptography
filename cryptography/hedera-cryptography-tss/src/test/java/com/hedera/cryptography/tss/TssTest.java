@@ -70,7 +70,7 @@ class TssTest {
         final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, new Random());
 
         // this message will contain a random share split in 3 parts
-        final TssMessage p0Message = tssService.getGenesisStage().generateTssMessage(p0sDirectory);
+        final TssMessage p0Message = tssService.genesisStage().generateTssMessage(p0sDirectory);
 
         final TssParticipantDirectory p1sDirectory = TssParticipantDirectory.createBuilder()
                 .withSelf(1, keyPair2.privateKey())
@@ -81,7 +81,7 @@ class TssTest {
                 .build(SIGNATURE_SCHEMA);
 
         // this message will contain a random share split in 3 parts
-        final TssMessage p1Message = tssService.getGenesisStage().generateTssMessage(p1sDirectory);
+        final TssMessage p1Message = tssService.genesisStage().generateTssMessage(p1sDirectory);
 
         final TssParticipantDirectory p2sDirectory = TssParticipantDirectory.createBuilder()
                 .withSelf(2, keyPair3.privateKey())
@@ -92,14 +92,14 @@ class TssTest {
                 .build(SIGNATURE_SCHEMA);
 
         // this message will contain a random share split in 3 parts
-        final TssMessage p2Message = tssService.getGenesisStage().generateTssMessage(p2sDirectory);
+        final TssMessage p2Message = tssService.genesisStage().generateTssMessage(p2sDirectory);
 
         // Some other piece will distribute messages across all participants
 
         // And simulating processing in P0
         final List<TssMessage> messages = List.of(p0Message, p1Message, p2Message);
         final List<TssMessage> validMessages = messages.stream()
-                .filter(tssMessage -> tssService.getGenesisStage().verifyTssMessage(p0sDirectory, tssMessage))
+                .filter(tssMessage -> tssService.genesisStage().verifyTssMessage(p0sDirectory, tssMessage))
                 .toList();
 
         if (validMessages.size() < p0sDirectory.getThreshold()) {
@@ -108,12 +108,12 @@ class TssTest {
 
         // Get the list of PrivateShares owned by participant 0
         final List<TssPrivateShare> privateShares = Objects.requireNonNull(
-                tssService.getGenesisStage().obtainPrivateShares(p0sDirectory, validMessages),
+                tssService.genesisStage().obtainPrivateShares(p0sDirectory, validMessages),
                 "Condition of threshold number of messages was not met");
 
         // Get the list of PublicShares
         final List<TssPublicShare> publicShares = Objects.requireNonNull(
-                tssService.getGenesisStage().obtainPublicShares(p0sDirectory, validMessages),
+                tssService.genesisStage().obtainPublicShares(p0sDirectory, validMessages),
                 "Condition of threshold number of messages was not met");
 
         // Get the ledgerId
@@ -146,16 +146,16 @@ class TssTest {
                 List.of(mock(TssMessage.class), mock(TssMessage.class), mock(TssMessage.class), mock(TssMessage.class));
 
         final var validMessages = tssMessages.stream()
-                .filter(m -> tssService.getGenesisStage().verifyTssMessage(p0sDirectory, m))
+                .filter(m -> tssService.genesisStage().verifyTssMessage(p0sDirectory, m))
                 .toList();
         final var publicShares =
-                tssService.getRekeyStage().obtainPublicShares(p0sDirectory, validMessages); // Reduce to threshold?
+                tssService.rekeyStage().obtainPublicShares(p0sDirectory, validMessages); // Reduce to threshold?
 
         final var ledgerID = TssPublicShare.aggregate(publicShares);
 
         final byte[] messageToSign = new byte[20];
         rng.nextBytes(messageToSign);
-        final var privateShares = tssService.getRekeyStage().obtainPrivateShares(p0sDirectory, validMessages);
+        final var privateShares = tssService.rekeyStage().obtainPrivateShares(p0sDirectory, validMessages);
 
         // then
         // After genesis, and assuming the same participantDirectory p0 will have a list of 1 private share
@@ -224,17 +224,17 @@ class TssTest {
                 List.of(mock(TssMessage.class), mock(TssMessage.class), mock(TssMessage.class), mock(TssMessage.class));
 
         final var validMessages = tssMessages.stream()
-                .filter(m -> tssService.getGenesisStage().verifyTssMessage(p0sDirectory, m))
+                .filter(m -> tssService.genesisStage().verifyTssMessage(p0sDirectory, m))
                 .toList();
         final var oldPublicShares =
-                tssService.getGenesisStage().obtainPublicShares(p0sDirectory, validMessages); // Reduce to threshold?
+                tssService.genesisStage().obtainPublicShares(p0sDirectory, validMessages); // Reduce to threshold?
         final var oldP0PrivateShares =
-                tssService.getGenesisStage().obtainPrivateShares(p0sDirectory, validMessages); // Reduce to threshold?
+                tssService.genesisStage().obtainPrivateShares(p0sDirectory, validMessages); // Reduce to threshold?
 
         final var ledgerID = TssPublicShare.aggregate(oldPublicShares);
         // then:
         final List<TssMessage> p0Messages = oldP0PrivateShares.stream()
-                .map(p -> tssService.getRekeyStage().generateTssMessage(p0sDirectory, p))
+                .map(p -> tssService.rekeyStage().generateTssMessage(p0sDirectory, p))
                 .toList();
 
         // Collect other participants messages
@@ -244,17 +244,17 @@ class TssTest {
         final List<TssMessage> collectedValidMessages = Stream.of(p0Messages, p1Messages, p2Messages)
                 .flatMap(Collection::stream)
                 .filter(tssMessage ->
-                        tssService.getRekeyStage().verifyTssMessage(p0sDirectory, oldPublicShares, tssMessage))
+                        tssService.rekeyStage().verifyTssMessage(p0sDirectory, oldPublicShares, tssMessage))
                 .toList();
 
         // Get the list of PrivateShares owned by participant 0
         final List<TssPrivateShare> newP0privateShares = Objects.requireNonNull(
-                tssService.getRekeyStage().obtainPrivateShares(p0sDirectory, collectedValidMessages),
+                tssService.rekeyStage().obtainPrivateShares(p0sDirectory, collectedValidMessages),
                 "Condition of threshold number of messages was not met");
 
         // Get the list of PublicShares
         final List<TssPublicShare> newPublicShares = Objects.requireNonNull(
-                tssService.getRekeyStage().obtainPublicShares(p0sDirectory, collectedValidMessages),
+                tssService.rekeyStage().obtainPublicShares(p0sDirectory, collectedValidMessages),
                 "Condition of threshold number of messages was not met");
 
         // calculate the ledgerId out of the newly calculated newPublicShares

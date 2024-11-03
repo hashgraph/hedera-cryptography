@@ -49,18 +49,25 @@ public class TssServiceTestImpl implements TssService {
     }
 
     @Override
-    public TssServiceGenesisStage getGenesisStage() {
+    public TssServiceGenesisStage genesisStage() {
         return new TssServiceGenesisStage() {
             @NonNull
             @Override
             public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory tssParticipantDirectory) {
-                return new TssMessage(new byte[] {});
+                return () -> new byte[0];
             }
 
             @Override
             public boolean verifyTssMessage(
                     @NonNull final TssParticipantDirectory participantDirectory, @NonNull final TssMessage tssMessage) {
                 return true;
+            }
+
+            @NonNull
+            @Override
+            public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory tssParticipantDirectory,
+                    @NonNull final TssPrivateShare privateShare) {
+                return () -> new byte[0];
             }
 
             @NonNull
@@ -101,14 +108,14 @@ public class TssServiceTestImpl implements TssService {
     }
 
     @Override
-    public TssServiceRekeyStage getRekeyStage() {
+    public TssServiceRekeyStage rekeyStage() {
         return new TssServiceRekeyStage() {
             @NonNull
             @Override
             public TssMessage generateTssMessage(
                     @NonNull final TssParticipantDirectory pendingParticipantDirectory,
                     @NonNull final TssPrivateShare privateShare) {
-                return new TssMessage(new byte[] {});
+                return () -> new byte[0];
             }
 
             @Override
