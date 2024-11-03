@@ -23,6 +23,7 @@ import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.tss.api.TssEncryptionKeyResolver;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ public class ElGamalUtils {
     /**
      * 256
      */
-    public final int TOTAL_NUMBER_OF_ELEMENTS = -Byte.MIN_VALUE + Byte.MAX_VALUE + 1;
+    public static final int TOTAL_NUMBER_OF_ELEMENTS = -Byte.MIN_VALUE + Byte.MAX_VALUE + 1;
 
     /**
      * Creates an ElGamal ciphertext from a {@code byte[]} value, chunking it byte by byte, and encrypting each chunk.
@@ -197,14 +198,14 @@ public class ElGamalUtils {
      *
      * @param signatureSchema the element schema
      * @param random the rng instance to use
-     * @param elGamalEncryptionKeys a BlsPublicKey table for each share. its base 0. so index 0 represents the bls key of share with value 1
+     * @param tssEncryptionKeyResolver a resolver to retrieve each participant's owner's encryption key
      * @param secrets the unencrypted messages to encrypt
      * @return a {@link CiphertextTable}
      */
     public static CiphertextTable ciphertextTable(
             @NonNull final SignatureSchema signatureSchema,
             @NonNull final Random random,
-            @NonNull final BlsPublicKey[] elGamalEncryptionKeys,
+            @NonNull final TssEncryptionKeyResolver tssEncryptionKeyResolver,
             @NonNull final List<FieldElement> secrets) {
 
         final Group publicKeyGroup = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
@@ -212,9 +213,7 @@ public class ElGamalUtils {
         final GroupElement publicKeyGenerator = publicKeyGroup.generator();
         final ElGamalSubstitutionTable<FieldElement, Byte> elGamalSubstitutionTable =
                 ElGamalUtils.elGamalSubstitutionTable(signatureSchema);
-        if (Objects.requireNonNull(elGamalEncryptionKeys, "elGamalEncryptionKeys must not be null").length == 0) {
-            throw new IllegalArgumentException("Invalid elGamalEncryptionKeys");
-        }
+        Objects.requireNonNull(tssEncryptionKeyResolver, "tssEncryptionKeyResolver must not be null");
         final List<FieldElement> randomness = ElGamalUtils.generateEntropy(
                 random, signatureSchema.getPairingFriendlyCurve().field().elementSize(), signatureSchema);
 
@@ -226,9 +225,9 @@ public class ElGamalUtils {
         CipherText[] multiEncryptedValues = new CipherText[secrets.size()];
         for (int i = 0; i < secrets.size(); i++) {
             final FieldElement secret = secrets.get(i);
-            final BlsPublicKey pk = elGamalEncryptionKeys[i];
+            final BlsPublicKey pk = tssEncryptionKeyResolver.resolveTssEncryptionKey(i + 1);
             if (pk == null) {
-                throw new IllegalArgumentException("Key not present for share: " + i);
+                throw new IllegalArgumentException("Key not present for share: " + i + 1);
             }
             multiEncryptedValues[i] = createCipherText(pk, elGamalSubstitutionTable, randomness, secret.toBytes());
         }

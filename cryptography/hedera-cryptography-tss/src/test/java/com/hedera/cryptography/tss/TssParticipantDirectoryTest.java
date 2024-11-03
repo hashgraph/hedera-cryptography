@@ -14,8 +14,23 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.tss;
+package com.hedera.cryptography.tss; /*
+                                      * Copyright (C) 2024 Hedera Hashgraph, LLC
+                                      *
+                                      * Licensed under the Apache License, Version 2.0 (the "License");
+                                      * you may not use this file except in compliance with the License.
+                                      * You may obtain a copy of the License at
+                                      *
+                                      *      http://www.apache.org/licenses/LICENSE-2.0
+                                      *
+                                      * Unless required by applicable law or agreed to in writing, software
+                                      * distributed under the License is distributed on an "AS IS" BASIS,
+                                      * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+                                      * See the License for the specific language governing permissions and
+                                      * limitations under the License.
+                                      */
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,6 +45,8 @@ import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
+import java.util.List;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -135,5 +152,28 @@ class TssParticipantDirectoryTest {
                 .build(signatureSchema);
 
         assertNotNull(directory, "directory should not be null");
+    }
+
+    @Test
+    void testValidConstructionHasValidPrivateSharesSize() {
+        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
+        final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
+        final TssParticipantDirectory directory = TssParticipantDirectory.createBuilder()
+                .withSelf(1, privateKey)
+                .withParticipant(1, 5, publicKey1)
+                .withParticipant(2, 2, publicKey2)
+                .withThreshold(1)
+                .build(signatureSchema);
+
+        assertNotNull(directory, "directory should not be null");
+        assertEquals(1, directory.getThreshold());
+        assertEquals(5, directory.getOwnedShareIds().size());
+        assertEquals(privateKey, directory.tssDecryptionPrivateKey());
+        assertEquals(List.of(1, 2, 3, 4, 5), directory.getOwnedShareIds());
+        assertEquals(List.of(1, 2, 3, 4, 5, 6, 7), directory.getShareIds());
+        var keys =
+                new BlsPublicKey[] {publicKey1, publicKey1, publicKey1, publicKey1, publicKey1, publicKey2, publicKey2};
+        IntStream.range(0, keys.length).forEach(k -> assertEquals(keys[k], directory.resolveTssEncryptionKey(k + 1)));
     }
 }
