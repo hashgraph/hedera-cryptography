@@ -27,6 +27,7 @@ public interface TssEncryptionKeyResolver {
      * Obtains a {@link BlsPublicKey} given a shareId.
      * Null if the shareId is not present or its owner cannot be found.
      * @param tssShareId an integer representing the shareId starting in 1.
+     * @return the BlsPublicKey of the participant that owns the tssShareId
      */
     @Nullable
     BlsPublicKey resolveTssEncryptionKey(int tssShareId);

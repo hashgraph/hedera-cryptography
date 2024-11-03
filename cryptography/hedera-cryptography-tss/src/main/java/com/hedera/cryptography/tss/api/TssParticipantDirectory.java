@@ -278,7 +278,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
 
             if (!participantEntries.containsKey(selfEntry.participantId())) {
                 throw new IllegalStateException(
-                        "The participant shareIds does not contain a reference to the current participant");
+                        "The participant list does not contain a reference to the current participant");
             }
 
             // Get the total number of shares of to distribute in the protocol
