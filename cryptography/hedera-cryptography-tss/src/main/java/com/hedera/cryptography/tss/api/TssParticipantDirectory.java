@@ -23,7 +23,6 @@ import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.SignatureSchema;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -57,21 +56,22 @@ import java.util.stream.IntStream;
  */
 public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
     /**
-     * The currentParticipantId
+     * Stores the ID of the {@code participant} owning this directory.
      */
     private final Integer participantId;
     /**
-     * a list of all participants tssShareIds in the directory.
-     * The values are consecutive starting from 1 and must be sorted.
+     * A list of all assigned {@code shareIds} in the directory.
+     * The sorted values are consecutive starting from 1.
+     * This contains the numeric value of the share, not the index.
      */
     private final List<Integer> shareIds;
     /**
-     * The list of owned Shares by the participant that created this directory.
+     * The list of participant's owned shareIds.
      */
     private final List<Integer> ownedShareIds;
     /**
-     * Stores the owner {@code participantId} of each TssShareId in the protocol.
-     * index 0 represents share with id 1.
+     * Stores the {@code participant} that is the owner of each shareId in the protocol.
+     * Index 0 represents shareId 1 and so on.
      * Shares are assigned sequentially.
      */
     private final Integer[] shareAllocationTable;
@@ -86,7 +86,9 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
      */
     private final transient BlsPrivateKey tssDecryptionPrivateKey;
     /**
-     * The minimum value that allows the recovery of Private and Public shares and that guarantees a valid signature.
+     * In an originating directory, the {@code threshold} value is the minimum number of messages that assures the correct recovery of
+     * {@link TssPrivateShare} and {@link TssPublicShare}.
+     * In a target directory the {@code threshold} defines the number of shares-of-shares that will be created to perform shamir-secret-sharing.
      */
     private final int threshold;
 
@@ -101,7 +103,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
      * @param tssDecryptionPrivateKey key to decrypt TssMessage parts intended
      * @param threshold  the threshold value for the TSS
      */
-    public TssParticipantDirectory(
+    private TssParticipantDirectory(
             @NonNull final Integer participantId,
             @NonNull final List<Integer> shareIds,
             @NonNull final List<Integer> ownedShareIds,
@@ -110,8 +112,8 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
             @NonNull final BlsPrivateKey tssDecryptionPrivateKey,
             final int threshold) {
         this.participantId = participantId;
-        this.shareIds = shareIds;
-        this.ownedShareIds = ownedShareIds;
+        this.shareIds = List.copyOf(shareIds);
+        this.ownedShareIds = List.copyOf(ownedShareIds);
         this.shareAllocationTable = shareAllocationTable;
         this.tssEncryptionPublicKeyTable = tssEncryptionPublicKeyTable;
         this.tssDecryptionPrivateKey = tssDecryptionPrivateKey;
@@ -139,7 +141,9 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
 
     /**
      * Returns the threshold value.
-     *
+     * In an originating directory, the {@code threshold} value is the minimum number of messages that assures the correct recovery of
+     * {@link TssPrivateShare} and {@link TssPublicShare}.
+     * In a target directory the {@code threshold} defines the number of shares-of-shares that will be created to perform shamir-secret-sharing.
      * @return the threshold value
      */
     public int getThreshold() {
@@ -147,7 +151,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
     }
 
     /**
-     * Returns the shares owned by the participant represented as self.
+     * The list of participant's owned shareIds.
      * This returns the numeric value of the share, not the index.
      * @return the shares owned by the participant represented as self.
      */
@@ -159,6 +163,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
     /**
      * Return the list of all the shareIds.
      * In this list, the first share has value of 1.
+     * This returns the numeric value of the share, not the index.
      * @return the list of all the shareIds
      */
     @NonNull
@@ -169,21 +174,23 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
     /**
      * Returns a tssShareId owner's {@link BlsPublicKey}.
      * If null, the participant does not belong to the directory.
+     * @param shareId the numeric value of the share, not the index.
      * @return a BlsPublicKey belonging to the owner of the share.
      */
-    @Nullable
+    @NonNull
     @Override
     public BlsPublicKey resolveTssEncryptionKey(final int shareId) {
-        var shareOwner = shareAllocationTable[shareId - 1];
-        if (shareOwner != null) {
-            return tssEncryptionPublicKeyTable[shareOwner];
+        if (shareId > shareAllocationTable.length || shareId <= 0) {
+            throw new IllegalArgumentException("Invalid ShareId");
         }
-        return null;
+        var shareOwner = shareAllocationTable[shareId - 1];
+        return tssEncryptionPublicKeyTable[shareOwner];
     }
 
     /**
      * Returns the tssDecryptionPrivateKey.
-     *
+     * The tssDecryptionPrivateKey is the key used to decrypt TssMessage parts intended for the participant
+     * that created this directory.
      * @return the tssDecryptionPrivateKey
      */
     public BlsPrivateKey tssDecryptionPrivateKey() {
@@ -318,7 +325,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
             return new TssParticipantDirectory(
                     selfEntry.participantId,
                     shareIds,
-                    List.copyOf(ownedShares),
+                    ownedShares,
                     shareOwnershipTable,
                     tssEncryptionPublicKeyTable,
                     selfEntry.tssEncryptionPrivateKey,

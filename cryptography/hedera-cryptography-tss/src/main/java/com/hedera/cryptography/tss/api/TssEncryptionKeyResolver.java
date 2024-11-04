@@ -17,7 +17,7 @@
 package com.hedera.cryptography.tss.api;
 
 import com.hedera.cryptography.bls.BlsPublicKey;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Allows to obtain a {@link BlsPublicKey} given a shareId
@@ -27,8 +27,9 @@ public interface TssEncryptionKeyResolver {
      * Obtains a {@link BlsPublicKey} given a shareId.
      * Null if the shareId is not present or its owner cannot be found.
      * @param tssShareId an integer representing the shareId starting in 1.
-     * @return the BlsPublicKey of the participant that owns the tssShareId
+     * @return the BlsPublicKey of the participant that owns the tssShareId.
+     * @throws IllegalArgumentException if the shareId less or equals to 0 or if it is higher than the total assigned shares
      */
-    @Nullable
+    @NonNull
     BlsPublicKey resolveTssEncryptionKey(int tssShareId);
 }

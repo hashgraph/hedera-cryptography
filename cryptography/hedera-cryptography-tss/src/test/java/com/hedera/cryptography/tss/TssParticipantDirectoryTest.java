@@ -162,4 +162,25 @@ class TssParticipantDirectoryTest {
                 new BlsPublicKey[] {publicKey1, publicKey1, publicKey1, publicKey1, publicKey1, publicKey2, publicKey2};
         IntStream.range(0, keys.length).forEach(k -> assertEquals(keys[k], directory.resolveTssEncryptionKey(k + 1)));
     }
+
+    @Test
+    void testResolveTssEncryptionKey() {
+        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
+        final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
+        final TssParticipantDirectory directory = TssParticipantDirectory.createBuilder()
+                .withSelf(1, privateKey)
+                .withParticipant(1, 5, publicKey1)
+                .withParticipant(2, 2, publicKey2)
+                .withThreshold(1)
+                .build(signatureSchema);
+
+        assertEquals(publicKey1, directory.resolveTssEncryptionKey(1));
+        assertEquals(publicKey1, directory.resolveTssEncryptionKey(5));
+        assertEquals(publicKey2, directory.resolveTssEncryptionKey(6));
+        assertEquals(publicKey2, directory.resolveTssEncryptionKey(7));
+        assertThrows(IllegalArgumentException.class, () -> directory.resolveTssEncryptionKey(8));
+        assertThrows(IllegalArgumentException.class, () -> directory.resolveTssEncryptionKey(0));
+        assertThrows(IllegalArgumentException.class, () -> directory.resolveTssEncryptionKey(-1));
+    }
 }
