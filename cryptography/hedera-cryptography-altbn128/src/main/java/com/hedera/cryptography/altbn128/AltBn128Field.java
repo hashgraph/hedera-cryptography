@@ -17,11 +17,11 @@
 package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
-import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.altbn128.facade.FieldFacade;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 
@@ -75,7 +75,7 @@ public class AltBn128Field implements Field {
     @Override
     public FieldElement fromBigInteger(@NonNull final BigInteger bigInteger) {
         return new AltBn128FieldElement(
-                facade.fromBytes(BigIntegerUtils.toLittleEndianBytes(bigInteger, facade.size())), this);
+                facade.fromBytes(ByteArrayUtils.toLittleEndianBytes(bigInteger, facade.size())), this);
     }
 
     /**

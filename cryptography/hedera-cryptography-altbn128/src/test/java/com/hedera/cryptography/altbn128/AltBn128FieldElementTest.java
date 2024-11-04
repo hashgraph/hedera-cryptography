@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.HashSet;
@@ -118,16 +118,16 @@ class AltBn128FieldElementTest {
         assertEquals(BigInteger.TEN, field.fromLong(10L).toBigInteger());
         final BigInteger rMinusOne = R.subtract(BigInteger.ONE);
         assertArrayEquals(
-                BigIntegerUtils.toLittleEndianBytes(rMinusOne, SIZE),
-                field.fromBytes(BigIntegerUtils.toLittleEndianBytes(rMinusOne, SIZE))
+                ByteArrayUtils.toLittleEndianBytes(rMinusOne, SIZE),
+                field.fromBytes(ByteArrayUtils.toLittleEndianBytes(rMinusOne, SIZE))
                         .toBytes());
         assertEquals(
                 BigInteger.ZERO,
-                field.fromBytes(BigIntegerUtils.toLittleEndianBytes(R, SIZE)).toBigInteger());
+                field.fromBytes(ByteArrayUtils.toLittleEndianBytes(R, SIZE)).toBigInteger());
         final BigInteger rPlusOne = R.add(BigInteger.ONE);
         assertEquals(
                 BigInteger.ONE,
-                field.fromBytes(BigIntegerUtils.toLittleEndianBytes(rPlusOne, SIZE))
+                field.fromBytes(ByteArrayUtils.toLittleEndianBytes(rPlusOne, SIZE))
                         .toBigInteger());
     }
 

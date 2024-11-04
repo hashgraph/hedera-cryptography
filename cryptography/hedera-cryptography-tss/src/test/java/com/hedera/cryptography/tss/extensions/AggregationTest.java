@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.tss.extensions;
 
+import static com.hedera.cryptography.utils.test.fixtures.stream.StreamUtils.zipStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -31,11 +32,8 @@ import com.hedera.cryptography.pairings.api.GroupElement;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 public class AggregationTest {
@@ -176,12 +174,6 @@ public class AggregationTest {
                         entry.getValue().getGroup().generator().multiply(entry.getKey()), entry.getValue()));
 
         return Lagrange.recoverGroupElement(receiverIds, rekeyPublicShares);
-    }
-
-    public static <A, B> Stream<Entry<A, B>> zipStream(final List<A> aCollection, final List<B> bCollection) {
-        return IntStream.range(0, Math.min(aCollection.size(), bCollection.size()))
-                .boxed()
-                .map(i -> Map.entry(aCollection.get(i), bCollection.get(i)));
     }
 
     private <T> List<List<T>> reArrange(int maxSize, final List<List<T>> polynomialPrivatesPoints) {

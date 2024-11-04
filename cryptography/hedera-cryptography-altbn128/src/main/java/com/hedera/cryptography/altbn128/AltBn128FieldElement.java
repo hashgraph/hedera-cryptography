@@ -16,13 +16,13 @@
 
 package com.hedera.cryptography.altbn128;
 
-import static com.hedera.cryptography.altbn128.common.ValidationUtils.expectOrThrow;
+import static com.hedera.cryptography.utils.ValidationUtils.expectOrThrow;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
-import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.altbn128.facade.FieldFacade;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -131,7 +131,7 @@ public class AltBn128FieldElement implements FieldElement {
     @NonNull
     @Override
     public BigInteger toBigInteger() {
-        return BigIntegerUtils.fromLittleEndianBytes(representation);
+        return ByteArrayUtils.fromLittleEndianBytes(representation);
     }
 
     /**
