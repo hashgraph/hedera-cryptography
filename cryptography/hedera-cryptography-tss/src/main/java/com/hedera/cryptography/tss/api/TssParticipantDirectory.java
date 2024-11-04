@@ -58,7 +58,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
     /**
      * Stores the ID of the {@code participant} owning this directory.
      */
-    private final Integer participantId;
+    private final int participantId;
     /**
      * A list of all assigned {@code shareIds} in the directory.
      * The sorted values are consecutive starting from 1.
@@ -104,7 +104,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
      * @param threshold  the threshold value for the TSS
      */
     private TssParticipantDirectory(
-            @NonNull final Integer participantId,
+            final int participantId,
             @NonNull final List<Integer> shareIds,
             @NonNull final List<Integer> ownedShareIds,
             @NonNull final Integer[] shareAllocationTable,
@@ -135,7 +135,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
      *
      * @return the participant owning this directory
      */
-    public Integer getParticipantId() {
+    public int getParticipantId() {
         return participantId;
     }
 
@@ -193,6 +193,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
      * that created this directory.
      * @return the tssDecryptionPrivateKey
      */
+    @NonNull
     public BlsPrivateKey tssDecryptionPrivateKey() {
         return tssDecryptionPrivateKey;
     }
