@@ -79,7 +79,8 @@ public record NizkProof(
             @NonNull final NizkStatement statement,
             @NonNull final NizkWitness witness) {
         final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
-                .getPairingFriendlyCurve().field();
+                .getPairingFriendlyCurve()
+                .field();
         Objects.requireNonNull(random, "random must not be null");
         Objects.requireNonNull(statement, "statement must not be null");
         Objects.requireNonNull(witness, "witness must not be null");
