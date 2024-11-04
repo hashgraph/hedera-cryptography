@@ -23,12 +23,11 @@ import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.*;
-import com.hedera.cryptography.tss.api.TssShareId;
+import com.hedera.cryptography.tss.api.TssKeyTable;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Random;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -150,25 +149,22 @@ public class ElGamalUtilsTest {
 
     @Test
     void testCiphertextTable(final Random random) {
-        final var ids = IntStream.range(1, 20)
-                .boxed()
-                .map(schema.getPairingFriendlyCurve().field()::fromLong)
-                .map(TssShareId::new)
-                .toList();
+        final var ids = IntStream.range(1, 20).boxed().toList();
         final var field = schema.getPairingFriendlyCurve().field();
         final var secret = field.fromBytes(SECRET);
         final var sks =
                 ids.stream().map(i -> BlsPrivateKey.create(schema, random)).toList();
+
         final var pks = sks.stream().map(BlsPrivateKey::createPublicKey).toList();
-        final var elGamalEncryptionKeys =
-                IntStream.range(0, ids.size()).boxed().collect(Collectors.toMap(ids::get, pks::get));
+        final TssKeyTable<BlsPublicKey> elGamalEncryptionKeys =
+                shareId -> pks.stream().toList().get(shareId - 1);
         final var secrets = Collections.nCopies(ids.size(), secret);
 
         var inverse = ElGamalSubstitutionTable.inverse(schema);
-        var table = ElGamalUtils.ciphertextTable(schema, random, elGamalEncryptionKeys, ids, secrets);
+        var table = ElGamalUtils.ciphertextTable(schema, random, elGamalEncryptionKeys, secrets);
 
         for (int i = 0; i < ids.size(); i++) {
-            var ecVal = table.shareCiphertexts().get(i + 1);
+            var ecVal = table.shareCiphertexts()[i];
             var dc = ElGamalUtils.readCipherText(sks.get(i), table.sharedRandomness(), inverse, ecVal);
             assertNotNull(ecVal);
             assertNotNull(dc);

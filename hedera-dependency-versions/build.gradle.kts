@@ -34,7 +34,7 @@ dependencies.constraints {
     api("com.google.protobuf:protobuf-java:3.21.7") {
         because("com.google.protobuf")
     }
-    api("com.google.protobuf:protobuf-java-util:3.21.7") {
+    api("com.google.protobuf:protobuf-java-util:3.25.5") {
         because("com.google.protobuf.util")
     }
     api("org.mockito:mockito-core:5.8.0") {

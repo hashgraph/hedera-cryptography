@@ -21,16 +21,14 @@ import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A {@link CiphertextTable} contains for each share an encrypted secret, and the sharedRandomness that was used to produce the encrypted values.
  *
  * @param sharedRandomness a shared randomness for all the messages in {@code shareCiphertexts}
- * @param shareCiphertexts a {@link com.hedera.cryptography.tss.api.TssShareId} to ciphertext table
+ * @param shareCiphertexts a ciphertext table containing {@link CipherText} for each share
  */
-public record CiphertextTable(
-        @NonNull List<GroupElement> sharedRandomness, @NonNull Map<Integer, List<GroupElement>> shareCiphertexts) {
+public record CiphertextTable(@NonNull List<GroupElement> sharedRandomness, @NonNull CipherText[] shareCiphertexts) {
 
     /**
      * Combines this representation into a compressed representation still containing all the information.
@@ -48,8 +46,8 @@ public record CiphertextTable(
         final GroupElement c1 = ramdomness.getFirst().getGroup().batchAdd(ramdomness);
         final List<GroupElement> c2 = new ArrayList<>();
 
-        for (int i = 0; i < this.shareCiphertexts().size(); i++) {
-            final List<GroupElement> ctxt_i = this.shareCiphertexts().get(i + 1);
+        for (int i = 0; i < this.shareCiphertexts().length; i++) {
+            final List<GroupElement> ctxt_i = this.shareCiphertexts()[i].cipherText();
             final List<GroupElement> c2_is = new ArrayList<>();
             for (int j = 0; j < ctxt_i.size(); j++) {
                 final GroupElement c2_ij = ctxt_i.get(j);

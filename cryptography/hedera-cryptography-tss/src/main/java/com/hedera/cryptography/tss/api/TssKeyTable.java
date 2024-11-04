@@ -16,23 +16,21 @@
 
 package com.hedera.cryptography.tss.api;
 
-import static java.util.Objects.requireNonNull;
-
-import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.bls.BlsPublicKey;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * The ID of a TSS share.
- *
- * @param id the {@link FieldElement} that represents the share ID
+ * Allows to obtain a {@link BlsPublicKey} given a shareId
+ * T The type of the key
  */
-public record TssShareId(@NonNull FieldElement id) {
+public interface TssKeyTable<T> {
     /**
-     * Constructor.
-     *
-     * @param id the {@link FieldElement} that represents the share ID
+     * Obtains a {@link BlsPublicKey} given a shareId.
+     * Null if the shareId is not present or its owner cannot be found.
+     * @param tssShareId an integer representing the shareId starting in 1.
+     * @return the BlsPublicKey of the participant that owns the tssShareId.
+     * @throws IllegalArgumentException if the shareId less or equals to 0 or if it is higher than the total assigned shares
      */
-    public TssShareId {
-        requireNonNull(id, "id must not be null");
-    }
+    @NonNull
+    T resolveKeyForShare(int tssShareId);
 }

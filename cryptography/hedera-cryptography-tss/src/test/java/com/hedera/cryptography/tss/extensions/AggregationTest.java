@@ -27,7 +27,6 @@ import com.hedera.cryptography.bls.BlsSignature;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.nio.charset.StandardCharsets;
@@ -60,11 +59,14 @@ public class AggregationTest {
 
         final int numberOfParticipants = dealerSecrets.size();
         final int threshold = dealerSecrets.size();
-        final var dealersIds = IntStream.rangeClosed(1, numberOfParticipants)
+        final var dealerIds =
+                IntStream.rangeClosed(1, numberOfParticipants).boxed().toList();
+
+        final var dealersFieldElementsIds = IntStream.rangeClosed(1, numberOfParticipants)
                 .boxed()
                 .map(schema.getPairingFriendlyCurve().field()::fromLong)
                 .toList();
-        final var receiverIds = dealersIds;
+        final var receiverIds = dealerIds;
         final var signatures = dealerSecrets.stream()
                 .map(p -> p.privateKey().sign(msg))
                 .map(BlsSignature::element)
@@ -74,12 +76,14 @@ public class AggregationTest {
                 .map(BlsKeyPair::publicKey)
                 .map(BlsPublicKey::element)
                 .toList();
-        final var aggregatedPk = new BlsPublicKey(Lagrange.recoverGroupElement(dealersIds, publicKeys), schema);
-        final var aggregateSignature = new BlsSignature(Lagrange.recoverGroupElement(dealersIds, signatures), schema);
+        final var aggregatedPk =
+                new BlsPublicKey(Lagrange.recoverGroupElement(dealersFieldElementsIds, publicKeys), schema);
+        final var aggregateSignature =
+                new BlsSignature(Lagrange.recoverGroupElement(dealersFieldElementsIds, signatures), schema);
         assertTrue(aggregateSignature.verify(aggregatedPk, msg));
 
         final var aggregatedRekey =
-                secretShareAndRecover(dealerSecrets, random, threshold, threshold, schema, receiverIds, dealersIds);
+                secretShareAndRecover(dealerSecrets, random, threshold, threshold, schema, receiverIds, dealerIds);
 
         assertEquals(aggregatedPk.element(), aggregatedRekey);
         assertTrue(aggregateSignature.verify(new BlsPublicKey(aggregatedRekey, schema), msg));
@@ -98,20 +102,20 @@ public class AggregationTest {
 
         final int numberOfParticipants = dealerSecrets.size();
         final int threshold = 12;
-        final var dealersIds = IntStream.rangeClosed(1, numberOfParticipants)
-                .boxed()
-                .map(schema.getPairingFriendlyCurve().field()::fromLong)
+        final var dealersIds =
+                IntStream.rangeClosed(1, numberOfParticipants).boxed().toList();
+        final var dealersFieldElementsIds = dealersIds.stream()
+                .map(id -> schema.getPairingFriendlyCurve().field().fromLong(id))
                 .toList();
-        final var receiverIds = IntStream.rangeClosed(1, numberOfParticipants * 2)
-                .boxed()
-                .map(schema.getPairingFriendlyCurve().field()::fromLong)
-                .toList();
+        final var receiverIds =
+                IntStream.rangeClosed(1, numberOfParticipants * 2).boxed().toList();
 
         final var publicKeys = dealerSecrets.stream()
                 .map(BlsKeyPair::publicKey)
                 .map(BlsPublicKey::element)
                 .toList();
-        final var aggregatedPk = new BlsPublicKey(Lagrange.recoverGroupElement(dealersIds, publicKeys), schema);
+        final var aggregatedPk =
+                new BlsPublicKey(Lagrange.recoverGroupElement(dealersFieldElementsIds, publicKeys), schema);
 
         final var aggregatedRekey = secretShareAndRecover(
                 dealerSecrets, random, dealersIds.size(), threshold, schema, receiverIds, dealersIds);
@@ -125,10 +129,13 @@ public class AggregationTest {
             final int previousThreshold,
             final int currentThreshold,
             final SignatureSchema schema,
-            final List<FieldElement> receiverIds,
-            final List<FieldElement> dealersIds) {
+            final List<Integer> receiverIds,
+            final List<Integer> dealersIds) {
 
-        final var selectedDealers = dealersIds.stream().limit(previousThreshold).toList();
+        final var selectedDealers = dealersIds.stream()
+                .limit(previousThreshold)
+                .map(d -> schema.getPairingFriendlyCurve().field().fromLong(d))
+                .toList();
         final var privateKeys = dealerSecrets.stream()
                 .limit(previousThreshold)
                 .map(BlsKeyPair::privateKey)
@@ -147,15 +154,16 @@ public class AggregationTest {
                         .map(poly::evaluate)
                         .toList())
                 .toList();
-        final var polynomialPublications = polynomialsCommitments.stream()
+        final var polynomialCommitmentsValues = polynomialsCommitments.stream()
                 .map(poly -> receiverIds.stream()
                         .limit(currentThreshold)
-                        .map(poly::evaluate)
+                        .map(id -> poly.evaluate(
+                                schema.getPairingFriendlyCurve().field().fromLong(id)))
                         .toList())
                 .toList();
 
         final var ssPoints = this.reArrange(currentThreshold, polynomialPrivatesPoints);
-        final var psPoints = this.reArrange(currentThreshold, polynomialPublications);
+        final var psPoints = this.reArrange(currentThreshold, polynomialCommitmentsValues);
 
         final var rekeyPublicShares = psPoints.stream()
                 .map(l -> Lagrange.recoverGroupElement(selectedDealers, l))
@@ -168,7 +176,11 @@ public class AggregationTest {
                 .forEach(entry -> assertEquals(
                         entry.getValue().getGroup().generator().multiply(entry.getKey()), entry.getValue()));
 
-        return Lagrange.recoverGroupElement(receiverIds, rekeyPublicShares);
+        final var receiversTssIds = receiverIds.stream()
+                .map(d -> schema.getPairingFriendlyCurve().field().fromLong(d))
+                .toList();
+
+        return Lagrange.recoverGroupElement(receiversTssIds, rekeyPublicShares);
     }
 
     private <T> List<List<T>> reArrange(int maxSize, final List<List<T>> polynomialPrivatesPoints) {

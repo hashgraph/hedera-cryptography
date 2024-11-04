@@ -59,21 +59,13 @@ class PolynomialTest {
         assertThrows(IllegalArgumentException.class, () -> new Polynomial(List.of()));
     }
 
-    @SuppressWarnings("DataFlowIssue")
-    @Test
-    void testEvaluateEmptyValueThrowsException() {
-        assertThrows(NullPointerException.class, () -> new Polynomial(
-                        List.of(Mockito.mock(FieldElement.class), Mockito.mock(FieldElement.class)))
-                .evaluate(null));
-    }
-
     @Test
     void testEvaluationReturnsNonNull(final Random rng) {
         var curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve();
         final Field field = curve.field();
         var poly = Polynomial.fromValue(rng, field.random(rng), 10);
 
-        var values = IntStream.range(0, 100).boxed().map(i -> field.random(rng)).toList();
+        var values = IntStream.range(0, 100).boxed().toList();
 
         for (var value : values) {
             assertNotNull(poly.evaluate(value));
@@ -87,7 +79,7 @@ class PolynomialTest {
         final Field field = curve.field();
         final FieldElement freeCoeff = field.fromLong(1);
         var poly = new Polynomial(List.of(freeCoeff, field.fromLong(1), field.fromLong(1), field.fromLong(1)));
-        assertEquals(freeCoeff, poly.evaluate(field.fromLong(0)));
-        assertEquals(field.fromLong(1).multiply(field.fromLong(poly.degree() + 1)), poly.evaluate(field.fromLong(1)));
+        assertEquals(freeCoeff, poly.evaluate(0));
+        assertEquals(field.fromLong(1).multiply(field.fromLong(poly.degree() + 1)), poly.evaluate(1));
     }
 }

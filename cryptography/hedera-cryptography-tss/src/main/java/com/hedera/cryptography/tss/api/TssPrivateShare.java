@@ -19,7 +19,13 @@ package com.hedera.cryptography.tss.api;
 import static java.util.Objects.requireNonNull;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
+import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.tss.extensions.Lagrange;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Represents a secret portion of a shared key.
@@ -28,7 +34,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * @param shareId the share ID
  * @param privateKey the private key
  */
-public record TssPrivateShare(@NonNull TssShareId shareId, @NonNull BlsPrivateKey privateKey) {
+public record TssPrivateShare(@NonNull Integer shareId, @NonNull BlsPrivateKey privateKey) {
     /**
      * Constructor
      *
@@ -52,7 +58,7 @@ public record TssPrivateShare(@NonNull TssShareId shareId, @NonNull BlsPrivateKe
         if (id <= 0) {
             throw new IllegalArgumentException("id must be greater than 0");
         }
-        return new TssPrivateShare(new TssShareId(privateKey.element().field().fromLong(id)), privateKey);
+        return new TssPrivateShare(id, privateKey);
     }
 
     /**
@@ -63,5 +69,43 @@ public record TssPrivateShare(@NonNull TssShareId shareId, @NonNull BlsPrivateKe
     @NonNull
     public TssShareSignature sign(@NonNull final byte[] message) {
         return new TssShareSignature(this.shareId(), this.privateKey().sign(message));
+    }
+
+    /**
+     * Aggregate a threshold number of {@link TssPrivateShare}s.
+     * It is the responsibility of the caller to ensure that the list of private shares meets the required threshold.
+     * If the threshold is not met, the public key returned by this method will be invalid.
+     * This method is used for two distinct purposes:
+     * <ul>
+     *     <li>Aggregating private shares derived from all commitments, to produce the private key for a given share</li>
+     * </ul>
+     *
+     * @param privateShares the privateShare to aggregate
+     * @return the interpolated public key
+     */
+    @NonNull
+    public static BlsPrivateKey aggregate(@NonNull final List<TssPrivateShare> privateShares) {
+        if (Objects.requireNonNull(privateShares, "privateShares must not be null")
+                        .size()
+                < 2) {
+            throw new IllegalArgumentException("Not enough privateShares to aggregate");
+        }
+        final Collection<SignatureSchema> s = privateShares.stream()
+                .map(TssPrivateShare::privateKey)
+                .map(BlsPrivateKey::signatureSchema)
+                .collect(Collectors.toSet());
+        if (s.size() > 1) {
+            throw new IllegalArgumentException("privateShares must not contain more than one schema");
+        }
+        final SignatureSchema signatureSchema = s.stream().findFirst().orElseThrow();
+        var xs = privateShares.stream()
+                .map(TssPrivateShare::shareId)
+                .map(signatureSchema.getPairingFriendlyCurve().field()::fromLong)
+                .toList();
+        var ys = privateShares.stream()
+                .map(TssPrivateShare::privateKey)
+                .map(BlsPrivateKey::element)
+                .toList();
+        return new BlsPrivateKey(Lagrange.recoverFieldElement(xs, ys), signatureSchema);
     }
 }
