@@ -4,6 +4,7 @@
 module com.hedera.cryptography.altbn128 {
     requires com.hedera.common.nativesupport;
     requires com.hedera.cryptography.pairings.api;
+    requires com.hedera.cryptography.utils;
     requires com.github.spotbugs.annotations;
     requires org.bouncycastle.provider;
 

@@ -16,12 +16,13 @@
 
 package com.hedera.cryptography.altbn128.facade;
 
+import static com.hedera.cryptography.utils.ValidationUtils.validateSize;
+
 import com.hedera.cryptography.altbn128.AltBN128CurveGroup;
 import com.hedera.cryptography.altbn128.AltBn128Exception;
 import com.hedera.cryptography.altbn128.adapter.GroupElementsLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.PairingsLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
-import com.hedera.cryptography.altbn128.common.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 
@@ -63,10 +64,10 @@ public class PairingFacade {
             @NonNull final byte[] point2,
             @NonNull final byte[] point3,
             @NonNull final byte[] point4) {
-        ValidationUtils.validateSize(point1, g1Size, "point1 must belong to group1");
-        ValidationUtils.validateSize(point3, g1Size, "point3 must belong to group1");
-        ValidationUtils.validateSize(point2, g2Size, "point2 must belong to group2");
-        ValidationUtils.validateSize(point4, g2Size, "point4 must belong to group2");
+        validateSize(point1, g1Size, "point1 must belong to group1");
+        validateSize(point3, g1Size, "point3 must belong to group1");
+        validateSize(point2, g2Size, "point2 must belong to group2");
+        validateSize(point4, g2Size, "point4 must belong to group2");
 
         final int result = adapter.pairingsEquals(point1, point2, point3, point4);
         if (result < GroupElementsLibraryAdapter.SUCCESS) {
