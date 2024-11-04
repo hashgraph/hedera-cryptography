@@ -78,14 +78,17 @@ public record NizkProof(
             @NonNull final Random random,
             @NonNull final NizkStatement statement,
             @NonNull final NizkWitness witness) {
-        final Field field = signatureSchema.getPairingFriendlyCurve().field();
+        final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
+                .getPairingFriendlyCurve().field();
+        Objects.requireNonNull(random, "random must not be null");
+        Objects.requireNonNull(statement, "statement must not be null");
+        Objects.requireNonNull(witness, "witness must not be null");
+
         final Group publicKeyGroup = signatureSchema.getPublicKeyGroup();
         final GroupElement generator = publicKeyGroup.generator();
 
         // compute x := RO(instance)
-        // we do this by seeding a PRNG with the SHA256 hash of the instance (serialized)
-        final byte[] statementHash = statement.hash();
-        final FieldElement x = field.random(statementHash);
+        final FieldElement x = field.fromBytes(statement.hash());
 
         // Generate random α, ρ ←$ Zp
         final FieldElement alpha = field.random(random);
@@ -138,7 +141,7 @@ public record NizkProof(
         // compute x := RO(instance)
         final byte[] statementHash =
                 Objects.requireNonNull(statement, "statement must not be null").hash();
-        final FieldElement x = field.random(statementHash);
+        final FieldElement x = field.fromBytes(statementHash);
         // compute x' := RO(x, F, A, Y)
         final byte[] hash = HashUtils.computeHash(
                 HashUtils.SHA256, x.toBytes(), this.f.toBytes(), this.a.toBytes(), this.y.toBytes());
