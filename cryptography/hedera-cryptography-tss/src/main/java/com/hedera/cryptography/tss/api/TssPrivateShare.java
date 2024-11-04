@@ -28,7 +28,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * @param shareId the share ID
  * @param privateKey the private key
  */
-public record TssPrivateShare(@NonNull TssShareId shareId, @NonNull BlsPrivateKey privateKey) {
+public record TssPrivateShare(@NonNull Integer shareId, @NonNull BlsPrivateKey privateKey) {
     /**
      * Constructor
      *
@@ -52,7 +52,7 @@ public record TssPrivateShare(@NonNull TssShareId shareId, @NonNull BlsPrivateKe
         if (id <= 0) {
             throw new IllegalArgumentException("id must be greater than 0");
         }
-        return new TssPrivateShare(new TssShareId(privateKey.element().field().fromLong(id)), privateKey);
+        return new TssPrivateShare(id, privateKey);
     }
 
     /**
