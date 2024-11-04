@@ -18,24 +18,19 @@ package com.hedera.cryptography.bls;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.hedera.cryptography.bls.test.fixtures.BlsTestUtils;
 import com.hedera.cryptography.pairings.api.Curve;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 public class BlsAggregationTest {
 
     @Test
     void test() {
-        var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
-        var pairs = List.of(
-                BlsKeyPair.generate(schema, new Random()),
-                BlsKeyPair.generate(schema, new Random()),
-                BlsKeyPair.generate(schema, new Random()),
-                BlsKeyPair.generate(schema, new Random()));
+        final var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
+        final var pairs = BlsTestUtils.generateKeyPairs(schema, 4);
 
-        var msg =
+        final var msg =
                 """
                     From Wikipedia, the free encyclopedia
                     This article is about plants in the family Araliaceae. For the typographic ornamentation ❧, see Fleuron (typography). For Hedera Hashgraph, see Hashgraph.
@@ -45,16 +40,16 @@ public class BlsAggregationTest {
                     """
                         .getBytes(StandardCharsets.UTF_8);
 
-        var signatures = pairs.stream().map(p -> p.privateKey().sign(msg)).toList();
-        var publicKeys = pairs.stream().map(BlsKeyPair::publicKey).toList();
+        final var signatures = BlsTestUtils.bulkSign(pairs, msg);
+        final var publicKeys = pairs.stream().map(BlsKeyPair::publicKey).toList();
         for (int i = 0; i < signatures.size(); i++) {
-            var signature = signatures.get(i);
-            var publicKey = publicKeys.get(i);
+            final var signature = signatures.get(i);
+            final var publicKey = publicKeys.get(i);
             assertTrue(signature.verify(publicKey, msg));
         }
 
-        var aggregatedPk = BlsPublicKey.aggregate(publicKeys);
-        var aggregateSignature = BlsSignature.aggregate(signatures);
+        final var aggregatedPk = BlsPublicKey.aggregate(publicKeys);
+        final var aggregateSignature = BlsSignature.aggregate(signatures);
         assertTrue(aggregateSignature.verify(aggregatedPk, msg));
     }
 }
