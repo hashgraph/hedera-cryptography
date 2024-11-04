@@ -47,18 +47,6 @@ import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 public class RngExtension implements InvocationInterceptor, ParameterResolver {
 
     /**
-     * Creates a new {@link Random} instance with a random seed which is printed to the console.
-     *
-     * @return a new {@link Random} instance
-     */
-    private Random createRandom() {
-        final Random random = new Random();
-        final long seed = random.nextLong();
-        System.out.println("Random seed: " + seed);
-        return new Random(seed);
-    }
-
-    /**
      * Intercepts a test method invocation and injects a {@link Random} instance into the test instance. The {@link Random}
      * instance is injected into any field of the test instance that is annotated with {@link Inject} and is of type
      * {@link Random}.
@@ -87,7 +75,7 @@ public class RngExtension implements InvocationInterceptor, ParameterResolver {
                 .forEach(field -> {
                     try {
                         field.setAccessible(true);
-                        field.set(extensionContext.getRequiredTestInstance(), createRandom());
+                        field.set(extensionContext.getRequiredTestInstance(), RandomUtils.create());
                     } catch (Exception ex) {
                         throw new RuntimeException("Error in injection", ex);
                     }
@@ -138,7 +126,7 @@ public class RngExtension implements InvocationInterceptor, ParameterResolver {
                 .map(ParameterContext::getParameter)
                 .map(Parameter::getType)
                 .filter(t -> t.equals(Random.class))
-                .map(t -> createRandom())
+                .map(t -> RandomUtils.create())
                 .orElseThrow(() -> new ParameterResolutionException("Could not resolve parameter"));
     }
 }
