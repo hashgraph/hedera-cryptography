@@ -18,6 +18,7 @@ package com.hedera.cryptography.tss;
 
 import static org.mockito.Mockito.mock;
 
+import com.hedera.common.testfixtures.WithRng;
 import com.hedera.cryptography.bls.BlsKeyPair;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
@@ -46,6 +47,7 @@ import org.junit.jupiter.api.Test;
  * A test to showcase the Tss protocol for a specific case
  * More validations can be added once
  */
+@WithRng
 class TssTest {
 
     public static final SignatureSchema SIGNATURE_SCHEMA =
@@ -53,7 +55,7 @@ class TssTest {
     public static final Random rng = new Random(600);
 
     @Test
-    void testGenesis() {
+    void testGenesis(final Random random) {
         // Simulates the genesis process for a 3 participant network
         final BlsKeyPair keyPair1 = BlsKeyPair.generate(SIGNATURE_SCHEMA, rng);
         final BlsKeyPair keyPair2 = BlsKeyPair.generate(SIGNATURE_SCHEMA, rng);
@@ -67,7 +69,7 @@ class TssTest {
                 .withThreshold(2)
                 .build(SIGNATURE_SCHEMA);
 
-        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, new Random());
+        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, random);
 
         // this message will contain a random share split in 3 parts
         final TssMessage p0Message = tssService.generateTssMessage(p0sDirectory);
@@ -121,7 +123,7 @@ class TssTest {
     }
 
     @Test
-    void testSigning() {
+    void testSigning(final Random random) {
         // given:
         // all this will be calculated at genesis
         // Simulates the genesis process for a 3 participant network
@@ -140,7 +142,7 @@ class TssTest {
                 .withThreshold(2)
                 .build(SIGNATURE_SCHEMA);
 
-        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, new Random());
+        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, random);
 
         final List<TssMessage> tssMessages =
                 List.of(mock(TssMessage.class), mock(TssMessage.class), mock(TssMessage.class), mock(TssMessage.class));
@@ -200,7 +202,7 @@ class TssTest {
     }
 
     @Test
-    void rekeying() {
+    void rekeying(final Random random) {
         // given:
         // all this will be calculated at genesis
         final BlsKeyPair keyPair1 = BlsKeyPair.generate(SIGNATURE_SCHEMA, rng);
@@ -218,7 +220,7 @@ class TssTest {
                 .withThreshold(2)
                 .build(SIGNATURE_SCHEMA);
 
-        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, new Random());
+        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, random);
         final List<TssMessage> tssMessages =
                 List.of(mock(TssMessage.class), mock(TssMessage.class), mock(TssMessage.class), mock(TssMessage.class));
 

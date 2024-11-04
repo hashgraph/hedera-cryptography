@@ -18,22 +18,24 @@ package com.hedera.cryptography.bls;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.hedera.common.testfixtures.WithRng;
 import com.hedera.cryptography.pairings.api.Curve;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 
+@WithRng
 public class BlsAggregationTest {
 
     @Test
-    void test() {
+    void test(final Random random) {
         var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
         var pairs = List.of(
-                BlsKeyPair.generate(schema, new Random()),
-                BlsKeyPair.generate(schema, new Random()),
-                BlsKeyPair.generate(schema, new Random()),
-                BlsKeyPair.generate(schema, new Random()));
+                BlsKeyPair.generate(schema, new Random(random.nextLong())),
+                BlsKeyPair.generate(schema, new Random(random.nextLong())),
+                BlsKeyPair.generate(schema, new Random(random.nextLong())),
+                BlsKeyPair.generate(schema, new Random(random.nextLong())));
 
         var msg =
                 """
