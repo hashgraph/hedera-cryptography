@@ -93,8 +93,7 @@ public final class TssParticipantDirectory implements TssKeyTable<BlsPublicKey> 
      * @param participantId the participant owning this directory
      * @param shareIds list of participants ids
      * @param ownedShareIds the list of owned share IDs
-     * @param shareAllocationTable share ids per participant
-     * @param tssEncryptionPublicKeyTable participant IDs to public keys
+     * @param tssEncryptionTable share to participant public keys table
      * @param tssDecryptionPrivateKey key to decrypt TssMessage parts intended
      * @param threshold  the threshold value for the TSS
      */
@@ -102,14 +101,13 @@ public final class TssParticipantDirectory implements TssKeyTable<BlsPublicKey> 
             final int participantId,
             @NonNull final List<Integer> shareIds,
             @NonNull final List<Integer> ownedShareIds,
-            @NonNull final int[] shareAllocationTable,
-            @NonNull final BlsPublicKey[] tssEncryptionPublicKeyTable,
+            @NonNull final TssKeyTable<BlsPublicKey> tssEncryptionTable,
             @NonNull final BlsPrivateKey tssDecryptionPrivateKey,
             final int threshold) {
         this.participantId = participantId;
         this.shareIds = List.copyOf(shareIds);
         this.ownedShareIds = List.copyOf(ownedShareIds);
-        this.tssEncryptionTable = new TssKeyTableImpl<>(shareAllocationTable, tssEncryptionPublicKeyTable);
+        this.tssEncryptionTable = tssEncryptionTable;
         this.tssDecryptionPrivateKey = tssDecryptionPrivateKey;
         this.threshold = threshold;
     }
@@ -317,8 +315,7 @@ public final class TssParticipantDirectory implements TssKeyTable<BlsPublicKey> 
                     selfEntry.participantId,
                     shareIds,
                     ownedShares,
-                    shareOwnershipTable,
-                    tssEncryptionPublicKeyTable,
+                    new TssKeyTableImpl<>(shareOwnershipTable, tssEncryptionPublicKeyTable),
                     selfEntry.tssEncryptionPrivateKey,
                     threshold);
         }
