@@ -18,6 +18,7 @@ package com.hedera.cryptography.bls;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.hedera.common.testfixtures.WithRng;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import com.hedera.cryptography.pairings.api.curves.KnownCurves;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@WithRng
 class SignaturesLibraryTest {
 
     @Test
@@ -88,9 +90,8 @@ class SignaturesLibraryTest {
 
     @ParameterizedTest
     @MethodSource("combinedParameters")
-    void crateKeyPairTest(GroupAssignment assignment) {
+    void crateKeyPairTest(GroupAssignment assignment, final Random rng) {
         final var schema = SignatureSchema.create(Curve.ALT_BN128, assignment);
-        final var rng = new Random();
 
         final var sk = BlsPrivateKey.create(schema, rng);
         assertNotNull(sk);
@@ -138,9 +139,8 @@ class SignaturesLibraryTest {
 
     @ParameterizedTest
     @MethodSource("combinedParameters")
-    void crateSignatureTest(GroupAssignment assignment) {
+    void crateSignatureTest(GroupAssignment assignment, final Random rng) {
         final var schema = SignatureSchema.create(Curve.ALT_BN128, assignment);
-        final var rng = new Random();
 
         final var sk = BlsPrivateKey.create(schema, rng);
 
@@ -177,9 +177,8 @@ class SignaturesLibraryTest {
 
     @ParameterizedTest
     @MethodSource("combinedParameters")
-    void verifySignatureTest(GroupAssignment assignment) {
+    void verifySignatureTest(GroupAssignment assignment, final Random rng) {
         final var schema = SignatureSchema.create(Curve.ALT_BN128, assignment);
-        final var rng = new Random();
 
         final var sk = BlsPrivateKey.create(schema, rng);
 

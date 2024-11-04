@@ -19,6 +19,7 @@ package com.hedera.cryptography.tss;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.hedera.common.testfixtures.WithRng;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.BlsSignature;
@@ -33,7 +34,6 @@ import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.api.TssShareId;
 import com.hedera.cryptography.tss.api.TssShareSignature;
 import com.hedera.cryptography.tss.impl.TssServiceTestImpl;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -47,13 +47,14 @@ import org.mockito.Mockito;
  * A test to showcase the Tss protocol for a specific case
  * More validations can be added once
  */
+@WithRng
 class TssTest {
 
     public static final SignatureSchema SIGNATURE_SCHEMA =
             SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
 
     @Test
-    void testGenesis() {
+    void testGenesis(final Random rng) {
         // Simulates the genesis process for a 3 participant network
         final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
         final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
@@ -67,7 +68,7 @@ class TssTest {
                 .withThreshold(2)
                 .build(SIGNATURE_SCHEMA);
 
-        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, new Random());
+        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, rng);
 
         // this message will contain a random share split in 3 parts
         final TssMessage p0Message = tssService.generateTssMessage(p0sDirectory);
@@ -107,7 +108,7 @@ class TssTest {
         }
 
         // Get the list of PrivateShares owned by participant 0
-        final List<TssPrivateShare> privateShares = Objects.requireNonNull(
+        Objects.requireNonNull(
                 tssService.decryptPrivateShares(p0sDirectory, validMessages),
                 "Condition of threshold number of messages was not met");
 
@@ -117,11 +118,11 @@ class TssTest {
                 "Condition of threshold number of messages was not met");
 
         // Get the ledgerId
-        final BlsPublicKey ledgerId = tssService.aggregatePublicShares(publicShares);
+        tssService.aggregatePublicShares(publicShares);
     }
 
     @Test
-    void testSigning() {
+    void testSigning(final Random random) {
         // given:
         // all this will be calculated at genesis
         final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
@@ -136,8 +137,8 @@ class TssTest {
                 .withThreshold(2)
                 .build(SIGNATURE_SCHEMA);
 
-        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, new Random());
-        final BlsPrivateKey s = BlsPrivateKey.create(SIGNATURE_SCHEMA, new Random());
+        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, new Random(random.nextLong()));
+        final BlsPrivateKey s = BlsPrivateKey.create(SIGNATURE_SCHEMA, new Random(random.nextLong()));
         TssPublicShare mockPublic = mock(TssPublicShare.class);
         when(mockPublic.publicKey()).thenReturn(s.createPublicKey());
         final List<TssPublicShare> publicShares =
@@ -148,7 +149,6 @@ class TssTest {
         when(mock.privateKey()).thenReturn(s);
         final List<TssPrivateShare> privateShares = List.of(mock);
 
-        final SecureRandom random = new SecureRandom();
         final byte[] messageToSign = new byte[20];
         random.nextBytes(messageToSign);
 
@@ -181,7 +181,7 @@ class TssTest {
     }
 
     @Test
-    void rekeying() {
+    void rekeying(final Random random) {
         // given:
         // all this will be calculated at genesis
         final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
@@ -196,7 +196,7 @@ class TssTest {
                 .withThreshold(2)
                 .build(SIGNATURE_SCHEMA);
 
-        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, new Random());
+        final TssService tssService = new TssServiceTestImpl(SIGNATURE_SCHEMA, random);
         final List<TssPublicShare> publicShares =
                 List.of(mock(TssPublicShare.class), mock(TssPublicShare.class), mock(TssPublicShare.class));
         final BlsPublicKey ledgerID = tssService.aggregatePublicShares(publicShares);
@@ -217,7 +217,7 @@ class TssTest {
                 .toList();
 
         // Get the list of PrivateShares owned by participant 0
-        final List<TssPrivateShare> newP0privateShares = Objects.requireNonNull(
+        Objects.requireNonNull(
                 tssService.decryptPrivateShares(p0sDirectory, collectedValidMessages),
                 "Condition of threshold number of messages was not met");
 

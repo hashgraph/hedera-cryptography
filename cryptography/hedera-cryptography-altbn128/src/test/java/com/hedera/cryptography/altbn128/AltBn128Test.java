@@ -18,6 +18,7 @@ package com.hedera.cryptography.altbn128;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.hedera.common.testfixtures.WithRng;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
@@ -25,13 +26,13 @@ import com.hedera.cryptography.pairings.api.curves.KnownCurves;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 
+@WithRng
 class AltBn128Test {
 
     @Test
-    void fullCircuit() {
+    void fullCircuit(final Random rng) {
 
         final AltBn128 curve = new AltBn128();
-        final var rng = new Random();
         final Group group2 = curve.group2();
         final Group group1 = curve.group1();
         final byte[] msg = new byte[1024];

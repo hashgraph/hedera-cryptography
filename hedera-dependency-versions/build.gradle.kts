@@ -43,4 +43,7 @@ dependencies.constraints {
     api("org.mockito:mockito-junit-jupiter:5.8.0") {
         because("org.mockito.junit.jupiter")
     }
+    api("org.junit.jupiter:junit-jupiter-api:5.10.2") {
+        because("org.junit.jupiter.api")
+    }
 }

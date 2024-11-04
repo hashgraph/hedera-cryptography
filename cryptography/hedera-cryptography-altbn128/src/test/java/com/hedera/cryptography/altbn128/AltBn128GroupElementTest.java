@@ -19,11 +19,11 @@ package com.hedera.cryptography.altbn128;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
+import com.hedera.common.testfixtures.WithRng;
 import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+@WithRng
 class AltBn128GroupElementTest {
 
     @ParameterizedTest
@@ -136,12 +137,11 @@ class AltBn128GroupElementTest {
         List<GroupElement> results = new ArrayList<>();
         assertDoesNotThrow(() -> results.addAll(group.batchMultiply(scalars)));
 
-        IntStream.range(0, results.size()).forEach(index -> {
-            assertEquals(
-                    group.generator().multiply(field.fromLong(index)),
-                    results.get(index),
-                    "result " + index + " is not correct");
-        });
+        IntStream.range(0, results.size())
+                .forEach(index -> assertEquals(
+                        group.generator().multiply(field.fromLong(index)),
+                        results.get(index),
+                        "result " + index + " is not correct"));
     }
 
     @Test
@@ -149,8 +149,6 @@ class AltBn128GroupElementTest {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP1);
         var group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         assertEquals(group.zero(), group.zero());
-        final GroupElement zero = group.zero();
-        assertTrue(zero.equals(zero));
         assertNotEquals(group.zero(), new Object());
         assertNotEquals(group.zero(), group.generator());
         assertNotEquals(group.generator(), group.zero());
@@ -199,9 +197,9 @@ class AltBn128GroupElementTest {
 
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
-    void testCopy(AltBN128CurveGroup gr) {
+    @SuppressWarnings("deprecation")
+    void testCopy(AltBN128CurveGroup gr, Random rng) {
         var group = new AltBn128Group(gr);
-        Random rng = new SecureRandom();
         final byte[] seed = new byte[group.seedSize()];
         rng.nextBytes(seed);
         var random = group.random(seed);
