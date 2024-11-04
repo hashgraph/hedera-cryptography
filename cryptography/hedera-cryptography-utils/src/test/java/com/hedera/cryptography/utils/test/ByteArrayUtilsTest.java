@@ -18,38 +18,38 @@ package com.hedera.cryptography.utils.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.hedera.cryptography.utils.BigIntegerUtils;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import java.math.BigInteger;
 import org.junit.jupiter.api.Test;
 
-class BigIntegerUtilsTest {
+class ByteArrayUtilsTest {
 
     @Test
     void testValidConversion() {
         BigInteger bigInt = new BigInteger("1234567890");
         int size = 32;
-        byte[] result = BigIntegerUtils.toLittleEndianBytes(bigInt, size);
-        BigInteger convertedBack = BigIntegerUtils.fromLittleEndianBytes(result);
+        byte[] result = ByteArrayUtils.toLittleEndianBytes(bigInt, size);
+        BigInteger convertedBack = ByteArrayUtils.fromLittleEndianBytes(result);
         assertEquals(bigInt, convertedBack);
     }
 
     @Test
     void testSmallerSize() {
         BigInteger bigInt = new BigInteger("1234567890");
-        assertThrows(IllegalArgumentException.class, () -> BigIntegerUtils.toLittleEndianBytes(bigInt, 1));
+        assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toLittleEndianBytes(bigInt, 1));
     }
 
     @Test
     void testSmallerSizeMultipleBigInts() {
         BigInteger bigInt = new BigInteger("1");
         BigInteger bigInt2 = new BigInteger("2");
-        assertThrows(IllegalArgumentException.class, () -> BigIntegerUtils.toLittleEndianBytes(1, bigInt, bigInt2));
-        assertDoesNotThrow(() -> BigIntegerUtils.toLittleEndianBytes(2, bigInt, bigInt2));
+        assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toLittleEndianBytes(1, bigInt, bigInt2));
+        assertDoesNotThrow(() -> ByteArrayUtils.toLittleEndianBytes(2, bigInt, bigInt2));
     }
 
     @Test
     void testSmallerChunks() {
-        assertThrows(IllegalArgumentException.class, () -> BigIntegerUtils.toBigIntegers(new byte[] {1, 2, 3}, 2));
-        assertDoesNotThrow(() -> BigIntegerUtils.toBigIntegers(new byte[] {1, 2, 3}, 1));
+        assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toBigIntegers(new byte[] {1, 2, 3}, 2));
+        assertDoesNotThrow(() -> ByteArrayUtils.toBigIntegers(new byte[] {1, 2, 3}, 1));
     }
 }

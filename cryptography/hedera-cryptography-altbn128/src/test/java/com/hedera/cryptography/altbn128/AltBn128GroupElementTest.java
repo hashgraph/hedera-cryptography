@@ -21,7 +21,7 @@ import static org.mockito.Mockito.mock;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.utils.BigIntegerUtils;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -97,7 +97,7 @@ class AltBn128GroupElementTest {
     void g2GeneratorIsWellKnown() {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         assertEquals(
-                BigIntegerUtils.toBigIntegers(group.generator().toBytes(), 32),
+                ByteArrayUtils.toBigIntegers(group.generator().toBytes(), 32),
                 List.of(
                         new BigInteger("10857046999023057135944570762232829481370756359578518086990519993285655852781"),
                                 new BigInteger(
@@ -112,7 +112,7 @@ class AltBn128GroupElementTest {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP1);
 
         assertEquals(
-                BigIntegerUtils.toBigIntegers(group.generator().toBytes(), 32),
+                ByteArrayUtils.toBigIntegers(group.generator().toBytes(), 32),
                 List.of(new BigInteger("1"), new BigInteger("2")));
     }
 
@@ -122,7 +122,7 @@ class AltBn128GroupElementTest {
         var group = new AltBn128Group(gr);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> group.fromBytes(BigIntegerUtils.toLittleEndianBytes(
+                () -> group.fromBytes(ByteArrayUtils.toLittleEndianBytes(
                         128, BigInteger.ONE, new BigInteger("10"), BigInteger.ONE, BigInteger.ONE)));
     }
 

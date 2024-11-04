@@ -16,10 +16,9 @@
 
 package com.hedera.cryptography.bls;
 
-import static com.hedera.cryptography.bls.SerializationUtils.deserializePairingPublicKey;
-import static com.hedera.cryptography.bls.SerializationUtils.serializePairingPublicKey;
-
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.ByteArrayUtils.Deserializer;
+import com.hedera.cryptography.utils.ByteArrayUtils.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 import java.util.Objects;
@@ -48,7 +47,10 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
      */
     @NonNull
     public byte[] toBytes() {
-        return serializePairingPublicKey(this);
+        return new Serializer()
+                .put(this.signatureSchema().getIdByte())
+                .put(this.element()::toBytes)
+                .toBytes();
     }
 
     /**
@@ -59,7 +61,17 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
      */
     @NonNull
     public static BlsPublicKey fromBytes(@NonNull final byte[] bytes) {
-        return deserializePairingPublicKey(bytes);
+        try {
+
+            final Deserializer deserializer = new Deserializer(bytes);
+            var schema = SignatureSchema.create(deserializer.readByte());
+            var element = deserializer.read(
+                    schema.getPublicKeyGroup()::fromBytes,
+                    schema.getPublicKeyGroup().elementSize());
+            return new BlsPublicKey(element, schema);
+        } catch (IllegalStateException e) {
+            throw new IllegalArgumentException("Unable to deserialize pairing public key", e);
+        }
     }
 
     /**

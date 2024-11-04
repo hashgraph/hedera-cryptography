@@ -18,8 +18,8 @@ package com.hedera.cryptography.utils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.hedera.cryptography.utils.TransportUtils.Deserializer;
-import com.hedera.cryptography.utils.TransportUtils.Serializer;
+import com.hedera.cryptography.utils.ByteArrayUtils.Deserializer;
+import com.hedera.cryptography.utils.ByteArrayUtils.Serializer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Function;
@@ -103,13 +103,5 @@ class TransportUtilsTest {
 
         // Trying to read beyond the available data should throw an exception
         assertThrows(IllegalStateException.class, deserializer::readByte);
-    }
-
-    @Test
-    void testCannotReread() {
-        Serializer serializer = new Serializer();
-        serializer.put((byte) 42);
-        serializer.toBytes();
-        assertThrows(IllegalStateException.class, serializer::toBytes);
     }
 }

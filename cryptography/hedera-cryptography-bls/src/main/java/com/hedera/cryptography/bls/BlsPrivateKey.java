@@ -16,12 +16,11 @@
 
 package com.hedera.cryptography.bls;
 
-import static com.hedera.cryptography.bls.SerializationUtils.deserializePairingPrivateKey;
-import static com.hedera.cryptography.bls.SerializationUtils.serializePairingPrivateKey;
-
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.ByteArrayUtils.Deserializer;
+import com.hedera.cryptography.utils.ByteArrayUtils.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 import java.util.Random;
@@ -56,12 +55,7 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
                 .getPairingFriendlyCurve()
                 .field();
         Objects.requireNonNull(random, "random must not be null");
-        final FieldElement zero = field.fromLong(0);
-        final FieldElement one = field.fromLong(1);
-        FieldElement sk = field.random(random);
-        while (sk.equals(zero) || sk.equals(one)) {
-            sk = field.random(random);
-        }
+        final FieldElement sk = field.random(random);
         return new BlsPrivateKey(sk, signatureSchema);
     }
 
@@ -98,7 +92,10 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
      */
     @NonNull
     public byte[] toBytes() {
-        return serializePairingPrivateKey(this);
+        return new Serializer()
+                .put(this.signatureSchema().getIdByte())
+                .put(this.element()::toBytes)
+                .toBytes();
     }
 
     /**
@@ -109,6 +106,15 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
      */
     @NonNull
     public static BlsPrivateKey fromBytes(@NonNull final byte[] bytes) {
-        return deserializePairingPrivateKey(bytes);
+        try {
+            final Deserializer deserializer = new Deserializer(bytes);
+            var schema = SignatureSchema.create(deserializer.readByte());
+            var element = deserializer.read(
+                    schema.getPairingFriendlyCurve().field()::fromBytes,
+                    schema.getPairingFriendlyCurve().field().elementSize());
+            return new BlsPrivateKey(element, schema);
+        } catch (IllegalStateException e) {
+            throw new IllegalArgumentException("Unable to deserialize pairing private key", e);
+        }
     }
 }
