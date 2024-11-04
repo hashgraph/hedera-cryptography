@@ -74,7 +74,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
      * Index 0 represents shareId 1 and so on.
      * Shares are assigned sequentially.
      */
-    private final Integer[] shareAllocationTable;
+    private final int[] shareAllocationTable;
     /**
      * Stores the {@link BlsPublicKey} of each {@code participant} in the protocol.
      * There is one BlsPublicKey per participant
@@ -107,7 +107,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
             final int participantId,
             @NonNull final List<Integer> shareIds,
             @NonNull final List<Integer> ownedShareIds,
-            @NonNull final Integer[] shareAllocationTable,
+            @NonNull final int[] shareAllocationTable,
             @NonNull final BlsPublicKey[] tssEncryptionPublicKeyTable,
             @NonNull final BlsPrivateKey tssDecryptionPrivateKey,
             final int threshold) {
@@ -304,7 +304,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
 
             final List<Integer> shareIds =
                     IntStream.rangeClosed(1, totalShares).boxed().toList();
-            final Integer[] shareOwnershipTable = new Integer[totalShares];
+            final int[] shareOwnershipTable = new int[totalShares];
             final BlsPublicKey[] tssEncryptionPublicKeyTable = new BlsPublicKey[maxId + 1];
             final List<Integer> ownedShares = new ArrayList<>();
 
