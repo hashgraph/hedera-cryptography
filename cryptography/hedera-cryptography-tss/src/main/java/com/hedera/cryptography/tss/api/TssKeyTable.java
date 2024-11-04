@@ -21,8 +21,9 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Allows to obtain a {@link BlsPublicKey} given a shareId
+ * T The type of the key
  */
-public interface TssEncryptionKeyResolver {
+public interface TssKeyTable<T> {
     /**
      * Obtains a {@link BlsPublicKey} given a shareId.
      * Null if the shareId is not present or its owner cannot be found.
@@ -31,5 +32,5 @@ public interface TssEncryptionKeyResolver {
      * @throws IllegalArgumentException if the shareId less or equals to 0 or if it is higher than the total assigned shares
      */
     @NonNull
-    BlsPublicKey resolveTssEncryptionKey(int tssShareId);
+    T resolveKeyForShare(int tssShareId);
 }

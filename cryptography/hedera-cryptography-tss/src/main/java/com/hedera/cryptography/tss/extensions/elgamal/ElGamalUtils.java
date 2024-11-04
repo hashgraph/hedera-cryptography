@@ -23,7 +23,7 @@ import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.tss.api.TssEncryptionKeyResolver;
+import com.hedera.cryptography.tss.api.TssKeyTable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.ArrayList;
@@ -205,7 +205,7 @@ public class ElGamalUtils {
     public static CiphertextTable ciphertextTable(
             @NonNull final SignatureSchema signatureSchema,
             @NonNull final Random random,
-            @NonNull final TssEncryptionKeyResolver tssEncryptionKeyResolver,
+            @NonNull final TssKeyTable<BlsPublicKey> tssEncryptionKeyResolver,
             @NonNull final List<FieldElement> secrets) {
 
         final Group publicKeyGroup = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
@@ -225,10 +225,7 @@ public class ElGamalUtils {
         CipherText[] multiEncryptedValues = new CipherText[secrets.size()];
         for (int i = 0; i < secrets.size(); i++) {
             final FieldElement secret = secrets.get(i);
-            final BlsPublicKey pk = tssEncryptionKeyResolver.resolveTssEncryptionKey(i + 1);
-            if (pk == null) {
-                throw new IllegalArgumentException("Key not present for share: " + i + 1);
-            }
+            final BlsPublicKey pk = tssEncryptionKeyResolver.resolveKeyForShare(i + 1);
             multiEncryptedValues[i] = createCipherText(pk, elGamalSubstitutionTable, randomness, secret.toBytes());
         }
         return new CiphertextTable(List.copyOf(chunkRandomness), multiEncryptedValues);

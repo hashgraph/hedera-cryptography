@@ -23,7 +23,7 @@ import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.*;
-import com.hedera.cryptography.tss.api.TssEncryptionKeyResolver;
+import com.hedera.cryptography.tss.api.TssKeyTable;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Collections;
@@ -175,7 +175,7 @@ public class ElGamalUtilsTest {
                 ids.stream().map(i -> BlsPrivateKey.create(schema, random)).toList();
 
         final var pks = sks.stream().map(BlsPrivateKey::createPublicKey).toList();
-        final TssEncryptionKeyResolver elGamalEncryptionKeys =
+        final TssKeyTable<BlsPublicKey> elGamalEncryptionKeys =
                 shareId -> pks.stream().toList().get(shareId - 1);
         final var secrets = Collections.nCopies(ids.size(), secret);
 

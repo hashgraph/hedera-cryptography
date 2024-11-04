@@ -22,6 +22,7 @@ import static java.util.Objects.requireNonNull;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.tss.extensions.TssKeyTableImpl;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,7 +55,7 @@ import java.util.stream.IntStream;
  * }</pre>
  *
  */
-public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
+public final class TssParticipantDirectory implements TssKeyTable<BlsPublicKey> {
     /**
      * Stores the ID of the {@code participant} owning this directory.
      */
@@ -70,17 +71,6 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
      */
     private final List<Integer> ownedShareIds;
     /**
-     * Stores the {@code participant} that is the owner of each shareId in the protocol.
-     * Index 0 represents shareId 1 and so on.
-     * Shares are assigned sequentially.
-     */
-    private final int[] shareAllocationTable;
-    /**
-     * Stores the {@link BlsPublicKey} of each {@code participant} in the protocol.
-     * There is one BlsPublicKey per participant
-     */
-    private final BlsPublicKey[] tssEncryptionPublicKeyTable;
-    /**
      * The key to decrypt TssMessage parts intended for the participant that created this directory.
      * It is transient to assure it does not get serialized and exposed outside.
      */
@@ -91,6 +81,11 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
      * In a target directory the {@code threshold} defines the number of shares-of-shares that will be created to perform shamir-secret-sharing.
      */
     private final int threshold;
+
+    /**
+     * Stores the {@link BlsPublicKey} of each {@code ShareId} in the protocol.
+     */
+    private final TssKeyTable<BlsPublicKey> tssEncryptionTable;
 
     /**
      * Constructs a {@link TssParticipantDirectory}.
@@ -114,8 +109,7 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
         this.participantId = participantId;
         this.shareIds = List.copyOf(shareIds);
         this.ownedShareIds = List.copyOf(ownedShareIds);
-        this.shareAllocationTable = shareAllocationTable;
-        this.tssEncryptionPublicKeyTable = tssEncryptionPublicKeyTable;
+        this.tssEncryptionTable = new TssKeyTableImpl<>(shareAllocationTable, tssEncryptionPublicKeyTable);
         this.tssDecryptionPrivateKey = tssDecryptionPrivateKey;
         this.threshold = threshold;
     }
@@ -179,12 +173,8 @@ public final class TssParticipantDirectory implements TssEncryptionKeyResolver {
      */
     @NonNull
     @Override
-    public BlsPublicKey resolveTssEncryptionKey(final int shareId) {
-        if (shareId > shareAllocationTable.length || shareId <= 0) {
-            throw new IllegalArgumentException("Invalid ShareId");
-        }
-        var shareOwner = shareAllocationTable[shareId - 1];
-        return tssEncryptionPublicKeyTable[shareOwner];
+    public BlsPublicKey resolveKeyForShare(final int shareId) {
+        return tssEncryptionTable.resolveKeyForShare(shareId);
     }
 
     /**
