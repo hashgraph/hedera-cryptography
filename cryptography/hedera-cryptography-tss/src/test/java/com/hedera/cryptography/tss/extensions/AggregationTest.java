@@ -41,7 +41,7 @@ public class AggregationTest {
 
     @SuppressWarnings("UnnecessaryLocalVariable")
     @Test
-    void testTargetGroupIsSameAsOriginal(Random random) {
+    void testTargetGroupIsSameAsOriginal(final Random random) {
         var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
         var dealerSecrets = List.of(
                 BlsKeyPair.generate(schema, random),
@@ -86,7 +86,7 @@ public class AggregationTest {
     }
 
     @Test
-    void testTargetGroupIsDifferentAsOriginal(Random random) {
+    void testTargetGroupIsDifferentAsOriginal(final Random random) {
         var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
         var dealerSecrets = List.of(
                 BlsKeyPair.generate(schema, random),

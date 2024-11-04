@@ -25,37 +25,23 @@ import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.*;
 import com.hedera.cryptography.tss.api.TssShareId;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
-import jakarta.inject.Inject;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 
 @TestInstance(Lifecycle.PER_CLASS)
 @WithRng
 public class ElGamalUtilsTest {
     static final SignatureSchema schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
 
-    @Inject
-    private Random random;
-
-    private Stream<Long> randomSeeds() {
-        return LongStream.range(0, 100).map(i -> random.nextLong()).boxed();
-    }
-
-    @ParameterizedTest
-    @MethodSource("randomSeeds")
-    public void testCompleteOperation(long seed) {
-        System.out.println("Seed used: " + seed);
-        final Random random = new Random(seed);
+    @RepeatedTest(100)
+    public void testCompleteOperation(final Random random) {
         final BlsPrivateKey sk = BlsPrivateKey.create(schema, random);
         final BlsPublicKey pk = sk.createPublicKey();
         final ElGamalSubstitutionTable<FieldElement, Byte> substitutionTable =

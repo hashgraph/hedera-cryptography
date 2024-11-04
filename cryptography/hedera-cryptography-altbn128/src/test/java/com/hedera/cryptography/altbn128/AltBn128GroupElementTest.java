@@ -137,10 +137,11 @@ class AltBn128GroupElementTest {
         List<GroupElement> results = new ArrayList<>();
         assertDoesNotThrow(() -> results.addAll(group.batchMultiply(scalars)));
 
-        IntStream.range(0, results.size()).forEach(index -> assertEquals(
-                group.generator().multiply(field.fromLong(index)),
-                results.get(index),
-                "result " + index + " is not correct"));
+        IntStream.range(0, results.size())
+                .forEach(index -> assertEquals(
+                        group.generator().multiply(field.fromLong(index)),
+                        results.get(index),
+                        "result " + index + " is not correct"));
     }
 
     @Test

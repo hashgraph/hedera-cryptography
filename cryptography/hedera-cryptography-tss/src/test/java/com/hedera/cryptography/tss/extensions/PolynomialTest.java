@@ -68,7 +68,7 @@ class PolynomialTest {
     }
 
     @Test
-    void testEvaluationReturnsNonNull(Random rng) {
+    void testEvaluationReturnsNonNull(final Random rng) {
         var curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve();
         final Field field = curve.field();
         var poly = Polynomial.fromValue(rng, field.random(rng), 10);

@@ -51,7 +51,7 @@ class AltBn128GroupTest {
     }
 
     @Test
-    void createRandomGroupElementIsNotNull(Random rng) {
+    void createRandomGroupElementIsNotNull(final Random rng) {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         final byte[] seed = new byte[group.seedSize()];
         rng.nextBytes(seed);
@@ -68,7 +68,7 @@ class AltBn128GroupTest {
     }
 
     @Test
-    void createGroupElementFromRandomIsNotNull(Random rng) {
+    void createGroupElementFromRandomIsNotNull(final Random rng) {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         ByteBuffer buffer = ByteBuffer.allocate(group.seedSize());
         rng.nextBytes(buffer.array());
@@ -77,7 +77,7 @@ class AltBn128GroupTest {
     }
 
     @Test
-    void createGroupElementHashToCurveIsNotNull(Random rng) {
+    void createGroupElementHashToCurveIsNotNull(final Random rng) {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         final byte[] message = new byte[1024];
         rng.nextBytes(message);
@@ -86,7 +86,7 @@ class AltBn128GroupTest {
     }
 
     @Test
-    void createRandomGroupElementAndToBytesIsNotNull(Random rng) {
+    void createRandomGroupElementAndToBytesIsNotNull(final Random rng) {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         final byte[] seed = new byte[group.seedSize()];
         rng.nextBytes(seed);

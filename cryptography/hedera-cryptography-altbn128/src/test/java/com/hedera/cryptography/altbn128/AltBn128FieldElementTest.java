@@ -128,7 +128,7 @@ class AltBn128FieldElementTest {
     }
 
     @Test
-    void fieldElementAddition(Random rng) {
+    void fieldElementAddition(final Random rng) {
         var field = new AltBn128Field();
         assertEquals(field.zero(), field.zero().add(field.zero()));
         assertEquals(field.one(), field.one().add(field.zero()));
@@ -143,7 +143,7 @@ class AltBn128FieldElementTest {
     }
 
     @Test
-    void fieldElementSubtraction(Random rng) {
+    void fieldElementSubtraction(final Random rng) {
         var field = new AltBn128Field();
         assertEquals(field.one(), field.one().subtract(field.zero()));
         assertEquals(
@@ -158,7 +158,7 @@ class AltBn128FieldElementTest {
     }
 
     @Test
-    void fieldElementMultiplication(Random rng) {
+    void fieldElementMultiplication(final Random rng) {
         var field = new AltBn128Field();
         assertEquals(field.zero(), field.zero().multiply(field.zero()));
         assertEquals(field.zero(), field.one().multiply(field.zero()));
@@ -174,7 +174,7 @@ class AltBn128FieldElementTest {
     }
 
     @Test
-    void fieldElementInverse(Random rng) {
+    void fieldElementInverse(final Random rng) {
         var field = new AltBn128Field();
         var a = field.random(rng);
         assertEquals(field.one(), a.multiply(a.inverse()));
@@ -182,7 +182,7 @@ class AltBn128FieldElementTest {
     }
 
     @Test
-    void fieldElementPow(Random rng) {
+    void fieldElementPow(final Random rng) {
         var field = new AltBn128Field();
         var a = field.random(rng);
         assertEquals(field.one(), a.power(0));
