@@ -25,8 +25,11 @@ import com.hedera.cryptography.utils.HashUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Random;
+import java.util.function.Function;
 
 /**
  * A NizkProof proof.
@@ -150,23 +153,25 @@ public record NizkProof(
             return false;
         }
 
-        final List<FieldElement> xPowerI = new ArrayList<>();
-        for (int y = 0; y < statement.tssShareIds().size(); y++) {
-            xPowerI.add(x.power(y + 1));
+        final List<FieldElement> xPowerId =
+                statement.tssShareIds().stream().map(x::power).toList();
+        final Function<Integer, FieldElement> idToField = id -> xPowerId.get(id - 1);
+        final List<Entry<FieldElement, FieldElement>> idxPowerId = statement.tssShareIds().stream()
+                .map(id -> Map.entry(field.fromLong(id), idToField.apply(id)))
+                .toList();
+        final List<GroupElement> results = new ArrayList<>();
+        final List<GroupElement> polyCoefficients =
+                statement.polynomialCommitment().commitmentCoefficients();
+        for (int k = 0; k < polyCoefficients.size(); k++) {
+            final GroupElement kthCoefficients = polyCoefficients.get(k);
+            final List<FieldElement> list = new ArrayList<>();
+            for (var entry : idxPowerId) {
+                list.add(entry.getKey().power(k).multiply(entry.getValue()));
+            }
+            FieldElement fold = field.add(list);
+            results.add(kthCoefficients.multiply(fold));
         }
 
-        List<GroupElement> results = new ArrayList<>();
-        final List<GroupElement> polyCoeffs = statement.polynomialCommitment().commitmentCoefficients();
-        for (int k = 0; k < polyCoeffs.size(); k++) {
-            final GroupElement a_k = polyCoeffs.get(k);
-            FieldElement fold = field.fromLong(0L);
-            for (int y = 0; y < statement.tssShareIds().size(); y++) {
-                final Integer id = statement.tssShareIds().get(y);
-                final FieldElement idPowi = field.fromLong(id).power(k);
-                fold = fold.add(idPowi.multiply(xPowerI.get(y)));
-            }
-            results.add(a_k.multiply(fold));
-        }
         GroupElement inner = publicKeyGroup.batchAdd(results);
         lhs = inner.multiply(xPrime).add(this.a);
         rhs = publicKeyGroup.generator().multiply(this.zA);
@@ -175,19 +180,18 @@ public record NizkProof(
         }
 
         inner = publicKeyGroup.zero();
-        for (int i = 0; i < statement.tssShareIds().size(); i++) {
-            final GroupElement ci = statement.combinedCiphertext().values().get(i);
-            inner = inner.add(ci.multiply(x.power(i + 1)));
+        for (int i : statement.tssShareIds()) {
+            final GroupElement ci = statement.combinedCiphertext().values().get(i - 1);
+            inner = inner.add(ci.multiply(idToField.apply(i)));
         }
 
         lhs = inner.multiply(xPrime).add(this.y);
 
         inner = publicKeyGroup.zero();
-        for (int i = 0; i < statement.tssShareIds().size(); i++) {
-            Integer idi = statement.tssShareIds().get(i);
+        for (int idi : statement.tssShareIds()) {
             GroupElement yi =
                     statement.tssEncryptionKeys().resolveKeyForShare(idi).element();
-            inner = inner.add(yi.multiply(this.zR.multiply(x.power(i + 1))));
+            inner = inner.add(yi.multiply(this.zR.multiply(idToField.apply(idi))));
         }
 
         rhs = inner.add(publicKeyGroup.generator().multiply(this.zA));
