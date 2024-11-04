@@ -28,4 +28,5 @@ testModuleInfo {
     requires("org.junit.jupiter.api")
     requires("org.mockito")
     requires("com.hedera.common.testfixtures")
+    requires("jakarta.inject")
 }
