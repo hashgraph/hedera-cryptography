@@ -23,6 +23,8 @@ import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssPrivateShare;
 import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
+import com.hedera.cryptography.tss.api.TssServiceGenesisStage;
+import com.hedera.cryptography.tss.api.TssServiceRekeyStage;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
@@ -46,65 +48,119 @@ public class TssServiceTestImpl implements TssService {
         this.signatureSchema = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
     }
 
-    @NonNull
     @Override
-    public TssMessage generateTssMessage(
-            @NonNull final TssParticipantDirectory pendingParticipantDirectory,
-            @NonNull final TssPrivateShare privateShare) {
-        return new TssMessage(new byte[] {});
-    }
+    public TssServiceGenesisStage genesisStage() {
+        return new TssServiceGenesisStage() {
+            @NonNull
+            @Override
+            public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory tssParticipantDirectory) {
+                return () -> new byte[0];
+            }
 
-    @NonNull
-    @Override
-    public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory tssParticipantDirectory) {
-        return new TssMessage(new byte[] {});
-    }
+            @Override
+            public boolean verifyTssMessage(
+                    @NonNull final TssParticipantDirectory participantDirectory, @NonNull final TssMessage tssMessage) {
+                return true;
+            }
 
-    @Override
-    public boolean verifyTssMessage(
-            @NonNull final TssParticipantDirectory participantDirectory, @NonNull final TssMessage tssMessage) {
-        return true;
-    }
+            @NonNull
+            @Override
+            public TssMessage generateTssMessage(
+                    @NonNull final TssParticipantDirectory tssParticipantDirectory,
+                    @NonNull final TssPrivateShare privateShare) {
+                return () -> new byte[0];
+            }
 
-    @Override
-    public boolean verifyTssMessage(
-            @NonNull final TssParticipantDirectory participantDirectory,
-            @Nullable final List<TssPublicShare> publicShares,
-            @NonNull final TssMessage tssMessage) {
-        return false;
-    }
-
-    @NonNull
-    @Override
-    public List<TssPrivateShare> obtainPrivateShares(
-            @NonNull final TssParticipantDirectory participantDirectory,
-            @NonNull final List<TssMessage> validTssMessages) {
-        return participantDirectory.getOwnedShareIds().stream()
-                .map(sid -> new TssPrivateShare(
-                        sid,
-                        new BlsPrivateKey(
-                                signatureSchema
-                                        .getPairingFriendlyCurve()
-                                        .field()
-                                        .fromLong(sid),
-                                signatureSchema)))
-                .toList();
-    }
-
-    @NonNull
-    @Override
-    public List<TssPublicShare> obtainPublicShares(
-            @NonNull final TssParticipantDirectory participantDirectory, @NonNull final List<TssMessage> tssMessages) {
-        return participantDirectory.getShareIds().stream()
-                .map(sid -> new TssPublicShare(
-                        sid,
-                        new BlsPrivateKey(
+            @NonNull
+            @Override
+            public List<TssPrivateShare> obtainPrivateShares(
+                    @NonNull final TssParticipantDirectory participantDirectory,
+                    @NonNull final List<TssMessage> validTssMessages) {
+                return participantDirectory.getOwnedShareIds().stream()
+                        .map(sid -> new TssPrivateShare(
+                                sid,
+                                new BlsPrivateKey(
                                         signatureSchema
                                                 .getPairingFriendlyCurve()
                                                 .field()
                                                 .fromLong(sid),
-                                        signatureSchema)
-                                .createPublicKey()))
-                .toList();
+                                        signatureSchema)))
+                        .toList();
+            }
+
+            @NonNull
+            @Override
+            public List<TssPublicShare> obtainPublicShares(
+                    @NonNull final TssParticipantDirectory participantDirectory,
+                    @NonNull final List<TssMessage> tssMessages) {
+                return participantDirectory.getShareIds().stream()
+                        .map(sid -> new TssPublicShare(
+                                sid,
+                                new BlsPrivateKey(
+                                                signatureSchema
+                                                        .getPairingFriendlyCurve()
+                                                        .field()
+                                                        .fromLong(sid),
+                                                signatureSchema)
+                                        .createPublicKey()))
+                        .toList();
+            }
+        };
+    }
+
+    @Override
+    public TssServiceRekeyStage rekeyStage() {
+        return new TssServiceRekeyStage() {
+            @NonNull
+            @Override
+            public TssMessage generateTssMessage(
+                    @NonNull final TssParticipantDirectory pendingParticipantDirectory,
+                    @NonNull final TssPrivateShare privateShare) {
+                return () -> new byte[0];
+            }
+
+            @Override
+            public boolean verifyTssMessage(
+                    @NonNull final TssParticipantDirectory participantDirectory,
+                    @Nullable final List<TssPublicShare> publicShares,
+                    @NonNull final TssMessage tssMessage) {
+                return false;
+            }
+
+            @NonNull
+            @Override
+            public List<TssPrivateShare> obtainPrivateShares(
+                    @NonNull final TssParticipantDirectory participantDirectory,
+                    @NonNull final List<TssMessage> validTssMessages) {
+                return participantDirectory.getOwnedShareIds().stream()
+                        .map(sid -> new TssPrivateShare(
+                                sid,
+                                new BlsPrivateKey(
+                                        signatureSchema
+                                                .getPairingFriendlyCurve()
+                                                .field()
+                                                .fromLong(sid),
+                                        signatureSchema)))
+                        .toList();
+            }
+
+            @NonNull
+            @Override
+            public List<TssPublicShare> obtainPublicShares(
+                    @NonNull final TssParticipantDirectory participantDirectory,
+                    @NonNull final List<TssMessage> tssMessages) {
+                return participantDirectory.getShareIds().stream()
+                        .map(sid -> new TssPublicShare(
+                                sid,
+                                new BlsPrivateKey(
+                                                signatureSchema
+                                                        .getPairingFriendlyCurve()
+                                                        .field()
+                                                        .fromLong(sid),
+                                                signatureSchema)
+                                        .createPublicKey()))
+                        .toList();
+            }
+        };
     }
 }

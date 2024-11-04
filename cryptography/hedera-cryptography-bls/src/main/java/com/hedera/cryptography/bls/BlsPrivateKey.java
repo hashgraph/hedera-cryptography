@@ -22,6 +22,7 @@ import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.utils.ByteArrayUtils.Deserializer;
 import com.hedera.cryptography.utils.ByteArrayUtils.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
@@ -57,6 +58,37 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
         Objects.requireNonNull(random, "random must not be null");
         final FieldElement sk = field.random(random);
         return new BlsPrivateKey(sk, signatureSchema);
+    }
+
+    /**
+     * Aggregates multiple {@link BlsPrivateKey} into a single {@link BlsPrivateKey} for efficient verification.
+     *<p>
+     * This method combines multiple private keys into a single aggregated
+     * private key, which retains the same size as a regular {@link BlsPrivateKey} .
+     * The aggregation is performed using finite field addition in the field defined by the curve in the signature schema.
+     *<p>
+     * An aggregated private key is indistinguishable from a non-aggregated private key in terms of size, reducing the
+     * computational cost of verification.
+     *
+     * @param privateKeys A list of {@link BlsPrivateKey}, where each signature is a.
+     * @return A single aggregated {@link BlsPrivateKey}.
+     * @throws NullPointerException if signatures is null.
+     * @throws IllegalArgumentException if there are not enough publicKeys to aggregate.
+     * @throws IllegalArgumentException if the publicKeys schemas do not match.
+     */
+    public static BlsPrivateKey aggregate(@NonNull final List<BlsPrivateKey> privateKeys) {
+        if (Objects.requireNonNull(privateKeys, "privateKeys must not be null").size() < 2) {
+            throw new IllegalArgumentException("Not enough privateKeys to aggregate");
+        }
+        if (privateKeys.stream().map(BlsPrivateKey::signatureSchema).distinct().count() > 1) {
+            throw new IllegalArgumentException("All keys should have the same schema");
+        }
+        final SignatureSchema schema = privateKeys.getFirst().signatureSchema();
+        final List<FieldElement> elements =
+                privateKeys.stream().map(BlsPrivateKey::element).toList();
+        final FieldElement aggregatedElement =
+                schema.getPairingFriendlyCurve().field().add(elements);
+        return new BlsPrivateKey(aggregatedElement, schema);
     }
 
     /**
