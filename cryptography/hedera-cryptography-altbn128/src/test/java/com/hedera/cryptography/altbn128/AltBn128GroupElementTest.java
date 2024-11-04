@@ -19,7 +19,7 @@ package com.hedera.cryptography.altbn128;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.common.testfixtures.WithRng;
+import com.hedera.common.testfixtures.rng.WithRng;
 import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;

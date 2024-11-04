@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.common.testfixtures.WithRng;
+import com.hedera.common.testfixtures.rng.WithRng;
 import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import java.math.BigInteger;

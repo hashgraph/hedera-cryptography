@@ -18,7 +18,7 @@ package com.hedera.cryptography.tss.extensions.elgamal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.hedera.common.testfixtures.WithRng;
+import com.hedera.common.testfixtures.rng.WithRng;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.GroupAssignment;

@@ -3,5 +3,5 @@ module com.hedera.common.testfixtures {
     requires transitive org.junit.jupiter.api;
     requires jakarta.inject;
 
-    exports com.hedera.common.testfixtures;
+    exports com.hedera.common.testfixtures.rng;
 }

@@ -18,7 +18,7 @@ package com.hedera.cryptography.tss;
 
 import static org.mockito.Mockito.mock;
 
-import com.hedera.common.testfixtures.WithRng;
+import com.hedera.common.testfixtures.rng.WithRng;
 import com.hedera.cryptography.bls.BlsKeyPair;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
@@ -28,7 +28,6 @@ import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
-import com.hedera.cryptography.tss.api.TssPrivateShare;
 import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.api.TssShareSignature;
@@ -109,7 +108,7 @@ class TssTest {
         }
 
         // Get the list of PrivateShares owned by participant 0
-        final List<TssPrivateShare> privateShares = Objects.requireNonNull(
+        Objects.requireNonNull(
                 tssService.obtainPrivateShares(p0sDirectory, validMessages),
                 "Condition of threshold number of messages was not met");
 
@@ -119,7 +118,7 @@ class TssTest {
                 "Condition of threshold number of messages was not met");
 
         // Get the ledgerId
-        final BlsPublicKey ledgerId = TssPublicShare.aggregate(publicShares);
+        TssPublicShare.aggregate(publicShares);
     }
 
     @Test
@@ -247,7 +246,7 @@ class TssTest {
                 .toList();
 
         // Get the list of PrivateShares owned by participant 0
-        final List<TssPrivateShare> newP0privateShares = Objects.requireNonNull(
+        Objects.requireNonNull(
                 tssService.obtainPrivateShares(p0sDirectory, collectedValidMessages),
                 "Condition of threshold number of messages was not met");
 

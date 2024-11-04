@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.common.testfixtures;
+package com.hedera.common.testfixtures.rng;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
