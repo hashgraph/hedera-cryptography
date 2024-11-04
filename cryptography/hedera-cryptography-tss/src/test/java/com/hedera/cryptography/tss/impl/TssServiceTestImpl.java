@@ -79,8 +79,15 @@ public class TssServiceTestImpl implements TssService {
     public List<TssPrivateShare> obtainPrivateShares(
             @NonNull final TssParticipantDirectory participantDirectory,
             @NonNull final List<TssMessage> validTssMessages) {
-        return participantDirectory.getCurrentParticipantOwnedShareIds().stream()
-                .map(sid -> new TssPrivateShare(sid, new BlsPrivateKey(sid.id(), signatureSchema)))
+        return participantDirectory.getOwnedShareIds().stream()
+                .map(sid -> new TssPrivateShare(
+                        sid,
+                        new BlsPrivateKey(
+                                signatureSchema
+                                        .getPairingFriendlyCurve()
+                                        .field()
+                                        .fromLong(sid),
+                                signatureSchema)))
                 .toList();
     }
 
@@ -89,7 +96,15 @@ public class TssServiceTestImpl implements TssService {
     public List<TssPublicShare> obtainPublicShares(
             @NonNull final TssParticipantDirectory participantDirectory, @NonNull final List<TssMessage> tssMessages) {
         return participantDirectory.getShareIds().stream()
-                .map(sid -> new TssPublicShare(sid, new BlsPrivateKey(sid.id(), signatureSchema).createPublicKey()))
+                .map(sid -> new TssPublicShare(
+                        sid,
+                        new BlsPrivateKey(
+                                        signatureSchema
+                                                .getPairingFriendlyCurve()
+                                                .field()
+                                                .fromLong(sid),
+                                        signatureSchema)
+                                .createPublicKey()))
                 .toList();
     }
 }
