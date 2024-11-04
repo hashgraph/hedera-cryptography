@@ -54,7 +54,7 @@ public class GenerateBenchmark {
     }
     /*
     Results on M1 Max MacBook Pro:
-    
+
     Benchmark               (groupAssignment)  (randomSeed)  Mode  Cnt  Score   Error  Units
     GenerateBenchmark.sign   SHORT_SIGNATURES             0  avgt    2  0.250          ms/op
     GenerateBenchmark.sign   SHORT_SIGNATURES      10000000  avgt    2  0.250          ms/op

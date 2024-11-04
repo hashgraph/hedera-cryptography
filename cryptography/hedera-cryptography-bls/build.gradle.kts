@@ -31,6 +31,4 @@ testModuleInfo {
     requires("org.mockito")
 }
 
-jmhModuleInfo {
-    requires("com.hedera.cryptography.bls.testFixtures")
-}
+jmhModuleInfo { requires("com.hedera.cryptography.bls.testFixtures") }

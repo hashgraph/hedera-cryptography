@@ -52,5 +52,4 @@ public class BlsAggregationTest {
         final var aggregateSignature = BlsSignature.aggregate(signatures);
         assertTrue(aggregateSignature.verify(aggregatedPk, msg));
     }
-
 }

@@ -51,21 +51,21 @@ public class SignatureAggregationBenchmarks {
 
     @Setup
     public void setup() {
-        final List<BlsKeyPair> keyPairs = BlsTestUtils.generateKeyPairs(
-                SignatureSchema.create(Curve.ALT_BN128, groupAssignment), numSignatures);
+        final List<BlsKeyPair> keyPairs =
+                BlsTestUtils.generateKeyPairs(SignatureSchema.create(Curve.ALT_BN128, groupAssignment), numSignatures);
         signatures = BlsTestUtils.bulkSign(keyPairs, BlsTestUtils.randomBytes(RANDOM_SEED, MESSAGE_SIZE));
     }
-/*
-Results on M1 Max MacBook Pro:
+    /*
+    Results on M1 Max MacBook Pro:
 
-Benchmark                                 (groupAssignment)  (numSignatures)  Mode  Cnt  Score   Error  Units
-SignatureAggregationBenchmarks.aggregate   SHORT_SIGNATURES               32  avgt    2  0.024          ms/op
-SignatureAggregationBenchmarks.aggregate   SHORT_SIGNATURES              256  avgt    2  0.172          ms/op
-SignatureAggregationBenchmarks.aggregate   SHORT_SIGNATURES             1024  avgt    2  0.703          ms/op
-SignatureAggregationBenchmarks.aggregate  SHORT_PUBLIC_KEYS               32  avgt    2  0.043          ms/op
-SignatureAggregationBenchmarks.aggregate  SHORT_PUBLIC_KEYS              256  avgt    2  0.336          ms/op
-SignatureAggregationBenchmarks.aggregate  SHORT_PUBLIC_KEYS             1024  avgt    2  1.414          ms/op
-*/
+    Benchmark                                 (groupAssignment)  (numSignatures)  Mode  Cnt  Score   Error  Units
+    SignatureAggregationBenchmarks.aggregate   SHORT_SIGNATURES               32  avgt    2  0.024          ms/op
+    SignatureAggregationBenchmarks.aggregate   SHORT_SIGNATURES              256  avgt    2  0.172          ms/op
+    SignatureAggregationBenchmarks.aggregate   SHORT_SIGNATURES             1024  avgt    2  0.703          ms/op
+    SignatureAggregationBenchmarks.aggregate  SHORT_PUBLIC_KEYS               32  avgt    2  0.043          ms/op
+    SignatureAggregationBenchmarks.aggregate  SHORT_PUBLIC_KEYS              256  avgt    2  0.336          ms/op
+    SignatureAggregationBenchmarks.aggregate  SHORT_PUBLIC_KEYS             1024  avgt    2  1.414          ms/op
+    */
     @Benchmark
     @BenchmarkMode(Mode.AverageTime)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
