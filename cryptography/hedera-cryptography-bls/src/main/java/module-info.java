@@ -4,6 +4,7 @@
  */
 module com.hedera.cryptography.bls {
     requires transitive com.hedera.cryptography.pairings.api;
+    requires com.hedera.cryptography.utils;
     requires static transitive com.github.spotbugs.annotations;
 
     exports com.hedera.cryptography.bls;

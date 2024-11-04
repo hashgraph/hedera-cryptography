@@ -18,21 +18,21 @@ package com.hedera.cryptography.altbn128;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.common.testfixtures.rng.WithRng;
-import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-@WithRng
 class AltBn128FieldElementTest {
 
     public static final BigInteger R =
@@ -40,7 +40,6 @@ class AltBn128FieldElementTest {
     public static final int SIZE = 32;
 
     @Test
-    @SuppressWarnings("EqualsWithItself")
     void fieldElementEquality() {
         final AltBn128Field mock = mock(AltBn128Field.class);
         final byte[] thizz = new byte[32];
@@ -56,15 +55,20 @@ class AltBn128FieldElementTest {
         var value5 = new AltBn128FieldElement(new byte[30], mock);
 
         assertEquals(value, value);
+        assertTrue(value.equals(value));
         assertNotEquals(value, value2);
-        assertNotEquals(value2, value);
+        assertFalse(value.equals(value2));
+        assertFalse(value2.equals(value));
         assertNotEquals(value, value3);
-        assertNotEquals(value3, value);
+        assertFalse(value.equals(value3));
+        assertFalse(value3.equals(value));
         assertEquals(value, value4);
-        assertEquals(value4, value);
+        assertTrue(value.equals(value4));
+        assertTrue(value4.equals(value));
         assertNotEquals(value, mock(FieldElement.class));
         assertNotEquals(value, value5);
-        assertNotEquals(value5, value);
+        assertFalse(value.equals(value5));
+        assertFalse(value5.equals(value));
     }
 
     @Test
@@ -96,7 +100,8 @@ class AltBn128FieldElementTest {
         var field = new AltBn128Field();
         byte[] representation = field.one().toBytes();
         assertEquals(field.fromBytes(representation), field.one());
-        assertEquals(field.one(), field.fromBytes(representation));
+        assertTrue(field.one().equals(field.fromBytes(representation)));
+        assertTrue(field.fromBytes(representation).equals(field.one()));
     }
 
     @Test
@@ -113,27 +118,28 @@ class AltBn128FieldElementTest {
         assertEquals(BigInteger.TEN, field.fromLong(10L).toBigInteger());
         final BigInteger rMinusOne = R.subtract(BigInteger.ONE);
         assertArrayEquals(
-                BigIntegerUtils.toLittleEndianBytes(rMinusOne, SIZE),
-                field.fromBytes(BigIntegerUtils.toLittleEndianBytes(rMinusOne, SIZE))
+                ByteArrayUtils.toLittleEndianBytes(rMinusOne, SIZE),
+                field.fromBytes(ByteArrayUtils.toLittleEndianBytes(rMinusOne, SIZE))
                         .toBytes());
         assertEquals(
                 BigInteger.ZERO,
-                field.fromBytes(BigIntegerUtils.toLittleEndianBytes(R, SIZE)).toBigInteger());
+                field.fromBytes(ByteArrayUtils.toLittleEndianBytes(R, SIZE)).toBigInteger());
         final BigInteger rPlusOne = R.add(BigInteger.ONE);
         assertEquals(
                 BigInteger.ONE,
-                field.fromBytes(BigIntegerUtils.toLittleEndianBytes(rPlusOne, SIZE))
+                field.fromBytes(ByteArrayUtils.toLittleEndianBytes(rPlusOne, SIZE))
                         .toBigInteger());
     }
 
     @Test
-    void fieldElementAddition(final Random rng) {
+    void fieldElementAddition() {
         var field = new AltBn128Field();
         assertEquals(field.zero(), field.zero().add(field.zero()));
         assertEquals(field.one(), field.one().add(field.zero()));
         assertEquals(field.one(), field.zero().add(field.one()));
         assertEquals(field.one(), field.fromBigInteger(R).add(field.one()));
 
+        SecureRandom rng = new SecureRandom();
         var a = field.random(rng);
         var b = field.random(rng);
         var c = field.random(rng);
@@ -142,13 +148,14 @@ class AltBn128FieldElementTest {
     }
 
     @Test
-    void fieldElementSubtraction(final Random rng) {
+    void fieldElementSubtraction() {
         var field = new AltBn128Field();
         assertEquals(field.one(), field.one().subtract(field.zero()));
         assertEquals(
                 field.fromBigInteger(R.subtract(BigInteger.ONE)), field.zero().subtract(field.one()));
         assertEquals(field.zero(), field.one().subtract(field.one()));
 
+        SecureRandom rng = new SecureRandom();
         var a = field.random(rng);
         var b = field.random(rng);
         var c = field.random(rng);
@@ -157,7 +164,7 @@ class AltBn128FieldElementTest {
     }
 
     @Test
-    void fieldElementMultiplication(final Random rng) {
+    void fieldElementMultiplication() {
         var field = new AltBn128Field();
         assertEquals(field.zero(), field.zero().multiply(field.zero()));
         assertEquals(field.zero(), field.one().multiply(field.zero()));
@@ -165,6 +172,7 @@ class AltBn128FieldElementTest {
         assertEquals(field.zero(), field.fromBigInteger(R).multiply(field.one()));
         assertEquals(field.one(), field.fromBigInteger(R.add(BigInteger.ONE)).multiply(field.one()));
 
+        SecureRandom rng = new SecureRandom();
         var a = field.random(rng);
         var b = field.random(rng);
         var c = field.random(rng);
@@ -173,16 +181,18 @@ class AltBn128FieldElementTest {
     }
 
     @Test
-    void fieldElementInverse(final Random rng) {
+    void fieldElementInverse() {
         var field = new AltBn128Field();
+        SecureRandom rng = new SecureRandom();
         var a = field.random(rng);
         assertEquals(field.one(), a.multiply(a.inverse()));
         assertThrows(IllegalArgumentException.class, () -> field.zero().inverse());
     }
 
     @Test
-    void fieldElementPow(final Random rng) {
+    void fieldElementPow() {
         var field = new AltBn128Field();
+        SecureRandom rng = new SecureRandom();
         var a = field.random(rng);
         assertEquals(field.one(), a.power(0));
         assertEquals(a, a.power(1));

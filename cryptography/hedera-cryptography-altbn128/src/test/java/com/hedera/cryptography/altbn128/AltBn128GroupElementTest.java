@@ -19,11 +19,11 @@ package com.hedera.cryptography.altbn128;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.common.testfixtures.rng.WithRng;
-import com.hedera.cryptography.altbn128.common.BigIntegerUtils;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-@WithRng
 class AltBn128GroupElementTest {
 
     @ParameterizedTest
@@ -98,7 +97,7 @@ class AltBn128GroupElementTest {
     void g2GeneratorIsWellKnown() {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         assertEquals(
-                BigIntegerUtils.toBigIntegers(group.generator().toBytes(), 32),
+                ByteArrayUtils.toBigIntegers(group.generator().toBytes(), 32),
                 List.of(
                         new BigInteger("10857046999023057135944570762232829481370756359578518086990519993285655852781"),
                                 new BigInteger(
@@ -113,7 +112,7 @@ class AltBn128GroupElementTest {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP1);
 
         assertEquals(
-                BigIntegerUtils.toBigIntegers(group.generator().toBytes(), 32),
+                ByteArrayUtils.toBigIntegers(group.generator().toBytes(), 32),
                 List.of(new BigInteger("1"), new BigInteger("2")));
     }
 
@@ -123,7 +122,7 @@ class AltBn128GroupElementTest {
         var group = new AltBn128Group(gr);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> group.fromBytes(BigIntegerUtils.toLittleEndianBytes(
+                () -> group.fromBytes(ByteArrayUtils.toLittleEndianBytes(
                         128, BigInteger.ONE, new BigInteger("10"), BigInteger.ONE, BigInteger.ONE)));
     }
 
@@ -137,11 +136,12 @@ class AltBn128GroupElementTest {
         List<GroupElement> results = new ArrayList<>();
         assertDoesNotThrow(() -> results.addAll(group.batchMultiply(scalars)));
 
-        IntStream.range(0, results.size())
-                .forEach(index -> assertEquals(
-                        group.generator().multiply(field.fromLong(index)),
-                        results.get(index),
-                        "result " + index + " is not correct"));
+        IntStream.range(0, results.size()).forEach(index -> {
+            assertEquals(
+                    group.generator().multiply(field.fromLong(index)),
+                    results.get(index),
+                    "result " + index + " is not correct");
+        });
     }
 
     @Test
@@ -149,6 +149,8 @@ class AltBn128GroupElementTest {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP1);
         var group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         assertEquals(group.zero(), group.zero());
+        final GroupElement zero = group.zero();
+        assertTrue(zero.equals(zero));
         assertNotEquals(group.zero(), new Object());
         assertNotEquals(group.zero(), group.generator());
         assertNotEquals(group.generator(), group.zero());
@@ -197,9 +199,9 @@ class AltBn128GroupElementTest {
 
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
-    @SuppressWarnings("deprecation")
-    void testCopy(AltBN128CurveGroup gr, Random rng) {
+    void testCopy(AltBN128CurveGroup gr) {
         var group = new AltBn128Group(gr);
+        Random rng = new SecureRandom();
         final byte[] seed = new byte[group.seedSize()];
         rng.nextBytes(seed);
         var random = group.random(seed);

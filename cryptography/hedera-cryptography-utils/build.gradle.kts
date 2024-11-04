@@ -17,17 +17,12 @@
 plugins {
     id("com.hedera.gradle.java-module")
     id("com.hedera.gradle.hedera-cryptography-publish")
+    id("com.hedera.gradle.java-test-fixtures")
 }
 
-mainModuleInfo {
-    runtimeOnly("com.hedera.cryptography.altbn128")
-    // requires("org.assertj.core")
-}
+mainModuleInfo {}
 
 testModuleInfo {
     requires("org.junit.jupiter.api")
-    requires("com.hedera.cryptography.utils.test.fixtures")
     requires("org.mockito")
-    requires("com.hedera.common.testfixtures")
-    requires("jakarta.inject")
 }
