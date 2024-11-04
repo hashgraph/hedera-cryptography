@@ -18,7 +18,7 @@ package com.hedera.cryptography.tss.extensions.nizk;
 
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.tss.api.TssEncryptionKeyResolver;
+import com.hedera.cryptography.tss.api.TssKeyTable;
 import com.hedera.cryptography.tss.extensions.FeldmanCommitment;
 import com.hedera.cryptography.tss.extensions.elgamal.CombinedCiphertext;
 import com.hedera.cryptography.utils.HashUtils;
@@ -37,7 +37,7 @@ import java.util.Objects;
  */
 public record NizkStatement(
         @NonNull List<Integer> tssShareIds,
-        @NonNull TssEncryptionKeyResolver tssEncryptionKeys,
+        @NonNull TssKeyTable<BlsPublicKey> tssEncryptionKeys,
         @NonNull FeldmanCommitment polynomialCommitment,
         @NonNull CombinedCiphertext combinedCiphertext) {
     /**
@@ -59,7 +59,7 @@ public record NizkStatement(
         final HashCalculator calculator = HashUtils.getHashCalculator(HashUtils.SHA256);
         for (Integer shareIds : tssShareIds) {
             calculator.append(shareIds);
-            final BlsPublicKey publicKey = tssEncryptionKeys.resolveTssEncryptionKey(shareIds);
+            final BlsPublicKey publicKey = tssEncryptionKeys.resolveKeyForShare(shareIds);
             calculator.append(publicKey.element().toBytes());
         }
         for (GroupElement coefficient : polynomialCommitment.commitmentCoefficients()) {

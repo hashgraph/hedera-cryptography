@@ -98,7 +98,7 @@ public record NizkProof(
         for (int i = 0; i < statement.tssShareIds().size(); i++) {
             final Integer xi = statement.tssShareIds().get(i);
             final GroupElement yi =
-                    statement.tssEncryptionKeys().resolveTssEncryptionKey(xi).element();
+                    statement.tssEncryptionKeys().resolveKeyForShare(xi).element();
             yAggregator = yAggregator.add(yi.multiply(x.power(i + 1)));
         }
         final GroupElement y = yAggregator.multiply(rho).add(a);
@@ -186,7 +186,7 @@ public record NizkProof(
         for (int i = 0; i < statement.tssShareIds().size(); i++) {
             Integer idi = statement.tssShareIds().get(i);
             GroupElement yi =
-                    statement.tssEncryptionKeys().resolveTssEncryptionKey(idi).element();
+                    statement.tssEncryptionKeys().resolveKeyForShare(idi).element();
             inner = inner.add(yi.multiply(this.zR.multiply(x.power(i + 1))));
         }
 

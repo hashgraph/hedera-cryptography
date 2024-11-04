@@ -24,7 +24,7 @@ import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.tss.api.TssEncryptionKeyResolver;
+import com.hedera.cryptography.tss.api.TssKeyTable;
 import com.hedera.cryptography.tss.extensions.FeldmanCommitment;
 import com.hedera.cryptography.tss.extensions.Polynomial;
 import com.hedera.cryptography.tss.extensions.elgamal.ElGamalUtils;
@@ -53,7 +53,7 @@ public class NizkProofTest {
                 ids.stream().map(i -> BlsPrivateKey.create(schema, random)).toList();
         final var publicKeys =
                 privateKeys.stream().map(BlsPrivateKey::createPublicKey).toList();
-        final TssEncryptionKeyResolver elGamalEncryptionKeys = share -> publicKeys.get(share - 1);
+        final TssKeyTable<BlsPublicKey> elGamalEncryptionKeys = share -> publicKeys.get(share - 1);
 
         // A d degree polynomial is defined by d + 1 coefficients: a_0, a_1, ..., a_d
         // such that p(x) = a_0 + a_1 * x + a_2 * x^2 + ... + a_d * x^d
@@ -77,7 +77,7 @@ public class NizkProofTest {
                 .boxed()
                 .map(i -> new BlsPublicKey(group.generator().multiply(field.fromLong(i)), schema))
                 .toList();
-        final TssEncryptionKeyResolver wrongTssEncryptionKeyResolver =
+        final TssKeyTable<BlsPublicKey> wrongTssEncryptionKeyResolver =
                 tssShareId -> elGamalEncryptionWrongKeys.get(tssShareId - 1);
         assertFalse(proof.verify(
                 schema, new NizkStatement(ids, wrongTssEncryptionKeyResolver, polyCommitment, combinedCipher)));
