@@ -19,10 +19,10 @@ package com.hedera.cryptography.altbn128;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.common.testfixtures.WithRng;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -31,7 +31,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-@WithRng
 class AltBn128GroupTest {
     @Test
     void constructionSucceeds() {
@@ -51,8 +50,9 @@ class AltBn128GroupTest {
     }
 
     @Test
-    void createRandomGroupElementIsNotNull(final Random rng) {
+    void createRandomGroupElementIsNotNull() {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+        Random rng = new SecureRandom();
         final byte[] seed = new byte[group.seedSize()];
         rng.nextBytes(seed);
         assertNotNull(group.random(seed));
@@ -68,8 +68,9 @@ class AltBn128GroupTest {
     }
 
     @Test
-    void createGroupElementFromRandomIsNotNull(final Random rng) {
+    void createGroupElementFromRandomIsNotNull() {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+        Random rng = new SecureRandom();
         ByteBuffer buffer = ByteBuffer.allocate(group.seedSize());
         rng.nextBytes(buffer.array());
         group.random(buffer.array());
@@ -77,17 +78,19 @@ class AltBn128GroupTest {
     }
 
     @Test
-    void createGroupElementFromHashIsNotNull(final Random rng) {
+    void createGroupElementHashToCurveIsNotNull() {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+        Random rng = new SecureRandom();
         final byte[] message = new byte[1024];
         rng.nextBytes(message);
 
-        assertNotNull(group.fromHash(message));
+        assertNotNull(group.hashToCurve(message));
     }
 
     @Test
-    void createRandomGroupElementAndToBytesIsNotNull(final Random rng) {
+    void createRandomGroupElementAndToBytesIsNotNull() {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+        Random rng = new SecureRandom();
         final byte[] seed = new byte[group.seedSize()];
         rng.nextBytes(seed);
         final GroupElement random = group.random(seed);
@@ -96,7 +99,6 @@ class AltBn128GroupTest {
     }
 
     @Test
-    @SuppressWarnings("EqualsWithItself")
     void equalityTest() {
         var group1 = new AltBn128Group(AltBN128CurveGroup.GROUP1);
         var group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);

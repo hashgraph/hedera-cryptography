@@ -17,24 +17,39 @@
 package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
-import com.hedera.cryptography.altbn128.common.HashUtils;
 import com.hedera.cryptography.altbn128.facade.GroupFacade;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
  * The implementation of the two {@link Group} of {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
  */
 public class AltBn128Group implements Group {
+    /** String ID to use for obtaining the digest algorithm */
+    private static final String KECCAK_256 = "Keccak-256";
+    /** The number of times to rehash in {@link #hashToCurve(byte[])} */
+    private static final int HASH_RETRIES = 255;
+
     private final GroupFacade facade;
     private final AltBN128CurveGroup group;
+
+    static {
+        // add provider only if it's not in the JVM
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+    }
 
     /**
      * Creates an instance of a {@link GroupFacade} for this implementation.
@@ -89,8 +104,26 @@ public class AltBn128Group implements Group {
      */
     @NonNull
     @Override
-    public GroupElement fromHash(@NonNull final byte[] input) {
-        return new AltBn128GroupElement(this, facade.fromSeed(HashUtils.computeSha256(input)));
+    public GroupElement hashToCurve(@NonNull final byte[] input) {
+        final MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance(KECCAK_256);
+        } catch (final NoSuchAlgorithmException e) {
+            // this should never happen, so we can downgrade to a runtime exception
+            throw new RuntimeException(e);
+        }
+        // hash the input and try to find a valid group element
+        // hash the hash until we find a valid group element
+        byte[] candidate = input;
+        for (int i = 0; i < HASH_RETRIES; i++) {
+            digest.update(candidate);
+            candidate = digest.digest();
+            final byte[] element = facade.fromXCoordinate(candidate);
+            if (element != null) {
+                return new AltBn128GroupElement(this, element);
+            }
+        }
+        throw new AltBn128Exception("Could not find a valid group element after %d tries".formatted(HASH_RETRIES));
     }
 
     /**

@@ -46,4 +46,7 @@ dependencies.constraints {
     api("org.junit.jupiter:junit-jupiter-api:5.10.2") {
         because("org.junit.jupiter.api")
     }
+    api("org.bouncycastle:bcprov-jdk18on:1.78.1") {
+        because("org.bouncycastle.provider")
+    }
 }

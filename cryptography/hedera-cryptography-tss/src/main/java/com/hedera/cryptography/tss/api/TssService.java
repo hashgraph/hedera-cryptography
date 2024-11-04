@@ -16,25 +16,20 @@
 
 package com.hedera.cryptography.tss.api;
 
-import com.hedera.cryptography.bls.BlsPublicKey;
-import com.hedera.cryptography.bls.BlsSignature;
 import com.hedera.cryptography.bls.SignatureSchema;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 
 /**
  * A Threshold Signature Scheme Service.
+ * <p>
  * Contract of TSS:
  * <ul>
  *     <li>Generate TssMessages out of PrivateShares</li>
  *     <li>Verify TssMessages out of a ParticipantDirectory</li>
  *     <li>Obtain PrivateShares out of TssMessages for each owned share</li>
- *     <li>Aggregate PrivateShares</li>
  *     <li>Obtain PublicShares out of TssMessages for each share</li>
- *     <li>Aggregate PublicShares</li>
- *     <li>Sign Messages</li>
- *     <li>Verify Signatures</li>
- *     <li>Aggregate Signatures</li>
  * </ul>
  * @implNote an instance of the service would require a source of randomness {@link java.util.Random}, and a{@link SignatureSchema}
  */
@@ -71,6 +66,19 @@ public interface TssService {
     boolean verifyTssMessage(@NonNull TssParticipantDirectory participantDirectory, @NonNull TssMessage tssMessage);
 
     /**
+     * Verify that a {@link TssMessage} is valid.
+     *
+     * @param participantDirectory the participant directory used to generate the message
+     * @param publicShares if available, the list of {@link TssPublicShare} that contains the local public share corresponding to the private share this message was generated from
+     * @param tssMessage the {@link TssMessage} to validate
+     * @return true if the message is valid, false otherwise
+     */
+    boolean verifyTssMessage(
+            @NonNull TssParticipantDirectory participantDirectory,
+            @Nullable List<TssPublicShare> publicShares,
+            @NonNull TssMessage tssMessage);
+
+    /**
      * Compute all private shares that belongs to this participant from a threshold minimum number of {@link TssMessage}s.
      * It is the responsibility of the caller to ensure that the list of validTssMessages meets the required threshold.
      *
@@ -80,7 +88,7 @@ public interface TssService {
      * @throws IllegalStateException if there aren't enough messages to meet the threshold
      */
     @NonNull
-    List<TssPrivateShare> decryptPrivateShares(
+    List<TssPrivateShare> obtainPrivateShares(
             @NonNull TssParticipantDirectory participantDirectory, @NonNull List<TssMessage> validTssMessages);
 
     /**
@@ -92,54 +100,6 @@ public interface TssService {
      * @throws IllegalStateException if there aren't enough messages to meet the threshold
      */
     @NonNull
-    List<TssPublicShare> computePublicShares(
+    List<TssPublicShare> obtainPublicShares(
             @NonNull TssParticipantDirectory participantDirectory, @NonNull List<TssMessage> validTssMessages);
-
-    /**
-     * Aggregate a threshold number of {@link TssPublicShare}s.
-     * It is the responsibility of the caller to ensure that the list of public shares meets the required threshold.
-     * If the threshold is not met, the public key returned by this method will be invalid.
-     * This method is used for two distinct purposes:
-     * <ul>
-     *     <li>Aggregating public shares to produce the Ledger ID</li>
-     *     <li>Aggregating public shares derived from all commitments, to produce the public key for a given share</li>
-     * </ul>
-     *
-     * @param publicShares the public shares to aggregate
-     * @return the interpolated public key
-     */
-    @NonNull
-    BlsPublicKey aggregatePublicShares(@NonNull List<TssPublicShare> publicShares);
-
-    /**
-     * Sign a message using the private share's key.
-     * @param privateShare the private share to sign the message with
-     * @param message the message to sign
-     * @return the signature
-     */
-    @NonNull
-    TssShareSignature sign(@NonNull TssPrivateShare privateShare, @NonNull byte[] message);
-
-    /**
-     * verifies a signature using the participantDirectory and the list of public shares.
-     * @param participantDirectory the pending share claims the TSS message was created for
-     * @param publicShares the public shares to verify the signature with
-     * @param signature the signature to verify
-     * @return if the signature is valid.
-     */
-    boolean verifySignature(
-            @NonNull TssParticipantDirectory participantDirectory,
-            @NonNull List<TssPublicShare> publicShares,
-            @NonNull TssShareSignature signature);
-
-    /**
-     * Aggregate a threshold number of {@link TssShareSignature}s.
-     * It is the responsibility of the caller to ensure that the list of partial signatures meets the required
-     * threshold. If the threshold is not met, the signature returned by this method will be invalid.
-     *
-     * @param partialSignatures the list of signatures to aggregate
-     * @return the interpolated signature
-     */
-    @NonNull
-    BlsSignature aggregateSignatures(@NonNull List<TssShareSignature> partialSignatures);
 }

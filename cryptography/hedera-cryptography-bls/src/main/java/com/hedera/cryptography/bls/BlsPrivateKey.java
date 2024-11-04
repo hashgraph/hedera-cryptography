@@ -27,8 +27,20 @@ import java.util.Random;
 
 /**
  *  A bls private Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
+ * @param element the element
+ * @param signatureSchema the signatureSchema
  */
-public record BlsPrivateKey(@NonNull FieldElement privateKey, @NonNull SignatureSchema signatureSchema) {
+public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSchema signatureSchema) {
+    /**
+     * Constructor.
+     *
+     * @param element the element
+     * @param signatureSchema the signature schema
+     */
+    public BlsPrivateKey {
+        Objects.requireNonNull(element, "element must not be null");
+        Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
+    }
 
     /**
      * Creates a private key out of the CurveType and a random
@@ -51,9 +63,10 @@ public record BlsPrivateKey(@NonNull FieldElement privateKey, @NonNull Signature
      *
      * @return the public key
      */
+    @NonNull
     public BlsPublicKey createPublicKey() {
         final GroupElement pk =
-                this.signatureSchema.getPublicKeyGroup().generator().multiply(this.privateKey);
+                this.signatureSchema.getPublicKeyGroup().generator().multiply(this.element);
 
         return new BlsPublicKey(pk, this.signatureSchema);
     }
@@ -67,7 +80,7 @@ public record BlsPrivateKey(@NonNull FieldElement privateKey, @NonNull Signature
     @NonNull
     public BlsSignature sign(final @NonNull byte[] message) {
         final GroupElement o =
-                signatureSchema.getSignatureGroup().fromHash(message).multiply(this.privateKey);
+                signatureSchema.getSignatureGroup().hashToCurve(message).multiply(this.element);
         return new BlsSignature(o, signatureSchema);
     }
 

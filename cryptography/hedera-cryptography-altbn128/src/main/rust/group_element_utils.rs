@@ -1,6 +1,29 @@
-use ark_ec::{CurveConfig, CurveGroup};
-use ark_serialize::CanonicalDeserialize;
+//
+// Copyright (C) 2024 Hedera Hashgraph, LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+use ark_ec::{AffineRepr, CurveConfig, CurveGroup};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use rand::Rng;
+use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
+use ark_ff::{Field, PrimeField};
+use jni::JNIEnv;
+use jni::objects::JByteArray;
+use jni::sys::jint;
+use crate::jni_helpers;
+
 /// Generic utility functions to instantiate and operate with curve points
 
 /// The Scalar field. It is the same Fr as bn254_field_elements. Fr is always [0,1,...r-1].
@@ -57,8 +80,7 @@ pub fn group_elements_batch_multiply<G: CurveGroup>(values: Vec<ScalarField<G>>)
 /// (De)/Serialization
 /// ******************
 
-/// returns the byte representation of a point in projective representation
-pub fn group_elements_serialize<G: CurveGroup>(element: &G) -> Result<Vec<u8>, String> {
+pub fn canonical_serialize<S: CanonicalSerialize>(element: &S) -> Result<Vec<u8>, String> {
     let mut serialized = Vec::new();
     match element.serialize_uncompressed(&mut serialized) {
         Ok(_) => Ok(serialized),
@@ -82,4 +104,45 @@ pub fn group_elements_deserialize_and_validate<G: CurveGroup>(
         Ok(val) => Ok(val),
         Err(err) => Err(err.to_string()),
     }
+}
+
+/// Converts a u8 array into the BaseField representation of the group (the field where the coordinates are represented) if there is such representation
+pub fn coordinate_from_bytes<G: SWCurveConfig>(candidate: &[u8]) ->Option<G::BaseField>{
+    if G::BaseField::extension_degree() == 1 {
+        // if the order is 1 the op is simpler
+        let f = <G::BaseField as Field>::BasePrimeField::from_be_bytes_mod_order(
+            &candidate,
+        );
+        G::BaseField::from_base_prime_field_elems(&[f])
+    } else {
+        G::BaseField::from_random_bytes(&candidate)
+    }
+}
+
+/// returns the point from an x coordinate if the point is in the curve
+pub fn point_from_x<CC: SWCurveConfig>(x: CC::BaseField) -> Option<Affine<CC>> {
+    if let Some(p) = Affine::<CC>::get_point_from_x_unchecked(x, false){
+        let scaled = p.mul_by_cofactor();
+        if scaled.is_zero() {
+            return None;
+        }
+        Some(scaled)
+    }else { None }
+}
+
+/// returns the point from a hash if the point is in the curve
+pub fn elements_from_hash_generic<CC: SWCurveConfig>(
+    env: JNIEnv,
+    hash_array: &[u8],
+    output: JByteArray,
+) -> jint {
+    let x_option = coordinate_from_bytes::<CC>(&hash_array);
+    if x_option.is_none() {
+        return jni_helpers::BUSINESS_ERROR_POINT_NOT_IN_CURVE;
+    }
+    let point_option = point_from_x::<CC>(x_option.unwrap());
+       if point_option.is_none() {
+           return jni_helpers::BUSINESS_ERROR_POINT_NOT_IN_CURVE;
+       }
+    jni_helpers::serialize_to_jbytearray::<Affine<CC>>(env, &point_option.unwrap(), output).unwrap_or_else(|value| value)
 }

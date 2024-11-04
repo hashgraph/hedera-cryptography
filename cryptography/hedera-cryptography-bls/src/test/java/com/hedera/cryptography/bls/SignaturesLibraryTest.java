@@ -229,7 +229,7 @@ class SignaturesLibraryTest {
                 copy[i] = originalByte;
             }
         }
-        // REVIEW flipping the last bit of the sign of the last element produces the same signature
+        // REVIEW flipping the last bit of the sign of the last element produces the same element
         // representation.
         // Makes sense given that we use unsigned values in rust, but seems that the last bit is not checked in
         // arkworks

@@ -1,11 +1,24 @@
-use crate::group_element_utils::{
-    group_elements_add, group_elements_batch_multiply, group_elements_deserialize,
-    group_elements_deserialize_and_validate, group_elements_scalar_multiply,
-    group_elements_serialize, group_elements_total_sum,
-};
+//
+// Copyright (C) 2024 Hedera Hashgraph, LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+use crate::group_element_utils::{canonical_serialize, group_elements_add, group_elements_batch_multiply, group_elements_deserialize, group_elements_deserialize_and_validate, group_elements_scalar_multiply, group_elements_total_sum};
 use crate::scalars_utils::{scalars_curve_from_bytes, scalars_from_bytes, scalars_to_bytes, F};
 use ark_bn254::{G1Affine, G1Projective, G2Affine, G2Projective};
 use ark_ec::{CurveConfig, CurveGroup};
+use ark_serialize::CanonicalSerialize;
 use jni::objects::{JByteArray, JObjectArray};
 use jni::sys::{jbyte, jint, jsize};
 use jni::JNIEnv;
@@ -39,7 +52,7 @@ const JNI_ERROR_COULD_SET_RESULT_DATA_IN_MATRIX: i32 = -1010;
 const JNI_ERROR_COULD_NOT_TRANSFORM_RESULT_ELEMENT: i32 = -1011;
 pub type ScalarField<G> = <<G as CurveGroup>::Config as CurveConfig>::ScalarField;
 /// * -4    Business Error: Point is not in the curve
-const BUSINESS_ERROR_POINT_NOT_IN_CURVE: i32 = -4;
+pub(crate) const BUSINESS_ERROR_POINT_NOT_IN_CURVE: i32 = -4;
 
 /// Utility function read a scalar form a JByteArray, if the scalar is bigger than the field a reduction is performed
 pub fn to_scalar_from_curve<G: CurveGroup>(
@@ -97,13 +110,13 @@ pub fn extract_random_seed(env: &JNIEnv, input_seed: &JByteArray) -> Result<[u8;
     Ok(seed_array)
 }
 
-/// Utility function to write the serialized representation of a point in an existing JByteArray
-pub fn write_return_point<G: CurveGroup>(
+/// Utility function to write the serialized representation in an existing JByteArray
+pub fn serialize_to_jbytearray<G: CanonicalSerialize>(
     env: JNIEnv,
     point: &G,
     output: JByteArray,
 ) -> Result<jint, jint> {
-    let ge_bytes = match group_elements_serialize::<G>(&point) {
+    let ge_bytes = match canonical_serialize::<G>(&point) {
         Ok(val) => val,
         Err(_) => return Err(ARK_ERROR_RESULT_SERIALIZATION),
     };
@@ -193,7 +206,7 @@ pub fn write_points_to_jobject_array<G: CurveGroup>(
     results: Vec<G>,
 ) -> i32 {
     for (i, entry) in results.iter().enumerate() {
-        let ge_bytes = match group_elements_serialize::<G>(&entry) {
+        let ge_bytes = match canonical_serialize::<G>(&entry) {
             Ok(val) => val,
             Err(_) => return ARK_ERROR_RESULT_SERIALIZATION,
         };
@@ -289,7 +302,7 @@ pub fn add_points<G: CurveGroup>(
     };
 
     let point = group_elements_add(point1, point2);
-    write_return_point(env, &point, output).unwrap_or_else(|value| value)
+    serialize_to_jbytearray(env, &point, output).unwrap_or_else(|value| value)
 }
 
 /// Utility function to multiply two points
@@ -310,7 +323,7 @@ pub fn multiply_point_and_scalar<G: CurveGroup>(
     };
 
     let point = group_elements_scalar_multiply(point1, value);
-    write_return_point(env, &point, output).unwrap_or_else(|value| value)
+    serialize_to_jbytearray(env, &point, output).unwrap_or_else(|value| value)
 }
 
 /// Utility function to produce the total sum of N points
@@ -326,7 +339,7 @@ pub fn total_sum_points<G: CurveGroup>(
 
     let point = group_elements_total_sum(points);
 
-    write_return_point(env, &point, output).unwrap_or_else(|value| value)
+    serialize_to_jbytearray(env, &point, output).unwrap_or_else(|value| value)
 }
 
 /// Utility function to batch multiply the generator to N scalars

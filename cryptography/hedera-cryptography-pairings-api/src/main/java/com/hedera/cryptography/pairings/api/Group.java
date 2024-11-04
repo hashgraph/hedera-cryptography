@@ -97,7 +97,7 @@ public interface Group {
      * @return the new group element
      */
     @NonNull
-    GroupElement fromHash(@NonNull byte[] input);
+    GroupElement hashToCurve(@NonNull byte[] input);
 
     /**
      * Adds a collection of group elements together
