@@ -155,9 +155,11 @@ public record NizkProof(
 
         final List<FieldElement> xPowerId =
                 statement.tssShareIds().stream().map(x::power).toList();
-        final Function<Integer, FieldElement> idToField = id -> xPowerId.get(id - 1);
+        // the list of shares is stored in a way where index 0 belongs to shareId=1,
+        // so to retrieve x^1 we need to access shareId-1 index.
+        final Function<Integer, FieldElement> shareToFieldElement = shareId -> xPowerId.get(shareId - 1);
         final List<Entry<FieldElement, FieldElement>> idxPowerId = statement.tssShareIds().stream()
-                .map(id -> Map.entry(field.fromLong(id), idToField.apply(id)))
+                .map(id -> Map.entry(field.fromLong(id), shareToFieldElement.apply(id)))
                 .toList();
         final List<GroupElement> results = new ArrayList<>();
         final List<GroupElement> polyCoefficients =
@@ -179,19 +181,22 @@ public record NizkProof(
             return false;
         }
 
+        // CombinedCipherText are stored per index, so to retrieve them by shareId we need to decrease the value by 1
+        final Function<Integer, GroupElement> shareToGroupElement =
+                shareId -> statement.combinedCiphertext().values().get(shareId - 1);
         inner = publicKeyGroup.zero();
-        for (int i : statement.tssShareIds()) {
-            final GroupElement ci = statement.combinedCiphertext().values().get(i - 1);
-            inner = inner.add(ci.multiply(idToField.apply(i)));
+        for (int shareId : statement.tssShareIds()) {
+            final GroupElement ci = shareToGroupElement.apply(shareId);
+            inner = inner.add(ci.multiply(shareToFieldElement.apply(shareId)));
         }
 
         lhs = inner.multiply(xPrime).add(this.y);
 
         inner = publicKeyGroup.zero();
-        for (int idi : statement.tssShareIds()) {
+        for (int shareId : statement.tssShareIds()) {
             GroupElement yi =
-                    statement.tssEncryptionKeys().resolveKeyForShare(idi).element();
-            inner = inner.add(yi.multiply(this.zR.multiply(idToField.apply(idi))));
+                    statement.tssEncryptionKeys().resolveKeyForShare(shareId).element();
+            inner = inner.add(yi.multiply(this.zR.multiply(shareToFieldElement.apply(shareId))));
         }
 
         rhs = inner.add(publicKeyGroup.generator().multiply(this.zA));

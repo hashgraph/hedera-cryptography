@@ -61,8 +61,8 @@ public final class TssParticipantDirectory implements TssKeyTable<BlsPublicKey> 
      */
     private final int participantId;
     /**
-     * A list of all assigned {@code shareIds} in the directory.
-     * The sorted values are consecutive starting from 1.
+     * A list of all assigned {@code shareIds} in the directory. The values are sorted, consecutive and starting from 1.
+     * ShareId 0 does not exist and is reserved.
      * This contains the numeric value of the share, not the index.
      */
     private final List<Integer> shareIds;
