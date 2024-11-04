@@ -19,11 +19,11 @@ package com.hedera.cryptography.altbn128;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
+import com.hedera.common.testfixtures.rng.WithRng;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.utils.ByteArrayUtils;
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+@WithRng
 class AltBn128GroupElementTest {
 
     @ParameterizedTest
@@ -199,9 +200,8 @@ class AltBn128GroupElementTest {
 
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
-    void testCopy(AltBN128CurveGroup gr) {
+    void testCopy(AltBN128CurveGroup gr, Random rng) {
         var group = new AltBn128Group(gr);
-        Random rng = new SecureRandom();
         final byte[] seed = new byte[group.seedSize()];
         rng.nextBytes(seed);
         var random = group.random(seed);
