@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.common.testfixtures.rng;
+package com.hedera.cryptography.utils.test.fixtures.rng;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;

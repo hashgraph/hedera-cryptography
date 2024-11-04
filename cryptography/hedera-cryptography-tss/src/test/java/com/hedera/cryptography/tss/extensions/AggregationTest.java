@@ -20,7 +20,7 @@ import static com.hedera.cryptography.utils.test.fixtures.stream.StreamUtils.zip
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.hedera.common.testfixtures.rng.WithRng;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import com.hedera.cryptography.bls.BlsKeyPair;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;

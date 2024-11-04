@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.common.testfixtures.rng;
+package com.hedera.cryptography.utils.test.fixtures.rng;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -18,7 +18,7 @@ package com.hedera.cryptography.tss;
 
 import static org.mockito.Mockito.mock;
 
-import com.hedera.common.testfixtures.rng.WithRng;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import com.hedera.cryptography.bls.BlsKeyPair;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;

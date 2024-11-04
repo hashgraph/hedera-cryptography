@@ -18,7 +18,7 @@ package com.hedera.cryptography.tss.extensions;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.hedera.common.testfixtures.rng.WithRng;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;

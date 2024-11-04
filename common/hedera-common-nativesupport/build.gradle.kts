@@ -17,7 +17,6 @@
 plugins {
     id("com.hedera.gradle.java-module")
     id("com.hedera.gradle.hedera-common-publish")
-    id("com.hedera.gradle.java-test-fixtures")
 }
 
 testModuleInfo {
