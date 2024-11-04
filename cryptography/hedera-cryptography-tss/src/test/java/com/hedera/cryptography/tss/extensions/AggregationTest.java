@@ -20,7 +20,6 @@ import static com.hedera.cryptography.utils.test.fixtures.stream.StreamUtils.zip
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import com.hedera.cryptography.bls.BlsKeyPair;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
@@ -30,6 +29,7 @@ import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Random;
@@ -39,6 +39,7 @@ import org.junit.jupiter.api.Test;
 @WithRng
 public class AggregationTest {
 
+    @SuppressWarnings("UnnecessaryLocalVariable")
     @Test
     void testTargetGroupIsSameAsOriginal(Random random) {
         var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);

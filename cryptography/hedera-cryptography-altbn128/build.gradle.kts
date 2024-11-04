@@ -27,5 +27,5 @@ cargo { libname = "bn254" }
 testModuleInfo {
     requires("org.junit.jupiter.api")
     requires("org.mockito")
-    requires("com.hedera.common.testfixtures")
+    requires("com.hedera.cryptography.utils.test.fixtures")
 }

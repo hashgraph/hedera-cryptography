@@ -18,11 +18,11 @@ package com.hedera.cryptography.tss.extensions;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
@@ -46,6 +46,7 @@ class PolynomialTest {
                 () -> Polynomial.fromValue(Mockito.mock(Random.class), Mockito.mock(FieldElement.class), 0));
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Test
     void testNullRandomOrSecretThrowsException() {
         assertThrows(
@@ -58,6 +59,7 @@ class PolynomialTest {
         assertThrows(IllegalArgumentException.class, () -> new Polynomial(List.of()));
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Test
     void testEvaluateEmptyValueThrowsException() {
         assertThrows(NullPointerException.class, () -> new Polynomial(

@@ -18,7 +18,6 @@ package com.hedera.cryptography.tss;
 
 import static org.mockito.Mockito.mock;
 
-import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import com.hedera.cryptography.bls.BlsKeyPair;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
@@ -32,6 +31,7 @@ import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.api.TssShareSignature;
 import com.hedera.cryptography.tss.impl.TssServiceTestImpl;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

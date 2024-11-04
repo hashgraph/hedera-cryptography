@@ -19,9 +19,9 @@ package com.hedera.cryptography.altbn128;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.common.testfixtures.rng.WithRng;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -95,6 +95,7 @@ class AltBn128GroupTest {
         assertNotNull(random.toBytes());
     }
 
+    @SuppressWarnings("EqualsWithItself")
     @Test
     void equalityTest() {
         var group1 = new AltBn128Group(AltBN128CurveGroup.GROUP1);

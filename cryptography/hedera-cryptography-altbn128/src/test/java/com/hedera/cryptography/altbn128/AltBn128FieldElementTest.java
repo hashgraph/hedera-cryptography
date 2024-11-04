@@ -18,16 +18,14 @@ package com.hedera.cryptography.altbn128;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.common.testfixtures.rng.WithRng;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.utils.ByteArrayUtils;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Random;
@@ -41,6 +39,7 @@ class AltBn128FieldElementTest {
             new BigInteger("21888242871839275222246405745257275088548364400416034343698204186575808495617");
     public static final int SIZE = 32;
 
+    @SuppressWarnings("EqualsWithItself")
     @Test
     void fieldElementEquality() {
         final AltBn128Field mock = mock(AltBn128Field.class);
@@ -57,20 +56,15 @@ class AltBn128FieldElementTest {
         var value5 = new AltBn128FieldElement(new byte[30], mock);
 
         assertEquals(value, value);
-        assertTrue(value.equals(value));
         assertNotEquals(value, value2);
-        assertFalse(value.equals(value2));
-        assertFalse(value2.equals(value));
+        assertNotEquals(value2, value);
         assertNotEquals(value, value3);
-        assertFalse(value.equals(value3));
-        assertFalse(value3.equals(value));
+        assertNotEquals(value3, value);
         assertEquals(value, value4);
-        assertTrue(value.equals(value4));
-        assertTrue(value4.equals(value));
+        assertEquals(value4, value);
         assertNotEquals(value, mock(FieldElement.class));
         assertNotEquals(value, value5);
-        assertFalse(value.equals(value5));
-        assertFalse(value5.equals(value));
+        assertNotEquals(value5, value);
     }
 
     @Test
@@ -102,8 +96,7 @@ class AltBn128FieldElementTest {
         var field = new AltBn128Field();
         byte[] representation = field.one().toBytes();
         assertEquals(field.fromBytes(representation), field.one());
-        assertTrue(field.one().equals(field.fromBytes(representation)));
-        assertTrue(field.fromBytes(representation).equals(field.one()));
+        assertEquals(field.one(), field.fromBytes(representation));
     }
 
     @Test

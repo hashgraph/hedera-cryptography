@@ -19,10 +19,10 @@ package com.hedera.cryptography.altbn128;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.common.testfixtures.rng.WithRng;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.utils.ByteArrayUtils;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -137,12 +137,11 @@ class AltBn128GroupElementTest {
         List<GroupElement> results = new ArrayList<>();
         assertDoesNotThrow(() -> results.addAll(group.batchMultiply(scalars)));
 
-        IntStream.range(0, results.size()).forEach(index -> {
-            assertEquals(
-                    group.generator().multiply(field.fromLong(index)),
-                    results.get(index),
-                    "result " + index + " is not correct");
-        });
+        IntStream.range(0, results.size())
+                .forEach(index -> assertEquals(
+                        group.generator().multiply(field.fromLong(index)),
+                        results.get(index),
+                        "result " + index + " is not correct"));
     }
 
     @Test
@@ -150,8 +149,6 @@ class AltBn128GroupElementTest {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP1);
         var group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         assertEquals(group.zero(), group.zero());
-        final GroupElement zero = group.zero();
-        assertTrue(zero.equals(zero));
         assertNotEquals(group.zero(), new Object());
         assertNotEquals(group.zero(), group.generator());
         assertNotEquals(group.generator(), group.zero());
@@ -198,6 +195,7 @@ class AltBn128GroupElementTest {
         assertEquals(group2.elementSize(), group2.zero().size());
     }
 
+    @SuppressWarnings("deprecation")
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void testCopy(AltBN128CurveGroup gr, Random rng) {

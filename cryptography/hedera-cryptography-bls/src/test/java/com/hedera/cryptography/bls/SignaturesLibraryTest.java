@@ -18,10 +18,10 @@ package com.hedera.cryptography.bls;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.hedera.common.testfixtures.rng.WithRng;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import com.hedera.cryptography.pairings.api.curves.KnownCurves;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.Random;

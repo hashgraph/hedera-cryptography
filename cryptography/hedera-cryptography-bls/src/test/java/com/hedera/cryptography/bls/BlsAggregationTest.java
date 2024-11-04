@@ -18,8 +18,8 @@ package com.hedera.cryptography.bls;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.hedera.common.testfixtures.rng.WithRng;
 import com.hedera.cryptography.pairings.api.Curve;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Random;

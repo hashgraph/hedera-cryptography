@@ -18,13 +18,13 @@ package com.hedera.cryptography.tss.extensions.elgamal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.*;
 import com.hedera.cryptography.tss.api.TssShareId;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import jakarta.inject.Inject;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;

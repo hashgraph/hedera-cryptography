@@ -21,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.hedera.common.testfixtures.rng.WithRng;
 import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
