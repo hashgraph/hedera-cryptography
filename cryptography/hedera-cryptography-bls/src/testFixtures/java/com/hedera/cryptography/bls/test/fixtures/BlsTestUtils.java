@@ -32,13 +32,13 @@ public class BlsTestUtils {
     /**
      * Generates a list of key pairs.
      *
+     * @param random        the random number generator
      * @param schema        the signature schema
      * @param numberOfPairs the number of key pairs to generate
      * @return the list of key pairs
      */
     public static @NonNull List<BlsKeyPair> generateKeyPairs(
-            @NonNull final SignatureSchema schema, final int numberOfPairs) {
-        final Random random = new Random();
+            @NonNull final Random random, @NonNull final SignatureSchema schema, final int numberOfPairs) {
         return Stream.generate(() -> BlsKeyPair.generate(schema, random))
                 .limit(numberOfPairs)
                 .toList();

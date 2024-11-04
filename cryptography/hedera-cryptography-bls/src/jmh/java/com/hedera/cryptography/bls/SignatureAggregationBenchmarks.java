@@ -19,6 +19,7 @@ package com.hedera.cryptography.bls;
 import com.hedera.cryptography.bls.test.fixtures.BlsTestUtils;
 import com.hedera.cryptography.pairings.api.Curve;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -51,8 +52,11 @@ public class SignatureAggregationBenchmarks {
 
     @Setup
     public void setup() {
-        final List<BlsKeyPair> keyPairs =
-                BlsTestUtils.generateKeyPairs(SignatureSchema.create(Curve.ALT_BN128, groupAssignment), numSignatures);
+        final long seed = new Random().nextLong();
+        System.out.println("Random Seed: " + seed);
+        final Random random = new Random(seed);
+        final List<BlsKeyPair> keyPairs = BlsTestUtils.generateKeyPairs(
+                random, SignatureSchema.create(Curve.ALT_BN128, groupAssignment), numSignatures);
         signatures = BlsTestUtils.bulkSign(keyPairs, BlsTestUtils.randomBytes(RANDOM_SEED, MESSAGE_SIZE));
     }
     /*
