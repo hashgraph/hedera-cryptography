@@ -3,7 +3,8 @@ import com.hedera.cryptography.pairings.test.spi.FailingPairingFriendlyCurveProv
 import com.hedera.cryptography.pairings.test.spi.PairingMockFriendlyCurveProvider;
 
 open module com.hedera.cryptography.pairings.test {
-    requires transitive com.hedera.cryptography.pairings.api;
+    requires com.hedera.cryptography.pairings.api;
+    requires com.hedera.cryptography.parings.test.fixtures;
     requires org.junit.jupiter.api;
 
     uses PairingFriendlyCurveProvider;
