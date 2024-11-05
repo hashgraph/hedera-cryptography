@@ -17,4 +17,5 @@
 plugins {
     id("com.hedera.gradle.java-module")
     id("com.hedera.gradle.hedera-cryptography-publish")
+    id("com.hedera.gradle.java-test-fixtures")
 }

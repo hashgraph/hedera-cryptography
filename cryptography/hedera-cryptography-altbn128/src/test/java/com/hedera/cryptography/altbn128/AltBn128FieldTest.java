@@ -78,14 +78,8 @@ class AltBn128FieldTest {
     @Test
     void createFieldFromLongIsNotNull(final Random rng) {
         var field = new AltBn128Field();
-        var value = rng.nextLong();
+        var value = rng.nextLong(Long.MAX_VALUE);
         assertNotNull(field.fromLong(value));
-    }
-
-    @Test
-    void createFieldElementFromNegativeLongIsNotNull() {
-        var field = new AltBn128Field();
-        assertNotNull(field.fromLong(-1));
     }
 
     @Test
@@ -95,9 +89,9 @@ class AltBn128FieldTest {
     }
 
     @Test
-    void createFieldElementFromNegativeLongMinValue() {
+    void createFieldElementFromNegativeLongValueThrowsException() {
         var field = new AltBn128Field();
-        assertNotNull(field.fromLong(Long.MIN_VALUE));
+        assertThrows(IllegalArgumentException.class, () -> field.fromLong(Long.MIN_VALUE));
     }
 
     @Test
@@ -131,7 +125,7 @@ class AltBn128FieldTest {
     void equalityAndHashCode(final Random rng) {
         var field = new AltBn128Field();
 
-        List<Long> values = rng.longs(10000).boxed().toList();
+        List<Long> values = rng.longs(10000, 0, Long.MAX_VALUE).boxed().toList();
         Set<Long> filtered = Set.copyOf(values);
 
         List<FieldElement> elements = values.stream().map(field::fromLong).toList();
