@@ -53,7 +53,7 @@ public class SignVerifyBenchmark {
 
     @Setup
     public void setup() {
-        final SeededRandom random = new SeededRandom();
+        final SeededRandom random = new SeededRandom(randomSeed);
         keyPair = BlsKeyPair.generate(SignatureSchema.create(Curve.ALT_BN128, groupAssignment), random);
         message = random.randomBytes(messageSize);
         signature = keyPair.privateKey().sign(message);
