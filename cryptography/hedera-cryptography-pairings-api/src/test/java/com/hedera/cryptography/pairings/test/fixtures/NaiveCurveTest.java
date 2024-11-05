@@ -19,9 +19,9 @@ package com.hedera.cryptography.pairings.test.fixtures;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.cryptography.pairings.api.*;
-import com.hedera.cryptography.parings.test.fixtures.NaiveCurve;
-import com.hedera.cryptography.parings.test.fixtures.NaiveGroup;
-import com.hedera.cryptography.parings.test.fixtures.NaiveGroupElement;
+import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve;
+import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveGroup;
+import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveGroupElement;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;

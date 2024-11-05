@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.parings.test.fixtures;
+package com.hedera.cryptography.pairings.test.fixtures.curve;
 
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Curve;

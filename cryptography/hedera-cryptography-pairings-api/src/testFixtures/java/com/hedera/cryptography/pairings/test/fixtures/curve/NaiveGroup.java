@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.parings.test.fixtures;
+package com.hedera.cryptography.pairings.test.fixtures.curve;
 
-import static com.hedera.cryptography.parings.test.fixtures.NaiveCurve.EXAMPLE_SIZE;
+import static com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve.EXAMPLE_SIZE;
 
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
