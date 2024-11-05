@@ -66,8 +66,8 @@ public record NizkProof(
     /**
      * Generates a NizkProof proof.
      *
-     * @param signatureSchema the signature schema
-     * @param random          an RNG
+     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param random a source of randomness
      * @param statement       the public part of the proof
      * @param witness         the private part of the proof
      * @return a {@link NizkProof} proof.
@@ -100,13 +100,18 @@ public record NizkProof(
         // compute A = g^alpha
         final GroupElement a = generator.multiply(alpha);
 
+        final List<FieldElement> xPowerId =
+                statement.tssShareIds().stream().map(x::power).toList();
+        // the list of shares is stored in a way where index 0 belongs to shareId=1,
+        // so to retrieve x^1 we need to access shareId-1 index.
+        final Function<Integer, FieldElement> xPowerShareIndex = shareId -> xPowerId.get(shareId - 1);
+
         // compute Y = Π_{i=1}^{n} (y_i)^x^i
         GroupElement yAggregator = publicKeyGroup.zero();
-        for (int i = 0; i < statement.tssShareIds().size(); i++) {
-            final Integer xi = statement.tssShareIds().get(i);
+        for (int shareId : statement.tssShareIds()) {
             final GroupElement yi =
-                    statement.tssEncryptionKeys().resolveKeyForShare(xi).element();
-            yAggregator = yAggregator.add(yi.multiply(x.power(i + 1)));
+                    statement.tssEncryptionKeys().resolveKeyForShare(shareId).element();
+            yAggregator = yAggregator.add(yi.multiply(xPowerShareIndex.apply(shareId)));
         }
         final GroupElement y = yAggregator.multiply(rho).add(a);
 
@@ -117,10 +122,12 @@ public record NizkProof(
         // compute z_r = x' * r + rho
         final FieldElement z_r = xPrime.multiply(witness.randomness()).add(rho);
 
+        final Function<Integer, FieldElement> secretPerShareIndex =
+                shareId -> witness.secrets().get(shareId - 1);
         FieldElement sigma = field.fromLong(0L);
-        for (int i = 0; i < statement.tssShareIds().size(); i++) {
-            final FieldElement si = witness.secrets().get(i);
-            sigma = sigma.add(si.multiply(x.power(i + 1)));
+        for (int shareId : statement.tssShareIds()) {
+            final FieldElement si = secretPerShareIndex.apply(shareId);
+            sigma = sigma.add(si.multiply(xPowerShareIndex.apply(shareId)));
         }
         // compute z_a = x' * Sigma_{i=1}^{n} (s_i)*x^i + alpha
         final FieldElement z_a = xPrime.multiply(sigma).add(alpha);
@@ -130,7 +137,7 @@ public record NizkProof(
     /**
      * Verifies this proof against another statement
      *
-     * @param signatureSchema the signature statement
+     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
      * @param statement       the public information to verify this proof
      * @return true if the statement matches the information used to generate this proof. False otherwise
      */
@@ -161,9 +168,9 @@ public record NizkProof(
                 statement.tssShareIds().stream().map(x::power).toList();
         // the list of shares is stored in a way where index 0 belongs to shareId=1,
         // so to retrieve x^1 we need to access shareId-1 index.
-        final Function<Integer, FieldElement> shareToFieldElement = shareId -> xPowerId.get(shareId - 1);
+        final Function<Integer, FieldElement> xPowerShareIndex = shareId -> xPowerId.get(shareId - 1);
         final List<Entry<FieldElement, FieldElement>> idxPowerId = statement.tssShareIds().stream()
-                .map(id -> Map.entry(field.fromLong(id), shareToFieldElement.apply(id)))
+                .map(id -> Map.entry(field.fromLong(id), xPowerShareIndex.apply(id)))
                 .toList();
         final List<GroupElement> results = new ArrayList<>();
         final List<GroupElement> polyCoefficients =
@@ -191,7 +198,7 @@ public record NizkProof(
         inner = publicKeyGroup.zero();
         for (int shareId : statement.tssShareIds()) {
             final GroupElement ci = shareToGroupElement.apply(shareId);
-            inner = inner.add(ci.multiply(shareToFieldElement.apply(shareId)));
+            inner = inner.add(ci.multiply(xPowerShareIndex.apply(shareId)));
         }
 
         lhs = inner.multiply(xPrime).add(this.y);
@@ -200,7 +207,7 @@ public record NizkProof(
         for (int shareId : statement.tssShareIds()) {
             GroupElement yi =
                     statement.tssEncryptionKeys().resolveKeyForShare(shareId).element();
-            inner = inner.add(yi.multiply(this.zR.multiply(shareToFieldElement.apply(shareId))));
+            inner = inner.add(yi.multiply(this.zR.multiply(xPowerShareIndex.apply(shareId))));
         }
 
         rhs = inner.add(publicKeyGroup.generator().multiply(this.zA));
