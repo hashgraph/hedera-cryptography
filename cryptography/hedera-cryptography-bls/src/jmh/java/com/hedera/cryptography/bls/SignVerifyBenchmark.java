@@ -17,8 +17,7 @@
 package com.hedera.cryptography.bls;
 
 import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.utils.test.fixtures.rng.RandomUtils;
-import java.util.Random;
+import com.hedera.cryptography.utils.test.fixtures.rng.SeededRandom;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -54,9 +53,9 @@ public class SignVerifyBenchmark {
 
     @Setup
     public void setup() {
-        final Random random = RandomUtils.create();
+        final SeededRandom random = new SeededRandom();
         keyPair = BlsKeyPair.generate(SignatureSchema.create(Curve.ALT_BN128, groupAssignment), random);
-        message = RandomUtils.randomBytes(random, messageSize);
+        message = random.randomBytes(messageSize);
         signature = keyPair.privateKey().sign(message);
     }
     /*

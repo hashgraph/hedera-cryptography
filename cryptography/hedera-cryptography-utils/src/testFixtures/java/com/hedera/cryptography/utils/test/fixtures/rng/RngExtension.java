@@ -27,11 +27,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
+import org.junit.jupiter.api.extension.TestWatcher;
 
 /**
  * A JUnit 5 extension that can be used to inject a {@link Random} instance into a test method or test class. Tests that
@@ -44,7 +46,33 @@ import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
  *     <li>The {@link Random} instance can be injected into a test method by adding a parameter of type {@link Random}.</li>
  * </ul>
  */
-public class RngExtension implements InvocationInterceptor, ParameterResolver {
+public class RngExtension implements InvocationInterceptor, ParameterResolver, TestWatcher {
+
+    /**
+     * The namespace of the extension.
+     */
+    private static final Namespace EXTENSION_NAMESPACE = Namespace.create(RngExtension.class);
+
+    /**
+     * The key to store the seed in the extension context.
+     */
+    private static final String SEED_KEY = "seed";
+
+    /**
+     * Creates a new {@link Random} instance with a random seed which gets stored in the extension context.
+     *
+     * @param extensionContext the extension context of the test
+     *
+     * @return a new {@link Random} instance
+     */
+    private Random createRandomWithSeed(final ExtensionContext extensionContext) {
+        final long seed = new Random().nextLong();
+        final Random random = new Random(seed);
+
+        extensionContext.getStore(EXTENSION_NAMESPACE).put(SEED_KEY, seed);
+
+        return random;
+    }
 
     /**
      * Intercepts a test method invocation and injects a {@link Random} instance into the test instance. The {@link Random}
@@ -75,7 +103,7 @@ public class RngExtension implements InvocationInterceptor, ParameterResolver {
                 .forEach(field -> {
                     try {
                         field.setAccessible(true);
-                        field.set(extensionContext.getRequiredTestInstance(), RandomUtils.create());
+                        field.set(extensionContext.getRequiredTestInstance(), createRandomWithSeed(extensionContext));
                     } catch (Exception ex) {
                         throw new RuntimeException("Error in injection", ex);
                     }
@@ -110,7 +138,7 @@ public class RngExtension implements InvocationInterceptor, ParameterResolver {
      * Resolves the parameter of a test method, providing a {@link Random} instance when needed.
      *
      * @param parameterContext the context of the parameter to be resolved
-     * @param ignored the extension context of the test (ignored)
+     * @param extensionContext the extension context of the test
      *
      * @return the resolved parameter value
      *
@@ -118,15 +146,52 @@ public class RngExtension implements InvocationInterceptor, ParameterResolver {
      */
     @Override
     public Object resolveParameter(
-            @NonNull final ParameterContext parameterContext, @Nullable final ExtensionContext ignored)
+            @NonNull final ParameterContext parameterContext, @NonNull final ExtensionContext extensionContext)
             throws ParameterResolutionException {
         Objects.requireNonNull(parameterContext, "parameterContext must not be null");
+        Objects.requireNonNull(extensionContext, "extensionContext must not be null");
 
         return Optional.of(parameterContext)
                 .map(ParameterContext::getParameter)
                 .map(Parameter::getType)
                 .filter(t -> t.equals(Random.class))
-                .map(t -> RandomUtils.create())
+                .map(t -> createRandomWithSeed(extensionContext))
                 .orElseThrow(() -> new ParameterResolutionException("Could not resolve parameter"));
+    }
+
+    /**
+     * Invoked after a test has been executed and failed.
+     *
+     * @param extensionContext the current extension context; never {@code null}
+     * @param cause the throwable that caused test failure; may be {@code null}
+     */
+    @Override
+    public void testFailed(@NonNull final ExtensionContext extensionContext, @Nullable final Throwable cause) {
+        Objects.requireNonNull(extensionContext, "extensionContext must not be null");
+        final Long seed = extensionContext.getStore(EXTENSION_NAMESPACE).get(SEED_KEY, Long.class);
+        if (seed != null) {
+            System.out.println("Test " + extensionContext.getDisplayName() + " failed with seed: " + seed);
+        }
+        clear(extensionContext);
+    }
+
+    /**
+     * Invoked after a test has been executed and succeeded.
+     *
+     * @param extensionContext the current extension context; never {@code null}
+     */
+    @Override
+    public void testSuccessful(@NonNull final ExtensionContext extensionContext) {
+        Objects.requireNonNull(extensionContext, "extensionContext must not be null");
+        clear(extensionContext);
+    }
+
+    /**
+     * Removes the seed from the extension context.
+     *
+     * @param extensionContext the current extension context; never {@code null}
+     */
+    private static void clear(@NonNull final ExtensionContext extensionContext) {
+        extensionContext.getStore(EXTENSION_NAMESPACE).remove(SEED_KEY);
     }
 }
