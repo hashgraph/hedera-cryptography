@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.tss.extensions;
+package com.hedera.cryptography.pairings.test.extensions;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,48 +22,51 @@ import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
+import com.hedera.cryptography.pairings.extensions.FiniteFieldPolynomial;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 // FUTURE work:Given that the polynomial is defined for a finite field, it is not possible to easily test it.
 // By using an alternative finite field implementation, we can calculate a reference polynomial with the second library
 // and contrast the result of the two of them as a testing mechanism.
 // possibly investigate: https://github.com/PoslavskySV/rings
 @WithRng
-class PolynomialTest {
+class FiniteFieldPolynomialTest {
 
     @Test
     void testNegativeOrZeroDegreeThrowsException() {
+        var field = PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
+                .pairingFriendlyCurve()
+                .field();
         assertThrows(
-                IllegalArgumentException.class,
-                () -> Polynomial.fromValue(Mockito.mock(Random.class), Mockito.mock(FieldElement.class), -1));
+                IllegalArgumentException.class, () -> FiniteFieldPolynomial.fromValue(ROOT_RNG, field.fromLong(0), -1));
         assertThrows(
-                IllegalArgumentException.class,
-                () -> Polynomial.fromValue(Mockito.mock(Random.class), Mockito.mock(FieldElement.class), 0));
+                IllegalArgumentException.class, () -> FiniteFieldPolynomial.fromValue(ROOT_RNG, field.fromLong(0), 0));
     }
 
     @SuppressWarnings("DataFlowIssue")
     @Test
     void testNullRandomOrSecretThrowsException() {
-        assertThrows(
-                NullPointerException.class, () -> Polynomial.fromValue(null, Mockito.mock(FieldElement.class), 10));
-        assertThrows(NullPointerException.class, () -> Polynomial.fromValue(Mockito.mock(Random.class), null, 10));
+        var field = PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
+                .pairingFriendlyCurve()
+                .field();
+        assertThrows(NullPointerException.class, () -> FiniteFieldPolynomial.fromValue(null, field.fromLong(0), 10));
+        assertThrows(NullPointerException.class, () -> FiniteFieldPolynomial.fromValue(ROOT_RNG, null, 10));
     }
 
     @Test
     void testEmptyCoefficientsThrowsException() {
-        assertThrows(IllegalArgumentException.class, () -> new Polynomial(List.of()));
+        assertThrows(IllegalArgumentException.class, () -> new FiniteFieldPolynomial(List.of()));
     }
 
     @Test
     void testEvaluationReturnsNonNull(final Random rng) {
         var curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve();
         final Field field = curve.field();
-        var poly = Polynomial.fromValue(rng, field.random(rng), 10);
+        var poly = FiniteFieldPolynomial.fromValue(rng, field.random(rng), 10);
 
         var values = IntStream.range(0, 100).boxed().toList();
 
@@ -78,7 +81,8 @@ class PolynomialTest {
         var curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve();
         final Field field = curve.field();
         final FieldElement freeCoeff = field.fromLong(1);
-        var poly = new Polynomial(List.of(freeCoeff, field.fromLong(1), field.fromLong(1), field.fromLong(1)));
+        var poly =
+                new FiniteFieldPolynomial(List.of(freeCoeff, field.fromLong(1), field.fromLong(1), field.fromLong(1)));
         assertEquals(freeCoeff, poly.evaluate(0));
         assertEquals(field.fromLong(1).multiply(field.fromLong(poly.degree() + 1)), poly.evaluate(1));
     }

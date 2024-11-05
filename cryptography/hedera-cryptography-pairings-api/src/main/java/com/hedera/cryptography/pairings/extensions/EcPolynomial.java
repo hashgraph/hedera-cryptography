@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.tss.extensions;
+package com.hedera.cryptography.pairings.extensions;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
@@ -25,39 +25,42 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * A Feldman polynomial commitment.
+ * A polynomial where the coefficients are points on the elliptic curve group.
  *
- * @param commitmentCoefficients the commitment coefficients. Each privateKey in this list consists of the group generator,
- *                               raised to the power of a coefficient of the polynomial being committed to.
+ * @param coefficients the polynomial coefficients.
  */
-public record FeldmanCommitment(@NonNull List<GroupElement> commitmentCoefficients) {
+public record EcPolynomial(@NonNull List<GroupElement> coefficients) {
     /**
      * Constructor.
      *
-     * @param commitmentCoefficients The commitment coefficients.
+     * @param coefficients The commitment coefficients.
      */
-    public FeldmanCommitment {
-        if (commitmentCoefficients.isEmpty()) {
-            throw new IllegalArgumentException("Coefficient commitments must not be empty");
+    public EcPolynomial {
+        if (Objects.requireNonNull(coefficients).isEmpty()) {
+            throw new IllegalArgumentException("coefficients must not be empty");
         }
     }
 
     /**
-     * Creates a Feldman commitment.
+     * Creates a FeldmanCommitment which is a {@link EcPolynomial} where every
+     * coefficient consists of the group generator, raised to the power of a coefficient of the {@link FiniteFieldPolynomial} being committed to.
      *
      * @param group      the group that elements of the commitment are in
-     * @param polynomial the polynomial to commit to
-     * @return the Feldman commitment
+     * @param finiteFieldPolynomial the polynomial to commit to
+     * @return the FeldmanCommitment
      */
-    public static FeldmanCommitment create(@NonNull final Group group, @NonNull final Polynomial polynomial) {
-        final GroupElement generator = group.generator();
+    @NonNull
+    public static EcPolynomial create(
+            @NonNull final Group group, @NonNull final FiniteFieldPolynomial finiteFieldPolynomial) {
+        final GroupElement generator = Objects.requireNonNull(group).generator();
 
         final List<GroupElement> commitmentCoefficients = new ArrayList<>();
-        for (final FieldElement polynomialCoefficient : polynomial.coefficients()) {
+        for (final FieldElement polynomialCoefficient :
+                Objects.requireNonNull(finiteFieldPolynomial).coefficients()) {
             commitmentCoefficients.add(generator.multiply(polynomialCoefficient));
         }
 
-        return new FeldmanCommitment(commitmentCoefficients);
+        return new EcPolynomial(commitmentCoefficients);
     }
 
     /**
@@ -70,12 +73,11 @@ public record FeldmanCommitment(@NonNull List<GroupElement> commitmentCoefficien
     public GroupElement evaluate(@NonNull final FieldElement x) {
 
         Objects.requireNonNull(x, "x must not be null");
-        GroupElement result = commitmentCoefficients.getFirst();
-        for (int i = 1; i < commitmentCoefficients.size(); i++) {
-            final FieldElement exponentialShareId = x.power(i);
-            result = result.add(commitmentCoefficients.get(i).multiply(exponentialShareId));
+        int n = coefficients.size() - 1;
+        GroupElement result = coefficients.get(n);
+        for (int i = n - 1; i >= 0; i--) {
+            result = result.multiply(x).add(coefficients.get(i));
         }
-
         return result;
     }
 }

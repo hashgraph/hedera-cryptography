@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.tss.extensions;
+package com.hedera.cryptography.pairings.extensions;
 
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
@@ -25,12 +25,14 @@ import java.util.Objects;
 import java.util.Random;
 
 /**
- * A polynomial, represented as a list of coefficients where each {@code coefficients[i]} corresponds to the coefficient for {@code x^i}.
+ * A polynomial, represented as a list of coefficients over the field (such as 𝐹𝑝 or 𝑍𝑞, where 𝑝 or 𝑞 are prime)
+ *  where each {@code coefficients[i]} is an element of that field, and corresponds to the coefficient for {@code x^i}.
+ *
  * @implNote it is responsibility of the user that the {@link FieldElement} instances are compatible with each-other.
  *  Otherwise, it might fail on the {@link #evaluate(long)} method depending on the implementation of {@link FieldElement}
  * @param coefficients the coefficients of the polynomial.
  */
-public record Polynomial(@NonNull List<FieldElement> coefficients) {
+public record FiniteFieldPolynomial(@NonNull List<FieldElement> coefficients) {
 
     /**
      * Creates a polynomial that is represented as a list of {@link FieldElement} coefficients,
@@ -39,7 +41,7 @@ public record Polynomial(@NonNull List<FieldElement> coefficients) {
      * @throws NullPointerException if {@code coefficients} parameter is null
      * @throws IllegalArgumentException if {@code coefficients} parameter is empty
      */
-    public Polynomial {
+    public FiniteFieldPolynomial {
         if (Objects.requireNonNull(coefficients).isEmpty())
             throw new IllegalArgumentException("coefficients cannot be empty");
     }
@@ -66,7 +68,7 @@ public record Polynomial(@NonNull List<FieldElement> coefficients) {
      * @throws IllegalArgumentException if the degree is not a positive number
      */
     @NonNull
-    public static Polynomial fromValue(
+    public static FiniteFieldPolynomial fromValue(
             @NonNull final Random random, @NonNull final FieldElement fixedValue, final int degree) {
 
         Objects.requireNonNull(random, "random must not be null");
@@ -84,7 +86,7 @@ public record Polynomial(@NonNull List<FieldElement> coefficients) {
             coefficients.add(field.random(random));
         }
 
-        return new Polynomial(coefficients);
+        return new FiniteFieldPolynomial(coefficients);
     }
 
     /**
@@ -95,13 +97,13 @@ public record Polynomial(@NonNull List<FieldElement> coefficients) {
      */
     @NonNull
     public FieldElement evaluate(final long value) {
+        int n = coefficients.size() - 1;
         final Field field = coefficients.getFirst().field();
-        final FieldElement fieldElement = field.fromLong(value);
-        FieldElement result = field.fromLong(0L);
-        for (int i = 0; i < coefficients.size(); i++) {
-            result = result.add(coefficients.get(i).multiply(fieldElement.power(i)));
+        final FieldElement x = field.fromLong(value);
+        FieldElement result = coefficients.get(n);
+        for (int i = n - 1; i >= 0; i--) {
+            result = result.multiply(x).add(coefficients.get(i));
         }
-
         return result;
     }
 }

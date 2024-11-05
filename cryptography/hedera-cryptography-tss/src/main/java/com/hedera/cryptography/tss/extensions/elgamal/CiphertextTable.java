@@ -18,8 +18,9 @@ package com.hedera.cryptography.tss.extensions.elgamal;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.pairings.extensions.EcPolynomial;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -38,24 +39,12 @@ public record CiphertextTable(@NonNull List<GroupElement> sharedRandomness, @Non
      */
     @NonNull
     public CombinedCiphertext combine(@NonNull final FieldElement base) {
-        final List<GroupElement> toCombineRandomness = new ArrayList<>();
+        final GroupElement randomness = new EcPolynomial(sharedRandomness()).evaluate(base);
 
-        for (int i = 0; i < this.sharedRandomness().size(); i++) {
-            toCombineRandomness.add(this.sharedRandomness().get(i).multiply(base.power(i)));
-        }
-        final GroupElement randomness =
-                toCombineRandomness.getFirst().getGroup().batchAdd(toCombineRandomness);
-
-        final List<GroupElement> values = new ArrayList<>();
-        for (int i = 0; i < this.shareCiphertexts().length; i++) {
-            final List<GroupElement> iValue = this.shareCiphertexts()[i].cipherText();
-            final List<GroupElement> toCombineIthValue = new ArrayList<>();
-            for (int j = 0; j < iValue.size(); j++) {
-                final GroupElement ijValue = iValue.get(j);
-                toCombineIthValue.add(ijValue.multiply(base.power(j)));
-            }
-            values.add(toCombineIthValue.getFirst().getGroup().batchAdd(toCombineIthValue));
-        }
+        final List<GroupElement> values = Arrays.stream(this.shareCiphertexts())
+                .map(cipherText -> new EcPolynomial(cipherText.cipherText()))
+                .map(poly -> poly.evaluate(base))
+                .toList();
         return new CombinedCiphertext(randomness, values);
     }
 }

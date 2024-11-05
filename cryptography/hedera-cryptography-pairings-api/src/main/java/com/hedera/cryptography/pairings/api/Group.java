@@ -106,7 +106,7 @@ public interface Group {
      * @return a new group element which is the sum the collection of elements
      */
     @NonNull
-    GroupElement batchAdd(@NonNull Collection<GroupElement> elements);
+    GroupElement add(@NonNull Collection<GroupElement> elements);
 
     /**
      * Creates a group element from its serialized encoding

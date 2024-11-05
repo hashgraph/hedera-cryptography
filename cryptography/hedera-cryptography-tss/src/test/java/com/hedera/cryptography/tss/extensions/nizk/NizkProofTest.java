@@ -24,9 +24,9 @@ import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.tss.api.TssKeyTable;
-import com.hedera.cryptography.tss.extensions.FeldmanCommitment;
-import com.hedera.cryptography.tss.extensions.Polynomial;
+import com.hedera.cryptography.pairings.extensions.EcPolynomial;
+import com.hedera.cryptography.pairings.extensions.FiniteFieldPolynomial;
+import com.hedera.cryptography.tss.api.TssShareTable;
 import com.hedera.cryptography.tss.extensions.elgamal.ElGamalUtils;
 import java.security.SecureRandom;
 import java.util.Random;
@@ -53,18 +53,18 @@ public class NizkProofTest {
                 ids.stream().map(i -> BlsPrivateKey.create(schema, random)).toList();
         final var publicKeys =
                 privateKeys.stream().map(BlsPrivateKey::createPublicKey).toList();
-        final TssKeyTable<BlsPublicKey> elGamalEncryptionKeys = share -> publicKeys.get(share - 1);
+        final TssShareTable<BlsPublicKey> elGamalEncryptionKeys = share -> publicKeys.get(share - 1);
 
         // A d degree polynomial is defined by d + 1 coefficients: a_0, a_1, ..., a_d
         // such that p(x) = a_0 + a_1 * x + a_2 * x^2 + ... + a_d * x^d
         // here we want d = threshold - 1, so threshold of points can identify this polynomial
-        final var polynomial = Polynomial.fromValue(random, secret, threshold - 1);
+        final var polynomial = FiniteFieldPolynomial.fromValue(random, secret, threshold - 1);
         final var secrets = ids.stream().map(polynomial::evaluate).toList();
 
         final var entropy = ElGamalUtils.generateEntropy(random, field.elementSize(), schema);
         final var cipherTable = ElGamalUtils.ciphertextTable(schema, entropy, elGamalEncryptionKeys, secrets);
         final var combinedCipher = cipherTable.combine(field.fromLong(ElGamalUtils.TOTAL_NUMBER_OF_ELEMENTS));
-        final var polyCommitment = FeldmanCommitment.create(group, polynomial);
+        final var polyCommitment = EcPolynomial.create(group, polynomial);
         final var statement = new NizkStatement(ids, elGamalEncryptionKeys, polyCommitment, combinedCipher);
         final var witness = NizkWitness.create(entropy, secrets);
         final var proof = NizkProof.prove(schema, random, statement, witness);
@@ -77,15 +77,15 @@ public class NizkProofTest {
                 .boxed()
                 .map(i -> new BlsPublicKey(group.generator().multiply(field.fromLong(i)), schema))
                 .toList();
-        final TssKeyTable<BlsPublicKey> wrongTssEncryptionKeyResolver =
+        final TssShareTable<BlsPublicKey> wrongTssEncryptionKeyResolver =
                 tssShareId -> elGamalEncryptionWrongKeys.get(tssShareId - 1);
         assertFalse(proof.verify(
                 schema, new NizkStatement(ids, wrongTssEncryptionKeyResolver, polyCommitment, combinedCipher)));
         // Try wrong commitment
-        final var wrongCommitmentCoefficients = polyCommitment.commitmentCoefficients().stream()
+        final var wrongCommitmentCoefficients = polyCommitment.coefficients().stream()
                 .map(e -> e.add(group.generator()))
                 .toList();
-        final var wrongCommitment = new FeldmanCommitment(wrongCommitmentCoefficients);
+        final var wrongCommitment = new EcPolynomial(wrongCommitmentCoefficients);
         assertFalse(
                 proof.verify(schema, new NizkStatement(ids, elGamalEncryptionKeys, wrongCommitment, combinedCipher)));
         // Try wrong combinedCipher

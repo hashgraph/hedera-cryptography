@@ -92,7 +92,7 @@ public class Lagrange {
                 .boxed()
                 .map(i -> ys.get(i).multiply(coefficient(xs, i)))
                 .toList();
-        return group.batchAdd(weightedElements);
+        return group.add(weightedElements);
     }
 
     /**

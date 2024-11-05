@@ -16,21 +16,20 @@
 
 package com.hedera.cryptography.tss.api;
 
-import com.hedera.cryptography.bls.BlsPublicKey;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * Allows to obtain a {@link BlsPublicKey} given a shareId
- * T The type of the key
+ * Allows to obtain a {@code T} element given a shareId
+ * @param <T>  The type of the element being mapped to a shareId
  */
-public interface TssKeyTable<T> {
+public interface TssShareTable<T> {
     /**
-     * Obtains a {@link BlsPublicKey} given a shareId.
-     * Null if the shareId is not present or its owner cannot be found.
-     * @param tssShareId an integer representing the shareId starting in 1.
-     * @return the BlsPublicKey of the participant that owns the tssShareId.
+     * Allows to obtain a {@code T} element given a shareId
+     * Null if the shareId cannot be associated to an element.
+     * @param shareId an integer representing the shareId starting in 1. 0 is not a valid shareId
+     * @return the T associated to a shareId.
      * @throws IllegalArgumentException if the shareId less or equals to 0 or if it is higher than the total assigned shares
      */
     @NonNull
-    T resolveKeyForShare(int tssShareId);
+    T getForShareId(int shareId);
 }
