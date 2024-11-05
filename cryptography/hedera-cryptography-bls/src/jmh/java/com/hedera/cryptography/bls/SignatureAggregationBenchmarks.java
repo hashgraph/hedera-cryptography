@@ -47,11 +47,14 @@ public class SignatureAggregationBenchmarks {
     @Param({"SHORT_SIGNATURES", "SHORT_PUBLIC_KEYS"})
     public GroupAssignment groupAssignment;
 
+    @Param({"0", "10000000"})
+    public int randomSeed;
+
     private List<BlsSignature> signatures;
 
     @Setup
     public void setup() {
-        final SeededRandom random = new SeededRandom();
+        final SeededRandom random = new SeededRandom(randomSeed);
         final List<BlsKeyPair> keyPairs = BlsTestUtils.generateKeyPairs(
                 random, SignatureSchema.create(Curve.ALT_BN128, groupAssignment), numSignatures);
         signatures = BlsTestUtils.bulkSign(keyPairs, random.randomBytes(MESSAGE_SIZE));
