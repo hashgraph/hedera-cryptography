@@ -55,6 +55,11 @@ jobs:
         with:
           cache-read-only: false
 
+      - name: Setup Node
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 20.18.0
+
       - name: Install Semantic Release
         run: |
           npm install -g semantic-release@21.0.7 @semantic-release/git@10.0.1 @semantic-release/exec@6.0.3 gradle-semantic-release-plugin@1.7.6
@@ -74,7 +79,7 @@ jobs:
 
       - name: Import GPG key
         id: gpg_key
-        uses: crazy-max/ghaction-import-gpg@cb9bde2e2525e640591a934b1fd28eef1dcaf5e5 # v6.2.0
+        uses: step-security/ghaction-import-gpg@6c8fe4d0126a59d57c21f87c9ae5dd3451fa3cca # v.6.1.0
         with:
           gpg_private_key: ${{ secrets.GPG_KEY_CONTENTS }}
           passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
@@ -82,11 +87,6 @@ jobs:
           git_user_signingkey: true
           git_commit_gpgsign: true
           git_tag_gpgsign: false
-
-      - name: Setup Node
-        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
-        with:
-          node-version: 20.18.0
 
       - name: Calculate Next Version
         env:
@@ -117,7 +117,6 @@ jobs:
 
       - name: Publish Semantic Release
         env:
-          commit: ${{ needs.update-readme.outputs.commit-hash }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
           GIT_AUTHOR_NAME: ${{ secrets.GIT_USER_NAME }}
