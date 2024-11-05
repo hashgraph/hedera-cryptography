@@ -36,7 +36,7 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
      * Constructor.
      *
      * @param element the element
-     * @param signatureSchema the signature schema
+     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
      */
     public BlsPrivateKey {
         Objects.requireNonNull(element, "element must not be null");
@@ -46,8 +46,8 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
     /**
      * Creates a private key out of the CurveType and a random
      *
-     * @param signatureSchema   The implementing curve type
-     * @param random The environment secureRandom to use
+     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param random a source of randomness
      * @return a privateKey for that CurveType
      */
     @NonNull

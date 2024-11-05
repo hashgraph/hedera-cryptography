@@ -33,7 +33,7 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
     /**
      * Constructor
      * @param element the element
-     * @param signatureSchema the signatureSchema
+     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
      */
     public BlsPublicKey {
         Objects.requireNonNull(element, "element must not be null");

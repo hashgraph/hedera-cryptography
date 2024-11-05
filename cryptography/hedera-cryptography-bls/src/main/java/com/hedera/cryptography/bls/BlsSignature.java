@@ -36,7 +36,7 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
     /**
      * Constructor.
      * @param element the element
-     * @param signatureSchema a signature schema
+     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
      */
     public BlsSignature {
         Objects.requireNonNull(element, "element must not be null");

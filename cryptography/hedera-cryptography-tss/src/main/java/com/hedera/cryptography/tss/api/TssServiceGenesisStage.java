@@ -19,13 +19,16 @@ package com.hedera.cryptography.tss.api;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * Threshold Signature Scheme dependant operations
+ * Threshold Signature Scheme Genesis Stage is the setup stage where all participants in the scheme collaborate to discover a shared polynomial.
  * <p>
- * Contract of TSS genesis stage:
+ *  The contract of a :
  * <ul>
- *     <li>Generate TssMessages out of a random share</li>
- *     <li>Verify TssMessages out of a ParticipantDirectory</li>
+ *     <li>Generate {@link TssMessage} out of a random share</li>
+ *     <li>Verify {@link TssMessage} out of a {@link TssParticipantDirectory}</li>
+ *     <li>Obtain the list of {@link TssPrivateShare} out of a {@link TssParticipantDirectory}</li>
+ *     <li>Obtain the list of {@link TssPublicShare} out of a {@link TssParticipantDirectory}</li>
  * </ul>
+ * Produces a fresh ledgerId: as result of the aggregation af all obtained {@link TssPublicShare}
  */
 public interface TssServiceGenesisStage extends TssServiceStage {
 

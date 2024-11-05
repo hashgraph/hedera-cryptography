@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-plugins {
-    id("com.hedera.gradle.java-module")
-    id("com.hedera.gradle.hedera-cryptography-publish")
-    id("com.hedera.gradle.java-test-fixtures")
-}
+package com.hedera.cryptography.tss.test.fixtures;
 
-mainModuleInfo {
-    runtimeOnly("com.hedera.cryptography.altbn128")
-    // requires("org.assertj.core")
-}
+import com.hedera.cryptography.tss.api.TssMessage;
 
-testModuleInfo {
-    requires("org.junit.jupiter.api")
-    requires("com.hedera.cryptography.utils.test.fixtures")
-    requires("org.mockito")
-    requires("com.hedera.common.testfixtures")
-    requires("jakarta.inject")
-}
+/**
+ * An opaque representation of the message.
+ * @param bytes the bytes that represents this message
+ */
+public record OpaqueTssMessage(byte[] bytes) implements TssMessage {}

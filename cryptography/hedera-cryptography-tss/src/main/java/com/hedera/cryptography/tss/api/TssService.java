@@ -16,24 +16,31 @@
 
 package com.hedera.cryptography.tss.api;
 
-import com.hedera.cryptography.bls.SignatureSchema;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * A Threshold Signature Scheme Service.
  * <p>
  * Contract of TSS:
- * <ul>
- *     <li>Gets a genesis stage</li>
- *     <li>Gets a rekey stage</li>
- * </ul>
- * @implNote an instance of the service would require a source of randomness {@link java.util.Random}, and a{@link SignatureSchema}
+ *   <ul>
+ *       <li>Get a {@link TssServiceGenesisStage}</li>
+ *       <li>Get a {@link TssServiceRekeyStage}</li>
+ *   </ul>
  */
 public interface TssService {
 
     /**
      * Returns the genesis stage.
      * In this stage all participants collaborate to discover a shared polynomial.
-     *
+     * Threshold Signature Scheme dependant operations
+     * <p>
+     * Contract of {@link TssServiceGenesisStage} stage:
+     * <ul>
+     *     <li>Generate {@link TssMessage} out of a random share</li>
+     *     <li>Verify {@link TssMessage} out of a {@link TssParticipantDirectory}</li>
+     *     <li>Obtain the list of {@link TssPrivateShare} out of a {@link TssParticipantDirectory}</li>
+     *     <li>Obtain the list of {@link TssPublicShare} out of a {@link TssParticipantDirectory}</li>
+     * </ul>
      * @return the genesis stage.
      */
     TssServiceGenesisStage genesisStage();
@@ -45,4 +52,13 @@ public interface TssService {
      * @return the rekey stage.
      */
     TssServiceRekeyStage rekeyStage();
+
+    /**
+     * Creates a {@link TssMessage} of a byte array representation.
+     * @see TssMessage#bytes() for the specification that message needs to follow.
+     * @param message message the byte representation of the opaque underlying structure used by the library
+     * @return a TssMessage instance
+     */
+    @NonNull
+    TssMessage messageFromBytes(@NonNull byte[] message);
 }

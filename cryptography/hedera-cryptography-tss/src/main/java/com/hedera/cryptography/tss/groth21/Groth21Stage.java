@@ -1,0 +1,168 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.hedera.cryptography.tss.groth21;
+
+import com.hedera.cryptography.bls.BlsPublicKey;
+import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.pairings.extensions.EcPolynomial;
+import com.hedera.cryptography.pairings.extensions.FiniteFieldPolynomial;
+import com.hedera.cryptography.tss.api.TssMessage;
+import com.hedera.cryptography.tss.api.TssParticipantDirectory;
+import com.hedera.cryptography.tss.api.TssPrivateShare;
+import com.hedera.cryptography.tss.api.TssPublicShare;
+import com.hedera.cryptography.tss.api.TssServiceStage;
+import com.hedera.cryptography.tss.extensions.ShamirUtils;
+import com.hedera.cryptography.tss.extensions.elgamal.CiphertextTable;
+import com.hedera.cryptography.tss.extensions.elgamal.CombinedCiphertext;
+import com.hedera.cryptography.tss.extensions.elgamal.ElGamalUtils;
+import com.hedera.cryptography.tss.extensions.nizk.NizkProof;
+import com.hedera.cryptography.tss.extensions.nizk.NizkStatement;
+import com.hedera.cryptography.tss.extensions.nizk.NizkWitness;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
+
+/**
+ * A Groth21Stage
+ * @see TssServiceStage
+ */
+public abstract class Groth21Stage implements TssServiceStage {
+    /**
+     * defines which and how elliptic curve is used in the protocol
+     *
+     */
+    protected final SignatureSchema signatureSchema;
+    /**
+     * random a source of randomness
+     */
+    protected final Random random;
+
+    /**
+     * A Groth21Stage
+     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param random a source of randomness
+     */
+    protected Groth21Stage(@NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {
+        this.signatureSchema = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
+        this.random = Objects.requireNonNull(random, "random must not be null");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public TssMessage generateTssMessage(
+            @NonNull final TssParticipantDirectory tssTargetParticipantDirectory,
+            @NonNull final TssPrivateShare generatingShare) {
+
+        final List<Integer> receivingShareIds = tssTargetParticipantDirectory.getShareIds();
+        final FieldElement secret = generatingShare.privateKey().element();
+
+        // First, crate a polynomial of degree d = threshold -1 so that threshold number of points can recover this
+        // polynomial.
+        // The value in the free coefficient is the secret that we want to share.
+        final FiniteFieldPolynomial finiteFieldPolynomial =
+                ShamirUtils.interpolationPolynomial(random, secret, tssTargetParticipantDirectory.getThreshold() - 1);
+        // The secrets we will end up sharing are the result of evaluating the polynomial with x= receiving-share-id
+        final List<FieldElement> secrets =
+                receivingShareIds.stream().map(finiteFieldPolynomial::evaluate).toList();
+        // Generating some shared entropy for ElGamal encryption algorithm. The randomness is reused for efficiency.
+        final List<FieldElement> elGamalRandomness = ElGamalUtils.generateEntropy(
+                random, signatureSchema.getPairingFriendlyCurve().field().elementSize(), signatureSchema);
+        // This ciphertextTable contains the secrets encrypted for each receiver using the shared randomness and each
+        // receiver tssEncryptionKey.
+        final CiphertextTable ciphertextTable = ElGamalUtils.ciphertextTable(
+                signatureSchema, elGamalRandomness, tssTargetParticipantDirectory, secrets);
+
+        // Zk proof: Create a collapsed representation of the cipherTable that can be used for a zk proof.
+        final CombinedCiphertext elGamalCombinedCipherText = ciphertextTable.combine(
+                signatureSchema.getPairingFriendlyCurve().field().fromLong(ElGamalUtils.TOTAL_NUMBER_OF_ELEMENTS));
+        // Zk proof: Create a Feldman polynomial commitment. This allows to validate that the points belong to the
+        // polynomial without revealing the polynomial.
+        final EcPolynomial commitment =
+                ShamirUtils.feldmanCommitment(signatureSchema.getPublicKeyGroup(), finiteFieldPolynomial);
+        // Zk proof: Creating the public statement
+        final NizkStatement nizkStatement = new NizkStatement(
+                receivingShareIds, tssTargetParticipantDirectory, commitment, elGamalCombinedCipherText);
+        // Zk proof: Creating the private witness
+        final NizkWitness nizkWitness = NizkWitness.create(elGamalRandomness, secrets);
+        // Zk proof: Creating the private witness
+        final NizkProof proof = NizkProof.prove(signatureSchema, random, nizkStatement, nizkWitness);
+        return new Groth21Message(
+                TssMessage.MESSAGE_CURRENT_VERSION,
+                signatureSchema,
+                generatingShare.shareId(),
+                ciphertextTable,
+                commitment,
+                proof);
+    }
+
+    /**
+     * Allows verification of the message against the zk proof and the previous public shares if used.
+     * @param tssTargetParticipantDirectory the directory
+     * @param publicShares the previous public shares. optional parameter.
+     * @param tssMessage the message to verify
+     * @return if the message is valid.
+     */
+    public boolean verifyTssMessage(
+            @NonNull final TssParticipantDirectory tssTargetParticipantDirectory,
+            @Nullable final List<TssPublicShare> publicShares,
+            @NonNull final TssMessage tssMessage) {
+        final Groth21Message message = Groth21Message.fromTssMessage(tssMessage);
+
+        if (message.version() != TssMessage.MESSAGE_CURRENT_VERSION) {
+            return false;
+        }
+        if (message.signatureSchema().getCurve() != signatureSchema.getCurve()
+                || message.signatureSchema().getGroupAssignment() != signatureSchema.getGroupAssignment()) {
+            return false;
+        }
+
+        if (publicShares != null) {
+            final BlsPublicKey pk = publicShares.stream()
+                    .filter(ps -> ps.shareId().equals(message.generatingShare()))
+                    .findAny()
+                    .map(TssPublicShare::publicKey)
+                    .orElse(null);
+            if (pk == null) {
+                return false;
+            }
+            if (!pk.element()
+                    .equals(message.polynomialCommitment().coefficients().getFirst())) {
+                return false;
+            }
+        }
+
+        CombinedCiphertext combinedCipher = message.cipherTable()
+                .combine(signatureSchema
+                        .getPairingFriendlyCurve()
+                        .field()
+                        .fromLong(ElGamalUtils.TOTAL_NUMBER_OF_ELEMENTS));
+        // Zk proof: Creating the public statement
+        final NizkStatement nizkStatement = new NizkStatement(
+                tssTargetParticipantDirectory.getShareIds(),
+                tssTargetParticipantDirectory,
+                message.polynomialCommitment(),
+                combinedCipher);
+
+        return message.proof().verify(signatureSchema, nizkStatement);
+    }
+}

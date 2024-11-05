@@ -251,11 +251,11 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
         }
 
         /**
-         * Builds and returns a {@link TssParticipantDirectory} instance based on the provided entries and schema.
+         * Builds and returns a {@link TssParticipantDirectory} instance based on the provided entries and signatureSchema.
          *
          * @param schema the signatureSchema
          * @return the constructed ParticipantDirectory instance
-         * @throws NullPointerException if schema is null
+         * @throws NullPointerException if signatureSchema is null
          * @throws IllegalStateException if there is no entry for the current participant
          * @throws IllegalStateException if there are no configured participants
          * @throws IllegalStateException if the threshold value is higher than the total shares
