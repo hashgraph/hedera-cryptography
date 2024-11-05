@@ -24,6 +24,7 @@ import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.utils.ByteArrayUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
+import java.util.Objects;
 
 /**
  * The implementation of a {@link Field}
@@ -74,6 +75,9 @@ public class AltBn128Field implements Field {
     @NonNull
     @Override
     public FieldElement fromBigInteger(@NonNull final BigInteger bigInteger) {
+        if (Objects.requireNonNull(bigInteger, "bigInteger must not be null").signum() == -1) {
+            throw new IllegalArgumentException("bigInteger cannot be negative");
+        }
         return new AltBn128FieldElement(
                 facade.fromBytes(ByteArrayUtils.toLittleEndianBytes(bigInteger, facade.size())), this);
     }

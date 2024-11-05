@@ -58,7 +58,7 @@ public interface ElGamalSubstitutionTable<T, S> {
 
         final Map<Byte, FieldElement> elGamalSubstitutionTable = new HashMap<>();
         for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
-            elGamalSubstitutionTable.put((byte) i, field.fromLong(i));
+            elGamalSubstitutionTable.put((byte) i, field.fromLong(Byte.toUnsignedInt((byte) i)));
         }
         return new Direct(elGamalSubstitutionTable);
     }
@@ -82,7 +82,7 @@ public interface ElGamalSubstitutionTable<T, S> {
 
         final GroupElement generator = encryptionGroup.generator();
         for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
-            final GroupElement key = generator.multiply(field.fromLong(i));
+            final GroupElement key = generator.multiply(field.fromLong(Byte.toUnsignedInt((byte) i)));
             elGamalInverseSubstitutionTable.put(key, (byte) i);
         }
         return new Inverse(elGamalInverseSubstitutionTable);

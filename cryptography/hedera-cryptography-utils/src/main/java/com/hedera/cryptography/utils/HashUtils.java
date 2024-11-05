@@ -56,7 +56,7 @@ public final class HashUtils {
      * @return the computed hash
      */
     @NonNull
-    public static byte[] computeSha256(final @NonNull String algorithm, @NonNull final byte[]... messages) {
+    public static byte[] computeHash(final @NonNull String algorithm, @NonNull final byte[]... messages) {
         if (Objects.requireNonNull(messages, "messages must not be null").length == 0)
             throw new IllegalArgumentException("messages must not be empty");
         HashCalculator calculator = getHashCalculator(algorithm);

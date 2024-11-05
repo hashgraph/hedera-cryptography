@@ -37,8 +37,8 @@ public record FeldmanCommitment(@NonNull List<GroupElement> commitmentCoefficien
      * @param commitmentCoefficients The commitment coefficients.
      */
     public FeldmanCommitment {
-        if (commitmentCoefficients.size() < 2) {
-            throw new IllegalArgumentException("Coefficient commitments must have at least 2 elements");
+        if (commitmentCoefficients.isEmpty()) {
+            throw new IllegalArgumentException("Coefficient commitments must not be empty");
         }
     }
 
@@ -70,10 +70,10 @@ public record FeldmanCommitment(@NonNull List<GroupElement> commitmentCoefficien
     public GroupElement evaluate(@NonNull final FieldElement x) {
 
         Objects.requireNonNull(x, "x must not be null");
-        GroupElement result = commitmentCoefficients.getFirst().getGroup().zero();
-        for (int i = 0; i < commitmentCoefficients.size(); i++) {
-            final FieldElement exponentiatedShareId = x.power(i);
-            result = result.add(commitmentCoefficients.get(i).multiply(exponentiatedShareId));
+        GroupElement result = commitmentCoefficients.getFirst();
+        for (int i = 1; i < commitmentCoefficients.size(); i++) {
+            final FieldElement exponentialShareId = x.power(i);
+            result = result.add(commitmentCoefficients.get(i).multiply(exponentialShareId));
         }
 
         return result;

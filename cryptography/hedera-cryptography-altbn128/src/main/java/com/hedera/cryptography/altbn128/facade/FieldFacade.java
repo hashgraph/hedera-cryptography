@@ -51,11 +51,14 @@ public final class FieldFacade {
 
     /**
      * Creates a byte array representation of a fieldElement form a {@code long} parameter.
-     * @param inputLong the long parameter to create the representation from
+     * @param inputLong the long parameter to create the representation from. Must be positive or zero.
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the input
      * @throws AltBn128Exception in case of error
      */
     public byte[] fromLong(final long inputLong) {
+        if (inputLong < 0) {
+            throw new IllegalArgumentException("input long must not be negative");
+        }
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsFromLong(inputLong, output);
         if (result != SUCCESS) {

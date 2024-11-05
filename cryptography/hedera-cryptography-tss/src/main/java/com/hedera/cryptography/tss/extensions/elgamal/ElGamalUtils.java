@@ -194,17 +194,40 @@ public class ElGamalUtils {
     }
 
     /**
+     * Combines randomness field elements into a single field element.
+     *
+     * @param fieldRandomness the randomness field elements
+     * @return the combined randomness element
+     */
+    public static FieldElement combineFieldRandomness(@NonNull final List<FieldElement> fieldRandomness) {
+        if (Objects.requireNonNull(fieldRandomness, "fieldRandomness must not be null")
+                .isEmpty()) {
+            throw new IllegalArgumentException("fieldRandomness must not be empty");
+        }
+
+        final Field field = fieldRandomness.getFirst().field();
+
+        final FieldElement base = field.fromLong(TOTAL_NUMBER_OF_ELEMENTS);
+        FieldElement output = field.fromLong(0L);
+        for (int i = 0; i < fieldRandomness.size(); i++) {
+            output = output.add(fieldRandomness.get(i).multiply(base.power(i)));
+        }
+
+        return output;
+    }
+
+    /**
      * Creates a {@link CiphertextTable} from two coordinate lists of tssShareIds and secret value.
      *
      * @param signatureSchema the element schema
-     * @param random the rng instance to use
+     * @param randomness to use for ElGamal encryption.
      * @param tssEncryptionKeyResolver a resolver to retrieve each participant's owner's encryption key
      * @param secrets the unencrypted messages to encrypt
      * @return a {@link CiphertextTable}
      */
     public static CiphertextTable ciphertextTable(
             @NonNull final SignatureSchema signatureSchema,
-            @NonNull final Random random,
+            @NonNull final List<FieldElement> randomness,
             @NonNull final TssKeyTable<BlsPublicKey> tssEncryptionKeyResolver,
             @NonNull final List<FieldElement> secrets) {
 
@@ -214,8 +237,6 @@ public class ElGamalUtils {
         final ElGamalSubstitutionTable<FieldElement, Byte> elGamalSubstitutionTable =
                 ElGamalUtils.elGamalSubstitutionTable(signatureSchema);
         Objects.requireNonNull(tssEncryptionKeyResolver, "tssEncryptionKeyResolver must not be null");
-        final List<FieldElement> randomness = ElGamalUtils.generateEntropy(
-                random, signatureSchema.getPairingFriendlyCurve().field().elementSize(), signatureSchema);
 
         final List<GroupElement> chunkRandomness = new ArrayList<>();
         for (final FieldElement randomElement : randomness) {
