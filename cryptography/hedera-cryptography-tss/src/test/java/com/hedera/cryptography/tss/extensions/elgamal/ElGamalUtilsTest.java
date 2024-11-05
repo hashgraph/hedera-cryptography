@@ -27,6 +27,7 @@ import com.hedera.cryptography.tss.api.TssKeyTable;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -178,9 +179,9 @@ public class ElGamalUtilsTest {
         final TssKeyTable<BlsPublicKey> elGamalEncryptionKeys =
                 shareId -> pks.stream().toList().get(shareId - 1);
         final var secrets = Collections.nCopies(ids.size(), secret);
-
+        final List<FieldElement> randomness = ElGamalUtils.generateEntropy(random, field.elementSize(), schema);
         var inverse = ElGamalSubstitutionTable.inverse(schema);
-        var table = ElGamalUtils.ciphertextTable(schema, random, elGamalEncryptionKeys, secrets);
+        var table = ElGamalUtils.ciphertextTable(schema, randomness, elGamalEncryptionKeys, secrets);
 
         for (int i = 0; i < ids.size(); i++) {
             var ecVal = table.shareCiphertexts()[i];
