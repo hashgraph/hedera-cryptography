@@ -22,7 +22,7 @@ import java.util.List;
 
 /**
  * Represents a comprised element obtained from a {@link CiphertextTable}
- * @param sharedRandomness a compressed shared randomness value
- * @param values a compressed representation of all the elements in a {@link CiphertextTable}
+ * @param randomness a compressed shared randomness value
+ * @param values a combined representation of all the elements in a {@link CiphertextTable}
  */
-public record CombinedCiphertext(@NonNull GroupElement sharedRandomness, @NonNull List<GroupElement> values) {}
+public record CombinedCiphertext(@NonNull GroupElement randomness, @NonNull List<GroupElement> values) {}

@@ -1,5 +1,5 @@
-module com.hedera.cryptography.parings.test.fixtures {
-    requires transitive com.hedera.cryptography.pairings.api;
+module com.hedera.cryptography.pairings.test.fixtures {
+    requires static transitive com.hedera.cryptography.pairings.api;
     requires static transitive com.github.spotbugs.annotations;
 
     exports com.hedera.cryptography.parings.test.fixtures;
