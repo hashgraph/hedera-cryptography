@@ -23,6 +23,7 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
+import java.util.Objects;
 import java.util.Random;
 
 /**
@@ -38,8 +39,8 @@ public class NaiveField implements Field {
      *
      * @param curve the pairing-friendly curve associated with this field
      */
-    public NaiveField(final PairingFriendlyCurve curve) {
-        this.curve = curve;
+    public NaiveField(@NonNull final PairingFriendlyCurve curve) {
+        this.curve = Objects.requireNonNull(curve, "curve must not be null");
     }
 
     /**
@@ -48,6 +49,7 @@ public class NaiveField implements Field {
     @Override
     @NonNull
     public FieldElement random(@NonNull final Random random) {
+        Objects.requireNonNull(random, "random must not be null");
         return fromLong(random.nextLong());
     }
 

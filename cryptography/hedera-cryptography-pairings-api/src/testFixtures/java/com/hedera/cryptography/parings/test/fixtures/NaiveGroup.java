@@ -26,6 +26,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * A naive implementation of the Group interface for testing purposes.
@@ -39,8 +40,8 @@ public class NaiveGroup implements Group {
      *
      * @param curve the pairing-friendly curve associated with this group
      */
-    public NaiveGroup(final PairingFriendlyCurve curve) {
-        this.curve = curve;
+    public NaiveGroup(@NonNull final PairingFriendlyCurve curve) {
+        this.curve = Objects.requireNonNull(curve, "curve must not be null");
     }
 
     /**

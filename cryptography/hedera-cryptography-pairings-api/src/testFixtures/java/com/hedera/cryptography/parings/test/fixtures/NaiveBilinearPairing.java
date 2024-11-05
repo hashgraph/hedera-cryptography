@@ -19,6 +19,7 @@ package com.hedera.cryptography.parings.test.fixtures;
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Objects;
 
 /**
  * A naive implementation of the BilinearPairing interface for testing purposes.
@@ -35,7 +36,8 @@ public record NaiveBilinearPairing(@NonNull GroupElement first, @NonNull GroupEl
      * @return true if both the first and second group elements are equal to the corresponding elements in the other pairing, false otherwise
      */
     @Override
-    public boolean compare(BilinearPairing other) {
+    public boolean compare(@NonNull final BilinearPairing other) {
+        Objects.requireNonNull(other, "other must not be null");
         return first.equals(other.first()) && second.equals(other.second());
     }
 }

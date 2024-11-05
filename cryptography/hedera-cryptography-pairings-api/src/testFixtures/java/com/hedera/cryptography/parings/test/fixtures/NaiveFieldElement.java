@@ -20,6 +20,7 @@ import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
+import java.util.Objects;
 
 /**
  * A naive implementation of the FieldElement interface for testing purposes.
@@ -29,7 +30,7 @@ public class NaiveFieldElement implements FieldElement {
     /**
      * The prime modulus used for field operations.
      */
-    private static final int PRIME_MODULUS = 23;
+    public static final BigInteger PRIME_MODULUS = BigInteger.valueOf(23);
 
     private final Field field;
     private final BigInteger value;
@@ -41,9 +42,10 @@ public class NaiveFieldElement implements FieldElement {
      * @param field the field associated with this field element
      * @param value the value of this field element
      */
-    public NaiveFieldElement(final Field field, final BigInteger value) {
-        this.field = field;
-        this.value = value.mod(BigInteger.valueOf(PRIME_MODULUS));
+    public NaiveFieldElement(@NonNull final Field field, @NonNull final BigInteger value) {
+        Objects.requireNonNull(value, "value must not be null");
+        this.field = Objects.requireNonNull(field, "field must not be null");
+        this.value = value.mod(PRIME_MODULUS);
     }
 
     /**
@@ -116,7 +118,7 @@ public class NaiveFieldElement implements FieldElement {
     @Override
     @NonNull
     public FieldElement inverse() {
-        return new NaiveFieldElement(field, this.value.modInverse(BigInteger.valueOf(PRIME_MODULUS)));
+        return new NaiveFieldElement(field, this.value.modInverse(PRIME_MODULUS));
     }
 
     /**

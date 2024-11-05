@@ -23,6 +23,7 @@ import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Objects;
 
 /**
  * A naive implementation of the PairingFriendlyCurve interface for testing purposes.
@@ -80,6 +81,7 @@ public class NaiveCurve implements PairingFriendlyCurve {
     @Override
     @NonNull
     public Group getOtherGroup(@NonNull final Group group) {
+        Objects.requireNonNull(group, "group must not be null");
         return group == group1() ? group2() : group1();
     }
 
@@ -89,6 +91,8 @@ public class NaiveCurve implements PairingFriendlyCurve {
     @Override
     @NonNull
     public BilinearPairing pairingBetween(@NonNull final GroupElement element1, @NonNull final GroupElement element2) {
+        Objects.requireNonNull(element1, "element1 must not be null");
+        Objects.requireNonNull(element2, "element2 must not be null");
         return new NaiveBilinearPairing(element1, element2);
     }
 }

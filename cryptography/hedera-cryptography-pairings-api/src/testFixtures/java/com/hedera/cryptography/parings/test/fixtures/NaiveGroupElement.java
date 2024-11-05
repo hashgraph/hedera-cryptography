@@ -24,6 +24,7 @@ import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * A naive implementation of the GroupElement interface for testing purposes.
@@ -38,8 +39,9 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
      * @param value the value of this group element
      */
     public NaiveGroupElement(@NonNull final Group group, @NonNull final BigInteger value) {
-        this.group = group;
-        this.value = value.mod(BigInteger.valueOf(23)); // Modulus for the finite field
+        Objects.requireNonNull(value, "value must not be null");
+        this.group = Objects.requireNonNull(group, "group must not be null");
+        this.value = value.mod(NaiveFieldElement.PRIME_MODULUS);
     }
 
     /**
@@ -65,7 +67,8 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
     @Override
     @NonNull
     public GroupElement multiply(@NonNull final FieldElement other) {
-        final BigInteger newValue = value.multiply(other.toBigInteger()).mod(BigInteger.valueOf(23));
+        Objects.requireNonNull(other, "other must not be null");
+        final BigInteger newValue = value.multiply(other.toBigInteger()).mod(NaiveFieldElement.PRIME_MODULUS);
         return new NaiveGroupElement(group, newValue);
     }
 
@@ -75,8 +78,9 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
     @Override
     @NonNull
     public GroupElement add(@NonNull final GroupElement other) {
+        Objects.requireNonNull(other, "other must not be null");
         final BigInteger newValue =
-                value.add(((NaiveGroupElement) other).value()).mod(BigInteger.valueOf(23));
+                value.add(((NaiveGroupElement) other).value()).mod(NaiveFieldElement.PRIME_MODULUS);
         return new NaiveGroupElement(group, newValue);
     }
 
