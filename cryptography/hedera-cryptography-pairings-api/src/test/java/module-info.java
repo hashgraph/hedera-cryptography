@@ -4,7 +4,7 @@ import com.hedera.cryptography.pairings.test.spi.PairingMockFriendlyCurveProvide
 
 open module com.hedera.cryptography.pairings.test {
     requires com.hedera.cryptography.pairings.api;
-    requires com.hedera.cryptography.parings.test.fixtures;
+    requires com.hedera.cryptography.pairings.test.fixtures;
     requires org.junit.jupiter.api;
 
     uses PairingFriendlyCurveProvider;
