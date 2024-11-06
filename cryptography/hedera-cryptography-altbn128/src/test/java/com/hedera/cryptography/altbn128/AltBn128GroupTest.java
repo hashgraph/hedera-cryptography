@@ -119,7 +119,6 @@ class AltBn128GroupTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> group.batchMultiply(List.of(field.zero(), mock(FieldElement.class))));
-        assertThrows(
-                IllegalArgumentException.class, () -> group.batchAdd(List.of(group.zero(), mock(GroupElement.class))));
+        assertThrows(IllegalArgumentException.class, () -> group.add(List.of(group.zero(), mock(GroupElement.class))));
     }
 }

@@ -17,14 +17,13 @@
 package com.hedera.cryptography.tss.extensions;
 
 import com.hedera.cryptography.bls.BlsPublicKey;
-import com.hedera.cryptography.tss.api.TssKeyTable;
+import com.hedera.cryptography.tss.api.TssShareTable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * An TssEncryptionEncryption Table.
- * It maps a shareId to its participants {@link BlsPublicKey} for encryption.
+ * A {@link TssShareTable} that maps a shareId to its participants {@link BlsPublicKey} for encryption.
  */
-public class TssKeyTableImpl<T> implements TssKeyTable<T> {
+public class TssEncryptionKeyMap implements TssShareTable<BlsPublicKey> {
 
     /**
      * Stores the {@code participant} that is the owner of each shareId in the protocol.
@@ -37,7 +36,7 @@ public class TssKeyTableImpl<T> implements TssKeyTable<T> {
      * Stores the {@link BlsPublicKey} of each {@code participant} in the protocol.
      * There is one BlsPublicKey per participant
      */
-    private final T[] tssKeyTable;
+    private final BlsPublicKey[] tssKeyTable;
 
     /**
      * Constructor
@@ -45,7 +44,7 @@ public class TssKeyTableImpl<T> implements TssKeyTable<T> {
      * @param shareAllocationTable  Stores the {@code participant} that is the owner of each shareId in the protocol.
      * @param tssKeyTable Stores the {@link BlsPublicKey} of each {@code participant} in the protocol.
      */
-    public TssKeyTableImpl(final int[] shareAllocationTable, final T[] tssKeyTable) {
+    public TssEncryptionKeyMap(final int[] shareAllocationTable, final BlsPublicKey[] tssKeyTable) {
         this.shareAllocationTable = shareAllocationTable;
         this.tssKeyTable = tssKeyTable;
     }
@@ -58,7 +57,7 @@ public class TssKeyTableImpl<T> implements TssKeyTable<T> {
      */
     @NonNull
     @Override
-    public T resolveKeyForShare(final int shareId) {
+    public BlsPublicKey getForShareId(final int shareId) {
         if (shareId > shareAllocationTable.length || shareId <= 0) {
             throw new IllegalArgumentException("Invalid ShareId");
         }

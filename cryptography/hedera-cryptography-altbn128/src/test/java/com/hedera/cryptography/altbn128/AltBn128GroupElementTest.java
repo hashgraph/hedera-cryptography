@@ -58,7 +58,7 @@ class AltBn128GroupElementTest {
         var group = new AltBn128Group(gr);
         var field = new AltBn128Field();
         assertEquals(
-                group.batchAdd(List.of(group.generator(), group.generator(), group.generator(), group.generator())),
+                group.add(List.of(group.generator(), group.generator(), group.generator(), group.generator())),
                 group.generator().multiply(field.fromLong(4)));
     }
 
@@ -68,7 +68,7 @@ class AltBn128GroupElementTest {
         var group = new AltBn128Group(gr);
         var field = new AltBn128Field();
         assertEquals(
-                group.batchAdd(List.of(
+                group.add(List.of(
                         group.zero(),
                         group.generator(),
                         group.generator(),

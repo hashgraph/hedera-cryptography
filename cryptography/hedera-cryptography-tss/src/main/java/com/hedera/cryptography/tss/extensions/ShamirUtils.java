@@ -18,6 +18,10 @@ package com.hedera.cryptography.tss.extensions;
 
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.pairings.api.Group;
+import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.pairings.extensions.EcPolynomial;
+import com.hedera.cryptography.pairings.extensions.FiniteFieldPolynomial;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,33 +29,12 @@ import java.util.Objects;
 import java.util.Random;
 
 /**
- * A polynomial, represented as a list of coefficients where each {@code coefficients[i]} corresponds to the coefficient for {@code x^i}.
- * @implNote it is responsibility of the user that the {@link FieldElement} instances are compatible with each-other.
- *  Otherwise, it might fail on the {@link #evaluate(long)} method depending on the implementation of {@link FieldElement}
- * @param coefficients the coefficients of the polynomial.
+ * This class uses allows creating an interpolation polynomial as used in shamir-secret-sharing.
+ * And a commitment to that polynomial
  */
-public record Polynomial(@NonNull List<FieldElement> coefficients) {
+public class ShamirUtils {
 
-    /**
-     * Creates a polynomial that is represented as a list of {@link FieldElement} coefficients,
-     *  where {@code coefficients[i]} corresponds to the coefficient for {@code x^i}.
-     * @param coefficients the list of coefficients
-     * @throws NullPointerException if {@code coefficients} parameter is null
-     * @throws IllegalArgumentException if {@code coefficients} parameter is empty
-     */
-    public Polynomial {
-        if (Objects.requireNonNull(coefficients).isEmpty())
-            throw new IllegalArgumentException("coefficients cannot be empty");
-    }
-
-    /**
-     * Returns the degree of the polynomial.
-     *
-     * @return the degree of the polynomial.
-     */
-    public int degree() {
-        return coefficients.size() - 1;
-    }
+    private ShamirUtils() {}
 
     /**
      * Creates a random degree d polynomial with a fixed point at x = 0.
@@ -66,7 +49,7 @@ public record Polynomial(@NonNull List<FieldElement> coefficients) {
      * @throws IllegalArgumentException if the degree is not a positive number
      */
     @NonNull
-    public static Polynomial fromValue(
+    public static FiniteFieldPolynomial interpolationPolynomial(
             @NonNull final Random random, @NonNull final FieldElement fixedValue, final int degree) {
 
         Objects.requireNonNull(random, "random must not be null");
@@ -84,24 +67,27 @@ public record Polynomial(@NonNull List<FieldElement> coefficients) {
             coefficients.add(field.random(random));
         }
 
-        return new Polynomial(coefficients);
+        return new FiniteFieldPolynomial(coefficients);
     }
 
     /**
-     * Evaluate the polynomial at a given value.
+     * Creates a FeldmanCommitment which is a {@link EcPolynomial} where every
+     * coefficient consists of the group generator, raised to the power of a coefficient of the {@link FiniteFieldPolynomial} being committed to.
      *
-     * @param value the value at which to evaluate the polynomial
-     * @return the value of the polynomial at the given value
+     * @param group the group that elements of the commitment are in
+     * @param finiteFieldPolynomial the polynomial to commit to
+     * @return the FeldmanCommitment
      */
     @NonNull
-    public FieldElement evaluate(final long value) {
-        final Field field = coefficients.getFirst().field();
-        final FieldElement fieldElement = field.fromLong(value);
-        FieldElement result = field.fromLong(0L);
-        for (int i = 0; i < coefficients.size(); i++) {
-            result = result.add(coefficients.get(i).multiply(fieldElement.power(i)));
+    public static EcPolynomial feldmanCommitment(
+            @NonNull final Group group, @NonNull final FiniteFieldPolynomial finiteFieldPolynomial) {
+        final GroupElement generator = Objects.requireNonNull(group).generator();
+        Objects.requireNonNull(finiteFieldPolynomial, "finiteFieldPolynomial must not be null");
+        final List<GroupElement> commitmentCoefficients = new ArrayList<>();
+        for (final FieldElement polynomialCoefficient : finiteFieldPolynomial.coefficients()) {
+            commitmentCoefficients.add(generator.multiply(polynomialCoefficient));
         }
 
-        return result;
+        return new EcPolynomial(commitmentCoefficients);
     }
 }

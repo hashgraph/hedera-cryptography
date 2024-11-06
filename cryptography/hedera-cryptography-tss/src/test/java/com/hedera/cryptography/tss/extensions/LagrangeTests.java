@@ -16,7 +16,7 @@
 
 package com.hedera.cryptography.tss.extensions;
 
-import static com.hedera.cryptography.tss.extensions.LagrangeTests.Pair.p;
+import static com.hedera.cryptography.tss.extensions.LagrangeTests.Point.p;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -118,9 +118,9 @@ public class LagrangeTests {
         return inputs.stream().map(i -> group.generator().multiply(i)).toList();
     }
 
-    private Result inputs(final Field field, final Pair... points) {
-        var ys = Stream.of(points).map(Pair::y).map(field::fromLong).toList();
-        var xs = Stream.of(points).map(Pair::x).map(field::fromLong).toList();
+    private Result inputs(final Field field, final Point... points) {
+        var ys = Stream.of(points).map(Point::y).map(field::fromLong).toList();
+        var xs = Stream.of(points).map(Point::x).map(field::fromLong).toList();
         return new Result(xs, ys);
     }
 
@@ -130,9 +130,9 @@ public class LagrangeTests {
         return new Result(xs, ys);
     }
 
-    record Pair(int x, int y) {
-        static Pair p(final int x, final int y) {
-            return new Pair(x, y);
+    record Point(int x, int y) {
+        static Point p(final int x, final int y) {
+            return new Point(x, y);
         }
     }
 

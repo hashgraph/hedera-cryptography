@@ -47,21 +47,6 @@ public record TssPrivateShare(@NonNull Integer shareId, @NonNull BlsPrivateKey p
     }
 
     /**
-     * Creates a new instance.
-     *
-     * @param id id
-     * @param privateKey the private key
-     * @return a new {@link TssPrivateShare}
-     */
-    public static TssPrivateShare of(final int id, @NonNull final BlsPrivateKey privateKey) {
-        requireNonNull(privateKey, "privateKey must not be null");
-        if (id <= 0) {
-            throw new IllegalArgumentException("id must be greater than 0");
-        }
-        return new TssPrivateShare(id, privateKey);
-    }
-
-    /**
      * Sign a message using the private share's key.
      * @param message the message to sign
      * @return the {@link TssShareSignature}
