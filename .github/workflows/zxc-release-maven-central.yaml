@@ -17,7 +17,7 @@
 name: "ZXC: Release Maven Central"
 # The purpose of this reusable workflow is to release a new version to Maven Central.
 # This reusable component is called by the following workflows:
-# - .github/workflows/flow-release-maven-central.yaml
+# - .github/workflows/publish_release.yml
 
 on:
   workflow_call:
@@ -90,7 +90,7 @@ env:
 jobs:
   release:
     name: ${{ inputs.custom-job-label || 'Release' }}
-    runs-on: solo-linux-medium
+    runs-on: network-node-linux-medium
     outputs:
       notes: ${{ steps.create-release-notes.outputs.RELEASE_NOTES }}
     steps:
@@ -118,7 +118,7 @@ jobs:
 
       - name: Import GPG key
         id: gpg_key
-        uses: crazy-max/ghaction-import-gpg@cb9bde2e2525e640591a934b1fd28eef1dcaf5e5 # v6.2.0
+        uses: step-security/ghaction-import-gpg@6c8fe4d0126a59d57c21f87c9ae5dd3451fa3cca # v.6.1.0
         if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
         with:
           gpg_private_key: ${{ secrets.gpg-key-contents }}
@@ -172,8 +172,10 @@ jobs:
         uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
         if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
         env:
-          OSSRH_USERNAME: ${{ secrets.ossrh-user-name }}
-          OSSRH_PASSWORD: ${{ secrets.ossrh-user-password }}
+          NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.GPG_KEY_CONTENTS }}
+          SIGNING_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
         with:
           gradle-version: ${{ inputs.gradle-version }}
           # always run with --no-parallel to avoid sonatype maven publish issues which result in invalid publications
