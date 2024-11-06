@@ -49,33 +49,6 @@ public record TssPublicShare(@NonNull Integer shareId, @NonNull BlsPublicKey pub
     }
 
     /**
-     * Creates a new instance.
-     *
-     * @param id id
-     * @param publicKey the private key
-     * @return a new {@link TssPublicShare}
-     */
-    public static TssPublicShare of(final int id, @NonNull final BlsPublicKey publicKey) {
-        requireNonNull(publicKey, "publicKey must not be null");
-        if (id <= 0) {
-            throw new IllegalArgumentException("id must be greater than 0");
-        }
-        return new TssPublicShare(id, publicKey);
-    }
-
-    /**
-     * verifies a signature using.
-     *
-     * @param signature the signature to verify
-     * @param message the signed message
-     * @return if the signature is valid.
-     */
-    boolean verifySignature(@NonNull TssShareSignature signature, final @NonNull byte[] message) {
-        requireNonNull(signature, "signature must not be null");
-        return signature.signature().verify(this.publicKey(), message);
-    }
-
-    /**
      * Aggregate a threshold number of {@link TssPublicShare}s.
      * It is the responsibility of the caller to ensure that the list of public shares meets the required threshold.
      * If the threshold is not met, the public key returned by this method will be invalid.

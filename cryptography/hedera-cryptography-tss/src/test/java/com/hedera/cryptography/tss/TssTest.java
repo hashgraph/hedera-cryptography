@@ -164,7 +164,7 @@ class TssTest {
         var signatures = privateShares.stream().map(p -> p.sign(messageToSign)).toList();
 
         // After signing, it will collect all other participant signatures
-        final List<TssShareSignature> p1Signatures = List.of(TssShareSignature.of(
+        final List<TssShareSignature> p1Signatures = List.of(new TssShareSignature(
                 2,
                 new BlsPrivateKey(
                                 SIGNATURE_SCHEMA
@@ -173,7 +173,7 @@ class TssTest {
                                         .fromLong(2),
                                 SIGNATURE_SCHEMA)
                         .sign(messageToSign)));
-        final List<TssShareSignature> p2Signatures = List.of(TssShareSignature.of(
+        final List<TssShareSignature> p2Signatures = List.of(new TssShareSignature(
                 3,
                 new BlsPrivateKey(
                                 SIGNATURE_SCHEMA

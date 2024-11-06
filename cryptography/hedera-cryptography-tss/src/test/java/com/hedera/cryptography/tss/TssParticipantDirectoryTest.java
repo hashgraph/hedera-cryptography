@@ -160,11 +160,11 @@ class TssParticipantDirectoryTest {
         assertEquals(List.of(1, 2, 3, 4, 5, 6, 7), directory.getShareIds());
         var keys =
                 new BlsPublicKey[] {publicKey1, publicKey1, publicKey1, publicKey1, publicKey1, publicKey2, publicKey2};
-        IntStream.range(0, keys.length).forEach(k -> assertEquals(keys[k], directory.resolveKeyForShare(k + 1)));
+        IntStream.range(0, keys.length).forEach(k -> assertEquals(keys[k], directory.getForShareId(k + 1)));
     }
 
     @Test
-    void testResolveKeyForShare() {
+    void testGetForShareId() {
         final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
         final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
         final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
@@ -175,12 +175,12 @@ class TssParticipantDirectoryTest {
                 .withThreshold(1)
                 .build(signatureSchema);
 
-        assertEquals(publicKey1, directory.resolveKeyForShare(1));
-        assertEquals(publicKey1, directory.resolveKeyForShare(5));
-        assertEquals(publicKey2, directory.resolveKeyForShare(6));
-        assertEquals(publicKey2, directory.resolveKeyForShare(7));
-        assertThrows(IllegalArgumentException.class, () -> directory.resolveKeyForShare(8));
-        assertThrows(IllegalArgumentException.class, () -> directory.resolveKeyForShare(0));
-        assertThrows(IllegalArgumentException.class, () -> directory.resolveKeyForShare(-1));
+        assertEquals(publicKey1, directory.getForShareId(1));
+        assertEquals(publicKey1, directory.getForShareId(5));
+        assertEquals(publicKey2, directory.getForShareId(6));
+        assertEquals(publicKey2, directory.getForShareId(7));
+        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(8));
+        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(0));
+        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(-1));
     }
 }

@@ -331,7 +331,7 @@ public class PairingMockFriendlyCurveProvider extends PairingFriendlyCurveProvid
         /** {@inheritDoc} */
         @NonNull
         @Override
-        public GroupElement batchAdd(@NonNull final Collection<GroupElement> elements) {
+        public GroupElement add(@NonNull final Collection<GroupElement> elements) {
             return new TestGroupElement(this);
         }
 

@@ -104,7 +104,7 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
         final SignatureSchema schema = signatures.getFirst().signatureSchema();
         final List<GroupElement> elements =
                 signatures.stream().map(BlsSignature::element).toList();
-        final GroupElement aggregatedElement = schema.getSignatureGroup().batchAdd(elements);
+        final GroupElement aggregatedElement = schema.getSignatureGroup().add(elements);
         return new BlsSignature(aggregatedElement, schema);
     }
 

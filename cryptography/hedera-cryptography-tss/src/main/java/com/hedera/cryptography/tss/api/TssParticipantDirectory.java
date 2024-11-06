@@ -22,7 +22,7 @@ import static java.util.Objects.requireNonNull;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.SignatureSchema;
-import com.hedera.cryptography.tss.extensions.TssKeyTableImpl;
+import com.hedera.cryptography.tss.extensions.TssEncryptionKeyMap;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,7 +55,7 @@ import java.util.stream.IntStream;
  * }</pre>
  *
  */
-public final class TssParticipantDirectory implements TssKeyTable<BlsPublicKey> {
+public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey> {
     /**
      * Stores the ID of the {@code participant} owning this directory.
      */
@@ -85,7 +85,7 @@ public final class TssParticipantDirectory implements TssKeyTable<BlsPublicKey> 
     /**
      * Stores the {@link BlsPublicKey} of each {@code ShareId} in the protocol.
      */
-    private final TssKeyTable<BlsPublicKey> tssEncryptionTable;
+    private final TssShareTable<BlsPublicKey> tssEncryptionTable;
 
     /**
      * Constructs a {@link TssParticipantDirectory}.
@@ -101,7 +101,7 @@ public final class TssParticipantDirectory implements TssKeyTable<BlsPublicKey> 
             final int participantId,
             @NonNull final List<Integer> shareIds,
             @NonNull final List<Integer> ownedShareIds,
-            @NonNull final TssKeyTable<BlsPublicKey> tssEncryptionTable,
+            @NonNull final TssShareTable<BlsPublicKey> tssEncryptionTable,
             @NonNull final BlsPrivateKey tssDecryptionPrivateKey,
             final int threshold) {
         this.participantId = participantId;
@@ -171,8 +171,8 @@ public final class TssParticipantDirectory implements TssKeyTable<BlsPublicKey> 
      */
     @NonNull
     @Override
-    public BlsPublicKey resolveKeyForShare(final int shareId) {
-        return tssEncryptionTable.resolveKeyForShare(shareId);
+    public BlsPublicKey getForShareId(final int shareId) {
+        return tssEncryptionTable.getForShareId(shareId);
     }
 
     /**
@@ -315,7 +315,7 @@ public final class TssParticipantDirectory implements TssKeyTable<BlsPublicKey> 
                     selfEntry.participantId,
                     shareIds,
                     ownedShares,
-                    new TssKeyTableImpl<>(shareOwnershipTable, tssEncryptionPublicKeyTable),
+                    new TssEncryptionKeyMap(shareOwnershipTable, tssEncryptionPublicKeyTable),
                     selfEntry.tssEncryptionPrivateKey,
                     threshold);
         }
