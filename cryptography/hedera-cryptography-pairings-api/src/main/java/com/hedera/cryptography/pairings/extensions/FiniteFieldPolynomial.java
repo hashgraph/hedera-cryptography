@@ -19,18 +19,19 @@ package com.hedera.cryptography.pairings.extensions;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 
 /**
- * A polynomial, represented as a list of coefficients over the field (such as 𝐹𝑝 or 𝑍𝑞, where 𝑝 or 𝑞 are prime)
+ * A polynomial, represented as a list of coefficients over the field (𝐹𝑝 or 𝑍𝑞, where 𝑝 or 𝑞 are prime)
  *  where each {@code coefficients[i]} is an element of that field, and corresponds to the coefficient for {@code x^i}.
+ *<p>
+ * The degree of the polynomial is the size of the coefficients +1 such that: <br/>
+ *{@code p(x) = a_0 + a_1 * x + a_2 * x^2 + ... + a_d * x^d}
  *
  * @implNote it is responsibility of the user that the {@link FieldElement} instances are compatible with each-other.
- *  Otherwise, it might fail on the {@link #evaluate(long)} method depending on the implementation of {@link FieldElement}
- * @param coefficients the coefficients of the polynomial.
+ *  Otherwise, it might fail on the {@link #evaluate(long)} method depending on the implementation of {@link FieldElement} addition.
+ * @param coefficients {@code a_0, a_1, ..., a_d} the coefficients of the polynomial.
  */
 public record FiniteFieldPolynomial(@NonNull List<FieldElement> coefficients) {
 
@@ -53,40 +54,6 @@ public record FiniteFieldPolynomial(@NonNull List<FieldElement> coefficients) {
      */
     public int degree() {
         return coefficients.size() - 1;
-    }
-
-    /**
-     * Creates a random degree d polynomial with a fixed point at x = 0.
-     * The polynomial generated here has d+1 number of coefficients: {@code a_0, a_1, ..., a_d} such that: <br/>
-     * {@code p(x) = a_0 + a_1 * x + a_2 * x^2 + ... + a_d * x^d}
-     *
-     * @param random    a source of randomness
-     * @param fixedValue the fixedValue to embed in the polynomial
-     * @param degree    the degree of the polynomial.
-     * @return a random polynomial of the given degree, with the given fixedValue embedded at x = 0
-     * @throws NullPointerException if any of the parameters is null
-     * @throws IllegalArgumentException if the degree is not a positive number
-     */
-    @NonNull
-    public static FiniteFieldPolynomial fromValue(
-            @NonNull final Random random, @NonNull final FieldElement fixedValue, final int degree) {
-
-        Objects.requireNonNull(random, "random must not be null");
-        final Field field = Objects.requireNonNull(fixedValue, "fixedValue must not be null")
-                .field();
-        if (degree <= 0) {
-            throw new IllegalArgumentException("degree must be positive");
-        }
-        final List<FieldElement> coefficients = new ArrayList<>(degree + 1);
-
-        // the fixedValue is embedded at x = 0
-        coefficients.add(fixedValue);
-
-        for (int i = 0; i < degree; i++) {
-            coefficients.add(field.random(random));
-        }
-
-        return new FiniteFieldPolynomial(coefficients);
     }
 
     /**

@@ -21,9 +21,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import com.hedera.cryptography.pairings.extensions.FiniteFieldPolynomial;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
@@ -35,27 +37,8 @@ import org.junit.jupiter.api.Test;
 // possibly investigate: https://github.com/PoslavskySV/rings
 @WithRng
 class FiniteFieldPolynomialTest {
-
-    @Test
-    void testNegativeOrZeroDegreeThrowsException() {
-        var field = PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
-                .pairingFriendlyCurve()
-                .field();
-        assertThrows(
-                IllegalArgumentException.class, () -> FiniteFieldPolynomial.fromValue(ROOT_RNG, field.fromLong(0), -1));
-        assertThrows(
-                IllegalArgumentException.class, () -> FiniteFieldPolynomial.fromValue(ROOT_RNG, field.fromLong(0), 0));
-    }
-
-    @SuppressWarnings("DataFlowIssue")
-    @Test
-    void testNullRandomOrSecretThrowsException() {
-        var field = PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
-                .pairingFriendlyCurve()
-                .field();
-        assertThrows(NullPointerException.class, () -> FiniteFieldPolynomial.fromValue(null, field.fromLong(0), 10));
-        assertThrows(NullPointerException.class, () -> FiniteFieldPolynomial.fromValue(ROOT_RNG, null, 10));
-    }
+    private static final PairingFriendlyCurve CURVE =
+            PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve();
 
     @Test
     void testEmptyCoefficientsThrowsException() {
@@ -64,26 +47,28 @@ class FiniteFieldPolynomialTest {
 
     @Test
     void testEvaluationReturnsNonNull(final Random rng) {
-        var curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve();
-        final Field field = curve.field();
-        var poly = FiniteFieldPolynomial.fromValue(rng, field.random(rng), 10);
-
-        var values = IntStream.range(0, 100).boxed().toList();
-
-        for (var value : values) {
-            assertNotNull(poly.evaluate(value));
-        }
+        var array = new byte[32];
+        rng.nextBytes(array);
+        var field = CURVE.field();
+        var coeff = IntStream.rangeClosed(0, array.length)
+                .mapToObj(i -> field.fromLong(array[i]))
+                .toList();
+        var poly = new FiniteFieldPolynomial(coeff);
+        IntStream.range(0, 100).forEach(i -> assertNotNull(poly.evaluate(i)));
     }
 
     @Test
-    void testEvaluationKnownResults() {
-        System.out.println();
-        var curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve();
-        final Field field = curve.field();
+    void testEvaluationKnownResults(final Random rng) {
+        final Field field = CURVE.field();
+        var degree = rng.nextInt(0, Integer.MAX_VALUE);
         final FieldElement freeCoeff = field.fromLong(1);
-        var poly =
-                new FiniteFieldPolynomial(List.of(freeCoeff, field.fromLong(1), field.fromLong(1), field.fromLong(1)));
+        final List<FieldElement> freeCoeff1 = Collections.nCopies(degree, freeCoeff);
+        var poly = new FiniteFieldPolynomial(freeCoeff1);
         assertEquals(freeCoeff, poly.evaluate(0));
-        assertEquals(field.fromLong(1).multiply(field.fromLong(poly.degree() + 1)), poly.evaluate(1));
+        var result = poly.evaluate(1);
+        for (int i = 0; i < degree; i++) {
+            result = result.subtract(freeCoeff);
+        }
+        assertEquals(freeCoeff, result);
     }
 }

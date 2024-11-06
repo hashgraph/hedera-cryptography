@@ -29,8 +29,6 @@ import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
-import com.hedera.cryptography.pairings.extensions.EcPolynomial;
-import com.hedera.cryptography.pairings.extensions.FiniteFieldPolynomial;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Random;
@@ -144,11 +142,11 @@ public class AggregationTest {
                 .map(BlsPrivateKey::element)
                 .toList();
         final var polynomials = privateKeys.stream()
-                .map(s -> FiniteFieldPolynomial.fromValue(random, s, currentThreshold - 1))
+                .map(s -> Shamir.interpolationPolynomial(random, s, currentThreshold - 1))
                 .limit(previousThreshold)
                 .toList();
         final var polynomialsCommitments = polynomials.stream()
-                .map(poly -> EcPolynomial.create(schema.getPublicKeyGroup(), poly))
+                .map(poly -> Shamir.feldmanCommitment(schema.getPublicKeyGroup(), poly))
                 .toList();
         final var polynomialPrivatesPoints = polynomials.stream()
                 .map(poly -> receiverIds.stream()

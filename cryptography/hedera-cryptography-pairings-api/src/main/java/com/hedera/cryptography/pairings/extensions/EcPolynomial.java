@@ -17,21 +17,29 @@
 package com.hedera.cryptography.pairings.extensions;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
-import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 /**
  * A polynomial where the coefficients are points on the elliptic curve group.
+ * /**
+ * A polynomial, represented as a list of coefficients over the one of the groups of a defined EllipticCurve
+ *  where each {@code coefficients[i]} is an element of that field, and corresponds to the coefficient for {@code x^i}.
+ *<p>
+ * The degree of the polynomial is the size of the coefficients +1 such that: <br/>
+ *{@code p(x) = a_0 + a_1 * x + a_2 * x^2 + ... + a_d * x^d}
  *
- * @param coefficients the polynomial coefficients.
+ * @implNote it is responsibility of the user that the {@link GroupElement} instances are compatible with each-other.
+ *  Otherwise, it might fail on the {@link #evaluate(FieldElement)} method depending on the implementation
+ *  of {@link GroupElement} addition
+ * @param coefficients {@code a_0, a_1, ..., a_d} the coefficients of the polynomial.
  */
 public record EcPolynomial(@NonNull List<GroupElement> coefficients) {
     /**
-     * Constructor.
+     * Creates a polynomial that is represented as a list of {@link GroupElement} coefficients,
+     *  where {@code coefficients[i]} corresponds to the coefficient for {@code x^i}.
      *
      * @param coefficients The commitment coefficients.
      */
@@ -42,25 +50,12 @@ public record EcPolynomial(@NonNull List<GroupElement> coefficients) {
     }
 
     /**
-     * Creates a FeldmanCommitment which is a {@link EcPolynomial} where every
-     * coefficient consists of the group generator, raised to the power of a coefficient of the {@link FiniteFieldPolynomial} being committed to.
+     * Returns the degree of the polynomial.
      *
-     * @param group      the group that elements of the commitment are in
-     * @param finiteFieldPolynomial the polynomial to commit to
-     * @return the FeldmanCommitment
+     * @return the degree of the polynomial.
      */
-    @NonNull
-    public static EcPolynomial create(
-            @NonNull final Group group, @NonNull final FiniteFieldPolynomial finiteFieldPolynomial) {
-        final GroupElement generator = Objects.requireNonNull(group).generator();
-
-        final List<GroupElement> commitmentCoefficients = new ArrayList<>();
-        for (final FieldElement polynomialCoefficient :
-                Objects.requireNonNull(finiteFieldPolynomial).coefficients()) {
-            commitmentCoefficients.add(generator.multiply(polynomialCoefficient));
-        }
-
-        return new EcPolynomial(commitmentCoefficients);
+    public int degree() {
+        return coefficients.size() - 1;
     }
 
     /**
