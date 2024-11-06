@@ -20,21 +20,22 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.Random;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+@WithRng
 class AltBn128BilinearPairingTest {
 
     @Test
-    void testBilinearity() {
+    void testBilinearity(final Random rand) {
 
         // Bilinearity: “a”, “b” member of “Fq” (Finite Field), “P” member of “G₁”, and “Q” member of “G₂”,
         // then e(a×P, b×Q) = e(ab×P, Q) = e(P, ab×Q) = e(P, Q)^(ab)
         AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1);
         AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         AltBn128Field fq = new AltBn128Field();
-        Random rand = new Random();
         FieldElement a = fq.random(rand);
         FieldElement b = fq.random(rand);
         GroupElement P = g1.random(rand);

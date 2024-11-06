@@ -18,6 +18,7 @@ package com.hedera.cryptography.bls;
 
 import com.hedera.cryptography.bls.test.fixtures.BlsTestUtils;
 import com.hedera.cryptography.pairings.api.Curve;
+import com.hedera.cryptography.utils.test.fixtures.rng.SeededRandom;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -39,7 +40,6 @@ import org.openjdk.jmh.infra.Blackhole;
 @Measurement(iterations = 2, time = 10)
 public class SignatureAggregationBenchmarks {
     public static final int MESSAGE_SIZE = 1024;
-    public static final int RANDOM_SEED = 1;
 
     @Param({"32", "256", "1024"})
     public int numSignatures;
@@ -47,13 +47,17 @@ public class SignatureAggregationBenchmarks {
     @Param({"SHORT_SIGNATURES", "SHORT_PUBLIC_KEYS"})
     public GroupAssignment groupAssignment;
 
+    @Param({"0", "10000000"})
+    public int randomSeed;
+
     private List<BlsSignature> signatures;
 
     @Setup
     public void setup() {
-        final List<BlsKeyPair> keyPairs =
-                BlsTestUtils.generateKeyPairs(SignatureSchema.create(Curve.ALT_BN128, groupAssignment), numSignatures);
-        signatures = BlsTestUtils.bulkSign(keyPairs, BlsTestUtils.randomBytes(RANDOM_SEED, MESSAGE_SIZE));
+        final SeededRandom random = new SeededRandom(randomSeed);
+        final List<BlsKeyPair> keyPairs = BlsTestUtils.generateKeyPairs(
+                random, SignatureSchema.create(Curve.ALT_BN128, groupAssignment), numSignatures);
+        signatures = BlsTestUtils.bulkSign(keyPairs, random.randomBytes(MESSAGE_SIZE));
     }
     /*
     Results on M1 Max MacBook Pro:

@@ -28,21 +28,19 @@ import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
+@WithRng
 public class AggregationTest {
-    private static final Random RANDOM = new SecureRandom();
 
+    @SuppressWarnings("UnnecessaryLocalVariable")
     @Test
-    void testTargetGroupIsSameAsOriginal() {
-        final long seed = RANDOM.nextLong();
-        System.out.println(seed);
-        var random = new Random(seed);
+    void testTargetGroupIsSameAsOriginal(final Random random) {
         var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
         var dealerSecrets = List.of(
                 BlsKeyPair.generate(schema, random),
@@ -92,10 +90,7 @@ public class AggregationTest {
     }
 
     @Test
-    void testTargetGroupIsDifferentAsOriginal() {
-        final long seed = RANDOM.nextLong();
-        System.out.println(seed);
-        var random = new Random(seed);
+    void testTargetGroupIsDifferentAsOriginal(final Random random) {
         var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
         var dealerSecrets = List.of(
                 BlsKeyPair.generate(schema, random),
