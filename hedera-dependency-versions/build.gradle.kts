@@ -43,6 +43,12 @@ dependencies.constraints {
     api("org.mockito:mockito-junit-jupiter:5.8.0") {
         because("org.mockito.junit.jupiter")
     }
+    api("org.junit.jupiter:junit-jupiter-api:5.10.2") {
+        because("org.junit.jupiter.api")
+    }
+    api("jakarta.inject:jakarta.inject-api:2.0.1") {
+        because("jakarta.inject")
+    }
     api("org.bouncycastle:bcprov-jdk18on:1.78.1") {
         because("org.bouncycastle.provider")
     }

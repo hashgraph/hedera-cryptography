@@ -22,7 +22,7 @@ import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
-import java.security.SecureRandom;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
@@ -33,9 +33,8 @@ import org.mockito.Mockito;
 // By using an alternative finite field implementation, we can calculate a reference polynomial with the second library
 // and contrast the result of the two of them as a testing mechanism.
 // possibly investigate: https://github.com/PoslavskySV/rings
+@WithRng
 class PolynomialTest {
-
-    private static final Random ROOT_RNG = new SecureRandom();
 
     @Test
     void testNegativeOrZeroDegreeThrowsException() {
@@ -47,6 +46,7 @@ class PolynomialTest {
                 () -> Polynomial.fromValue(Mockito.mock(Random.class), Mockito.mock(FieldElement.class), 0));
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Test
     void testNullRandomOrSecretThrowsException() {
         assertThrows(
@@ -60,10 +60,7 @@ class PolynomialTest {
     }
 
     @Test
-    void testEvaluationReturnsNonNull() {
-        final long seed = ROOT_RNG.nextLong();
-        var rng = new Random(seed);
-        System.out.println();
+    void testEvaluationReturnsNonNull(final Random rng) {
         var curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve();
         final Field field = curve.field();
         var poly = Polynomial.fromValue(rng, field.random(rng), 10);

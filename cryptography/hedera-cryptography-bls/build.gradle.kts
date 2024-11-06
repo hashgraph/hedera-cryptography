@@ -29,6 +29,10 @@ mainModuleInfo {
 testModuleInfo {
     requires("org.junit.jupiter.api")
     requires("org.mockito")
+    requires("com.hedera.cryptography.utils.test.fixtures")
 }
 
-jmhModuleInfo { requires("com.hedera.cryptography.bls.testFixtures") }
+jmhModuleInfo {
+    requires("com.hedera.cryptography.bls.testFixtures")
+    requires("com.hedera.cryptography.utils.test.fixtures")
+}

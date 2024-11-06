@@ -17,9 +17,8 @@
 package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.pairings.api.GroupElement;
-import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -38,7 +37,6 @@ import org.openjdk.jmh.infra.Blackhole;
 
 @State(Scope.Benchmark)
 public class GroupElementEqualityAndHashCodeBenchmark {
-    private List<Long> values;
     GroupElement a;
     GroupElement b;
 
@@ -65,7 +63,9 @@ public class GroupElementEqualityAndHashCodeBenchmark {
 
     @Setup(Level.Trial)
     public void init() {
-        var rng = new SecureRandom();
+        var seed = new Random().nextLong();
+        System.out.println("Random Seed: " + seed);
+        var rng = new Random(seed);
         var group = new AltBn128Group(AltBN128CurveGroup.valueOf(value));
 
         var aVal = new byte[group.seedSize()];
@@ -97,6 +97,7 @@ public class GroupElementEqualityAndHashCodeBenchmark {
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.MILLISECONDS)
     @Measurement(iterations = 1, time = 1, timeUnit = TimeUnit.MILLISECONDS)
+    @SuppressWarnings("EqualsWithItself")
     public void benchEquals(Blackhole blackhole) {
         blackhole.consume(a.equals(a));
     }
