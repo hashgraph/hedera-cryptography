@@ -123,6 +123,8 @@ jobs:
           [[ "${{ github.event.inputs.dry-run-enabled }}" == true && ! -f VERSION ]] && echo -n "0.0.0-latest" > VERSION
           echo "version=$(cat VERSION | tr -d '[:space:]')" | tee -a ${GITHUB_OUTPUT}
 
+      # Add publish-maven-central here
+
       - name: Setup NPM Authentication
         run: |
           # create .npmrc file to publish solo to Github NPM registry
