@@ -142,11 +142,11 @@ public class AggregationTest {
                 .map(BlsPrivateKey::element)
                 .toList();
         final var polynomials = privateKeys.stream()
-                .map(s -> Shamir.interpolationPolynomial(random, s, currentThreshold - 1))
+                .map(s -> ShamirUtils.interpolationPolynomial(random, s, currentThreshold - 1))
                 .limit(previousThreshold)
                 .toList();
         final var polynomialsCommitments = polynomials.stream()
-                .map(poly -> Shamir.feldmanCommitment(schema.getPublicKeyGroup(), poly))
+                .map(poly -> ShamirUtils.feldmanCommitment(schema.getPublicKeyGroup(), poly))
                 .toList();
         final var polynomialPrivatesPoints = polynomials.stream()
                 .map(poly -> receiverIds.stream()

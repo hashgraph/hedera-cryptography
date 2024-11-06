@@ -25,15 +25,17 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 @WithRng
-class ShamirTest {
+class ShamirUtilsTest {
 
     @Test
     void testNegativeOrZeroDegreeThrowsException(Random rng) {
         var field = PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
                 .pairingFriendlyCurve()
                 .field();
-        assertThrows(IllegalArgumentException.class, () -> Shamir.interpolationPolynomial(rng, field.fromLong(0), -1));
-        assertThrows(IllegalArgumentException.class, () -> Shamir.interpolationPolynomial(rng, field.fromLong(0), 0));
+        assertThrows(
+                IllegalArgumentException.class, () -> ShamirUtils.interpolationPolynomial(rng, field.fromLong(0), -1));
+        assertThrows(
+                IllegalArgumentException.class, () -> ShamirUtils.interpolationPolynomial(rng, field.fromLong(0), 0));
     }
 
     @Test
@@ -41,7 +43,8 @@ class ShamirTest {
         var field = PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
                 .pairingFriendlyCurve()
                 .field();
-        assertThrows(NullPointerException.class, () -> Shamir.interpolationPolynomial(null, field.fromLong(0), 10));
-        assertThrows(NullPointerException.class, () -> Shamir.interpolationPolynomial(rng, null, 10));
+        assertThrows(
+                NullPointerException.class, () -> ShamirUtils.interpolationPolynomial(null, field.fromLong(0), 10));
+        assertThrows(NullPointerException.class, () -> ShamirUtils.interpolationPolynomial(rng, null, 10));
     }
 }

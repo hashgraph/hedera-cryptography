@@ -32,9 +32,9 @@ import java.util.Random;
  * This class uses allows creating an interpolation polynomial as used in shamir-secret-sharing.
  * And a commitment to that polynomial
  */
-public class Shamir {
+public class ShamirUtils {
 
-    private Shamir() {}
+    private ShamirUtils() {}
 
     /**
      * Creates a random degree d polynomial with a fixed point at x = 0.
@@ -82,10 +82,9 @@ public class Shamir {
     public static EcPolynomial feldmanCommitment(
             @NonNull final Group group, @NonNull final FiniteFieldPolynomial finiteFieldPolynomial) {
         final GroupElement generator = Objects.requireNonNull(group).generator();
-
+        Objects.requireNonNull(finiteFieldPolynomial, "finiteFieldPolynomial must not be null");
         final List<GroupElement> commitmentCoefficients = new ArrayList<>();
-        for (final FieldElement polynomialCoefficient :
-                Objects.requireNonNull(finiteFieldPolynomial).coefficients()) {
+        for (final FieldElement polynomialCoefficient : finiteFieldPolynomial.coefficients()) {
             commitmentCoefficients.add(generator.multiply(polynomialCoefficient));
         }
 

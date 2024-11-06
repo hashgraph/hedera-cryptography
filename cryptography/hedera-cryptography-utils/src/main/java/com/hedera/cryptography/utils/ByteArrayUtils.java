@@ -270,7 +270,7 @@ public class ByteArrayUtils {
          * @param bytes The byte array containing serialized data.
          */
         public Deserializer(@NonNull byte[] bytes) {
-            ByteArrayInputStream buffer = new ByteArrayInputStream(bytes);
+            final ByteArrayInputStream buffer = new ByteArrayInputStream(bytes);
             this.is = new DataInputStream(buffer);
         }
 

@@ -41,7 +41,7 @@ public record CiphertextTable(@NonNull List<GroupElement> sharedRandomness, @Non
     public CombinedCiphertext combine(@NonNull final FieldElement base) {
         final GroupElement randomness = new EcPolynomial(sharedRandomness()).evaluate(base);
 
-        final List<GroupElement> values = Arrays.stream(this.shareCiphertexts())
+        final List<GroupElement> values = Arrays.stream(shareCiphertexts)
                 .map(cipherText -> new EcPolynomial(cipherText.cipherText()))
                 .map(poly -> poly.evaluate(base))
                 .toList();
