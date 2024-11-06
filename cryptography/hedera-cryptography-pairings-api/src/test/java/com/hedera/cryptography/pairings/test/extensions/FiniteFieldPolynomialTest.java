@@ -50,7 +50,7 @@ class FiniteFieldPolynomialTest {
         var array = new byte[32];
         rng.nextBytes(array);
         var field = CURVE.field();
-        var coeff = IntStream.rangeClosed(0, array.length)
+        var coeff = IntStream.range(0, array.length)
                 .mapToObj(i -> field.fromLong(array[i]))
                 .toList();
         var poly = new FiniteFieldPolynomial(coeff);
