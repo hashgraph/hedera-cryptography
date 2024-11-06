@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.pairings.test.fixtures;
+package com.hedera.cryptography.pairings.test.fixturestests;
 
 import static org.junit.jupiter.api.Assertions.*;
 

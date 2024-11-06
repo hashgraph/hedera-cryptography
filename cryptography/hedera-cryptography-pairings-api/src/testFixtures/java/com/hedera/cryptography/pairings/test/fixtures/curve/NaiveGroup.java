@@ -17,10 +17,12 @@
 package com.hedera.cryptography.pairings.test.fixtures.curve;
 
 import static com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve.EXAMPLE_SIZE;
+import static com.hedera.cryptography.pairings.test.fixtures.curve.NaiveFieldElement.PRIME_MODULUS;
 
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
+import com.hedera.cryptography.utils.HashUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -81,7 +83,7 @@ public class NaiveGroup implements Group {
     @Override
     @NonNull
     public GroupElement random(@NonNull final byte[] seed) {
-        final BigInteger value = new BigInteger(seed).mod(BigInteger.valueOf(23));
+        final BigInteger value = new BigInteger(seed).mod(PRIME_MODULUS);
         return new NaiveGroupElement(this, value);
     }
 
@@ -95,14 +97,10 @@ public class NaiveGroup implements Group {
     @Override
     @NonNull
     public GroupElement hashToCurve(@NonNull final byte[] input) {
-        try {
-            final MessageDigest md = MessageDigest.getInstance("SHA-256");
-            final byte[] hash = md.digest(input);
-            final BigInteger value = new BigInteger(1, hash).mod(BigInteger.valueOf(23));
-            return new NaiveGroupElement(this, value);
-        } catch (final NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not found", e);
-        }
+        final byte[] hash = HashUtils.computeHash(HashUtils.SHA256, input);
+        final BigInteger value = new BigInteger(1, hash).mod(PRIME_MODULUS);
+
+        return new NaiveGroupElement(this, value);
     }
 
     /**
@@ -117,7 +115,7 @@ public class NaiveGroup implements Group {
     public GroupElement batchAdd(@NonNull final Collection<GroupElement> elements) {
         BigInteger sum = BigInteger.ZERO;
         for (final GroupElement element : elements) {
-            sum = sum.add(((NaiveGroupElement) element).value()).mod(BigInteger.valueOf(23));
+            sum = sum.add(((NaiveGroupElement) element).value()).mod(PRIME_MODULUS);
         }
         return new NaiveGroupElement(this, sum);
     }
@@ -128,7 +126,7 @@ public class NaiveGroup implements Group {
     @Override
     @NonNull
     public GroupElement fromBytes(@NonNull final byte[] bytes) {
-        final BigInteger value = new BigInteger(bytes).mod(BigInteger.valueOf(23));
+        final BigInteger value = new BigInteger(bytes).mod(PRIME_MODULUS);
         return new NaiveGroupElement(this, value);
     }
 

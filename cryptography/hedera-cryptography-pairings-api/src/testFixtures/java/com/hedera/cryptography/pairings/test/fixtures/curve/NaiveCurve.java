@@ -34,7 +34,7 @@ public class NaiveCurve implements PairingFriendlyCurve {
     /**
      * The size of the field elements in bytes. For simplicity, using 256-bit elements.
      */
-    public static final int EXAMPLE_SIZE = 32;
+    public static final int EXAMPLE_SIZE = 12;
 
     /**
      * {@inheritDoc}
@@ -42,7 +42,7 @@ public class NaiveCurve implements PairingFriendlyCurve {
     @Override
     @NonNull
     public Curve curve() {
-        return Curve.TEST;
+        return TestFixtureCurves.NAIVE_CURVE;
     }
 
     /**

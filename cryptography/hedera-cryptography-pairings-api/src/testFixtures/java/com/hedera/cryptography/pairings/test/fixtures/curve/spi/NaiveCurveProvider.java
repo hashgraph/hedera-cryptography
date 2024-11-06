@@ -4,6 +4,7 @@ import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
 import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve;
+import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -31,7 +32,7 @@ public class NaiveCurveProvider extends PairingFriendlyCurveProvider {
      */
     @Override
     public Curve curve() {
-        return Curve.TEST;
+        return TestFixtureCurves.NAIVE_CURVE;
     }
 
     /**

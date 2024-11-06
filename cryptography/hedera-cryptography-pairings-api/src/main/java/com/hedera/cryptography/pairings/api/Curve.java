@@ -35,11 +35,6 @@ public interface Curve {
     Curve ALT_BN128 = KnownCurves.ALT_BN128;
 
     /**
-     * Test curve for testing purposes.
-     */
-    Curve TEST = KnownCurves.TEST;
-
-    /**
      * The internal unique id for the curve.
      * @return an internal unique id for the curve.
      */
