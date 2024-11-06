@@ -20,30 +20,28 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
-import java.security.SecureRandom;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 
+@WithRng
 class ShamirTest {
-    private static final Random ROOT_RNG = new SecureRandom();
 
     @Test
-    void testNegativeOrZeroDegreeThrowsException() {
+    void testNegativeOrZeroDegreeThrowsException(Random rng) {
         var field = PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
                 .pairingFriendlyCurve()
                 .field();
-        assertThrows(
-                IllegalArgumentException.class, () -> Shamir.interpolationPolynomial(ROOT_RNG, field.fromLong(0), -1));
-        assertThrows(
-                IllegalArgumentException.class, () -> Shamir.interpolationPolynomial(ROOT_RNG, field.fromLong(0), 0));
+        assertThrows(IllegalArgumentException.class, () -> Shamir.interpolationPolynomial(rng, field.fromLong(0), -1));
+        assertThrows(IllegalArgumentException.class, () -> Shamir.interpolationPolynomial(rng, field.fromLong(0), 0));
     }
 
     @Test
-    void testNullRandomOrSecretThrowsException() {
+    void testNullRandomOrSecretThrowsException(Random rng) {
         var field = PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
                 .pairingFriendlyCurve()
                 .field();
         assertThrows(NullPointerException.class, () -> Shamir.interpolationPolynomial(null, field.fromLong(0), 10));
-        assertThrows(NullPointerException.class, () -> Shamir.interpolationPolynomial(ROOT_RNG, null, 10));
+        assertThrows(NullPointerException.class, () -> Shamir.interpolationPolynomial(rng, null, 10));
     }
 }
