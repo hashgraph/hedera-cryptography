@@ -21,13 +21,20 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 
 /**
- * Threshold Signature Scheme dependant operations
+ * The Threshold Signature Scheme Rekey Stage is where all participants redistribute their key material and generate a new set of keys that
+ * aggregate to the same aggregated public key (ledgerId) as before
  * <p>
- * Contract of TSS genesis stage:
+ * Contract:
  * <ul>
- *     <li>Generate TssMessages out of a private share</li>
- *     <li>Verify TssMessages out of a ParticipantDirectory and all previous {@link TssPublicShare}</li>
+ *     <li>Generate {@link TssMessage} from a {@link TssPrivateShare}</li>
+ *     <li>Verify {@link TssMessage} with a {@link TssParticipantDirectory},
+ *        and all previous {@link TssPublicShare}</li>
+ *     <li>Obtain the list of {@link TssPrivateShare} with a {@link TssParticipantDirectory}</li>
+ *     <li>Obtain the list of {@link TssPublicShare} with a {@link TssParticipantDirectory}</li>
  * </ul>
+ *
+ * The aggregation of the obtained {@link TssPublicShare}s using {@link TssPublicShare#aggregate(List)}
+ *  will retrieve the same previously generated aggregated {@link com.hedera.cryptography.bls.BlsPublicKey} (known as ledgerId)
  */
 public interface TssServiceRekeyStage extends TssServiceStage {
     /**

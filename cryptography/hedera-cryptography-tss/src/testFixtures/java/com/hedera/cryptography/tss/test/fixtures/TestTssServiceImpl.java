@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.tss.impl;
+package com.hedera.cryptography.tss.test.fixtures;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.SignatureSchema;
@@ -29,23 +29,23 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 
 /**
  * A prototype implementation of the TssService.
- * future-work:Complete this implementation.
  */
-public class TssServiceTestImpl implements TssService {
+public class TestTssServiceImpl implements TssService {
     private final SignatureSchema signatureSchema;
+    private final BlsPrivateKey sharedZeroKey;
 
     /**
      * Generates a new instance of this prototype implementation.
      *
-     * @param signatureSchema the predefined parameters that define the curve and group selection
-     * @param random the RNG
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      */
-    public TssServiceTestImpl(@NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {
+    public TestTssServiceImpl(@NonNull final SignatureSchema signatureSchema) {
         this.signatureSchema = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
+        this.sharedZeroKey = new BlsPrivateKey(
+                signatureSchema.getPairingFriendlyCurve().field().fromLong(0), signatureSchema);
     }
 
     @Override
@@ -54,7 +54,11 @@ public class TssServiceTestImpl implements TssService {
             @NonNull
             @Override
             public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory tssParticipantDirectory) {
-                return () -> new byte[0];
+                return DkgUtils.testTssMessage(
+                        signatureSchema,
+                        tssParticipantDirectory.getParticipantId() + 1,
+                        tssParticipantDirectory.getShareIds().size(),
+                        tssParticipantDirectory.getThreshold());
             }
 
             @Override
@@ -68,7 +72,11 @@ public class TssServiceTestImpl implements TssService {
             public TssMessage generateTssMessage(
                     @NonNull final TssParticipantDirectory tssParticipantDirectory,
                     @NonNull final TssPrivateShare privateShare) {
-                return () -> new byte[0];
+                return DkgUtils.testTssMessage(
+                        signatureSchema,
+                        privateShare.shareId(),
+                        tssParticipantDirectory.getShareIds().size(),
+                        tssParticipantDirectory.getThreshold());
             }
 
             @NonNull
@@ -77,14 +85,7 @@ public class TssServiceTestImpl implements TssService {
                     @NonNull final TssParticipantDirectory participantDirectory,
                     @NonNull final List<TssMessage> validTssMessages) {
                 return participantDirectory.getOwnedShareIds().stream()
-                        .map(sid -> new TssPrivateShare(
-                                sid,
-                                new BlsPrivateKey(
-                                        signatureSchema
-                                                .getPairingFriendlyCurve()
-                                                .field()
-                                                .fromLong(sid),
-                                        signatureSchema)))
+                        .map(sid -> new TssPrivateShare(sid, sharedZeroKey))
                         .toList();
             }
 
@@ -94,15 +95,7 @@ public class TssServiceTestImpl implements TssService {
                     @NonNull final TssParticipantDirectory participantDirectory,
                     @NonNull final List<TssMessage> tssMessages) {
                 return participantDirectory.getShareIds().stream()
-                        .map(sid -> new TssPublicShare(
-                                sid,
-                                new BlsPrivateKey(
-                                                signatureSchema
-                                                        .getPairingFriendlyCurve()
-                                                        .field()
-                                                        .fromLong(sid),
-                                                signatureSchema)
-                                        .createPublicKey()))
+                        .map(sid -> new TssPublicShare(sid, sharedZeroKey.createPublicKey()))
                         .toList();
             }
         };
@@ -114,9 +107,13 @@ public class TssServiceTestImpl implements TssService {
             @NonNull
             @Override
             public TssMessage generateTssMessage(
-                    @NonNull final TssParticipantDirectory pendingParticipantDirectory,
+                    @NonNull final TssParticipantDirectory tssParticipantDirectory,
                     @NonNull final TssPrivateShare privateShare) {
-                return () -> new byte[0];
+                return DkgUtils.testTssMessage(
+                        signatureSchema,
+                        tssParticipantDirectory.getParticipantId() + 1,
+                        tssParticipantDirectory.getShareIds().size(),
+                        tssParticipantDirectory.getThreshold());
             }
 
             @Override
@@ -124,7 +121,7 @@ public class TssServiceTestImpl implements TssService {
                     @NonNull final TssParticipantDirectory participantDirectory,
                     @Nullable final List<TssPublicShare> publicShares,
                     @NonNull final TssMessage tssMessage) {
-                return false;
+                return true;
             }
 
             @NonNull
@@ -133,14 +130,7 @@ public class TssServiceTestImpl implements TssService {
                     @NonNull final TssParticipantDirectory participantDirectory,
                     @NonNull final List<TssMessage> validTssMessages) {
                 return participantDirectory.getOwnedShareIds().stream()
-                        .map(sid -> new TssPrivateShare(
-                                sid,
-                                new BlsPrivateKey(
-                                        signatureSchema
-                                                .getPairingFriendlyCurve()
-                                                .field()
-                                                .fromLong(sid),
-                                        signatureSchema)))
+                        .map(sid -> new TssPrivateShare(sid, sharedZeroKey))
                         .toList();
             }
 
@@ -150,17 +140,15 @@ public class TssServiceTestImpl implements TssService {
                     @NonNull final TssParticipantDirectory participantDirectory,
                     @NonNull final List<TssMessage> tssMessages) {
                 return participantDirectory.getShareIds().stream()
-                        .map(sid -> new TssPublicShare(
-                                sid,
-                                new BlsPrivateKey(
-                                                signatureSchema
-                                                        .getPairingFriendlyCurve()
-                                                        .field()
-                                                        .fromLong(sid),
-                                                signatureSchema)
-                                        .createPublicKey()))
+                        .map(sid -> new TssPublicShare(sid, sharedZeroKey.createPublicKey()))
                         .toList();
             }
         };
+    }
+
+    @NonNull
+    @Override
+    public TssMessage messageFromBytes(@NonNull final byte[] message) {
+        return new OpaqueTssMessage(message);
     }
 }

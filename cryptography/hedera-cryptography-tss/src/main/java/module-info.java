@@ -9,5 +9,5 @@ module com.hedera.cryptography.tss {
     requires static transitive com.github.spotbugs.annotations;
 
     exports com.hedera.cryptography.tss.api;
-    exports com.hedera.cryptography.tss.extensions;
+    exports com.hedera.cryptography.tss.impl;
 }

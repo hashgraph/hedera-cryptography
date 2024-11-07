@@ -38,7 +38,7 @@ pub fn scalars_curve_from_bytes<G: CurveGroup>(value: &[u8]) -> ScalarField<G> {
     ScalarField::<G>::from_le_bytes_mod_order(&value)
 }
 
-/// creates an u8 vector out of a scalar
+/// creates an u8 vector from a scalar
 pub fn scalars_to_bytes(value: F) -> Result<Vec<u8>, String> {
     let mut serialized = Vec::new();
     match value.serialize_uncompressed(&mut serialized) {

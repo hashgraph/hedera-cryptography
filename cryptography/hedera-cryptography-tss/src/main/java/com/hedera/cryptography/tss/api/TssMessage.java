@@ -16,18 +16,20 @@
 
 package com.hedera.cryptography.tss.api;
 
-import static java.util.Objects.requireNonNull;
-
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.tss.groth21.Groth21Message;
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * A message sent as part of either genesis keying, or rekeying.
  */
 public interface TssMessage {
+
+    /**
+     * Current supported version.
+     * All messages using a different version will throw an error when parsed.
+     */
+    int MESSAGE_CURRENT_VERSION = 0;
 
     /**
      * Specification of the format:
@@ -58,16 +60,4 @@ public interface TssMessage {
      * @return the byte representation of a TssMessage
      */
     byte[] bytes();
-
-    /**
-     * Creates a byte array out of a byte array representation.
-     * @see TssMessage#bytes() for the specification followed
-     * @param bytes bytes the byte representation of the opaque underlying structure used by the library
-     * @return a TssMessage instance
-     */
-    @NonNull
-    static TssMessage fromBytes(@NonNull byte[] bytes) {
-        requireNonNull(bytes, "bytes must not be null");
-        return new Groth21Message(bytes);
-    }
 }

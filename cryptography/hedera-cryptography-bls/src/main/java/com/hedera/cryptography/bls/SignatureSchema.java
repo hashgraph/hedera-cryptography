@@ -111,7 +111,7 @@ public final class SignatureSchema {
     }
 
     /**
-     * Returns a signature scheme out of a packed representation of this object
+     * Returns a signature scheme from a packed representation of this object
      *
      * @param idByte the group assignment
      * @return the SignatureSchema instance
