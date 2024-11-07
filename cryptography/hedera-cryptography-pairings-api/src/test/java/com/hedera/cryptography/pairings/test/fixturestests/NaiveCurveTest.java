@@ -71,7 +71,7 @@ public class NaiveCurveTest {
         final GroupElement element2 = group.random(new Random());
 
         final Collection<GroupElement> elements = Arrays.asList(element1, element2);
-        final GroupElement sum = group.batchAdd(elements);
+        final GroupElement sum = group.add(elements);
 
         assertNotNull(sum, "Sum of batch add should not be null");
 

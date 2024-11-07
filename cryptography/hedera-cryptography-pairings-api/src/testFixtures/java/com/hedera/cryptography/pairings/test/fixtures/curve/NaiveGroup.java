@@ -104,15 +104,11 @@ public class NaiveGroup implements Group {
     }
 
     /**
-     * Adds a collection of group elements and returns the result.
-     * Sums the values of the provided group elements and ensures the result is within the group size.
-     *
-     * @param elements the collection of group elements
-     * @return the result of the addition
+     * {@inheritDoc}
      */
-    @Override
     @NonNull
-    public GroupElement batchAdd(@NonNull final Collection<GroupElement> elements) {
+    @Override
+    public GroupElement add(@NonNull final Collection<GroupElement> elements) {
         BigInteger sum = BigInteger.ZERO;
         for (final GroupElement element : elements) {
             sum = sum.add(((NaiveGroupElement) element).value()).mod(PRIME_MODULUS);
