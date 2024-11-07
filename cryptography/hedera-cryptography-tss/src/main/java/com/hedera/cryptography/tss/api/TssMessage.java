@@ -27,7 +27,7 @@ public interface TssMessage {
 
     /**
      * Current supported version.
-     * All messages using a different version will throw error when parsed.
+     * All messages using a different version will throw an error when parsed.
      */
     int MESSAGE_CURRENT_VERSION = 0;
 

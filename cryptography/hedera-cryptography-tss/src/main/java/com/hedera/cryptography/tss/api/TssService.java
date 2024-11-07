@@ -32,14 +32,13 @@ public interface TssService {
     /**
      * Returns the genesis stage.
      * In this stage all participants collaborate to discover a shared polynomial.
-     * Threshold Signature Scheme dependant operations
      * <p>
      * Contract of {@link TssServiceGenesisStage} stage:
      * <ul>
-     *     <li>Generate {@link TssMessage} out of a random share</li>
-     *     <li>Verify {@link TssMessage} out of a {@link TssParticipantDirectory}</li>
-     *     <li>Obtain the list of {@link TssPrivateShare} out of a {@link TssParticipantDirectory}</li>
-     *     <li>Obtain the list of {@link TssPublicShare} out of a {@link TssParticipantDirectory}</li>
+     *     <li>Generate {@link TssMessage} from a random share</li>
+     *     <li>Verify {@link TssMessage} with a {@link TssParticipantDirectory}</li>
+     *     <li>Obtain the list of {@link TssPrivateShare} with a {@link TssParticipantDirectory}</li>
+     *     <li>Obtain the list of {@link TssPublicShare} with a {@link TssParticipantDirectory}</li>
      * </ul>
      * @return the genesis stage.
      */
@@ -48,15 +47,23 @@ public interface TssService {
     /**
      * Returns the rekey stage.
      * In this stage all participants recover keys belonging to an already established polynomial.
+     *  Contract of {@link TssServiceRekeyStage} stage:
+     * <ul>
+     *     <li>Generate {@link TssMessage} from a {@link TssPrivateShare}</li>
+     *     <li>Verify {@link TssMessage} with a {@link TssParticipantDirectory},
+     *        and all previous {@link TssPublicShare}</li>
+     *     <li>Obtain the list of {@link TssPrivateShare} with a {@link TssParticipantDirectory}</li>
+     *     <li>Obtain the list of {@link TssPublicShare} with a {@link TssParticipantDirectory}</li>
+     * </ul>
      *
      * @return the rekey stage.
      */
     TssServiceRekeyStage rekeyStage();
 
     /**
-     * Creates a {@link TssMessage} of a byte array representation.
+     * Creates a {@link TssMessage} from a byte array representation.
      * @see TssMessage#bytes() for the specification that message needs to follow.
-     * @param message message the byte representation of the opaque underlying structure used by the library
+     * @param message the byte representation of the opaque underlying structure used by the library
      * @return a TssMessage instance
      */
     @NonNull

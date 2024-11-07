@@ -36,10 +36,10 @@ public class Groth21RekeyStage extends Groth21Stage implements TssServiceRekeySt
 
     /**
      * Constructor
-     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      * @param random a source of randomness
      */
-    public Groth21RekeyStage(SignatureSchema signatureSchema, Random random) {
+    public Groth21RekeyStage(@NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {
         super(signatureSchema, random);
     }
 

@@ -21,18 +21,20 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 
 /**
- * Threshold Signature Scheme rekey Stage is the stage where all participants in the scheme re distributes their key material and comes up with a set newly created keys
- * that aggregated produces the same ledgerId.
+ * The Threshold Signature Scheme Rekey Stage is where all participants redistribute their key material and generate a new set of keys that
+ * aggregate to the same aggregated public key (ledgerId) as before
  * <p>
- * Contract of TSS rekey stage:
+ * Contract:
  * <ul>
- *     <li>Generate {@link TssMessage} out of a {@link TssPrivateShare}</li>
- *     <li>Verify {@link TssMessage} out of a {@link TssParticipantDirectory},
+ *     <li>Generate {@link TssMessage} from a {@link TssPrivateShare}</li>
+ *     <li>Verify {@link TssMessage} with a {@link TssParticipantDirectory},
  *        and all previous {@link TssPublicShare}</li>
- *     <li>Obtain the list of {@link TssPrivateShare} out of a {@link TssParticipantDirectory}</li>
- *     <li>Obtain the list of {@link TssPublicShare} out of a {@link TssParticipantDirectory}</li>
+ *     <li>Obtain the list of {@link TssPrivateShare} with a {@link TssParticipantDirectory}</li>
+ *     <li>Obtain the list of {@link TssPublicShare} with a {@link TssParticipantDirectory}</li>
  * </ul>
- * The result of the aggregation af all obtained {@link TssPublicShare} retrieves the same previously generated ledgerId
+ *
+ * The aggregation of the obtained {@link TssPublicShare}s using {@link TssPublicShare#aggregate(List)}
+ *  will retrieve the same previously generated aggregated {@link com.hedera.cryptography.bls.BlsPublicKey} (known as ledgerId)
  */
 public interface TssServiceRekeyStage extends TssServiceStage {
     /**

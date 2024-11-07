@@ -40,7 +40,7 @@ public class TestTssServiceImpl implements TssService {
     /**
      * Generates a new instance of this prototype implementation.
      *
-     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      */
     public TestTssServiceImpl(@NonNull final SignatureSchema signatureSchema) {
         this.signatureSchema = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");

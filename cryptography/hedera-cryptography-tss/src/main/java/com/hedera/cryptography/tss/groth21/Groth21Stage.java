@@ -56,7 +56,7 @@ public abstract class Groth21Stage implements TssServiceStage {
 
     /**
      * A Groth21Stage
-     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      * @param random a source of randomness
      */
     protected Groth21Stage(@NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {

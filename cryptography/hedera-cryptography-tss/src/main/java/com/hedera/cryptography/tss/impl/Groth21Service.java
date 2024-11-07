@@ -41,7 +41,7 @@ public class Groth21Service implements TssService {
 
     /**
      * Constructor
-     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      * @param random a source of randomness
      */
     public Groth21Service(final @NonNull SignatureSchema signatureSchema, final @NonNull Random random) {

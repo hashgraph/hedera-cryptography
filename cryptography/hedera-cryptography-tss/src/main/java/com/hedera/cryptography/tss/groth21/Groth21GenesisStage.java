@@ -29,7 +29,7 @@ import java.util.Random;
 
 /**
  *  The genesis stage of Groth21 based TssService implementation.
- *  In this stage, given the lack of previous material, the generations of {@link TssMessage} is based on random information,
+ *  In this stage, given the lack of previous material, the generation of {@link TssMessage} is based on random information,
  *  and the aggregation rules for {@link TssPrivateShare} and {@link TssPrivateShare} follows bls addition.
  * @see TssServiceGenesisStage
  */
@@ -37,7 +37,7 @@ public class Groth21GenesisStage extends Groth21Stage implements TssServiceGenes
 
     /**
      * Constructor
-     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      * @param random a source of randomness
      */
     public Groth21GenesisStage(@NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {

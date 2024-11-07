@@ -20,7 +20,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 
 /**
- * A Tss Service Stage common operations.
+ * Tss Service Stage common operations.
  */
 public interface TssServiceStage {
 

@@ -30,7 +30,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Represents a partial signature created out of a share of a secret key.
+ * Represents a partial signature created from share of a secret key.
  * It's a BLS signature with an owner.
  *
  * @param shareId the share ID

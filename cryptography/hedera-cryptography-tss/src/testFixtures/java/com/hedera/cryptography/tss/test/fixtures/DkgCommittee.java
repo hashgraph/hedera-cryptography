@@ -38,7 +38,7 @@ public record DkgCommittee(int size, int sharesPerParticipant, @NonNull BlsPriva
     }
     /**
      * Retrieves the selected directory
-     * @param signatureSchema signature signatureSchema
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      * @param participantId participant id
      * @return the selected participant's directory
      */
@@ -56,7 +56,7 @@ public record DkgCommittee(int size, int sharesPerParticipant, @NonNull BlsPriva
 
     /**
      * Retrieves all directories in the committee
-     * @param signatureSchema  the schema
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      * @return a list of directories from the committee
      */
     public List<TssParticipantDirectory> allDirectories(final SignatureSchema signatureSchema) {

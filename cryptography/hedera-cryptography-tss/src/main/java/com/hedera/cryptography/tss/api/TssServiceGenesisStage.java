@@ -17,18 +17,21 @@
 package com.hedera.cryptography.tss.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.List;
 
 /**
  * Threshold Signature Scheme Genesis Stage is the setup stage where all participants in the scheme collaborate to discover a shared polynomial.
  * <p>
- *  The contract of a :
+ *  Contract:
  * <ul>
- *     <li>Generate {@link TssMessage} out of a random share</li>
- *     <li>Verify {@link TssMessage} out of a {@link TssParticipantDirectory}</li>
- *     <li>Obtain the list of {@link TssPrivateShare} out of a {@link TssParticipantDirectory}</li>
- *     <li>Obtain the list of {@link TssPublicShare} out of a {@link TssParticipantDirectory}</li>
+ *     <li>Generate {@link TssMessage} from a random share</li>
+ *     <li>Verify {@link TssMessage} with a {@link TssParticipantDirectory}</li>
+ *     <li>Obtain the list of {@link TssPrivateShare} with a {@link TssParticipantDirectory}</li>
+ *     <li>Obtain the list of {@link TssPublicShare} with a {@link TssParticipantDirectory}</li>
  * </ul>
- * Produces a fresh ledgerId: as result of the aggregation af all obtained {@link TssPublicShare}
+ *
+ * The aggregation of the obtained {@link TssPublicShare}s using {@link TssPublicShare#aggregate(List)}
+ *  will produce an aggregated {@link com.hedera.cryptography.bls.BlsPublicKey} (known as ledgerId)
  */
 public interface TssServiceGenesisStage extends TssServiceStage {
 
@@ -37,7 +40,7 @@ public interface TssServiceGenesisStage extends TssServiceStage {
      * This method can be used to bootstrap the protocol as it does not need the existence of a previous {@link TssPrivateShare}
      *
      * @param tssParticipantDirectory the participant directory that we should generate the message for
-     * @return a {@link TssMessage} produced out of a random share.
+     * @return a {@link TssMessage} produced from a random share.
      */
     @NonNull
     TssMessage generateTssMessage(@NonNull TssParticipantDirectory tssParticipantDirectory);

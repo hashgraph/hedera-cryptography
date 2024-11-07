@@ -29,14 +29,14 @@ import java.util.Random;
 /**
  *  A bls private Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
  * @param element the element
- * @param signatureSchema the signatureSchema
+ * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
  */
 public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSchema signatureSchema) {
     /**
      * Constructor.
      *
      * @param element the element
-     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      */
     public BlsPrivateKey {
         Objects.requireNonNull(element, "element must not be null");
@@ -46,7 +46,7 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
     /**
      * Creates a private key out of the CurveType and a random
      *
-     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      * @param random a source of randomness
      * @return a privateKey for that CurveType
      */

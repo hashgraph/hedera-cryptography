@@ -26,14 +26,14 @@ import java.util.Objects;
 /**
  *  A bls public Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
  * @param element a GroupElement
- * @param signatureSchema the signatureSchema
+ * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
  */
 public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSchema signatureSchema) {
 
     /**
      * Constructor
      * @param element the element
-     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      */
     public BlsPublicKey {
         Objects.requireNonNull(element, "element must not be null");

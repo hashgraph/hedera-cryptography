@@ -34,7 +34,7 @@ import java.util.function.Function;
 /**
  * A message sent as part of either genesis keying, or rekeying.
  * @param version supported version of the message
- * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+ * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
  * @param generatingShare share generating the message
  * @param cipherTable an ElGamal cipher per receiving share
  * @param polynomialCommitment a FeldmanCommitment

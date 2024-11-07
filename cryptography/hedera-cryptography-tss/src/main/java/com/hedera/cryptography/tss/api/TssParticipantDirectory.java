@@ -253,7 +253,7 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
         /**
          * Builds and returns a {@link TssParticipantDirectory} instance based on the provided entries and signatureSchema.
          *
-         * @param schema the signatureSchema
+         * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
          * @return the constructed ParticipantDirectory instance
          * @throws NullPointerException if signatureSchema is null
          * @throws IllegalStateException if there is no entry for the current participant
@@ -261,8 +261,8 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
          * @throws IllegalStateException if the threshold value is higher than the total shares
          */
         @NonNull
-        public TssParticipantDirectory build(@NonNull final SignatureSchema schema) {
-            Objects.requireNonNull(schema, "Schema must not be null");
+        public TssParticipantDirectory build(@NonNull final SignatureSchema signatureSchema) {
+            Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
 
             if (isNull(selfEntry)) {
                 throw new IllegalStateException("There should be an entry for the current participant");

@@ -46,7 +46,7 @@ public record BlsKeyPair(@NonNull BlsPrivateKey privateKey, @NonNull BlsPublicKe
     /**
      * Generates a Key Pair (private and public keys)
      *
-     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      * @return a key pair
      * @throws NoSuchAlgorithmException if no algorithm found to get a {@link SecureRandom} instance
      */
@@ -58,7 +58,7 @@ public record BlsKeyPair(@NonNull BlsPrivateKey privateKey, @NonNull BlsPublicKe
     /**
      * Generates a Key Pair (private and public keys)
      *
-     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      * @param random a source of randomness
      * @return a key pair
      */
