@@ -5,6 +5,7 @@ module com.hedera.cryptography.pairings.api {
     uses com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
 
     exports com.hedera.cryptography.pairings.api;
+    exports com.hedera.cryptography.pairings.extensions;
     exports com.hedera.cryptography.pairings.api.curves;
     exports com.hedera.cryptography.pairings.spi;
 

@@ -102,7 +102,7 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
         final SignatureSchema schema = publicKeys.getFirst().signatureSchema();
         final List<GroupElement> elements =
                 publicKeys.stream().map(BlsPublicKey::element).toList();
-        final GroupElement aggregatedElement = schema.getPublicKeyGroup().batchAdd(elements);
+        final GroupElement aggregatedElement = schema.getPublicKeyGroup().add(elements);
         return new BlsPublicKey(aggregatedElement, schema);
     }
 

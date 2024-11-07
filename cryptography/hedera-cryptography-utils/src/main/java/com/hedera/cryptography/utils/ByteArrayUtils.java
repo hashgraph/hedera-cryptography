@@ -262,7 +262,6 @@ public class ByteArrayUtils {
      * A utility class for deserializing data from a byte array.
      */
     public static class Deserializer {
-        private final ByteArrayInputStream buffer;
         private final DataInputStream is;
 
         /**
@@ -271,7 +270,7 @@ public class ByteArrayUtils {
          * @param bytes The byte array containing serialized data.
          */
         public Deserializer(@NonNull byte[] bytes) {
-            this.buffer = new ByteArrayInputStream(bytes);
+            final ByteArrayInputStream buffer = new ByteArrayInputStream(bytes);
             this.is = new DataInputStream(buffer);
         }
 

@@ -17,6 +17,7 @@
 package com.hedera.cryptography.tss.extensions.elgamal;
 
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.tss.api.TssShareTable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 
@@ -25,4 +26,11 @@ import java.util.List;
  * @param randomness a compressed shared randomness value
  * @param values a combined representation of all the elements in a {@link CiphertextTable}
  */
-public record CombinedCiphertext(@NonNull GroupElement randomness, @NonNull List<GroupElement> values) {}
+public record CombinedCiphertext(@NonNull GroupElement randomness, @NonNull List<GroupElement> values)
+        implements TssShareTable<GroupElement> {
+    @NonNull
+    @Override
+    public GroupElement getForShareId(final int shareId) {
+        return values().get(shareId - 1);
+    }
+}

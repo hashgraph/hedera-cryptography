@@ -18,8 +18,8 @@ package com.hedera.cryptography.tss.extensions.nizk;
 
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.tss.api.TssKeyTable;
-import com.hedera.cryptography.tss.extensions.FeldmanCommitment;
+import com.hedera.cryptography.pairings.extensions.EcPolynomial;
+import com.hedera.cryptography.tss.api.TssShareTable;
 import com.hedera.cryptography.tss.extensions.elgamal.CombinedCiphertext;
 import com.hedera.cryptography.utils.HashUtils;
 import com.hedera.cryptography.utils.HashUtils.HashCalculator;
@@ -32,13 +32,13 @@ import java.util.Objects;
  *
  * @param tssShareIds a list of tssIds, should be consecutive and each id value should match the index in the list.
  * @param tssEncryptionKeys a Map to retrieve the corresponding tssEncryptionKey of the participant owning the share
- * @param polynomialCommitment a {@link FeldmanCommitment}
+ * @param polynomialCommitment a {@link EcPolynomial}
  * @param combinedCiphertext a {@link CombinedCiphertext}
  */
 public record NizkStatement(
         @NonNull List<Integer> tssShareIds,
-        @NonNull TssKeyTable<BlsPublicKey> tssEncryptionKeys,
-        @NonNull FeldmanCommitment polynomialCommitment,
+        @NonNull TssShareTable<BlsPublicKey> tssEncryptionKeys,
+        @NonNull EcPolynomial polynomialCommitment,
         @NonNull CombinedCiphertext combinedCiphertext) {
     /**
      * Constructor.
@@ -59,10 +59,10 @@ public record NizkStatement(
         final HashCalculator calculator = HashUtils.getHashCalculator(HashUtils.SHA256);
         for (Integer shareIds : tssShareIds) {
             calculator.append(shareIds);
-            final BlsPublicKey publicKey = tssEncryptionKeys.resolveKeyForShare(shareIds);
+            final BlsPublicKey publicKey = tssEncryptionKeys.getForShareId(shareIds);
             calculator.append(publicKey.element().toBytes());
         }
-        for (GroupElement coefficient : polynomialCommitment.commitmentCoefficients()) {
+        for (GroupElement coefficient : polynomialCommitment.coefficients()) {
             calculator.append(coefficient.toBytes());
         }
         for (GroupElement cv : combinedCiphertext.values()) {

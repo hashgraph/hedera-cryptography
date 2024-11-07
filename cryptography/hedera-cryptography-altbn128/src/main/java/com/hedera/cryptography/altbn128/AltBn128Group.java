@@ -126,7 +126,7 @@ public class AltBn128Group implements Group {
      */
     @NonNull
     @Override
-    public GroupElement batchAdd(@NonNull final Collection<GroupElement> elements) {
+    public GroupElement add(@NonNull final Collection<GroupElement> elements) {
         Objects.requireNonNull(elements, "elements must not be null");
         List<AltBn128GroupElement> elems = elements.stream()
                 .map(e -> AltBn128GroupElement.isSameAltBn128GroupElement(this, e))

@@ -49,21 +49,6 @@ public record TssShareSignature(@NonNull Integer shareId, @NonNull BlsSignature 
     }
 
     /**
-     * Creates a new instance.
-     *
-     * @param id id
-     * @param signature the private key
-     * @return a new {@link TssShareSignature}
-     */
-    public static TssShareSignature of(final int id, @NonNull final BlsSignature signature) {
-        requireNonNull(signature, "signature must not be null");
-        if (id <= 0) {
-            throw new IllegalArgumentException("id must be greater than 0");
-        }
-        return new TssShareSignature(id, signature);
-    }
-
-    /**
      * verifies a signature using.
      *
      * @param publicShare the publicShare to verify the signature represented by this instance
