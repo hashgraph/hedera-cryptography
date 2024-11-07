@@ -16,21 +16,48 @@
 
 package com.hedera.cryptography.tss.api;
 
-import static java.util.Objects.requireNonNull;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
+import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.pairings.api.GroupElement;
 
 /**
  * A message sent as part of either genesis keying, or rekeying.
- * @param bytes the byte representation of the opaque underlying structure used by the library
  */
-public record TssMessage(@NonNull byte[] bytes) {
+public interface TssMessage {
 
     /**
-     * Constructor
-     * @param bytes bytes the byte representation of the opaque underlying structure used by the library
+     * Current supported version.
+     * All messages using a different version will throw an error when parsed.
      */
-    public TssMessage {
-        requireNonNull(bytes, "bytes must not be null");
-    }
+    int MESSAGE_CURRENT_VERSION = 0;
+
+    /**
+     * Specification of the format:
+     * Given {@code e}: {@link FieldElement#size()} of the chosen curve
+     * and {@code g}: {@link GroupElement#size()} of the defined
+     * {@link SignatureSchema#getPublicKeyGroup()}
+     * A TssMessage will consist of:
+     * <ul>
+     *  <li>4 fixed bytes representing the version of the message
+     *  <li>1 byte representing the SignatureSchema that originated the message
+     *  <li>4 fixed bytes representing the shareId that originated the message
+     *  <li>4 fixed bytes representing the size N_1 of the next list
+     *  <li>(total of N_1*g bytes) a list of N_1 elements of g size representing the shared randomness
+     *  <li>4 fixed bytes representing the size M of the next lists
+     *  <li>(total of M*N_2*g)
+     *  (0 to M):
+     *  <ul>
+     *       <li>4 bytes representing the size N_2 of the next list
+     *       <li>(total of N_2*g bytes) a list of N_2 elements of g size representing the encrypted shares
+     *      </ul>
+     *  <li>4 fixed bytes representing the size N_3 of the next list
+     *  <li>(total of N_3*g bytes) a list of N_3 elements of g size representing the polynomial commitment
+     *  <li>g bytes representing the proof f element
+     *  <li>g bytes representing the proof a element
+     *  <li>s bytes representing the proof zr element
+     *  <li>s bytes representing the proof za element
+     *  </ul>
+     * @return the byte representation of a TssMessage
+     */
+    byte[] bytes();
 }

@@ -20,6 +20,8 @@ import static java.util.Objects.requireNonNull;
 
 import com.hedera.cryptography.bls.BlsSignature;
 import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.tss.extensions.Lagrange;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
@@ -28,13 +30,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Represents a partial signature created out of a share of a secret key.
+ * Represents a partial signature created from share of a secret key.
  * It's a BLS signature with an owner.
  *
  * @param shareId the share ID
  * @param signature the signature
  */
-public record TssShareSignature(@NonNull TssShareId shareId, @NonNull BlsSignature signature) {
+public record TssShareSignature(@NonNull Integer shareId, @NonNull BlsSignature signature) {
     /**
      * Constructor.
      *
@@ -44,27 +46,6 @@ public record TssShareSignature(@NonNull TssShareId shareId, @NonNull BlsSignatu
     public TssShareSignature {
         requireNonNull(shareId, "shareId must not be null");
         requireNonNull(signature, "signature must not be null");
-    }
-
-    /**
-     * Creates a new instance.
-     *
-     * @param id id
-     * @param signature the private key
-     * @return a new {@link TssShareSignature}
-     */
-    public static TssShareSignature of(final int id, @NonNull final BlsSignature signature) {
-        requireNonNull(signature, "signature must not be null");
-        if (id <= 0) {
-            throw new IllegalArgumentException("id must be greater than 0");
-        }
-        return new TssShareSignature(
-                new TssShareId(signature
-                        .signatureSchema()
-                        .getPairingFriendlyCurve()
-                        .field()
-                        .fromLong(id)),
-                signature);
     }
 
     /**
@@ -99,17 +80,17 @@ public record TssShareSignature(@NonNull TssShareId shareId, @NonNull BlsSignatu
                 .map(BlsSignature::signatureSchema)
                 .collect(Collectors.toSet());
         if (s.size() > 1) {
-            throw new IllegalArgumentException("publicKeys must not contain more than one schema");
+            throw new IllegalArgumentException("publicKeys must not contain more than one signatureSchema");
         }
-        var xs = partialSignatures.stream()
+        final SignatureSchema signatureSchema = s.stream().findFirst().orElseThrow();
+        final List<FieldElement> xs = partialSignatures.stream()
                 .map(TssShareSignature::shareId)
-                .map(TssShareId::id)
+                .map(signatureSchema.getPairingFriendlyCurve().field()::fromLong)
                 .toList();
-        var ys = partialSignatures.stream()
+        final List<GroupElement> ys = partialSignatures.stream()
                 .map(TssShareSignature::signature)
                 .map(BlsSignature::element)
                 .toList();
-        return new BlsSignature(
-                Lagrange.recoverGroupElement(xs, ys), s.stream().findFirst().orElseThrow());
+        return new BlsSignature(Lagrange.recoverGroupElement(xs, ys), signatureSchema);
     }
 }

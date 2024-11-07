@@ -16,7 +16,7 @@
 
 package com.hedera.cryptography.altbn128;
 
-import static com.hedera.cryptography.altbn128.common.ValidationUtils.expectOrThrow;
+import static com.hedera.cryptography.utils.ValidationUtils.expectOrThrow;
 
 import com.hedera.cryptography.altbn128.facade.GroupFacade;
 import com.hedera.cryptography.pairings.api.FieldElement;

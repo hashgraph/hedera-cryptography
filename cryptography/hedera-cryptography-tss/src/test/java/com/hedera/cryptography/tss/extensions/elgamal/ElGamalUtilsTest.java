@@ -23,31 +23,25 @@ import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.*;
-import com.hedera.cryptography.tss.api.TssShareId;
+import com.hedera.cryptography.tss.api.TssShareTable;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 
+@TestInstance(Lifecycle.PER_CLASS)
+@WithRng
 public class ElGamalUtilsTest {
-    static final Random INIT_RANDOM = new SecureRandom();
     static final SignatureSchema schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
 
-    private static Stream<Integer> randomSeeds() {
-        return IntStream.range(0, 100).map(i -> INIT_RANDOM.nextInt()).boxed();
-    }
-
-    @ParameterizedTest
-    @MethodSource("randomSeeds")
-    public void testCompleteOperation(int seed) {
-        System.out.println("Seed used: " + seed);
-        final Random random = new Random(seed);
+    @RepeatedTest(100)
+    public void testCompleteOperation(final Random random) {
         final BlsPrivateKey sk = BlsPrivateKey.create(schema, random);
         final BlsPublicKey pk = sk.createPublicKey();
         final ElGamalSubstitutionTable<FieldElement, Byte> substitutionTable =
@@ -76,10 +70,7 @@ public class ElGamalUtilsTest {
     };
 
     @Test
-    public void invalidKeyCannotRecoverTheSecret() {
-        var seed = INIT_RANDOM.nextInt();
-        System.out.println("Seed used: " + seed);
-        final Random random = new Random(seed);
+    public void invalidKeyCannotRecoverTheSecret(final Random random) {
         final BlsPrivateKey sk = BlsPrivateKey.create(schema, random);
         final BlsPublicKey pk = sk.createPublicKey();
         final ElGamalSubstitutionTable<FieldElement, Byte> substitutionTable =
@@ -104,10 +95,7 @@ public class ElGamalUtilsTest {
     }
 
     @Test
-    public void invalidRandomnessCannotRecoverTheSecret() {
-        var seed = INIT_RANDOM.nextLong();
-        System.out.println("Seed used: " + seed);
-        final Random random = new Random(seed);
+    public void invalidRandomnessCannotRecoverTheSecret(final Random random) {
         final BlsPrivateKey sk = BlsPrivateKey.create(schema, random);
         final BlsPublicKey pk = sk.createPublicKey();
         final ElGamalSubstitutionTable<FieldElement, Byte> substitutionTable =
@@ -130,11 +118,7 @@ public class ElGamalUtilsTest {
     }
 
     @Test
-    public void testRecoverText() {
-
-        final int seed = INIT_RANDOM.nextInt();
-        System.out.println("Seed used: " + seed);
-        final Random random = new Random(seed);
+    public void testRecoverText(final Random random) {
         final BlsPrivateKey sk = BlsPrivateKey.create(schema, random);
         final BlsPublicKey pk = sk.createPublicKey();
         final ElGamalSubstitutionTable<FieldElement, Byte> substitutionTable =
@@ -165,29 +149,23 @@ public class ElGamalUtilsTest {
     }
 
     @Test
-    void testCiphertextTable() {
-        final int seed = INIT_RANDOM.nextInt();
-        System.out.println("Seed used: " + seed);
-        final Random random = new Random(seed);
-        final var ids = IntStream.range(1, 20)
-                .boxed()
-                .map(schema.getPairingFriendlyCurve().field()::fromLong)
-                .map(TssShareId::new)
-                .toList();
+    void testCiphertextTable(final Random random) {
+        final var ids = IntStream.range(1, 20).boxed().toList();
         final var field = schema.getPairingFriendlyCurve().field();
         final var secret = field.fromBytes(SECRET);
         final var sks =
                 ids.stream().map(i -> BlsPrivateKey.create(schema, random)).toList();
-        final var pks = sks.stream().map(BlsPrivateKey::createPublicKey).toList();
-        final var elGamalEncryptionKeys =
-                IntStream.range(0, ids.size()).boxed().collect(Collectors.toMap(ids::get, pks::get));
-        final var secrets = Collections.nCopies(ids.size(), secret);
 
+        final var pks = sks.stream().map(BlsPrivateKey::createPublicKey).toList();
+        final TssShareTable<BlsPublicKey> elGamalEncryptionKeys =
+                shareId -> pks.stream().toList().get(shareId - 1);
+        final var secrets = Collections.nCopies(ids.size(), secret);
+        final List<FieldElement> randomness = ElGamalUtils.generateEntropy(random, field.elementSize(), schema);
         var inverse = ElGamalSubstitutionTable.inverse(schema);
-        var table = ElGamalUtils.ciphertextTable(schema, random, elGamalEncryptionKeys, ids, secrets);
+        var table = ElGamalUtils.ciphertextTable(schema, randomness, elGamalEncryptionKeys, secrets);
 
         for (int i = 0; i < ids.size(); i++) {
-            var ecVal = table.shareCiphertexts().get(i + 1);
+            var ecVal = table.shareCiphertexts()[i];
             var dc = ElGamalUtils.readCipherText(sks.get(i), table.sharedRandomness(), inverse, ecVal);
             assertNotNull(ecVal);
             assertNotNull(dc);

@@ -17,14 +17,12 @@
 package com.hedera.cryptography.altbn128;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
-import java.security.SecureRandom;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -32,6 +30,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+@WithRng
 class AltBn128FieldTest {
 
     @Test
@@ -55,14 +54,13 @@ class AltBn128FieldTest {
     void zeroNotEqualsOne() {
         var field = new AltBn128Field();
         assertNotEquals(field.zero(), field.one());
-        assertFalse(field.zero().equals(field.one()));
-        assertFalse(field.one().equals(field.zero()));
+        assertNotEquals(field.zero(), field.one());
+        assertNotEquals(field.one(), field.zero());
     }
 
     @Test
-    void createRandomFieldElementIsNotNull() {
+    void createRandomFieldElementIsNotNull(final Random rng) {
         var field = new AltBn128Field();
-        Random rng = new SecureRandom();
         final byte[] seed = new byte[field.seedSize()];
         rng.nextBytes(seed);
         assertNotNull(field.random(seed));
@@ -78,17 +76,10 @@ class AltBn128FieldTest {
     }
 
     @Test
-    void createFieldFromLongIsNotNull() {
+    void createFieldFromLongIsNotNull(final Random rng) {
         var field = new AltBn128Field();
-        Random rng = new SecureRandom();
-        var value = rng.nextLong();
+        var value = rng.nextLong(Long.MAX_VALUE);
         assertNotNull(field.fromLong(value));
-    }
-
-    @Test
-    void createFieldElementFromNegativeLongIsNotNull() {
-        var field = new AltBn128Field();
-        assertNotNull(field.fromLong(-1));
     }
 
     @Test
@@ -98,31 +89,30 @@ class AltBn128FieldTest {
     }
 
     @Test
-    void createFieldElementFromNegativeLongMinValue() {
+    void createFieldElementFromNegativeLongValueThrowsException() {
         var field = new AltBn128Field();
-        assertNotNull(field.fromLong(Long.MIN_VALUE));
+        assertThrows(IllegalArgumentException.class, () -> field.fromLong(Long.MIN_VALUE));
     }
 
     @Test
     void createFieldFromLongIsEqualToZero() {
         var field = new AltBn128Field();
         assertEquals(field.zero(), field.fromLong(0));
-        assertTrue(field.zero().equals(field.fromLong(0)));
-        assertTrue(field.fromLong(0).equals(field.zero()));
+        assertEquals(field.zero(), field.fromLong(0));
+        assertEquals(field.fromLong(0), field.zero());
     }
 
     @Test
     void createFieldFromLongIsEqualToOne() {
         var field = new AltBn128Field();
         assertEquals(field.one(), field.fromLong(1));
-        assertTrue(field.one().equals(field.fromLong(1)));
-        assertTrue(field.fromLong(1).equals(field.one()));
+        assertEquals(field.one(), field.fromLong(1));
+        assertEquals(field.fromLong(1), field.one());
     }
 
     @Test
-    void createFieldElementFromInvalidBytesThrowsException() {
+    void createFieldElementFromInvalidBytesThrowsException(final Random rng) {
         var field = new AltBn128Field();
-        Random rng = new SecureRandom();
         final byte[] value = new byte[field.elementSize() - 1];
         rng.nextBytes(value);
         assertThrows(IllegalArgumentException.class, () -> field.fromBytes(value));
@@ -132,11 +122,10 @@ class AltBn128FieldTest {
     }
 
     @Test
-    void equalityAndHashCode() {
+    void equalityAndHashCode(final Random rng) {
         var field = new AltBn128Field();
-        Random rng = new SecureRandom();
 
-        List<Long> values = rng.longs(10000).boxed().toList();
+        List<Long> values = rng.longs(10000, 0, Long.MAX_VALUE).boxed().toList();
         Set<Long> filtered = Set.copyOf(values);
 
         List<FieldElement> elements = values.stream().map(field::fromLong).toList();

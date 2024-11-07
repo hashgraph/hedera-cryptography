@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.tss;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,6 +31,8 @@ import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
+import java.util.List;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -135,5 +138,49 @@ class TssParticipantDirectoryTest {
                 .build(signatureSchema);
 
         assertNotNull(directory, "directory should not be null");
+    }
+
+    @Test
+    void testValidConstructionHasValidPrivateSharesSize() {
+        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
+        final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
+        final TssParticipantDirectory directory = TssParticipantDirectory.createBuilder()
+                .withSelf(1, privateKey)
+                .withParticipant(1, 5, publicKey1)
+                .withParticipant(2, 2, publicKey2)
+                .withThreshold(1)
+                .build(signatureSchema);
+
+        assertNotNull(directory, "directory should not be null");
+        assertEquals(1, directory.getThreshold());
+        assertEquals(5, directory.getOwnedShareIds().size());
+        assertEquals(privateKey, directory.tssDecryptionPrivateKey());
+        assertEquals(List.of(1, 2, 3, 4, 5), directory.getOwnedShareIds());
+        assertEquals(List.of(1, 2, 3, 4, 5, 6, 7), directory.getShareIds());
+        var keys =
+                new BlsPublicKey[] {publicKey1, publicKey1, publicKey1, publicKey1, publicKey1, publicKey2, publicKey2};
+        IntStream.range(0, keys.length).forEach(k -> assertEquals(keys[k], directory.getForShareId(k + 1)));
+    }
+
+    @Test
+    void testGetForShareId() {
+        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
+        final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
+        final TssParticipantDirectory directory = TssParticipantDirectory.createBuilder()
+                .withSelf(1, privateKey)
+                .withParticipant(1, 5, publicKey1)
+                .withParticipant(2, 2, publicKey2)
+                .withThreshold(1)
+                .build(signatureSchema);
+
+        assertEquals(publicKey1, directory.getForShareId(1));
+        assertEquals(publicKey1, directory.getForShareId(5));
+        assertEquals(publicKey2, directory.getForShareId(6));
+        assertEquals(publicKey2, directory.getForShareId(7));
+        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(8));
+        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(0));
+        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(-1));
     }
 }

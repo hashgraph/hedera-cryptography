@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.tss.extensions;
 
+import static com.hedera.cryptography.utils.test.fixtures.stream.StreamUtils.zipStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,26 +27,20 @@ import com.hedera.cryptography.bls.BlsSignature;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
+@WithRng
 public class AggregationTest {
-    private static final Random RANDOM = new SecureRandom();
 
+    @SuppressWarnings("UnnecessaryLocalVariable")
     @Test
-    void testTargetGroupIsSameAsOriginal() {
-        final long seed = RANDOM.nextLong();
-        System.out.println(seed);
-        var random = new Random(seed);
+    void testTargetGroupIsSameAsOriginal(final Random random) {
         var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
         var dealerSecrets = List.of(
                 BlsKeyPair.generate(schema, random),
@@ -64,11 +59,14 @@ public class AggregationTest {
 
         final int numberOfParticipants = dealerSecrets.size();
         final int threshold = dealerSecrets.size();
-        final var dealersIds = IntStream.rangeClosed(1, numberOfParticipants)
+        final var dealerIds =
+                IntStream.rangeClosed(1, numberOfParticipants).boxed().toList();
+
+        final var dealersFieldElementsIds = IntStream.rangeClosed(1, numberOfParticipants)
                 .boxed()
                 .map(schema.getPairingFriendlyCurve().field()::fromLong)
                 .toList();
-        final var receiverIds = dealersIds;
+        final var receiverIds = dealerIds;
         final var signatures = dealerSecrets.stream()
                 .map(p -> p.privateKey().sign(msg))
                 .map(BlsSignature::element)
@@ -78,22 +76,21 @@ public class AggregationTest {
                 .map(BlsKeyPair::publicKey)
                 .map(BlsPublicKey::element)
                 .toList();
-        final var aggregatedPk = new BlsPublicKey(Lagrange.recoverGroupElement(dealersIds, publicKeys), schema);
-        final var aggregateSignature = new BlsSignature(Lagrange.recoverGroupElement(dealersIds, signatures), schema);
+        final var aggregatedPk =
+                new BlsPublicKey(Lagrange.recoverGroupElement(dealersFieldElementsIds, publicKeys), schema);
+        final var aggregateSignature =
+                new BlsSignature(Lagrange.recoverGroupElement(dealersFieldElementsIds, signatures), schema);
         assertTrue(aggregateSignature.verify(aggregatedPk, msg));
 
         final var aggregatedRekey =
-                secretShareAndRecover(dealerSecrets, random, threshold, threshold, schema, receiverIds, dealersIds);
+                secretShareAndRecover(dealerSecrets, random, threshold, threshold, schema, receiverIds, dealerIds);
 
         assertEquals(aggregatedPk.element(), aggregatedRekey);
         assertTrue(aggregateSignature.verify(new BlsPublicKey(aggregatedRekey, schema), msg));
     }
 
     @Test
-    void testTargetGroupIsDifferentAsOriginal() {
-        final long seed = RANDOM.nextLong();
-        System.out.println(seed);
-        var random = new Random(seed);
+    void testTargetGroupIsDifferentAsOriginal(final Random random) {
         var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
         var dealerSecrets = List.of(
                 BlsKeyPair.generate(schema, random),
@@ -105,20 +102,20 @@ public class AggregationTest {
 
         final int numberOfParticipants = dealerSecrets.size();
         final int threshold = 12;
-        final var dealersIds = IntStream.rangeClosed(1, numberOfParticipants)
-                .boxed()
-                .map(schema.getPairingFriendlyCurve().field()::fromLong)
+        final var dealersIds =
+                IntStream.rangeClosed(1, numberOfParticipants).boxed().toList();
+        final var dealersFieldElementsIds = dealersIds.stream()
+                .map(id -> schema.getPairingFriendlyCurve().field().fromLong(id))
                 .toList();
-        final var receiverIds = IntStream.rangeClosed(1, numberOfParticipants * 2)
-                .boxed()
-                .map(schema.getPairingFriendlyCurve().field()::fromLong)
-                .toList();
+        final var receiverIds =
+                IntStream.rangeClosed(1, numberOfParticipants * 2).boxed().toList();
 
         final var publicKeys = dealerSecrets.stream()
                 .map(BlsKeyPair::publicKey)
                 .map(BlsPublicKey::element)
                 .toList();
-        final var aggregatedPk = new BlsPublicKey(Lagrange.recoverGroupElement(dealersIds, publicKeys), schema);
+        final var aggregatedPk =
+                new BlsPublicKey(Lagrange.recoverGroupElement(dealersFieldElementsIds, publicKeys), schema);
 
         final var aggregatedRekey = secretShareAndRecover(
                 dealerSecrets, random, dealersIds.size(), threshold, schema, receiverIds, dealersIds);
@@ -132,21 +129,24 @@ public class AggregationTest {
             final int previousThreshold,
             final int currentThreshold,
             final SignatureSchema schema,
-            final List<FieldElement> receiverIds,
-            final List<FieldElement> dealersIds) {
+            final List<Integer> receiverIds,
+            final List<Integer> dealersIds) {
 
-        final var selectedDealers = dealersIds.stream().limit(previousThreshold).toList();
+        final var selectedDealers = dealersIds.stream()
+                .limit(previousThreshold)
+                .map(d -> schema.getPairingFriendlyCurve().field().fromLong(d))
+                .toList();
         final var privateKeys = dealerSecrets.stream()
                 .limit(previousThreshold)
                 .map(BlsKeyPair::privateKey)
                 .map(BlsPrivateKey::element)
                 .toList();
         final var polynomials = privateKeys.stream()
-                .map(s -> Polynomial.fromValue(random, s, currentThreshold - 1))
+                .map(s -> ShamirUtils.interpolationPolynomial(random, s, currentThreshold - 1))
                 .limit(previousThreshold)
                 .toList();
         final var polynomialsCommitments = polynomials.stream()
-                .map(poly -> FeldmanCommitment.create(schema.getPublicKeyGroup(), poly))
+                .map(poly -> ShamirUtils.feldmanCommitment(schema.getPublicKeyGroup(), poly))
                 .toList();
         final var polynomialPrivatesPoints = polynomials.stream()
                 .map(poly -> receiverIds.stream()
@@ -154,15 +154,16 @@ public class AggregationTest {
                         .map(poly::evaluate)
                         .toList())
                 .toList();
-        final var polynomialPublications = polynomialsCommitments.stream()
+        final var polynomialCommitmentsValues = polynomialsCommitments.stream()
                 .map(poly -> receiverIds.stream()
                         .limit(currentThreshold)
-                        .map(poly::evaluate)
+                        .map(id -> poly.evaluate(
+                                schema.getPairingFriendlyCurve().field().fromLong(id)))
                         .toList())
                 .toList();
 
         final var ssPoints = this.reArrange(currentThreshold, polynomialPrivatesPoints);
-        final var psPoints = this.reArrange(currentThreshold, polynomialPublications);
+        final var psPoints = this.reArrange(currentThreshold, polynomialCommitmentsValues);
 
         final var rekeyPublicShares = psPoints.stream()
                 .map(l -> Lagrange.recoverGroupElement(selectedDealers, l))
@@ -175,13 +176,11 @@ public class AggregationTest {
                 .forEach(entry -> assertEquals(
                         entry.getValue().getGroup().generator().multiply(entry.getKey()), entry.getValue()));
 
-        return Lagrange.recoverGroupElement(receiverIds, rekeyPublicShares);
-    }
+        final var receiversTssIds = receiverIds.stream()
+                .map(d -> schema.getPairingFriendlyCurve().field().fromLong(d))
+                .toList();
 
-    public static <A, B> Stream<Entry<A, B>> zipStream(final List<A> aCollection, final List<B> bCollection) {
-        return IntStream.range(0, Math.min(aCollection.size(), bCollection.size()))
-                .boxed()
-                .map(i -> Map.entry(aCollection.get(i), bCollection.get(i)));
+        return Lagrange.recoverGroupElement(receiversTssIds, rekeyPublicShares);
     }
 
     private <T> List<List<T>> reArrange(int maxSize, final List<List<T>> polynomialPrivatesPoints) {

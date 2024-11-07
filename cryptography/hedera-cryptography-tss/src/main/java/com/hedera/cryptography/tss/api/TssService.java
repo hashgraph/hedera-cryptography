@@ -16,90 +16,56 @@
 
 package com.hedera.cryptography.tss.api;
 
-import com.hedera.cryptography.bls.SignatureSchema;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import java.util.List;
 
 /**
  * A Threshold Signature Scheme Service.
  * <p>
  * Contract of TSS:
- * <ul>
- *     <li>Generate TssMessages out of PrivateShares</li>
- *     <li>Verify TssMessages out of a ParticipantDirectory</li>
- *     <li>Obtain PrivateShares out of TssMessages for each owned share</li>
- *     <li>Obtain PublicShares out of TssMessages for each share</li>
- * </ul>
- * @implNote an instance of the service would require a source of randomness {@link java.util.Random}, and a{@link SignatureSchema}
+ *   <ul>
+ *       <li>Get a {@link TssServiceGenesisStage}</li>
+ *       <li>Get a {@link TssServiceRekeyStage}</li>
+ *   </ul>
  */
 public interface TssService {
 
     /**
-     * Generate a {@link TssMessage} for a {@code tssParticipantDirectory}, from a random private share.
-     * This method can be used to bootstrap the protocol as it does not need the existence of a previous {@link TssPrivateShare}
+     * Returns the genesis stage.
+     * In this stage all participants collaborate to discover a shared polynomial.
+     * <p>
+     * Contract of {@link TssServiceGenesisStage} stage:
+     * <ul>
+     *     <li>Generate {@link TssMessage} from a random share</li>
+     *     <li>Verify {@link TssMessage} with a {@link TssParticipantDirectory}</li>
+     *     <li>Obtain the list of {@link TssPrivateShare} with a {@link TssParticipantDirectory}</li>
+     *     <li>Obtain the list of {@link TssPublicShare} with a {@link TssParticipantDirectory}</li>
+     * </ul>
+     * @return the genesis stage.
+     */
+    TssServiceGenesisStage genesisStage();
+
+    /**
+     * Returns the rekey stage.
+     * In this stage all participants recover keys belonging to an already established polynomial.
+     *  Contract of {@link TssServiceRekeyStage} stage:
+     * <ul>
+     *     <li>Generate {@link TssMessage} from a {@link TssPrivateShare}</li>
+     *     <li>Verify {@link TssMessage} with a {@link TssParticipantDirectory},
+     *        and all previous {@link TssPublicShare}</li>
+     *     <li>Obtain the list of {@link TssPrivateShare} with a {@link TssParticipantDirectory}</li>
+     *     <li>Obtain the list of {@link TssPublicShare} with a {@link TssParticipantDirectory}</li>
+     * </ul>
      *
-     * @param tssParticipantDirectory the participant directory that we should generate the message for
-     * @return a {@link TssMessage} produced out of a random share.
+     * @return the rekey stage.
+     */
+    TssServiceRekeyStage rekeyStage();
+
+    /**
+     * Creates a {@link TssMessage} from a byte array representation.
+     * @see TssMessage#bytes() for the specification that message needs to follow.
+     * @param message the byte representation of the opaque underlying structure used by the library
+     * @return a TssMessage instance
      */
     @NonNull
-    TssMessage generateTssMessage(@NonNull TssParticipantDirectory tssParticipantDirectory);
-
-    /**
-     * Generate a {@link TssMessage} for a {@code tssParticipantDirectory}, for the specified {@link TssPrivateShare}.
-     *
-     * @param tssParticipantDirectory the participant directory that we should generate the message for
-     * @param privateShare       the secret to use for generating new keys
-     * @return a TssMessage for the requested share.
-     */
-    @NonNull
-    TssMessage generateTssMessage(
-            @NonNull TssParticipantDirectory tssParticipantDirectory, @NonNull TssPrivateShare privateShare);
-
-    /**
-     * Verify that a {@link TssMessage} is valid.
-     *
-     * @param participantDirectory the participant directory used to generate the message
-     * @param tssMessage the {@link TssMessage} to validate
-     * @return true if the message is valid, false otherwise
-     */
-    boolean verifyTssMessage(@NonNull TssParticipantDirectory participantDirectory, @NonNull TssMessage tssMessage);
-
-    /**
-     * Verify that a {@link TssMessage} is valid.
-     *
-     * @param participantDirectory the participant directory used to generate the message
-     * @param publicShares if available, the list of {@link TssPublicShare} that contains the local public share corresponding to the private share this message was generated from
-     * @param tssMessage the {@link TssMessage} to validate
-     * @return true if the message is valid, false otherwise
-     */
-    boolean verifyTssMessage(
-            @NonNull TssParticipantDirectory participantDirectory,
-            @Nullable List<TssPublicShare> publicShares,
-            @NonNull TssMessage tssMessage);
-
-    /**
-     * Compute all private shares that belongs to this participant from a threshold minimum number of {@link TssMessage}s.
-     * It is the responsibility of the caller to ensure that the list of validTssMessages meets the required threshold.
-     *
-     * @param participantDirectory the pending participant directory that we should generate the private share for
-     * @param validTssMessages the TSS messages to extract the private shares from. They must be previously validated.
-     * @return a sorted by sharedId list of private shares the current participant owns.
-     * @throws IllegalStateException if there aren't enough messages to meet the threshold
-     */
-    @NonNull
-    List<TssPrivateShare> obtainPrivateShares(
-            @NonNull TssParticipantDirectory participantDirectory, @NonNull List<TssMessage> validTssMessages);
-
-    /**
-     * Compute all public shares for all the participants in the scheme.
-     *
-     * @param participantDirectory the participant directory that we should generate the public shares for
-     * @param validTssMessages the {@link TssMessage}s to extract the public shares from. They must be previously validated.
-     * @return a sorted by the sharedId list of public shares.
-     * @throws IllegalStateException if there aren't enough messages to meet the threshold
-     */
-    @NonNull
-    List<TssPublicShare> obtainPublicShares(
-            @NonNull TssParticipantDirectory participantDirectory, @NonNull List<TssMessage> validTssMessages);
+    TssMessage messageFromBytes(@NonNull byte[] message);
 }

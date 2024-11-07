@@ -22,9 +22,9 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
+import com.hedera.cryptography.utils.HashUtils;
+import com.hedera.cryptography.utils.HashUtils.HashCalculator;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.util.Arrays;
 import java.util.Collection;
@@ -105,19 +105,13 @@ public class AltBn128Group implements Group {
     @NonNull
     @Override
     public GroupElement hashToCurve(@NonNull final byte[] input) {
-        final MessageDigest digest;
-        try {
-            digest = MessageDigest.getInstance(KECCAK_256);
-        } catch (final NoSuchAlgorithmException e) {
-            // this should never happen, so we can downgrade to a runtime exception
-            throw new RuntimeException(e);
-        }
+        HashCalculator calculator = HashUtils.getHashCalculator(KECCAK_256);
         // hash the input and try to find a valid group element
         // hash the hash until we find a valid group element
         byte[] candidate = input;
         for (int i = 0; i < HASH_RETRIES; i++) {
-            digest.update(candidate);
-            candidate = digest.digest();
+            calculator.append(candidate);
+            candidate = calculator.hash();
             final byte[] element = facade.fromXCoordinate(candidate);
             if (element != null) {
                 return new AltBn128GroupElement(this, element);
@@ -132,7 +126,7 @@ public class AltBn128Group implements Group {
      */
     @NonNull
     @Override
-    public GroupElement batchAdd(@NonNull final Collection<GroupElement> elements) {
+    public GroupElement add(@NonNull final Collection<GroupElement> elements) {
         Objects.requireNonNull(elements, "elements must not be null");
         List<AltBn128GroupElement> elems = elements.stream()
                 .map(e -> AltBn128GroupElement.isSameAltBn128GroupElement(this, e))

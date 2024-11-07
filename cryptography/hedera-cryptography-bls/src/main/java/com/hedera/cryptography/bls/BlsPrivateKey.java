@@ -16,26 +16,27 @@
 
 package com.hedera.cryptography.bls;
 
-import static com.hedera.cryptography.bls.ByteArrayConversionUtils.deserializePairingPrivateKey;
-import static com.hedera.cryptography.bls.ByteArrayConversionUtils.serializePairingPrivateKey;
-
+import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.ByteArrayUtils.Deserializer;
+import com.hedera.cryptography.utils.ByteArrayUtils.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
 /**
  *  A bls private Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
  * @param element the element
- * @param signatureSchema the signatureSchema
+ * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
  */
 public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSchema signatureSchema) {
     /**
      * Constructor.
      *
      * @param element the element
-     * @param signatureSchema the signature schema
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      */
     public BlsPrivateKey {
         Objects.requireNonNull(element, "element must not be null");
@@ -45,17 +46,49 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
     /**
      * Creates a private key out of the CurveType and a random
      *
-     * @param signatureSchema   The implementing curve type
-     * @param random The environment secureRandom to use
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
+     * @param random a source of randomness
      * @return a privateKey for that CurveType
      */
     @NonNull
     public static BlsPrivateKey create(@NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {
-        final FieldElement sk = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
+        final Field field = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null")
                 .getPairingFriendlyCurve()
-                .field()
-                .random(Objects.requireNonNull(random, "random must not be null"));
+                .field();
+        Objects.requireNonNull(random, "random must not be null");
+        final FieldElement sk = field.random(random);
         return new BlsPrivateKey(sk, signatureSchema);
+    }
+
+    /**
+     * Aggregates multiple {@link BlsPrivateKey} into a single {@link BlsPrivateKey} for efficient verification.
+     *<p>
+     * This method combines multiple private keys into a single aggregated
+     * private key, which retains the same size as a regular {@link BlsPrivateKey} .
+     * The aggregation is performed using finite field addition in the field defined by the curve in the signature schema.
+     *<p>
+     * An aggregated private key is indistinguishable from a non-aggregated private key in terms of size, reducing the
+     * computational cost of verification.
+     *
+     * @param privateKeys A list of {@link BlsPrivateKey}, where each signature is a.
+     * @return A single aggregated {@link BlsPrivateKey}.
+     * @throws NullPointerException if signatures is null.
+     * @throws IllegalArgumentException if there are not enough publicKeys to aggregate.
+     * @throws IllegalArgumentException if the publicKeys schemas do not match.
+     */
+    public static BlsPrivateKey aggregate(@NonNull final List<BlsPrivateKey> privateKeys) {
+        if (Objects.requireNonNull(privateKeys, "privateKeys must not be null").size() < 2) {
+            throw new IllegalArgumentException("Not enough privateKeys to aggregate");
+        }
+        if (privateKeys.stream().map(BlsPrivateKey::signatureSchema).distinct().count() > 1) {
+            throw new IllegalArgumentException("All keys should have the same schema");
+        }
+        final SignatureSchema schema = privateKeys.getFirst().signatureSchema();
+        final List<FieldElement> elements =
+                privateKeys.stream().map(BlsPrivateKey::element).toList();
+        final FieldElement aggregatedElement =
+                schema.getPairingFriendlyCurve().field().add(elements);
+        return new BlsPrivateKey(aggregatedElement, schema);
     }
 
     /**
@@ -91,7 +124,10 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
      */
     @NonNull
     public byte[] toBytes() {
-        return serializePairingPrivateKey(this);
+        return new Serializer()
+                .put(this.signatureSchema().getIdByte())
+                .put(this.element()::toBytes)
+                .toBytes();
     }
 
     /**
@@ -102,6 +138,15 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
      */
     @NonNull
     public static BlsPrivateKey fromBytes(@NonNull final byte[] bytes) {
-        return deserializePairingPrivateKey(bytes);
+        try {
+            final Deserializer deserializer = new Deserializer(bytes);
+            var schema = SignatureSchema.create(deserializer.readByte());
+            var element = deserializer.read(
+                    schema.getPairingFriendlyCurve().field()::fromBytes,
+                    schema.getPairingFriendlyCurve().field().elementSize());
+            return new BlsPrivateKey(element, schema);
+        } catch (IllegalStateException e) {
+            throw new IllegalArgumentException("Unable to deserialize pairing private key", e);
+        }
     }
 }

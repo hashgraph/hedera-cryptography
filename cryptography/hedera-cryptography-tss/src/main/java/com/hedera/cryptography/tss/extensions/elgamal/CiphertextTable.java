@@ -18,19 +18,18 @@ package com.hedera.cryptography.tss.extensions.elgamal;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.pairings.extensions.EcPolynomial;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
- * A {@link CiphertextTable} contains for each share an encrypted secret, and the sharedRandomness that was used to produce the encrypted values.
+ * A {@link CiphertextTable} contains for each share an encrypted secret, and the randomness that was used to produce the encrypted values.
  *
  * @param sharedRandomness a shared randomness for all the messages in {@code shareCiphertexts}
- * @param shareCiphertexts a {@link com.hedera.cryptography.tss.api.TssShareId} to ciphertext table
+ * @param shareCiphertexts a ciphertext table containing {@link CipherText} for each share
  */
-public record CiphertextTable(
-        @NonNull List<GroupElement> sharedRandomness, @NonNull Map<Integer, List<GroupElement>> shareCiphertexts) {
+public record CiphertextTable(@NonNull List<GroupElement> sharedRandomness, @NonNull CipherText[] shareCiphertexts) {
 
     /**
      * Combines this representation into a compressed representation still containing all the information.
@@ -40,23 +39,12 @@ public record CiphertextTable(
      */
     @NonNull
     public CombinedCiphertext combine(@NonNull final FieldElement base) {
-        final List<GroupElement> ramdomness = new ArrayList<>();
+        final GroupElement randomness = new EcPolynomial(sharedRandomness).evaluate(base);
 
-        for (int i = 0; i < this.sharedRandomness().size(); i++) {
-            ramdomness.add(this.sharedRandomness().get(i).multiply(base.power(i)));
-        }
-        final GroupElement c1 = ramdomness.getFirst().getGroup().batchAdd(ramdomness);
-        final List<GroupElement> c2 = new ArrayList<>();
-
-        for (int i = 0; i < this.shareCiphertexts().size(); i++) {
-            final List<GroupElement> ctxt_i = this.shareCiphertexts().get(i + 1);
-            final List<GroupElement> c2_is = new ArrayList<>();
-            for (int j = 0; j < ctxt_i.size(); j++) {
-                final GroupElement c2_ij = ctxt_i.get(j);
-                c2_is.add(c2_ij.multiply(base.power(j)));
-            }
-            c2.add(c2_is.getFirst().getGroup().batchAdd(c2_is));
-        }
-        return new CombinedCiphertext(c1, c2);
+        final List<GroupElement> values = Arrays.stream(shareCiphertexts)
+                .map(cipherText -> new EcPolynomial(cipherText.cipherText()))
+                .map(poly -> poly.evaluate(base))
+                .toList();
+        return new CombinedCiphertext(randomness, values);
     }
 }

@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import com.hedera.cryptography.pairings.api.curves.KnownCurves;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.Random;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@WithRng
 class SignaturesLibraryTest {
 
     @Test
@@ -88,9 +90,8 @@ class SignaturesLibraryTest {
 
     @ParameterizedTest
     @MethodSource("combinedParameters")
-    void crateKeyPairTest(GroupAssignment assignment) {
+    void crateKeyPairTest(GroupAssignment assignment, final Random rng) {
         final var schema = SignatureSchema.create(Curve.ALT_BN128, assignment);
-        final var rng = new Random();
 
         final var sk = BlsPrivateKey.create(schema, rng);
         assertNotNull(sk);
@@ -138,9 +139,8 @@ class SignaturesLibraryTest {
 
     @ParameterizedTest
     @MethodSource("combinedParameters")
-    void crateSignatureTest(GroupAssignment assignment) {
+    void crateSignatureTest(GroupAssignment assignment, final Random rng) {
         final var schema = SignatureSchema.create(Curve.ALT_BN128, assignment);
-        final var rng = new Random();
 
         final var sk = BlsPrivateKey.create(schema, rng);
 
@@ -177,9 +177,8 @@ class SignaturesLibraryTest {
 
     @ParameterizedTest
     @MethodSource("combinedParameters")
-    void verifySignatureTest(GroupAssignment assignment) {
+    void verifySignatureTest(GroupAssignment assignment, final Random rng) {
         final var schema = SignatureSchema.create(Curve.ALT_BN128, assignment);
-        final var rng = new Random();
 
         final var sk = BlsPrivateKey.create(schema, rng);
 
@@ -246,8 +245,8 @@ class SignaturesLibraryTest {
     /**
      *  Asserts that either throws an IllegalArgumentException or that the result of invoking the consumer is not the same as the original value
      *
-     * @param originalValue expected value to be different than this one
-     * @param creator the function that creates the elements out of an array
+     * @param originalValue expected value to be different from this one
+     * @param creator the function that creates the elements from an array
      * @param message the message to show in case validation fails
      * @param <T> the type of the comparison object
      * @return a consumer that performs the check when requested

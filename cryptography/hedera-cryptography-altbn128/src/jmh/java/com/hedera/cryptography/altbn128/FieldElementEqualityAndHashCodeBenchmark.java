@@ -17,7 +17,7 @@
 package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
-import java.security.SecureRandom;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -50,7 +50,9 @@ public class FieldElementEqualityAndHashCodeBenchmark {
 
     @Setup(Level.Trial)
     public void init() {
-        var rng = new SecureRandom();
+        var seed = new Random().nextLong();
+        System.out.println("Random Seed: " + seed);
+        var rng = new Random(seed);
         var field = new AltBn128Field();
         var aVal = rng.nextLong();
         var bVal = aVal;
@@ -79,6 +81,7 @@ public class FieldElementEqualityAndHashCodeBenchmark {
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
     @Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.MILLISECONDS)
     @Measurement(iterations = 1, time = 1, timeUnit = TimeUnit.MILLISECONDS)
+    @SuppressWarnings("EqualsWithItself")
     public void benchEquals(Blackhole blackhole) {
         blackhole.consume(a.equals(a));
     }

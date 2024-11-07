@@ -16,13 +16,12 @@
 
 package com.hedera.cryptography.bls;
 
-import static com.hedera.cryptography.bls.ByteArrayConversionUtils.deserializePairingSignature;
-import static com.hedera.cryptography.bls.ByteArrayConversionUtils.serializePairingSignature;
-
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
+import com.hedera.cryptography.utils.ByteArrayUtils.Deserializer;
+import com.hedera.cryptography.utils.ByteArrayUtils.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 import java.util.Objects;
@@ -30,14 +29,14 @@ import java.util.Objects;
 /**
  *  A bls element for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
  * @param element the element
- * @param signatureSchema a signature schema
+ * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
  */
 public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSchema signatureSchema) {
 
     /**
      * Constructor.
      * @param element the element
-     * @param signatureSchema a signature schema
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      */
     public BlsSignature {
         Objects.requireNonNull(element, "element must not be null");
@@ -51,7 +50,10 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
      */
     @NonNull
     public byte[] toBytes() {
-        return serializePairingSignature(this);
+        return new Serializer()
+                .put(this.signatureSchema().getIdByte())
+                .put(this.element()::toBytes)
+                .toBytes();
     }
 
     /**
@@ -62,7 +64,16 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
      */
     @NonNull
     public static BlsSignature fromBytes(@NonNull final byte[] bytes) {
-        return deserializePairingSignature(bytes);
+        try {
+            final Deserializer deserializer = new Deserializer(bytes);
+            var schema = SignatureSchema.create(deserializer.readByte());
+            var element = deserializer.read(
+                    schema.getSignatureGroup()::fromBytes,
+                    schema.getSignatureGroup().elementSize());
+            return new BlsSignature(element, schema);
+        } catch (IllegalStateException e) {
+            throw new IllegalArgumentException("Unable to deserialize pairing private key", e);
+        }
     }
 
     /**
@@ -93,7 +104,7 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
         final SignatureSchema schema = signatures.getFirst().signatureSchema();
         final List<GroupElement> elements =
                 signatures.stream().map(BlsSignature::element).toList();
-        final GroupElement aggregatedElement = schema.getSignatureGroup().batchAdd(elements);
+        final GroupElement aggregatedElement = schema.getSignatureGroup().add(elements);
         return new BlsSignature(aggregatedElement, schema);
     }
 

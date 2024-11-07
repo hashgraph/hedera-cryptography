@@ -16,10 +16,9 @@
 
 package com.hedera.cryptography.bls;
 
-import static com.hedera.cryptography.bls.ByteArrayConversionUtils.deserializePairingPublicKey;
-import static com.hedera.cryptography.bls.ByteArrayConversionUtils.serializePairingPublicKey;
-
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.ByteArrayUtils.Deserializer;
+import com.hedera.cryptography.utils.ByteArrayUtils.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 import java.util.Objects;
@@ -27,14 +26,14 @@ import java.util.Objects;
 /**
  *  A bls public Key for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
  * @param element a GroupElement
- * @param signatureSchema the signatureSchema
+ * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
  */
 public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSchema signatureSchema) {
 
     /**
      * Constructor
      * @param element the element
-     * @param signatureSchema the signatureSchema
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      */
     public BlsPublicKey {
         Objects.requireNonNull(element, "element must not be null");
@@ -48,7 +47,10 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
      */
     @NonNull
     public byte[] toBytes() {
-        return serializePairingPublicKey(this);
+        return new Serializer()
+                .put(this.signatureSchema().getIdByte())
+                .put(this.element()::toBytes)
+                .toBytes();
     }
 
     /**
@@ -59,7 +61,17 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
      */
     @NonNull
     public static BlsPublicKey fromBytes(@NonNull final byte[] bytes) {
-        return deserializePairingPublicKey(bytes);
+        try {
+
+            final Deserializer deserializer = new Deserializer(bytes);
+            var schema = SignatureSchema.create(deserializer.readByte());
+            var element = deserializer.read(
+                    schema.getPublicKeyGroup()::fromBytes,
+                    schema.getPublicKeyGroup().elementSize());
+            return new BlsPublicKey(element, schema);
+        } catch (IllegalStateException e) {
+            throw new IllegalArgumentException("Unable to deserialize pairing public key", e);
+        }
     }
 
     /**
@@ -90,7 +102,7 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
         final SignatureSchema schema = publicKeys.getFirst().signatureSchema();
         final List<GroupElement> elements =
                 publicKeys.stream().map(BlsPublicKey::element).toList();
-        final GroupElement aggregatedElement = schema.getPublicKeyGroup().batchAdd(elements);
+        final GroupElement aggregatedElement = schema.getPublicKeyGroup().add(elements);
         return new BlsPublicKey(aggregatedElement, schema);
     }
 
