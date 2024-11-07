@@ -67,7 +67,7 @@ public record NizkProof(
     /**
      * Generates a NizkProof proof.
      *
-     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      * @param random a source of randomness
      * @param statement       the public part of the proof
      * @param witness         the private part of the proof
@@ -138,7 +138,7 @@ public record NizkProof(
     /**
      * Verifies this proof against another statement
      *
-     * @param signatureSchema Defines which and how elliptic curve is used in the protocol
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      * @param statement       the public information to verify this proof
      * @return true if the statement matches the information used to generate this proof. False otherwise
      */

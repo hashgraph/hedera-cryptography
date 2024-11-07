@@ -71,7 +71,7 @@ public record TssPublicShare(@NonNull Integer shareId, @NonNull BlsPublicKey pub
                 .map(BlsPublicKey::signatureSchema)
                 .collect(Collectors.toSet());
         if (s.size() > 1) {
-            throw new IllegalArgumentException("publicKeys must not contain more than one schema");
+            throw new IllegalArgumentException("publicKeys must not contain more than one signatureSchema");
         }
         final SignatureSchema signatureSchema = s.stream().findFirst().orElseThrow();
         final List<FieldElement> xs = publicShares.stream()

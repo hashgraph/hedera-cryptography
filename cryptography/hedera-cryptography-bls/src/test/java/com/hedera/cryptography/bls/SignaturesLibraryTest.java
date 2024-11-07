@@ -245,8 +245,8 @@ class SignaturesLibraryTest {
     /**
      *  Asserts that either throws an IllegalArgumentException or that the result of invoking the consumer is not the same as the original value
      *
-     * @param originalValue expected value to be different than this one
-     * @param creator the function that creates the elements out of an array
+     * @param originalValue expected value to be different from this one
+     * @param creator the function that creates the elements from an array
      * @param message the message to show in case validation fails
      * @param <T> the type of the comparison object
      * @return a consumer that performs the check when requested

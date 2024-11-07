@@ -30,7 +30,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Represents a partial signature created out of a share of a secret key.
+ * Represents a partial signature created from share of a secret key.
  * It's a BLS signature with an owner.
  *
  * @param shareId the share ID
@@ -80,7 +80,7 @@ public record TssShareSignature(@NonNull Integer shareId, @NonNull BlsSignature 
                 .map(BlsSignature::signatureSchema)
                 .collect(Collectors.toSet());
         if (s.size() > 1) {
-            throw new IllegalArgumentException("publicKeys must not contain more than one schema");
+            throw new IllegalArgumentException("publicKeys must not contain more than one signatureSchema");
         }
         final SignatureSchema signatureSchema = s.stream().findFirst().orElseThrow();
         final List<FieldElement> xs = partialSignatures.stream()
