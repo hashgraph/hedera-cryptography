@@ -32,7 +32,7 @@ public class NaiveCurveProvider extends PairingFriendlyCurveProvider {
      */
     @Override
     public Curve curve() {
-        return TestFixtureCurves.NAIVE_CURVE;
+        return TestFixtureCurves.NO_PAIRING_CURVE;
     }
 
     /**

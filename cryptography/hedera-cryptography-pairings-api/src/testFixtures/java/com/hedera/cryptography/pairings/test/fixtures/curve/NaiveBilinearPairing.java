@@ -22,22 +22,19 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 
 /**
- * A naive implementation of the BilinearPairing interface for testing purposes.
- * This implementation simply holds two GroupElement instances and provides a method
- * to compare them with another BilinearPairing.
+ * Without having an actual elliptic curve implementation, this curve is not supporting the bilinear pairing operation.
  */
 public record NaiveBilinearPairing(@NonNull GroupElement first, @NonNull GroupElement second)
         implements BilinearPairing {
 
     /**
-     * Compares this bilinear pairing with another bilinear pairing.
+     * This curve is not supporting the bilinear pairing operation.
      *
      * @param other the other bilinear pairing to compare with
      * @return true if both the first and second group elements are equal to the corresponding elements in the other pairing, false otherwise
      */
     @Override
     public boolean compare(@NonNull final BilinearPairing other) {
-        Objects.requireNonNull(other, "other must not be null");
-        return first.equals(other.first()) && second.equals(other.second());
+        throw new UnsupportedOperationException("Not implemented");
     }
 }

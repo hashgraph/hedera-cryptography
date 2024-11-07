@@ -42,7 +42,7 @@ public class NaiveCurve implements PairingFriendlyCurve {
     @Override
     @NonNull
     public Curve curve() {
-        return TestFixtureCurves.NAIVE_CURVE;
+        return TestFixtureCurves.NO_PAIRING_CURVE;
     }
 
     /**

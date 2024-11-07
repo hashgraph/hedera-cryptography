@@ -3,7 +3,7 @@ package com.hedera.cryptography.pairings.test.fixtures.curve;
 import com.hedera.cryptography.pairings.api.Curve;
 
 public enum TestFixtureCurves implements Curve {
-    NAIVE_CURVE((byte) 0);
+    NO_PAIRING_CURVE((byte) 0);
 
     /**
      * An internal unique id per curve.
