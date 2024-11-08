@@ -19,7 +19,6 @@ package com.hedera.cryptography.pairings.test.fixtures.curve;
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Objects;
 
 /**
  * Without having an actual elliptic curve implementation, this curve is not supporting the bilinear pairing operation.

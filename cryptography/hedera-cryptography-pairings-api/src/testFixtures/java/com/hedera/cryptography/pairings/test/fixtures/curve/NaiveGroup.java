@@ -25,8 +25,6 @@ import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.utils.HashUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Objects;
 
