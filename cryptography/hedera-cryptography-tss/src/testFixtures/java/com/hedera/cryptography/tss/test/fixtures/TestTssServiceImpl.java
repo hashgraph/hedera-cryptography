@@ -20,15 +20,18 @@ import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
+import com.hedera.cryptography.tss.api.TssParticipantPrivateInfo;
 import com.hedera.cryptography.tss.api.TssPrivateShare;
 import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.api.TssServiceGenesisStage;
 import com.hedera.cryptography.tss.api.TssServiceRekeyStage;
+import com.hedera.cryptography.tss.api.TssShareExtractor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 /**
  * A prototype implementation of the TssService.
@@ -53,12 +56,12 @@ public class TestTssServiceImpl implements TssService {
         return new TssServiceGenesisStage() {
             @NonNull
             @Override
-            public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory tssParticipantDirectory) {
-                return DkgUtils.testTssMessage(
+            public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory participantDirectory) {
+                return TssTestUtils.testTssMessage(
                         signatureSchema,
-                        tssParticipantDirectory.getParticipantId() + 1,
-                        tssParticipantDirectory.getShareIds().size(),
-                        tssParticipantDirectory.getThreshold());
+                        -1,
+                        participantDirectory.getShareIds().size(),
+                        participantDirectory.getThreshold());
             }
 
             @Override
@@ -67,36 +70,45 @@ public class TestTssServiceImpl implements TssService {
                 return true;
             }
 
-            @NonNull
             @Override
-            public TssMessage generateTssMessage(
+            public TssShareExtractor shareExtractor(
                     @NonNull final TssParticipantDirectory tssParticipantDirectory,
-                    @NonNull final TssPrivateShare privateShare) {
-                return DkgUtils.testTssMessage(
-                        signatureSchema,
-                        privateShare.shareId(),
-                        tssParticipantDirectory.getShareIds().size(),
-                        tssParticipantDirectory.getThreshold());
-            }
+                    @NonNull final List<TssMessage> messages) {
+                return new TssShareExtractor() {
+                    @NonNull
+                    @Override
+                    public TssShareExtractor async(@NonNull final ExecutorService executorService) {
+                        return this;
+                    }
 
-            @NonNull
-            @Override
-            public List<TssPrivateShare> obtainPrivateShares(
-                    @NonNull final TssParticipantDirectory participantDirectory,
-                    @NonNull final List<TssMessage> validTssMessages) {
-                return participantDirectory.getOwnedShareIds().stream()
-                        .map(sid -> new TssPrivateShare(sid, sharedZeroKey))
-                        .toList();
-            }
+                    @Override
+                    public TssShareExtractionStatus status() {
+                        return null;
+                    }
 
-            @NonNull
-            @Override
-            public List<TssPublicShare> obtainPublicShares(
-                    @NonNull final TssParticipantDirectory participantDirectory,
-                    @NonNull final List<TssMessage> tssMessages) {
-                return participantDirectory.getShareIds().stream()
-                        .map(sid -> new TssPublicShare(sid, sharedZeroKey.createPublicKey()))
-                        .toList();
+                    @NonNull
+                    @Override
+                    public TssShareExtractor extract(@NonNull final TssParticipantPrivateInfo privateInfo) {
+                        return this;
+                    }
+
+                    @NonNull
+                    @Override
+                    public List<TssPrivateShare> ownedPrivateShares(
+                            @NonNull TssParticipantPrivateInfo participantPrivateInfo) {
+                        return participantPrivateInfo.ownedShares(tssParticipantDirectory).stream()
+                                .map(sid -> new TssPrivateShare(sid, sharedZeroKey))
+                                .toList();
+                    }
+
+                    @NonNull
+                    @Override
+                    public List<TssPublicShare> allPublicShares() {
+                        return tssParticipantDirectory.getShareIds().stream()
+                                .map(sid -> new TssPublicShare(sid, sharedZeroKey.createPublicKey()))
+                                .toList();
+                    }
+                };
             }
         };
     }
@@ -109,9 +121,9 @@ public class TestTssServiceImpl implements TssService {
             public TssMessage generateTssMessage(
                     @NonNull final TssParticipantDirectory tssParticipantDirectory,
                     @NonNull final TssPrivateShare privateShare) {
-                return DkgUtils.testTssMessage(
+                return TssTestUtils.testTssMessage(
                         signatureSchema,
-                        tssParticipantDirectory.getParticipantId() + 1,
+                        privateShare.shareId(),
                         tssParticipantDirectory.getShareIds().size(),
                         tssParticipantDirectory.getThreshold());
             }
@@ -119,29 +131,50 @@ public class TestTssServiceImpl implements TssService {
             @Override
             public boolean verifyTssMessage(
                     @NonNull final TssParticipantDirectory participantDirectory,
-                    @Nullable final List<TssPublicShare> publicShares,
+                    @Nullable final List<TssPublicShare> previousPublicShares,
                     @NonNull final TssMessage tssMessage) {
                 return true;
             }
 
-            @NonNull
             @Override
-            public List<TssPrivateShare> obtainPrivateShares(
-                    @NonNull final TssParticipantDirectory participantDirectory,
-                    @NonNull final List<TssMessage> validTssMessages) {
-                return participantDirectory.getOwnedShareIds().stream()
-                        .map(sid -> new TssPrivateShare(sid, sharedZeroKey))
-                        .toList();
-            }
+            public TssShareExtractor shareExtractor(
+                    @NonNull final TssParticipantDirectory tssParticipantDirectory,
+                    @NonNull final List<TssMessage> messages) {
+                return new TssShareExtractor() {
+                    @NonNull
+                    @Override
+                    public TssShareExtractor async(@NonNull final ExecutorService executorService) {
+                        return this;
+                    }
 
-            @NonNull
-            @Override
-            public List<TssPublicShare> obtainPublicShares(
-                    @NonNull final TssParticipantDirectory participantDirectory,
-                    @NonNull final List<TssMessage> tssMessages) {
-                return participantDirectory.getShareIds().stream()
-                        .map(sid -> new TssPublicShare(sid, sharedZeroKey.createPublicKey()))
-                        .toList();
+                    @Override
+                    public TssShareExtractionStatus status() {
+                        return null;
+                    }
+
+                    @NonNull
+                    @Override
+                    public TssShareExtractor extract(@NonNull final TssParticipantPrivateInfo privateInfo) {
+                        return this;
+                    }
+
+                    @NonNull
+                    @Override
+                    public List<TssPrivateShare> ownedPrivateShares(
+                            @NonNull TssParticipantPrivateInfo participantPrivateInfo) {
+                        return participantPrivateInfo.ownedShares(tssParticipantDirectory).stream()
+                                .map(sid -> new TssPrivateShare(sid, sharedZeroKey))
+                                .toList();
+                    }
+
+                    @NonNull
+                    @Override
+                    public List<TssPublicShare> allPublicShares() {
+                        return tssParticipantDirectory.getShareIds().stream()
+                                .map(sid -> new TssPublicShare(sid, sharedZeroKey.createPublicKey()))
+                                .toList();
+                    }
+                };
             }
         };
     }

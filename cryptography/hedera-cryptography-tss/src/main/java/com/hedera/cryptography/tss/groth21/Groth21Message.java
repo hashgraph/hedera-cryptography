@@ -73,8 +73,8 @@ public record Groth21Message(
                 .put(generatingShare)
                 .putListSameSize(cipherTable.sharedRandomness(), GroupElement::toBytes)
                 .put(cipherTable.shareCiphertexts().length);
-        for (int i = 0; i < cipherTable.shareCiphertexts().length; i++) {
-            serializer.putListSameSize(cipherTable.shareCiphertexts()[i].cipherText(), GroupElement::toBytes);
+        for (var cipherText : cipherTable.shareCiphertexts()) {
+            serializer.putListSameSize(cipherText.cipherText(), GroupElement::toBytes);
         }
         return serializer
                 .putListSameSize(polynomialCommitment.coefficients(), GroupElement::toBytes)

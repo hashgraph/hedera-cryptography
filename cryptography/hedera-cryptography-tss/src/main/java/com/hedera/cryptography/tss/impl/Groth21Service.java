@@ -17,6 +17,7 @@
 package com.hedera.cryptography.tss.impl;
 
 import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.tss.api.TssException;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.api.TssServiceGenesisStage;
@@ -28,7 +29,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Random;
 
 /**
- * A Threshold Signature Scheme based on Groth21.
+ * A Threshold Signature Scheme (TSS) Service based on Groth21.
  * Use the service to:
  *   <ul>
  *       <li>Get a {@link Groth21GenesisStage}</li>
@@ -73,6 +74,10 @@ public class Groth21Service implements TssService {
     @NonNull
     @Override
     public TssMessage messageFromBytes(@NonNull final byte[] message) {
-        return Groth21Message.fromBytes(message);
+        try {
+            return Groth21Message.fromBytes(message);
+        } catch (IllegalStateException e) {
+            throw new TssException("Could not read tss message", e);
+        }
     }
 }
