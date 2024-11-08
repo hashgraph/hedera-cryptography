@@ -121,7 +121,7 @@ tasks.register("versionAsSpecified") {
         if (project.gradle.startParameter.taskNames.contains("versionAsSpecified")) {
             throw IllegalArgumentException(
                 "No newVersion property provided! " +
-                        "Please add the parameter -PnewVersion=<version> when running this task."
+                    "Please add the parameter -PnewVersion=<version> when running this task."
             )
         }
     }
