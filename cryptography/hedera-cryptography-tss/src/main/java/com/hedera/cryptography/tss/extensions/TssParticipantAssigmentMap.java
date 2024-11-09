@@ -19,14 +19,28 @@ package com.hedera.cryptography.tss.extensions;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.tss.api.TssShareTable;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.IntStream;
 
 /**
- * A {@link TssShareTable} that maps a shareId to its participants {@link BlsPublicKey} for encryption.
+ * Contains mappings useful for the {@link com.hedera.cryptography.tss.api.TssParticipantDirectory}:
+ * <ul>
+ *  <li> Maps {@code ParticipantId}s to owned {@code shareId}s</li>
+ *  <li> Maps {@code shareId}s to participant's {@code tssEncryptionPublicKey}s</li>
+ *  </ul>
  */
-public class TssEncryptionKeyMap implements TssShareTable<BlsPublicKey> {
+public class TssParticipantAssigmentMap implements TssShareTable<BlsPublicKey> {
+    /**
+     * Each index represents a participant.
+     * Two values are stored per index:
+     * <ul>
+     *  <li>the first shareId belonging to the participant</li>
+     *  <li>the number of shares assigned to that participant</li>
+     *  </ul>
+     */
+    private final int[][] participantsShares;
+
     /**
      * Stores the {@code participant} that is the owner of each shareId in the protocol.
      * Index 0 represents shareId 1 and so on.
@@ -39,36 +53,41 @@ public class TssEncryptionKeyMap implements TssShareTable<BlsPublicKey> {
      */
     private final BlsPublicKey[] tssKeyTable;
     /**
-     *Sorted by value array of participantIds
+     * A map that assigns an index to each participant in the directory
      */
-    private final long[] participantIds;
+    private final Map<Long, Integer> participantIds;
 
     /**
      * Constructor
      *
+     * @param participantsShares  a table where each index is a participant and each value the first share assigned to it, and the second value the number-of-shares
      * @param shareAllocationTable  Stores the {@code participant} that is the owner of each shareId in the protocol.
      * @param participantIds list of sorted by value participant ids
      * @param tssKeyTable Stores the {@link BlsPublicKey} of each {@code participant} in the protocol.
      */
-    public TssEncryptionKeyMap(
+    public TssParticipantAssigmentMap(
+            @NonNull final int[][] participantsShares,
             @NonNull final int[] shareAllocationTable,
-            @NonNull final long[] participantIds,
+            @NonNull final Map<Long, Integer> participantIds,
             @NonNull final BlsPublicKey[] tssKeyTable) {
+        this.participantsShares = participantsShares;
+        ;
         this.shareAllocationTable = shareAllocationTable;
         this.tssKeyTable = tssKeyTable;
         this.participantIds = participantIds;
     }
 
     /**
-     * Returns a tssShareId owner's {@link BlsPublicKey}.
-     * If null, the participant does not belong to the directory.
+     * Returns the {@code share} owner's {@link BlsPublicKey}.
+     *
      * @param shareId the numeric value of the share, not the index.
      * @return a BlsPublicKey belonging to the owner of the share.
+     * @throws IllegalArgumentException if the share is higher than the number of shares assigned or if is less or equals to 0
      */
     @NonNull
     @Override
     public BlsPublicKey getForShareId(final int shareId) {
-        if (shareId > shareAllocationTable.length || shareId <= 0) {
+        if (shareId <= 0 || shareId > shareAllocationTable.length) {
             throw new IllegalArgumentException("Invalid ShareId");
         }
         var shareOwner = shareAllocationTable[shareId - 1];
@@ -76,30 +95,20 @@ public class TssEncryptionKeyMap implements TssShareTable<BlsPublicKey> {
     }
 
     /**
-     * Given that participantId are long based, and we want to map it to a sequential index, to save storage
-     * @param participantId the participant that wants to know the ids of its shares.
-     * @return the shares owned by the participant {@code participantId}.
-     */
-    private int getParticipantIndex(final long participantId) {
-        return Arrays.binarySearch(participantIds, participantId);
-    }
-
-    /**
      * Returns the shares owned by the participant {@code participantId }
-     * @param participantId the participant querying for the info
-     * @return the list of shares owned by the participant
+     * @param participantId the participant querying for the info.
+     * @return the list of shares owned by the participant if it owns any share, an empty list if it doesn't or is not a participant in the scheme.
      */
     @NonNull
     public List<Integer> getSharesForParticipantId(final long participantId) {
-        List<Integer> shares = new ArrayList<>();
-        int i = 0;
-        final int participantIndex = getParticipantIndex(participantId);
-        while (i < shareAllocationTable.length) {
-            if (shareAllocationTable[i] == participantIndex) {
-                shares.add(i + 1);
-            }
-            i++;
+        final Integer participantIndex = participantIds.get(participantId);
+        if (participantIndex == null) {
+            return List.of();
         }
-        return shares;
+        return IntStream.range(
+                        participantsShares[participantIndex][0],
+                        participantsShares[participantIndex][0] + participantsShares[participantIndex][1])
+                .boxed()
+                .toList();
     }
 }

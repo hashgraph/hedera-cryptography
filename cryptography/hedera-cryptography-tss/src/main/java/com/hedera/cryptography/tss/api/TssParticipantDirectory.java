@@ -19,7 +19,7 @@ package com.hedera.cryptography.tss.api;
 import static java.util.Objects.requireNonNull;
 
 import com.hedera.cryptography.bls.BlsPublicKey;
-import com.hedera.cryptography.tss.extensions.TssEncryptionKeyMap;
+import com.hedera.cryptography.tss.extensions.TssParticipantAssigmentMap;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -64,18 +64,18 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
     /**
      * Stores the {@link BlsPublicKey} of each {@code ShareId} in the protocol.
      */
-    private final TssEncryptionKeyMap tssEncryptionTable;
+    private final TssParticipantAssigmentMap tssEncryptionTable;
 
     /**
      * Constructs a {@link TssParticipantDirectory}.
      *
      * @param shareIds            list of participants ids
-     * @param tssEncryptionTable  share to participant public keys table
+     * @param tssEncryptionTable  share to public keys and participant to index table
      * @param threshold           the threshold value for the TSS
      */
     private TssParticipantDirectory(
             @NonNull final List<Integer> shareIds,
-            @NonNull final TssEncryptionKeyMap tssEncryptionTable,
+            @NonNull final TssParticipantAssigmentMap tssEncryptionTable,
             final int threshold) {
         this.shareIds = List.copyOf(shareIds);
         this.tssEncryptionTable = tssEncryptionTable;
@@ -216,22 +216,31 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
 
             final List<Integer> shareIds =
                     IntStream.rangeClosed(1, totalShares).boxed().toList();
-            final int[] shareOwnershipTable = new int[totalShares];
+            final int[] shareOwnersTable = new int[totalShares];
+            final int[][] participantShares = new int[participantIds.length][2];
             final BlsPublicKey[] tssEncryptionPublicKeyTable = new BlsPublicKey[participantIds.length];
-
+            final Map<Long, Integer> participantIndexes = new HashMap<>();
             int currentIndex = 0;
             // Iteration of the sorted int representation to make sure we assign the shares deterministically.
             for (int i = 0; i < participantIds.length; i++) {
                 final ParticipantEntry entry = participantEntries.get(participantIds[i]);
                 tssEncryptionPublicKeyTable[i] = entry.tssEncryptionPublicKey;
-                // Add the public encryption key for each participant id in the iteration.
-                Arrays.fill(shareOwnershipTable, currentIndex, currentIndex + entry.shareCount(), i);
+
+                // ParticipantId-->ParticipantIndex
+                participantIndexes.put(participantIds[i], i);
+                // ShareIndex-->ParticipantIndex
+                Arrays.fill(shareOwnersTable, currentIndex, currentIndex + entry.shareCount(), i);
+                // ParticipantIndex-->First Share; Share count
+                participantShares[i][0] = currentIndex + 1; // adds the first share and the last share
+                participantShares[i][1] = entry.shareCount();
+
                 currentIndex += entry.shareCount();
             }
 
             return new TssParticipantDirectory(
                     shareIds,
-                    new TssEncryptionKeyMap(shareOwnershipTable, participantIds, tssEncryptionPublicKeyTable),
+                    new TssParticipantAssigmentMap(
+                            participantShares, shareOwnersTable, participantIndexes, tssEncryptionPublicKeyTable),
                     threshold);
         }
     }
