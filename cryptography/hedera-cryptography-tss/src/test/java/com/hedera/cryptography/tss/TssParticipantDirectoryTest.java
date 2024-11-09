@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import java.util.List;
@@ -39,7 +38,6 @@ class TssParticipantDirectoryTest {
         builder.withParticipant(1, 1, publicKey);
 
         // Test threshold too low
-
         Exception exception = assertThrows(IllegalArgumentException.class, () -> builder.withThreshold(0));
         assertTrue(exception.getMessage().contains("Invalid threshold: 0"), "threshold check did not work");
 
@@ -84,7 +82,6 @@ class TssParticipantDirectoryTest {
 
     @Test
     void testValidConstructionHasValidPrivateSharesSize() {
-        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
         final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
         final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
         final TssParticipantDirectory directory = TssParticipantDirectory.createBuilder()
@@ -103,21 +100,28 @@ class TssParticipantDirectoryTest {
 
     @Test
     void testGetForShareId() {
-        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
         final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
         final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey3 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey4 = mock(BlsPublicKey.class);
         final TssParticipantDirectory directory = TssParticipantDirectory.createBuilder()
                 .withParticipant(1, 5, publicKey1)
                 .withParticipant(2, 2, publicKey2)
+                .withParticipant(Long.MAX_VALUE / 2, 1, publicKey3)
+                .withParticipant(Long.MAX_VALUE, 2, publicKey4)
                 .withThreshold(1)
                 .build();
 
         assertEquals(publicKey1, directory.getForShareId(1));
         assertEquals(publicKey1, directory.getForShareId(5));
         assertEquals(publicKey2, directory.getForShareId(6));
-        assertEquals(publicKey2, directory.getForShareId(7));
-        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(8));
+        assertEquals(publicKey3, directory.getForShareId(8));
+        assertEquals(publicKey4, directory.getForShareId(10));
         assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(0));
         assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(-1));
+        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(12));
+
+        assertEquals(1, directory.ownedShares(Long.MAX_VALUE / 2).size());
+        assertEquals(2, directory.ownedShares(Long.MAX_VALUE).size());
     }
 }

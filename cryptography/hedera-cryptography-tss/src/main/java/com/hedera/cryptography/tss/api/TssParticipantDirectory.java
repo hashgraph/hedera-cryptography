@@ -61,7 +61,6 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
      * In any case, to which of those of this property refers to, depends on whether the directory represents a candidate directory or an adopted one.
      */
     private final int threshold;
-
     /**
      * Stores the {@link BlsPublicKey} of each {@code ShareId} in the protocol.
      */
@@ -70,9 +69,9 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
     /**
      * Constructs a {@link TssParticipantDirectory}.
      *
-     * @param shareIds list of participants ids
-     * @param tssEncryptionTable share to participant public keys table
-     * @param threshold  the threshold value for the TSS
+     * @param shareIds            list of participants ids
+     * @param tssEncryptionTable  share to participant public keys table
+     * @param threshold           the threshold value for the TSS
      */
     private TssParticipantDirectory(
             @NonNull final List<Integer> shareIds,
@@ -123,19 +122,7 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
      */
     @NonNull
     public List<Integer> ownedShares(long participantId) {
-        int pi = getParticipantIndex(participantId);
-        return tssEncryptionTable.getSharesForParticipantId(pi);
-    }
-
-    /**
-     * Given that participantId are long based, and we want to map it to a sequential index, to save storage
-     * @param participantId the participant that wants to know the ids of its shares.
-     * @return the shares owned by the participant {@code participantId}.
-     */
-    private int getParticipantIndex(final long participantId) {
-        return (int)
-                participantId; // FUTURE-WORK: #16481 strengthen this mapping of participantId to a sequential index, to
-        // save storage
+        return tssEncryptionTable.getSharesForParticipantId(participantId);
     }
 
     /**
@@ -154,7 +141,7 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
      * A builder for creating {@link TssParticipantDirectory} instances.
      */
     public static class Builder {
-        private final Map<Integer, ParticipantEntry> participantEntries = new HashMap<>();
+        private final Map<Long, ParticipantEntry> participantEntries = new HashMap<>();
         private int threshold;
 
         private Builder() {}
@@ -186,7 +173,7 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
          */
         @NonNull
         public Builder withParticipant(
-                final Integer participantId,
+                final long participantId,
                 final int numberOfShares,
                 @NonNull final BlsPublicKey tssEncryptionPublicKey) {
             if (participantEntries.containsKey(participantId))
@@ -218,10 +205,11 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
                     .map(ParticipantEntry::shareCount)
                     .reduce(0, Integer::sum);
 
-            final List<Integer> participantIds =
-                    participantEntries.keySet().stream().sorted().toList();
-            final Integer maxId =
-                    participantIds.stream().max(Integer::compareTo).orElse(participantEntries.size());
+            final var participantIds = participantEntries.keySet().stream()
+                    .sorted(Long::compareTo)
+                    .mapToLong(Long::longValue)
+                    .toArray();
+
             if (threshold > totalShares) {
                 throw new IllegalStateException("Threshold exceeds the number of shares");
             }
@@ -229,20 +217,22 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
             final List<Integer> shareIds =
                     IntStream.rangeClosed(1, totalShares).boxed().toList();
             final int[] shareOwnershipTable = new int[totalShares];
-            final BlsPublicKey[] tssEncryptionPublicKeyTable = new BlsPublicKey[maxId + 1];
+            final BlsPublicKey[] tssEncryptionPublicKeyTable = new BlsPublicKey[participantIds.length];
 
             int currentIndex = 0;
             // Iteration of the sorted int representation to make sure we assign the shares deterministically.
-            for (int participantId : participantIds) {
-                final ParticipantEntry entry = participantEntries.get(participantId);
-                tssEncryptionPublicKeyTable[participantId] = entry.tssEncryptionPublicKey;
+            for (int i = 0; i < participantIds.length; i++) {
+                final ParticipantEntry entry = participantEntries.get(participantIds[i]);
+                tssEncryptionPublicKeyTable[i] = entry.tssEncryptionPublicKey;
                 // Add the public encryption key for each participant id in the iteration.
-                Arrays.fill(shareOwnershipTable, currentIndex, currentIndex + entry.shareCount(), participantId);
+                Arrays.fill(shareOwnershipTable, currentIndex, currentIndex + entry.shareCount(), i);
                 currentIndex += entry.shareCount();
             }
 
             return new TssParticipantDirectory(
-                    shareIds, new TssEncryptionKeyMap(shareOwnershipTable, tssEncryptionPublicKeyTable), threshold);
+                    shareIds,
+                    new TssEncryptionKeyMap(shareOwnershipTable, participantIds, tssEncryptionPublicKeyTable),
+                    threshold);
         }
     }
 

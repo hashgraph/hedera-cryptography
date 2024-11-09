@@ -20,35 +20,43 @@ import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.tss.api.TssShareTable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * A {@link TssShareTable} that maps a shareId to its participants {@link BlsPublicKey} for encryption.
  */
 public class TssEncryptionKeyMap implements TssShareTable<BlsPublicKey> {
-
     /**
      * Stores the {@code participant} that is the owner of each shareId in the protocol.
      * Index 0 represents shareId 1 and so on.
      * Shares are assigned sequentially.
      */
     private final int[] shareAllocationTable;
-
     /**
      * Stores the {@link BlsPublicKey} of each {@code participant} in the protocol.
      * There is one BlsPublicKey per participant
      */
     private final BlsPublicKey[] tssKeyTable;
+    /**
+     *Sorted by value array of participantIds
+     */
+    private final long[] participantIds;
 
     /**
      * Constructor
      *
      * @param shareAllocationTable  Stores the {@code participant} that is the owner of each shareId in the protocol.
+     * @param participantIds list of sorted by value participant ids
      * @param tssKeyTable Stores the {@link BlsPublicKey} of each {@code participant} in the protocol.
      */
-    public TssEncryptionKeyMap(final int[] shareAllocationTable, final BlsPublicKey[] tssKeyTable) {
+    public TssEncryptionKeyMap(
+            @NonNull final int[] shareAllocationTable,
+            @NonNull final long[] participantIds,
+            @NonNull final BlsPublicKey[] tssKeyTable) {
         this.shareAllocationTable = shareAllocationTable;
         this.tssKeyTable = tssKeyTable;
+        this.participantIds = participantIds;
     }
 
     /**
@@ -68,16 +76,26 @@ public class TssEncryptionKeyMap implements TssShareTable<BlsPublicKey> {
     }
 
     /**
+     * Given that participantId are long based, and we want to map it to a sequential index, to save storage
+     * @param participantId the participant that wants to know the ids of its shares.
+     * @return the shares owned by the participant {@code participantId}.
+     */
+    private int getParticipantIndex(final long participantId) {
+        return Arrays.binarySearch(participantIds, participantId);
+    }
+
+    /**
      * Returns the shares owned by the participant {@code participantId }
      * @param participantId the participant querying for the info
      * @return the list of shares owned by the participant
      */
     @NonNull
-    public List<Integer> getSharesForParticipantId(final int participantId) {
+    public List<Integer> getSharesForParticipantId(final long participantId) {
         List<Integer> shares = new ArrayList<>();
         int i = 0;
+        final int participantIndex = getParticipantIndex(participantId);
         while (i < shareAllocationTable.length) {
-            if (shareAllocationTable[i] == participantId) {
+            if (shareAllocationTable[i] == participantIndex) {
                 shares.add(i + 1);
             }
             i++;
