@@ -19,13 +19,12 @@ package com.hedera.cryptography.tss.api;
 import static java.util.Objects.requireNonNull;
 
 import com.hedera.cryptography.bls.BlsPublicKey;
-import com.hedera.cryptography.tss.extensions.TssParticipantAssigmentMap;
+import com.hedera.cryptography.tss.extensions.TssParticipantAssigmentMapping;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 
 /**
  * Represents a public directory of participants in a Threshold Signature Scheme (TSS).
@@ -47,11 +46,6 @@ import java.util.stream.IntStream;
  */
 public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey> {
     /**
-     * A list of all assigned {@code shareIds} in the directory. The values are sorted, consecutive and starting from 1.
-     * This contains the numeric value of the share, not the index. ShareId 0 does not exist and is reserved.
-     */
-    private final List<Integer> shareIds;
-    /**
      * In directory used to generate TssMessages, the {@code threshold} defines the number of shares-of-shares that will be created to perform shamir-secret-sharing.
      * In a directory used to validate and latter process TssMessages, the {@code threshold} value is the minimum number of messages that assures the correct recovery of
      * {@link TssPrivateShare} and {@link TssPublicShare}.
@@ -64,21 +58,17 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
     /**
      * Stores the {@link BlsPublicKey} of each {@code ShareId} in the protocol.
      */
-    private final TssParticipantAssigmentMap tssEncryptionTable;
+    private final TssParticipantAssigmentMapping participantAssigmentMapping;
 
     /**
      * Constructs a {@link TssParticipantDirectory}.
      *
-     * @param shareIds            list of participants ids
-     * @param tssEncryptionTable  share to public keys and participant to index table
-     * @param threshold           the threshold value for the TSS
+     * @param participantAssigmentMapping different kinds of necessary mappings
+     * @param threshold the threshold value for the TSS
      */
     private TssParticipantDirectory(
-            @NonNull final List<Integer> shareIds,
-            @NonNull final TssParticipantAssigmentMap tssEncryptionTable,
-            final int threshold) {
-        this.shareIds = List.copyOf(shareIds);
-        this.tssEncryptionTable = tssEncryptionTable;
+            @NonNull final TssParticipantAssigmentMapping participantAssigmentMapping, final int threshold) {
+        this.participantAssigmentMapping = participantAssigmentMapping;
         this.threshold = threshold;
     }
 
@@ -111,7 +101,7 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
      */
     @NonNull
     public List<Integer> getShareIds() {
-        return shareIds;
+        return participantAssigmentMapping.getShareIds();
     }
 
     /**
@@ -122,7 +112,7 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
      */
     @NonNull
     public List<Integer> ownedShares(long participantId) {
-        return tssEncryptionTable.getSharesForParticipantId(participantId);
+        return participantAssigmentMapping.getSharesForParticipantId(participantId);
     }
 
     /**
@@ -134,7 +124,7 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
     @NonNull
     @Override
     public BlsPublicKey getForShareId(final int shareId) {
-        return tssEncryptionTable.getForShareId(shareId);
+        return participantAssigmentMapping.tssEncryptionKeyForShareId(shareId);
     }
 
     /**
@@ -214,8 +204,6 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
                 throw new IllegalStateException("Threshold exceeds the number of shares");
             }
 
-            final List<Integer> shareIds =
-                    IntStream.rangeClosed(1, totalShares).boxed().toList();
             final int[] shareOwnersTable = new int[totalShares];
             final int[][] participantShares = new int[participantIds.length][2];
             final BlsPublicKey[] tssEncryptionPublicKeyTable = new BlsPublicKey[participantIds.length];
@@ -238,8 +226,7 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
             }
 
             return new TssParticipantDirectory(
-                    shareIds,
-                    new TssParticipantAssigmentMap(
+                    new TssParticipantAssigmentMapping(
                             participantShares, shareOwnersTable, participantIndexes, tssEncryptionPublicKeyTable),
                     threshold);
         }

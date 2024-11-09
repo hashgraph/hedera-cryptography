@@ -17,7 +17,6 @@
 package com.hedera.cryptography.tss.extensions;
 
 import com.hedera.cryptography.bls.BlsPublicKey;
-import com.hedera.cryptography.tss.api.TssShareTable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,7 @@ import java.util.stream.IntStream;
  *  <li> Maps {@code shareId}s to participant's {@code tssEncryptionPublicKey}s</li>
  *  </ul>
  */
-public class TssParticipantAssigmentMap implements TssShareTable<BlsPublicKey> {
+public class TssParticipantAssigmentMapping {
     /**
      * Each index represents a participant.
      * Two values are stored per index:
@@ -42,7 +41,7 @@ public class TssParticipantAssigmentMap implements TssShareTable<BlsPublicKey> {
     private final int[][] participantsShares;
 
     /**
-     * Stores the {@code participant} that is the owner of each shareId in the protocol.
+     * Stores the {@code participant} index that is the owner of each shareId in the protocol.
      * Index 0 represents shareId 1 and so on.
      * Shares are assigned sequentially.
      */
@@ -65,7 +64,7 @@ public class TssParticipantAssigmentMap implements TssShareTable<BlsPublicKey> {
      * @param participantIds list of sorted by value participant ids
      * @param tssKeyTable Stores the {@link BlsPublicKey} of each {@code participant} in the protocol.
      */
-    public TssParticipantAssigmentMap(
+    public TssParticipantAssigmentMapping(
             @NonNull final int[][] participantsShares,
             @NonNull final int[] shareAllocationTable,
             @NonNull final Map<Long, Integer> participantIds,
@@ -85,8 +84,7 @@ public class TssParticipantAssigmentMap implements TssShareTable<BlsPublicKey> {
      * @throws IllegalArgumentException if the share is higher than the number of shares assigned or if is less or equals to 0
      */
     @NonNull
-    @Override
-    public BlsPublicKey getForShareId(final int shareId) {
+    public BlsPublicKey tssEncryptionKeyForShareId(final int shareId) {
         if (shareId <= 0 || shareId > shareAllocationTable.length) {
             throw new IllegalArgumentException("Invalid ShareId");
         }
@@ -110,5 +108,16 @@ public class TssParticipantAssigmentMap implements TssShareTable<BlsPublicKey> {
                         participantsShares[participantIndex][0] + participantsShares[participantIndex][1])
                 .boxed()
                 .toList();
+    }
+
+    /**
+     * Return the list of all the shareIds.
+     * In this list, the first share has value of 1.
+     * This returns the numeric value of the share, not the index.
+     * @return the list of all the shareIds
+     */
+    @NonNull
+    public List<Integer> getShareIds() {
+        return IntStream.rangeClosed(1, shareAllocationTable.length).boxed().toList();
     }
 }
