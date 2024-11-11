@@ -66,8 +66,10 @@ tasks.named("closeSonatypeStagingRepository") {
 tasks.named("releaseMavenCentral") {
     group = "release"
     // For initial release and testing builds, we should use the closeSonatypeStagingRepository task
-    // instead of the closeAndReleaseStagingRepository task. Left in for testing and the first release.
-    // Once automation has been tested and the initial release manually completed, this should be reverted
+    // instead of the closeAndReleaseStagingRepository task. Left in for testing and the first
+    // release.
+    // Once automation has been tested and the initial release manually completed, this should be
+    // reverted
     // to the closeAndReleaseStagingRepository task.
 
     // dependsOn(tasks.closeAndReleaseStagingRepository)

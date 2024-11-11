@@ -21,17 +21,19 @@ plugins {
 
 // Publishing tasks are only enabled if we publish to the matching group.
 // Otherwise, Nexus configuration and credentials do not fit.
-//val publishingPackageGroup = providers.gradleProperty("publishingPackageGroup").getOrElse("")
+// val publishingPackageGroup = providers.gradleProperty("publishingPackageGroup").getOrElse("")
 
 tasks.withType<PublishToMavenRepository>().configureEach {
-    // Not required since both common and cryptography modules are published under the same com.hedera prefix which
+    // Not required since both common and cryptography modules are published under the same
+    // com.hedera prefix which
     // is the same configured Nexus profile on maven central.
     // enabled = publishingPackageGroup == "com.hedera.common"
 }
 
 publishing {
     publications.named<MavenPublication>("maven") {
-        // Explicitly set the package group to com.hedera.common since the cryptograph module is published under
+        // Explicitly set the package group to com.hedera.common since the cryptograph module is
+        // published under
         // the same com.hedera Nexus profile.
         group = "com.hedera.common"
         pom.description =
