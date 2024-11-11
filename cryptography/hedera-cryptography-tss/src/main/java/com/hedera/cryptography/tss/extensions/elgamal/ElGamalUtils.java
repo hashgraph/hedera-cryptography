@@ -24,6 +24,7 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.extensions.FiniteFieldPolynomial;
+import com.hedera.cryptography.tss.api.TssException;
 import com.hedera.cryptography.tss.api.TssShareTable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -39,7 +40,6 @@ import java.util.Random;
  * It also provides utility methods for generating these substitution tables for encryption and decryption.
  */
 public class ElGamalUtils {
-
 
     /**
      * Private constructor for static access
@@ -85,6 +85,10 @@ public class ElGamalUtils {
         for (int i = 0; i < value.length; i++) {
             final FieldElement r_j = randomness.get(i);
             final FieldElement m_j = elGamalDirectSubstitutionTable.get(value[i]);
+            if (m_j == null) {
+                // This should never happen: It means that the ElGamalSubstitutionTable is incorrectly configured
+                throw new TssException("Wrong ElGamalSubstitutionTable");
+            }
             final GroupElement c2_j = encryptionPublicKeyElement.multiply(r_j).add(generator.multiply(m_j));
             encryptedShareElements.add(c2_j);
         }

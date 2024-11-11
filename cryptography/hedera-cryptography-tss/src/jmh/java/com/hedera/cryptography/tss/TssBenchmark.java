@@ -79,107 +79,208 @@ public class TssBenchmark {
         signatureSchema = SignatureSchema.create(Curve.ALT_BN128, groupAssignment);
     }
 
-    //Benchmark                                (benchmarkTest)  (groupAssignment)  (messageSize)  Mode  Cnt     Score   Error  Units
-    //TssBenchmark.genesisObtainPrivateShares           P100S1   SHORT_SIGNATURES            N/A    ss          0.339           s/op
-    //TssBenchmark.genesisObtainPrivateShares           P100S1  SHORT_PUBLIC_KEYS            N/A    ss          0.130           s/op
-    //TssBenchmark.genesisObtainPrivateShares           P100S3   SHORT_SIGNATURES            N/A    ss          3.117           s/op
-    //TssBenchmark.genesisObtainPrivateShares           P100S3  SHORT_PUBLIC_KEYS            N/A    ss          1.160           s/op
-    //TssBenchmark.genesisObtainPrivateShares           P100S5   SHORT_SIGNATURES            N/A    ss          8.643           s/op
-    //TssBenchmark.genesisObtainPrivateShares           P100S5  SHORT_PUBLIC_KEYS            N/A    ss          3.094           s/op
-    //TssBenchmark.genesisObtainPrivateShares          P100S10   SHORT_SIGNATURES            N/A    ss         30.192           s/op
-    //TssBenchmark.genesisObtainPrivateShares          P100S10  SHORT_PUBLIC_KEYS            N/A    ss         12.788           s/op
-    //TssBenchmark.genesisObtainPrivateShares          P130S10   SHORT_SIGNATURES            N/A    ss         42.122           s/op
-    //TssBenchmark.genesisObtainPrivateShares          P130S10  SHORT_PUBLIC_KEYS            N/A    ss         16.104           s/op
-    //TssBenchmark.genesisObtainPublicShares            P100S1   SHORT_SIGNATURES            N/A    ss          3.043           s/op
-    //TssBenchmark.genesisObtainPublicShares            P100S1  SHORT_PUBLIC_KEYS            N/A    ss          2.172           s/op
-    //TssBenchmark.genesisObtainPublicShares            P100S3   SHORT_SIGNATURES            N/A    ss         89.245           s/op
-    //TssBenchmark.genesisObtainPublicShares            P100S3  SHORT_PUBLIC_KEYS            N/A    ss         60.999           s/op
-    //TssBenchmark.genesisObtainPublicShares            P100S5   SHORT_SIGNATURES            N/A    ss        433.085           s/op
-    //TssBenchmark.genesisObtainPublicShares            P100S5  SHORT_PUBLIC_KEYS            N/A    ss        283.260           s/op
-    //TssBenchmark.genesisObtainPublicShares           P100S10   SHORT_SIGNATURES            N/A    ss       3669.155           s/op
-    //TssBenchmark.genesisObtainPublicShares           P100S10  SHORT_PUBLIC_KEYS            N/A    ss       2382.951           s/op
-    //TssBenchmark.genesisObtainPublicShares           P130S10   SHORT_SIGNATURES            N/A    ss       8109.137           s/op
-    //TssBenchmark.genesisObtainPublicShares           P130S10  SHORT_PUBLIC_KEYS            N/A    ss       5226.440           s/op
-    //TssBenchmark.p0Signs                              P100S1   SHORT_SIGNATURES             32    ss          0.001           s/op
-    //TssBenchmark.p0Signs                              P100S1   SHORT_SIGNATURES            256    ss          0.001           s/op
-    //TssBenchmark.p0Signs                              P100S1   SHORT_SIGNATURES           1024    ss         ≈ 10⁻³           s/op
-    //TssBenchmark.p0Signs                              P100S1  SHORT_PUBLIC_KEYS             32    ss          0.001           s/op
-    //TssBenchmark.p0Signs                              P100S1  SHORT_PUBLIC_KEYS            256    ss          0.001           s/op
-    //TssBenchmark.p0Signs                              P100S1  SHORT_PUBLIC_KEYS           1024    ss          0.001           s/op
-    //TssBenchmark.p0Signs                              P100S3   SHORT_SIGNATURES             32    ss          0.001           s/op
-    //TssBenchmark.p0Signs                              P100S3   SHORT_SIGNATURES            256    ss          0.001           s/op
-    //TssBenchmark.p0Signs                              P100S3   SHORT_SIGNATURES           1024    ss          0.001           s/op
-    //TssBenchmark.p0Signs                              P100S3  SHORT_PUBLIC_KEYS             32    ss          0.002           s/op
-    //TssBenchmark.p0Signs                              P100S3  SHORT_PUBLIC_KEYS            256    ss          0.002           s/op
-    //TssBenchmark.p0Signs                              P100S3  SHORT_PUBLIC_KEYS           1024    ss          0.002           s/op
-    //TssBenchmark.p0Signs                              P100S5   SHORT_SIGNATURES             32    ss          0.001           s/op
-    //TssBenchmark.p0Signs                              P100S5   SHORT_SIGNATURES            256    ss          0.001           s/op
-    //TssBenchmark.p0Signs                              P100S5   SHORT_SIGNATURES           1024    ss          0.001           s/op
-    //TssBenchmark.p0Signs                              P100S5  SHORT_PUBLIC_KEYS             32    ss          0.002           s/op
-    //TssBenchmark.p0Signs                              P100S5  SHORT_PUBLIC_KEYS            256    ss          0.002           s/op
-    //TssBenchmark.p0Signs                              P100S5  SHORT_PUBLIC_KEYS           1024    ss          0.002           s/op
-    //TssBenchmark.p0Signs                             P100S10   SHORT_SIGNATURES             32    ss          0.001           s/op
-    //TssBenchmark.p0Signs                             P100S10   SHORT_SIGNATURES            256    ss          0.002           s/op
-    //TssBenchmark.p0Signs                             P100S10   SHORT_SIGNATURES           1024    ss          0.001           s/op
-    //TssBenchmark.p0Signs                             P100S10  SHORT_PUBLIC_KEYS             32    ss          0.004           s/op
-    //TssBenchmark.p0Signs                             P100S10  SHORT_PUBLIC_KEYS            256    ss          0.004           s/op
-    //TssBenchmark.p0Signs                             P100S10  SHORT_PUBLIC_KEYS           1024    ss          0.004           s/op
-    //TssBenchmark.p0Signs                             P130S10   SHORT_SIGNATURES             32    ss          0.001           s/op
-    //TssBenchmark.p0Signs                             P130S10   SHORT_SIGNATURES            256    ss          0.001           s/op
-    //TssBenchmark.p0Signs                             P130S10   SHORT_SIGNATURES           1024    ss          0.002           s/op
-    //TssBenchmark.p0Signs                             P130S10  SHORT_PUBLIC_KEYS             32    ss          0.004           s/op
-    //TssBenchmark.p0Signs                             P130S10  SHORT_PUBLIC_KEYS            256    ss          0.004           s/op
-    //TssBenchmark.p0Signs                             P130S10  SHORT_PUBLIC_KEYS           1024    ss          0.004           s/op
-    //TssBenchmark.rekeyObtainPrivateShares             P100S1   SHORT_SIGNATURES            N/A    ss          0.338           s/op
-    //TssBenchmark.rekeyObtainPrivateShares             P100S1  SHORT_PUBLIC_KEYS            N/A    ss          0.141           s/op
-    //TssBenchmark.rekeyObtainPrivateShares             P100S3   SHORT_SIGNATURES            N/A    ss          3.096           s/op
-    //TssBenchmark.rekeyObtainPrivateShares             P100S3  SHORT_PUBLIC_KEYS            N/A    ss          1.283           s/op
-    //TssBenchmark.rekeyObtainPrivateShares             P100S5   SHORT_SIGNATURES            N/A    ss          9.226           s/op
-    //TssBenchmark.rekeyObtainPrivateShares             P100S5  SHORT_PUBLIC_KEYS            N/A    ss          4.033           s/op
-    //TssBenchmark.rekeyObtainPrivateShares            P100S10   SHORT_SIGNATURES            N/A    ss         37.757           s/op
-    //TssBenchmark.rekeyObtainPrivateShares            P100S10  SHORT_PUBLIC_KEYS            N/A    ss         18.569           s/op
-    //TssBenchmark.rekeyObtainPrivateShares            P130S10   SHORT_SIGNATURES            N/A    ss         52.017           s/op
-    //TssBenchmark.rekeyObtainPrivateShares            P130S10  SHORT_PUBLIC_KEYS            N/A    ss         26.669           s/op
-    //TssBenchmark.rekeyObtainPublicShares              P100S1   SHORT_SIGNATURES            N/A    ss          4.225           s/op
-    //TssBenchmark.rekeyObtainPublicShares              P100S1  SHORT_PUBLIC_KEYS            N/A    ss          3.003           s/op
-    //TssBenchmark.rekeyObtainPublicShares              P100S3   SHORT_SIGNATURES            N/A    ss        112.521           s/op
-    //TssBenchmark.rekeyObtainPublicShares              P100S3  SHORT_PUBLIC_KEYS            N/A    ss         79.256           s/op
-    //TssBenchmark.rekeyObtainPublicShares              P100S5   SHORT_SIGNATURES            N/A    ss        528.783           s/op
-    //TssBenchmark.rekeyObtainPublicShares              P100S5  SHORT_PUBLIC_KEYS            N/A    ss        372.264           s/op
-    //TssBenchmark.rekeyObtainPublicShares             P100S10   SHORT_SIGNATURES            N/A    ss       4289.557           s/op
-    //TssBenchmark.rekeyObtainPublicShares             P100S10  SHORT_PUBLIC_KEYS            N/A    ss       3075.747           s/op
-    //TssBenchmark.rekeyObtainPublicShares             P130S10   SHORT_SIGNATURES            N/A    ss       9506.254           s/op
-    //TssBenchmark.rekeyObtainPublicShares             P130S10  SHORT_PUBLIC_KEYS            N/A    ss       6631.898           s/op
-    //TssBenchmark.signatureAggregation                 P100S1   SHORT_SIGNATURES             32    ss          0.039           s/op
-    //TssBenchmark.signatureAggregation                 P100S1   SHORT_SIGNATURES            256    ss          0.037           s/op
-    //TssBenchmark.signatureAggregation                 P100S1   SHORT_SIGNATURES           1024    ss          0.036           s/op
-    //TssBenchmark.signatureAggregation                 P100S1  SHORT_PUBLIC_KEYS             32    ss          0.046           s/op
-    //TssBenchmark.signatureAggregation                 P100S1  SHORT_PUBLIC_KEYS            256    ss          0.045           s/op
-    //TssBenchmark.signatureAggregation                 P100S1  SHORT_PUBLIC_KEYS           1024    ss          0.045           s/op
-    //TssBenchmark.signatureAggregation                 P100S3   SHORT_SIGNATURES             32    ss          0.249           s/op
-    //TssBenchmark.signatureAggregation                 P100S3   SHORT_SIGNATURES            256    ss          0.240           s/op
-    //TssBenchmark.signatureAggregation                 P100S3   SHORT_SIGNATURES           1024    ss          0.246           s/op
-    //TssBenchmark.signatureAggregation                 P100S3  SHORT_PUBLIC_KEYS             32    ss          0.282           s/op
-    //TssBenchmark.signatureAggregation                 P100S3  SHORT_PUBLIC_KEYS            256    ss          0.274           s/op
-    //TssBenchmark.signatureAggregation                 P100S3  SHORT_PUBLIC_KEYS           1024    ss          0.281           s/op
-    //TssBenchmark.signatureAggregation                 P100S5   SHORT_SIGNATURES             32    ss          0.690           s/op
-    //TssBenchmark.signatureAggregation                 P100S5   SHORT_SIGNATURES            256    ss          0.714           s/op
-    //TssBenchmark.signatureAggregation                 P100S5   SHORT_SIGNATURES           1024    ss          0.716           s/op
-    //TssBenchmark.signatureAggregation                 P100S5  SHORT_PUBLIC_KEYS             32    ss          0.752           s/op
-    //TssBenchmark.signatureAggregation                 P100S5  SHORT_PUBLIC_KEYS            256    ss          0.738           s/op
-    //TssBenchmark.signatureAggregation                 P100S5  SHORT_PUBLIC_KEYS           1024    ss          0.754           s/op
-    //TssBenchmark.signatureAggregation                P100S10   SHORT_SIGNATURES             32    ss          2.617           s/op
-    //TssBenchmark.signatureAggregation                P100S10   SHORT_SIGNATURES            256    ss          2.776           s/op
-    //TssBenchmark.signatureAggregation                P100S10   SHORT_SIGNATURES           1024    ss          2.713           s/op
-    //TssBenchmark.signatureAggregation                P100S10  SHORT_PUBLIC_KEYS             32    ss          2.729           s/op
-    //TssBenchmark.signatureAggregation                P100S10  SHORT_PUBLIC_KEYS            256    ss          2.766           s/op
-    //TssBenchmark.signatureAggregation                P100S10  SHORT_PUBLIC_KEYS           1024    ss          2.890           s/op
-    //TssBenchmark.signatureAggregation                P130S10   SHORT_SIGNATURES             32    ss          4.582           s/op
-    //TssBenchmark.signatureAggregation                P130S10   SHORT_SIGNATURES            256    ss          4.233           s/op
-    //TssBenchmark.signatureAggregation                P130S10   SHORT_SIGNATURES           1024    ss          4.572           s/op
-    //TssBenchmark.signatureAggregation                P130S10  SHORT_PUBLIC_KEYS             32    ss          5.500           s/op
-    //TssBenchmark.signatureAggregation                P130S10  SHORT_PUBLIC_KEYS            256    ss          4.570           s/op
-    //TssBenchmark.signatureAggregation                P130S10  SHORT_PUBLIC_KEYS           1024    ss          4.912           s/op
+    // Benchmark                                (benchmarkTest)  (groupAssignment)  (messageSize)  Mode  Cnt     Score
+    // Error  Units
+    // TssBenchmark.genesisObtainPrivateShares           P100S1   SHORT_SIGNATURES            N/A    ss          0.339
+    //         s/op
+    // TssBenchmark.genesisObtainPrivateShares           P100S1  SHORT_PUBLIC_KEYS            N/A    ss          0.130
+    //         s/op
+    // TssBenchmark.genesisObtainPrivateShares           P100S3   SHORT_SIGNATURES            N/A    ss          3.117
+    //         s/op
+    // TssBenchmark.genesisObtainPrivateShares           P100S3  SHORT_PUBLIC_KEYS            N/A    ss          1.160
+    //         s/op
+    // TssBenchmark.genesisObtainPrivateShares           P100S5   SHORT_SIGNATURES            N/A    ss          8.643
+    //         s/op
+    // TssBenchmark.genesisObtainPrivateShares           P100S5  SHORT_PUBLIC_KEYS            N/A    ss          3.094
+    //         s/op
+    // TssBenchmark.genesisObtainPrivateShares          P100S10   SHORT_SIGNATURES            N/A    ss         30.192
+    //         s/op
+    // TssBenchmark.genesisObtainPrivateShares          P100S10  SHORT_PUBLIC_KEYS            N/A    ss         12.788
+    //         s/op
+    // TssBenchmark.genesisObtainPrivateShares          P130S10   SHORT_SIGNATURES            N/A    ss         42.122
+    //         s/op
+    // TssBenchmark.genesisObtainPrivateShares          P130S10  SHORT_PUBLIC_KEYS            N/A    ss         16.104
+    //         s/op
+    // TssBenchmark.genesisObtainPublicShares            P100S1   SHORT_SIGNATURES            N/A    ss          3.043
+    //         s/op
+    // TssBenchmark.genesisObtainPublicShares            P100S1  SHORT_PUBLIC_KEYS            N/A    ss          2.172
+    //         s/op
+    // TssBenchmark.genesisObtainPublicShares            P100S3   SHORT_SIGNATURES            N/A    ss         89.245
+    //         s/op
+    // TssBenchmark.genesisObtainPublicShares            P100S3  SHORT_PUBLIC_KEYS            N/A    ss         60.999
+    //         s/op
+    // TssBenchmark.genesisObtainPublicShares            P100S5   SHORT_SIGNATURES            N/A    ss        433.085
+    //         s/op
+    // TssBenchmark.genesisObtainPublicShares            P100S5  SHORT_PUBLIC_KEYS            N/A    ss        283.260
+    //         s/op
+    // TssBenchmark.genesisObtainPublicShares           P100S10   SHORT_SIGNATURES            N/A    ss       3669.155
+    //         s/op
+    // TssBenchmark.genesisObtainPublicShares           P100S10  SHORT_PUBLIC_KEYS            N/A    ss       2382.951
+    //         s/op
+    // TssBenchmark.genesisObtainPublicShares           P130S10   SHORT_SIGNATURES            N/A    ss       8109.137
+    //         s/op
+    // TssBenchmark.genesisObtainPublicShares           P130S10  SHORT_PUBLIC_KEYS            N/A    ss       5226.440
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S1   SHORT_SIGNATURES             32    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S1   SHORT_SIGNATURES            256    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S1   SHORT_SIGNATURES           1024    ss         ≈ 10⁻³
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S1  SHORT_PUBLIC_KEYS             32    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S1  SHORT_PUBLIC_KEYS            256    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S1  SHORT_PUBLIC_KEYS           1024    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S3   SHORT_SIGNATURES             32    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S3   SHORT_SIGNATURES            256    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S3   SHORT_SIGNATURES           1024    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S3  SHORT_PUBLIC_KEYS             32    ss          0.002
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S3  SHORT_PUBLIC_KEYS            256    ss          0.002
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S3  SHORT_PUBLIC_KEYS           1024    ss          0.002
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S5   SHORT_SIGNATURES             32    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S5   SHORT_SIGNATURES            256    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S5   SHORT_SIGNATURES           1024    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S5  SHORT_PUBLIC_KEYS             32    ss          0.002
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S5  SHORT_PUBLIC_KEYS            256    ss          0.002
+    //         s/op
+    // TssBenchmark.p0Signs                              P100S5  SHORT_PUBLIC_KEYS           1024    ss          0.002
+    //         s/op
+    // TssBenchmark.p0Signs                             P100S10   SHORT_SIGNATURES             32    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                             P100S10   SHORT_SIGNATURES            256    ss          0.002
+    //         s/op
+    // TssBenchmark.p0Signs                             P100S10   SHORT_SIGNATURES           1024    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                             P100S10  SHORT_PUBLIC_KEYS             32    ss          0.004
+    //         s/op
+    // TssBenchmark.p0Signs                             P100S10  SHORT_PUBLIC_KEYS            256    ss          0.004
+    //         s/op
+    // TssBenchmark.p0Signs                             P100S10  SHORT_PUBLIC_KEYS           1024    ss          0.004
+    //         s/op
+    // TssBenchmark.p0Signs                             P130S10   SHORT_SIGNATURES             32    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                             P130S10   SHORT_SIGNATURES            256    ss          0.001
+    //         s/op
+    // TssBenchmark.p0Signs                             P130S10   SHORT_SIGNATURES           1024    ss          0.002
+    //         s/op
+    // TssBenchmark.p0Signs                             P130S10  SHORT_PUBLIC_KEYS             32    ss          0.004
+    //         s/op
+    // TssBenchmark.p0Signs                             P130S10  SHORT_PUBLIC_KEYS            256    ss          0.004
+    //         s/op
+    // TssBenchmark.p0Signs                             P130S10  SHORT_PUBLIC_KEYS           1024    ss          0.004
+    //         s/op
+    // TssBenchmark.rekeyObtainPrivateShares             P100S1   SHORT_SIGNATURES            N/A    ss          0.338
+    //         s/op
+    // TssBenchmark.rekeyObtainPrivateShares             P100S1  SHORT_PUBLIC_KEYS            N/A    ss          0.141
+    //         s/op
+    // TssBenchmark.rekeyObtainPrivateShares             P100S3   SHORT_SIGNATURES            N/A    ss          3.096
+    //         s/op
+    // TssBenchmark.rekeyObtainPrivateShares             P100S3  SHORT_PUBLIC_KEYS            N/A    ss          1.283
+    //         s/op
+    // TssBenchmark.rekeyObtainPrivateShares             P100S5   SHORT_SIGNATURES            N/A    ss          9.226
+    //         s/op
+    // TssBenchmark.rekeyObtainPrivateShares             P100S5  SHORT_PUBLIC_KEYS            N/A    ss          4.033
+    //         s/op
+    // TssBenchmark.rekeyObtainPrivateShares            P100S10   SHORT_SIGNATURES            N/A    ss         37.757
+    //         s/op
+    // TssBenchmark.rekeyObtainPrivateShares            P100S10  SHORT_PUBLIC_KEYS            N/A    ss         18.569
+    //         s/op
+    // TssBenchmark.rekeyObtainPrivateShares            P130S10   SHORT_SIGNATURES            N/A    ss         52.017
+    //         s/op
+    // TssBenchmark.rekeyObtainPrivateShares            P130S10  SHORT_PUBLIC_KEYS            N/A    ss         26.669
+    //         s/op
+    // TssBenchmark.rekeyObtainPublicShares              P100S1   SHORT_SIGNATURES            N/A    ss          4.225
+    //         s/op
+    // TssBenchmark.rekeyObtainPublicShares              P100S1  SHORT_PUBLIC_KEYS            N/A    ss          3.003
+    //         s/op
+    // TssBenchmark.rekeyObtainPublicShares              P100S3   SHORT_SIGNATURES            N/A    ss        112.521
+    //         s/op
+    // TssBenchmark.rekeyObtainPublicShares              P100S3  SHORT_PUBLIC_KEYS            N/A    ss         79.256
+    //         s/op
+    // TssBenchmark.rekeyObtainPublicShares              P100S5   SHORT_SIGNATURES            N/A    ss        528.783
+    //         s/op
+    // TssBenchmark.rekeyObtainPublicShares              P100S5  SHORT_PUBLIC_KEYS            N/A    ss        372.264
+    //         s/op
+    // TssBenchmark.rekeyObtainPublicShares             P100S10   SHORT_SIGNATURES            N/A    ss       4289.557
+    //         s/op
+    // TssBenchmark.rekeyObtainPublicShares             P100S10  SHORT_PUBLIC_KEYS            N/A    ss       3075.747
+    //         s/op
+    // TssBenchmark.rekeyObtainPublicShares             P130S10   SHORT_SIGNATURES            N/A    ss       9506.254
+    //         s/op
+    // TssBenchmark.rekeyObtainPublicShares             P130S10  SHORT_PUBLIC_KEYS            N/A    ss       6631.898
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S1   SHORT_SIGNATURES             32    ss          0.039
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S1   SHORT_SIGNATURES            256    ss          0.037
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S1   SHORT_SIGNATURES           1024    ss          0.036
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S1  SHORT_PUBLIC_KEYS             32    ss          0.046
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S1  SHORT_PUBLIC_KEYS            256    ss          0.045
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S1  SHORT_PUBLIC_KEYS           1024    ss          0.045
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S3   SHORT_SIGNATURES             32    ss          0.249
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S3   SHORT_SIGNATURES            256    ss          0.240
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S3   SHORT_SIGNATURES           1024    ss          0.246
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S3  SHORT_PUBLIC_KEYS             32    ss          0.282
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S3  SHORT_PUBLIC_KEYS            256    ss          0.274
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S3  SHORT_PUBLIC_KEYS           1024    ss          0.281
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S5   SHORT_SIGNATURES             32    ss          0.690
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S5   SHORT_SIGNATURES            256    ss          0.714
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S5   SHORT_SIGNATURES           1024    ss          0.716
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S5  SHORT_PUBLIC_KEYS             32    ss          0.752
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S5  SHORT_PUBLIC_KEYS            256    ss          0.738
+    //         s/op
+    // TssBenchmark.signatureAggregation                 P100S5  SHORT_PUBLIC_KEYS           1024    ss          0.754
+    //         s/op
+    // TssBenchmark.signatureAggregation                P100S10   SHORT_SIGNATURES             32    ss          2.617
+    //         s/op
+    // TssBenchmark.signatureAggregation                P100S10   SHORT_SIGNATURES            256    ss          2.776
+    //         s/op
+    // TssBenchmark.signatureAggregation                P100S10   SHORT_SIGNATURES           1024    ss          2.713
+    //         s/op
+    // TssBenchmark.signatureAggregation                P100S10  SHORT_PUBLIC_KEYS             32    ss          2.729
+    //         s/op
+    // TssBenchmark.signatureAggregation                P100S10  SHORT_PUBLIC_KEYS            256    ss          2.766
+    //         s/op
+    // TssBenchmark.signatureAggregation                P100S10  SHORT_PUBLIC_KEYS           1024    ss          2.890
+    //         s/op
+    // TssBenchmark.signatureAggregation                P130S10   SHORT_SIGNATURES             32    ss          4.582
+    //         s/op
+    // TssBenchmark.signatureAggregation                P130S10   SHORT_SIGNATURES            256    ss          4.233
+    //         s/op
+    // TssBenchmark.signatureAggregation                P130S10   SHORT_SIGNATURES           1024    ss          4.572
+    //         s/op
+    // TssBenchmark.signatureAggregation                P130S10  SHORT_PUBLIC_KEYS             32    ss          5.500
+    //         s/op
+    // TssBenchmark.signatureAggregation                P130S10  SHORT_PUBLIC_KEYS            256    ss          4.570
+    //         s/op
+    // TssBenchmark.signatureAggregation                P130S10  SHORT_PUBLIC_KEYS           1024    ss          4.912
+    //         s/op
 
     @Benchmark
     public List<?> genesisObtainPublicShares(TssGenesisState state) {

@@ -82,7 +82,6 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
         return new Builder();
     }
 
-
     /**
      * While executing the scheme there exist up to two threshold values:<br>
      * <ul>

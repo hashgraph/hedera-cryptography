@@ -41,6 +41,7 @@ public interface TssService {
      * </ul>
      * @return the genesis stage.
      */
+    @NonNull
     TssServiceGenesisStage genesisStage();
 
     /**
@@ -56,14 +57,16 @@ public interface TssService {
      *
      * @return the rekey stage.
      */
+    @NonNull
     TssServiceRekeyStage rekeyStage();
 
     /**
      * Creates a {@link TssMessage} from a byte array representation.
-     * @see TssMessage#bytes() for the specification that message needs to follow.
+     * @see TssMessage#toBytes() for the specification that message needs to follow.
      * @param message the byte representation of the opaque underlying structure used by the library
      * @return a TssMessage instance
+     * @throws TssMessageParsingException in case of error while parsing the TssMessage from its byte array format
      */
     @NonNull
-    TssMessage messageFromBytes(@NonNull byte[] message);
+    TssMessage messageFromBytes(@NonNull byte[] message) throws TssMessageParsingException;
 }

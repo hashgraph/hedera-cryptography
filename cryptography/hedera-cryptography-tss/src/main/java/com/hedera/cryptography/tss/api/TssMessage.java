@@ -40,27 +40,27 @@ public interface TssMessage {
      *  </ul>
      * A {@link TssMessage} byte representation will consist of:<br>
      * <ul>
-     *  <li>4 fixed bytes representing the version of the message.</li>
-     *  <li>1 byte representing the SignatureSchema that originated the message.</li>
-     *  <li>4 fixed bytes representing the shareId that originated the message.</li>
-     *  <li>4 fixed bytes representing the size <code>n<sub>1</sub></code> of the next list.</li>
-     *  <li> a list of <code>n<sub>1</sub></code> elements of {@code g} size representing the shared randomness. (Total of <code>n<sub>1</sub>*g</code> bytes)</li>
-     *  <li>4 fixed bytes representing the size M of the next lists.</li>
-     *  <li>
-     *      <ul>
-     *          <li>4 bytes representing the size <code>n<sub>2</sub></code> of the next list</li>
-     *          <li>a list of <code>n<sub>2</sub></code> elements of {@code g} size representing the encrypted shares</li>
-     *      </ul>
-     *      (total of {@code M*N_2*g} bytes)
-     *  </li>
-     *  <li>4 fixed bytes representing the size <code>n<sub>3</sub></code> of the next list</li>
-     *  <li>A list of <code>n<sub>3</sub></code> elements of {@code g} size representing the polynomial commitment (total of <code>n<sub>3</sub>*g</code> bytes) </li>
-     *  <li>{@code g} bytes representing the proof {@code f} element</li>
-     *  <li>{@code g} bytes representing the proof {@code a} element</li>
-     *  <li>{@code s} bytes representing the proof {@code zr} element</li>
-     *  <li>{@code s} bytes representing the proof {@code za} element</li>
-     *  </ul>
+     *     <li>4 bytes (big-endian) representing the version of the message. Usually {@code MESSAGE_CURRENT_VERSION} constant value</li>
+     *     <li>1 byte for {@link SignatureSchema} that originated the message. See {@link SignatureSchema#toByte()}</li>
+     *     <li>4 bytes (big-endian) representing the shareId that originated the message.</li>
+     *     <li>4 bytes (big-endian) representing the size {@code n1} of the shared randomness list.</li>
+     *     <li>A list of {@code n1} elements, each of size {@code g} bytes, representing the shared randomness (total of {@code n1 * g} bytes). See {@link GroupElement#toBytes()}</li>
+     *     <li>4 bytes (big-endian) representing the number of encrypted share lists, {@code M}.</li>
+     *     <li>
+     *         For each of the {@code M} encrypted share lists:
+     *         <ul>
+     *             <li>4 bytes (big-endian) representing the size {@code n2} of the encrypted shares list.</li>
+     *             <li>A list of {@code n2} elements, each of size {@code g} bytes, representing the encrypted shares (total of {@code n2 * g} bytes). See {@link GroupElement#toBytes()}</li>
+     *         </ul>
+     *     </li>
+     *     <li>4 bytes (big-endian) representing the size {@code n3} of the polynomial commitment list.</li>
+     *     <li>A list of {@code n3} elements, each of size {@code g} bytes, representing the polynomial commitment (total of {@code n3 * g} bytes). See {@link GroupElement#toBytes()}</li>
+     *     <li>{@code g} bytes representing the proof element {@code f}. See {@link GroupElement#toBytes()}</li>
+     *     <li>{@code g} bytes representing the proof element {@code a}. See {@link GroupElement#toBytes()}</li>
+     *     <li>{@code e} bytes representing the proof scalar {@code zr}. See {@link FieldElement#toBytes()}</li>
+     *     <li>{@code e} bytes representing the proof scalar {@code za}. See {@link FieldElement#toBytes()}</li>
+     * </ul>
      * @return the byte representation of a TssMessage
      */
-    byte[] bytes();
+    byte[] toBytes();
 }

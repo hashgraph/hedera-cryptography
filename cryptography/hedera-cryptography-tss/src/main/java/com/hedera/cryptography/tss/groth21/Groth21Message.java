@@ -50,26 +50,14 @@ public record Groth21Message(
         implements TssMessage {
 
     /**
-     * Cast or transform a {@link TssMessage} into a {@link Groth21Message}
-     * @param tssMessage the message to cast or transform
-     * @return the cast or transformed message
-     */
-    @NonNull
-    static Groth21Message fromTssMessage(final @NonNull TssMessage tssMessage) {
-        return Objects.requireNonNull(tssMessage, "tssMessage must not be null") instanceof Groth21Message message
-                ? message
-                : Groth21Message.fromBytes(tssMessage.bytes());
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     @NonNull
-    public byte[] bytes() {
+    public byte[] toBytes() {
         final Serializer serializer = new Serializer()
                 .put(version)
-                .put(signatureSchema.getIdByte())
+                .put(signatureSchema.toByte())
                 .put(generatingShare)
                 .putListSameSize(cipherTable.sharedRandomness(), GroupElement::toBytes)
                 .put(cipherTable.shareCiphertexts().length);
@@ -87,17 +75,32 @@ public record Groth21Message(
     }
 
     /**
-     * Reads a {@link Groth21Message} from its serialized form following the specs in
-     * {@link TssMessage#bytes()}
+     * Reads a {@link Groth21Message} from its serialized form following the specs in {@link TssMessage#toBytes()}
+     *
      * @param message the byte array representation of the message
+     * @param expectedSchema the signatureSchema expected
      * @return a Groth21Message instance
      * @throws IllegalStateException if the message cannot be read
      */
     @NonNull
-    public static Groth21Message fromBytes(@NonNull final byte[] message) {
-        final Deserializer deserializer = new Deserializer(message);
+    public static Groth21Message fromBytes(
+            @NonNull final byte[] message, @NonNull final SignatureSchema expectedSchema) {
+        final Deserializer deserializer = new Deserializer(Objects.requireNonNull(message, "message must not be null"));
+        Objects.requireNonNull(expectedSchema, "expected schema must not be null");
         final int version = deserializer.readInt();
-        final SignatureSchema schema = SignatureSchema.create(deserializer.readByte());
+        if (version != TssMessage.MESSAGE_CURRENT_VERSION) {
+            throw new IllegalStateException("Invalid message version: " + version);
+        }
+        final SignatureSchema schema;
+        try {
+            schema = SignatureSchema.create(deserializer.readByte());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Invalid signature schema: " + e.getMessage());
+        }
+
+        if (!expectedSchema.equals(schema)) {
+            throw new IllegalStateException("Invalid signature schema");
+        }
         final int fieldElementSize = schema.getPairingFriendlyCurve().field().elementSize();
         final int groupElementSize = schema.getPublicKeyGroup().elementSize();
 

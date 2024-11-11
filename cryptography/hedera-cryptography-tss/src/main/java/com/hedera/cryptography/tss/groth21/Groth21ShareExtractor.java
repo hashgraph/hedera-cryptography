@@ -60,20 +60,18 @@ class Groth21ShareExtractor<P, S> implements TssShareExtractor {
     /**
      * Constructor
      * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
-     * @param validTssMessages a list of <strong>previously validated</strong> {@link TssMessage}s
+     * @param validTssMessages a list of <strong>previously validated</strong> {@link Groth21Message}s
      * @param participantDirectory the candidate directory
      * @param keyExtractionHelper the helper object that will be used to transform and aggregate the different types of keys depending on the stage.
+     * @throws IllegalArgumentException in case the list of {@link TssMessage} cannot be converted properly to {@link Groth21Message} instances
      */
     Groth21ShareExtractor(
             @NonNull final SignatureSchema signatureSchema,
-            @NonNull final List<TssMessage> validTssMessages,
+            @NonNull final List<Groth21Message> validTssMessages,
             @NonNull final TssParticipantDirectory participantDirectory,
             @NonNull final KeyExtractionHelper<P, S> keyExtractionHelper) {
         this.signatureSchema = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
-        this.validTssMessages =
-                Objects.requireNonNull(validTssMessages, "validateTssMessages must not be null").stream()
-                        .map(Groth21Message::fromTssMessage)
-                        .toList();
+        this.validTssMessages = Objects.requireNonNull(validTssMessages, "validateTssMessages must not be null");
         this.participantDirectory =
                 Objects.requireNonNull(participantDirectory, "participantDirectory must not be null");
         this.elGamalTable = ElGamalUtils.elGamalReverseSubstitutionTable(signatureSchema);
@@ -91,7 +89,8 @@ class Groth21ShareExtractor<P, S> implements TssShareExtractor {
 
     @Override
     public TssShareExtractionStatus status() {
-        return new TssShareExtractionStatus() {// FUTURE-WORK, report the advance of the process while extracting the shares
+        return new TssShareExtractionStatus() { // FUTURE-WORK, report the advance of the process while extracting the
+            // shares
             @Override
             public boolean isCompleted() {
                 return false;

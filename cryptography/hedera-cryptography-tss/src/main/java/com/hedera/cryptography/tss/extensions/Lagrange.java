@@ -34,8 +34,7 @@ public class Lagrange {
     /**
      * Private constructor for static access
      */
-    private Lagrange() {
-    }
+    private Lagrange() {}
 
     /**
      * This method calculates the Lagrange polynomial for a given set of data points,

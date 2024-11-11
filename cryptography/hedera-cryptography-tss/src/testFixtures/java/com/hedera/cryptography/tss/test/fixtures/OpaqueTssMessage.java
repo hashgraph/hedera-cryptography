@@ -20,6 +20,6 @@ import com.hedera.cryptography.tss.api.TssMessage;
 
 /**
  * An opaque representation of the message.
- * @param bytes the bytes that represents this message
+ * @param toBytes the bytes that represents this message
  */
-public record OpaqueTssMessage(byte[] bytes) implements TssMessage {}
+public record OpaqueTssMessage(byte[] toBytes) implements TssMessage {}

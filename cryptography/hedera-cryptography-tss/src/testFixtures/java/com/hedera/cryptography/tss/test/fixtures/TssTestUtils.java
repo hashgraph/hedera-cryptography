@@ -18,7 +18,6 @@ package com.hedera.cryptography.tss.test.fixtures;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.SignatureSchema;
-import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssPrivateShare;
@@ -92,16 +91,15 @@ public class TssTestUtils {
             final int generatingShare,
             final int totalShares,
             final int threshold) {
-        final var zero =
-                signatureSchema.getPairingFriendlyCurve().field().fromLong(0);
+        final var zero = signatureSchema.getPairingFriendlyCurve().field().fromLong(0);
         final int n = signatureSchema.getPairingFriendlyCurve().field().elementSize();
         final var zeroElement = signatureSchema.getPublicKeyGroup().zero();
         final var zeros = Collections.nCopies(n, zeroElement);
-        final var commitmentCoefficients = Collections.nCopies(threshold, zeroElement);
+        final var commitmentCoefficients = Collections.nCopies(threshold + 1, zeroElement);
 
         final var serializer = new Serializer()
                 .put(TssMessage.MESSAGE_CURRENT_VERSION)
-                .put(signatureSchema.getIdByte())
+                .put(signatureSchema.toByte())
                 .put(generatingShare)
                 .putListSameSize(zeros, GroupElement::toBytes)
                 .put(totalShares);
@@ -124,7 +122,9 @@ public class TssTestUtils {
      */
     @NonNull
     public static List<List<TssPrivateShare>> randomPrivateShares(
-            @NonNull final TssTestCommittee committee, @NonNull final Random rng, @NonNull final SignatureSchema signatureSchema) {
+            @NonNull final TssTestCommittee committee,
+            @NonNull final Random rng,
+            @NonNull final SignatureSchema signatureSchema) {
         final var pks = rndSks(signatureSchema, rng, committee.size() * committee.sharesPerParticipant());
         return IntStream.range(0, committee.size())
                 .mapToObj(i -> IntStream.range(0, committee.sharesPerParticipant())

@@ -60,6 +60,7 @@ public class Groth21RekeyStage extends Groth21Stage implements TssServiceRekeySt
                 TssPrivateShare::aggregate, // The rekey aggregation is based in Lagrange interpolation
                 TssPublicShare::new,
                 TssPublicShare::aggregate); // The rekey aggregation is based in Lagrange interpolation
-        return new Groth21ShareExtractor<>(signatureSchema, validTssMessages, participantDirectory, helper);
+        return new Groth21ShareExtractor<>(
+                signatureSchema, fromTssMessages(validTssMessages), participantDirectory, helper);
     }
 }

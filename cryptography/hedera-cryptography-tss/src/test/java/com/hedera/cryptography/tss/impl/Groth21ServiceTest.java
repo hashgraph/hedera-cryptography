@@ -14,23 +14,19 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.tss;
+package com.hedera.cryptography.tss.impl;
 
 import static com.hedera.cryptography.tss.test.fixtures.TssTestUtils.rndSks;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
-import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
+import com.hedera.cryptography.tss.api.TssMessageParsingException;
 import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
-import com.hedera.cryptography.tss.api.TssShareExtractor;
 import com.hedera.cryptography.tss.api.TssShareSignature;
-import com.hedera.cryptography.tss.impl.Groth21Service;
 import com.hedera.cryptography.tss.test.fixtures.TssTestCommittee;
 import com.hedera.cryptography.tss.test.fixtures.TssTestUtils;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
@@ -41,14 +37,12 @@ import java.util.Random;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * A test to showcase the Tss protocol for a specific use-case
- */
 @WithRng
-class TssTest {
-
-    public static final SignatureSchema SIGNATURE_SCHEMA =
+class Groth21ServiceTest {
+    static final SignatureSchema SIGNATURE_SCHEMA =
             SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
+
+    static final TssService SERVICE = new Groth21Service(SIGNATURE_SCHEMA, new Random());
     public static final int GENESIS_SIZE = 2;
     public static final int GENESIS_SHARES = 5;
     public static final int TARGET_SIZE = 4;
@@ -64,25 +58,89 @@ class TssTest {
     }
 
     @Test
-    void testToBytesAndBackAgain() {
+    void testInvalidVersion() {
+        final var tssMessage = TssTestUtils.testTssMessage(SIGNATURE_SCHEMA, 0, 2, 3);
+        final var bytes = tssMessage.toBytes();
+        // Corrupt the version bytes
+        bytes[0] = (byte) 0xFF;
+        bytes[1] = (byte) 0xFF;
+        bytes[2] = (byte) 0xFF;
+        bytes[3] = (byte) 0xFF;
+
+        assertThrows(TssMessageParsingException.class, () -> SERVICE.messageFromBytes(bytes));
+    }
+
+    @Test
+    void testInvalidSignatureSchema() {
+        final var tssMessage = TssTestUtils.testTssMessage(SIGNATURE_SCHEMA, 0, 2, 3);
+        final var bytes = tssMessage.toBytes();
+        // Set an invalid signature schema byte
+        bytes[Integer.BYTES] = (byte) 0xFF;
+        assertThrows(TssMessageParsingException.class, () -> SERVICE.messageFromBytes(bytes));
+    }
+
+    @Test
+    void testDifferentSignatureSchema() {
+        final var tssMessage = TssTestUtils.testTssMessage(
+                SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS), 0, 2, 3);
+        final var bytes = tssMessage.toBytes();
+        assertThrows(TssMessageParsingException.class, () -> SERVICE.messageFromBytes(bytes));
+    }
+
+    @Test
+    void testGenesisStageNonNull() {
+        assertNotNull(SERVICE.genesisStage());
+    }
+
+    @Test
+    void testRekeyStageNonNull() {
+        assertNotNull(SERVICE.rekeyStage());
+    }
+
+    @Test
+    void testVerifyInvalidMessage() {
+        var genesisCommittee = new TssTestCommittee(1, 2, keys);
+        var participantDirectory = genesisCommittee.participantDirectory();
+        final var tssMessage = TssTestUtils.testTssMessage(
+                SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS), 0, 2, 3);
+        assertThrows(IllegalArgumentException.class, () -> SERVICE.genesisStage()
+                .verifyTssMessage(participantDirectory, tssMessage));
+        assertThrows(IllegalArgumentException.class, () -> SERVICE.rekeyStage()
+                .verifyTssMessage(participantDirectory, null, tssMessage));
+    }
+
+    @Test
+    void testAggregateInvalidMessage() {
+        var genesisCommittee = new TssTestCommittee(1, 2, keys);
+        var participantDirectory = genesisCommittee.participantDirectory();
+        final var tssMessage = TssTestUtils.testTssMessage(
+                SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS), 0, 2, 3);
+        assertThrows(IllegalArgumentException.class, () -> SERVICE.genesisStage()
+                .shareExtractor(participantDirectory, List.of(tssMessage)));
+        assertThrows(IllegalArgumentException.class, () -> SERVICE.rekeyStage()
+                .shareExtractor(participantDirectory, List.of(tssMessage)));
+    }
+
+    @Test
+    void testToBytesAndBackAgain() throws TssMessageParsingException {
         var genesisCommittee = new TssTestCommittee(1, 2, keys);
         var participantDirectory = genesisCommittee.participantDirectory();
         var myMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
-        var myMessageBytes = myMessage.bytes();
+        var myMessageBytes = myMessage.toBytes();
 
         var message = tssService.messageFromBytes(myMessageBytes);
 
         assertTrue(tssService.genesisStage().verifyTssMessage(participantDirectory, message));
-
     }
+
     @Test
-    void testGenesis() {
+    void testGenesis() throws TssMessageParsingException {
         final var genesisCommittee = new TssTestCommittee(GENESIS_SIZE, GENESIS_SHARES, keys);
         final var participantDirectory = genesisCommittee.participantDirectory();
         final var myMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
         final var myInfo = genesisCommittee.privateInfoOf(0);
         assertNotNull(myMessage);
-        assertNotNull(tssService.messageFromBytes(myMessage.bytes()));
+        assertNotNull(tssService.messageFromBytes(myMessage.toBytes()));
         final var otherMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
         final var tssShareExtractor =
                 tssService.genesisStage().shareExtractor(participantDirectory, List.of(myMessage, otherMessage));
@@ -114,12 +172,16 @@ class TssTest {
 
         final var allPrivateShares = new ArrayList<>(privateShares);
         allPrivateShares.addAll(otherPrivateShares);
-        final var signatures = allPrivateShares.stream()
-                .map(share -> share.sign("MyMessage".getBytes()))
-                .toList();
+        final byte[] message = "MyMessage".getBytes();
+        final var signatures =
+                allPrivateShares.stream().map(share -> share.sign(message)).toList();
+
+        StreamUtils.zipStream(signatures, allPublicShares)
+                .forEach(e -> assertTrue(e.getKey().verify(e.getValue(), message)));
+
         final var aggregatedSignature = TssShareSignature.aggregate(signatures);
 
-        assertTrue(aggregatedSignature.verify(aggregatedPublicKey, "MyMessage".getBytes()));
+        assertTrue(aggregatedSignature.verify(aggregatedPublicKey, message));
     }
 
     @Test
@@ -135,7 +197,7 @@ class TssTest {
 
         final var pastPublicShares = genesisShareExtractor.allPublicShares();
         final var pastLedgerId = TssPublicShare.aggregate(pastPublicShares);
-        final  var allPrivateShares = genesisCommittee.allPrivateInfo().stream()
+        final var allPrivateShares = genesisCommittee.allPrivateInfo().stream()
                 .map(privateInfo -> tssService
                         .genesisStage()
                         .shareExtractor(genesisCommittee.participantDirectory(), genesisMessages)

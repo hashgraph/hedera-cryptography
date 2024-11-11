@@ -64,6 +64,35 @@ public abstract class Groth21Stage {
     }
 
     /**
+     * Cast the message to the instance this service will work.
+     *
+     * @param tssMessage the tssMessage to convert
+     * @return a cast version of tssMessage
+     * @throws IllegalArgumentException if it is not the valid instance of the message
+     */
+    @NonNull
+    protected static Groth21Message fromTssMessage(@NonNull final TssMessage tssMessage) {
+        if (!(tssMessage instanceof Groth21Message))
+            throw new IllegalArgumentException(
+                    "invalid message type: " + tssMessage.getClass().getSimpleName());
+        return (Groth21Message) tssMessage;
+    }
+
+    /**
+     * Cast the messages to the instance this service will work with.
+     *
+     * @param tssMessages the list of tssMessage to convert
+     * @return a cast version of tssMessage
+     * @throws IllegalArgumentException if it is not the valid instance of the message
+     * @throws NullPointerException if the list is null
+     */
+    protected static List<Groth21Message> fromTssMessages(@NonNull final List<TssMessage> tssMessages) {
+        return Objects.requireNonNull(tssMessages, "tssMessages must not be null").stream()
+                .map(Groth21Stage::fromTssMessage)
+                .toList();
+    }
+
+    /**
      * Generates a TssMessage from a participantDirectory and a generatingShare
      *
      * @param participantDirectory the candidate tss directory
@@ -129,7 +158,7 @@ public abstract class Groth21Stage {
             @NonNull final TssParticipantDirectory tssTargetParticipantDirectory,
             @Nullable final List<TssPublicShare> previousPublicShares,
             @NonNull final TssMessage tssMessage) {
-        final Groth21Message message = Groth21Message.fromTssMessage(tssMessage);
+        final Groth21Message message = fromTssMessage(tssMessage);
 
         if (message.version() != TssMessage.MESSAGE_CURRENT_VERSION) {
             return false;
