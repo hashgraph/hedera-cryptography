@@ -20,6 +20,7 @@ import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssPrivateShare;
+import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssServiceRekeyStage;
 import com.hedera.cryptography.tss.api.TssShareExtractor;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -54,6 +55,11 @@ public class Groth21RekeyStage extends Groth21Stage implements TssServiceRekeySt
     public TssShareExtractor shareExtractor(
             @NonNull final TssParticipantDirectory participantDirectory,
             @NonNull final List<TssMessage> validTssMessages) {
-        throw new UnsupportedOperationException("Unsupported operation");
+        final KeyExtractionHelper<TssPrivateShare, TssPublicShare> helper = new KeyExtractionHelper<>(
+                TssPrivateShare::new,
+                TssPrivateShare::aggregate, // The rekey aggregation is based in Lagrange interpolation
+                TssPublicShare::new,
+                TssPublicShare::aggregate); // The rekey aggregation is based in Lagrange interpolation
+        return new Groth21ShareExtractor<>(signatureSchema, validTssMessages, participantDirectory, helper);
     }
 }

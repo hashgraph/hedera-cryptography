@@ -21,7 +21,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 /**
  * A Threshold Signature Scheme Service.
  * <p>
- * Contract of TSSService:
+ * Contract of TssService:
  *   <ul>
  *       <li>Get a {@link TssServiceGenesisStage}: Returns the genesis stage</li>
  *       <li>Get a {@link TssServiceRekeyStage}: Returns the rekey stage.</li>

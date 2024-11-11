@@ -23,6 +23,7 @@ import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.pairings.extensions.FiniteFieldPolynomial;
 import com.hedera.cryptography.tss.api.TssShareTable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -38,6 +39,13 @@ import java.util.Random;
  * It also provides utility methods for generating these substitution tables for encryption and decryption.
  */
 public class ElGamalUtils {
+
+
+    /**
+     * Private constructor for static access
+     */
+    private ElGamalUtils() {}
+
     /**
      * 256
      */
@@ -203,16 +211,7 @@ public class ElGamalUtils {
                 .isEmpty()) {
             throw new IllegalArgumentException("fieldRandomness must not be empty");
         }
-
-        final Field field = fieldRandomness.getFirst().field();
-
-        final FieldElement base = field.fromLong(TOTAL_NUMBER_OF_ELEMENTS);
-        FieldElement output = field.fromLong(0L);
-        for (int i = 0; i < fieldRandomness.size(); i++) {
-            output = output.add(fieldRandomness.get(i).multiply(base.power(i)));
-        }
-
-        return output;
+        return new FiniteFieldPolynomial(fieldRandomness).evaluate(TOTAL_NUMBER_OF_ELEMENTS);
     }
 
     /**

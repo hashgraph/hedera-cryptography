@@ -121,7 +121,7 @@ public abstract class Groth21Stage {
     /**
      * Allows verification of the message against the zk proof and the previous public shares if sent.
      * @param tssTargetParticipantDirectory the directory
-     * @param previousPublicShares the previous public shares. optional parameter.
+     * @param previousPublicShares The sorted list by shareId of the previous TssPublicShare. optional parameter.
      * @param tssMessage the message to verify
      * @return if the message is valid.
      */
@@ -134,20 +134,16 @@ public abstract class Groth21Stage {
         if (message.version() != TssMessage.MESSAGE_CURRENT_VERSION) {
             return false;
         }
-        if (message.signatureSchema().getCurve() != signatureSchema.getCurve()
-                || message.signatureSchema().getGroupAssignment() != signatureSchema.getGroupAssignment()) {
+        if (!signatureSchema.equals(message.signatureSchema())) {
             return false;
         }
 
         if (previousPublicShares != null) {
-            final BlsPublicKey pk = previousPublicShares.stream()
-                    .filter(ps -> ps.shareId().equals(message.generatingShare()))
-                    .findAny()
-                    .map(TssPublicShare::publicKey)
-                    .orElse(null);
-            if (pk == null) {
+            final int shareId = message.generatingShare();
+            if (shareId < 1 || shareId > previousPublicShares.size()) {
                 return false;
             }
+            final BlsPublicKey pk = previousPublicShares.get(shareId - 1).publicKey();
             if (!pk.element()
                     .equals(message.polynomialCommitment().coefficients().getFirst())) {
                 return false;

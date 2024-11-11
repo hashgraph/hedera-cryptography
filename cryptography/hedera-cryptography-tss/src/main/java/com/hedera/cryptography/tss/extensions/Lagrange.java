@@ -32,6 +32,12 @@ import java.util.stream.IntStream;
 public class Lagrange {
 
     /**
+     * Private constructor for static access
+     */
+    private Lagrange() {
+    }
+
+    /**
      * This method calculates the Lagrange polynomial for a given set of data points,
      * represented by two consecutive lists of xs and ys values where each point is given by {@code (xs[i]; ys[i])}
      * the {@code ys} are instances of {@link FieldElement}'s; and recovers the y-intercept value 𝑃(0).
