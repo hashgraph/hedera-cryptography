@@ -74,6 +74,7 @@ public class Groth21GenesisStage extends Groth21Stage implements TssServiceGenes
      *  will produce a new aggregated {@link BlsPublicKey} (known as ledgerId)
      */
     @Override
+    @NonNull
     public TssShareExtractor shareExtractor(
             @NonNull final TssParticipantDirectory participantDirectory,
             @NonNull final List<TssMessage> validTssMessages) {

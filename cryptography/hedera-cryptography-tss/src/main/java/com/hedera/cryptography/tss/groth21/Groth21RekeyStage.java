@@ -50,6 +50,7 @@ public class Groth21RekeyStage extends Groth21Stage implements TssServiceRekeySt
      *  and the list of {@link com.hedera.cryptography.tss.api.TssPublicShare} obtained aggregate to the previously obtained ledgerId
      */
     @Override
+    @NonNull
     public TssShareExtractor shareExtractor(
             @NonNull final TssParticipantDirectory participantDirectory,
             @NonNull final List<TssMessage> validTssMessages) {

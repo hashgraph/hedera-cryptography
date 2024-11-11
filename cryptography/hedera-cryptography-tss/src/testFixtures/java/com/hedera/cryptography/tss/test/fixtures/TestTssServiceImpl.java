@@ -54,7 +54,7 @@ public class TestTssServiceImpl implements TssService {
     @Override
     public TssServiceGenesisStage genesisStage() {
         return new TssServiceGenesisStage() {
-            @NonNull
+
             @Override
             public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory participantDirectory) {
                 return TssTestUtils.testTssMessage(
@@ -71,6 +71,7 @@ public class TestTssServiceImpl implements TssService {
             }
 
             @Override
+            @NonNull
             public TssShareExtractor shareExtractor(
                     @NonNull final TssParticipantDirectory tssParticipantDirectory,
                     @NonNull final List<TssMessage> messages) {
@@ -137,6 +138,7 @@ public class TestTssServiceImpl implements TssService {
             }
 
             @Override
+            @NonNull
             public TssShareExtractor shareExtractor(
                     @NonNull final TssParticipantDirectory tssParticipantDirectory,
                     @NonNull final List<TssMessage> messages) {
