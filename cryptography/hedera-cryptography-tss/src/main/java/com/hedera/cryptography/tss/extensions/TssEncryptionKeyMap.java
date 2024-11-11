@@ -19,6 +19,8 @@ package com.hedera.cryptography.tss.extensions;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.tss.api.TssShareTable;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A {@link TssShareTable} that maps a shareId to its participants {@link BlsPublicKey} for encryption.
@@ -63,5 +65,23 @@ public class TssEncryptionKeyMap implements TssShareTable<BlsPublicKey> {
         }
         var shareOwner = shareAllocationTable[shareId - 1];
         return tssKeyTable[shareOwner];
+    }
+
+    /**
+     * Returns the shares owned by the participant {@code participantId }
+     * @param participantId the participant querying for the info
+     * @return the list of shares owned by the participant
+     */
+    @NonNull
+    public List<Integer> getSharesForParticipantId(final int participantId) {
+        List<Integer> shares = new ArrayList<>();
+        int i = 0;
+        while (i < shareAllocationTable.length) {
+            if (shareAllocationTable[i] == participantId) {
+                shares.add(i + 1);
+            }
+            i++;
+        }
+        return shares;
     }
 }

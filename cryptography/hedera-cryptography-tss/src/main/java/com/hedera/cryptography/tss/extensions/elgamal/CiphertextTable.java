@@ -19,6 +19,7 @@ package com.hedera.cryptography.tss.extensions.elgamal;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.extensions.EcPolynomial;
+import com.hedera.cryptography.tss.api.TssShareTable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.List;
@@ -29,7 +30,8 @@ import java.util.List;
  * @param sharedRandomness a shared randomness for all the messages in {@code shareCiphertexts}
  * @param shareCiphertexts a ciphertext table containing {@link CipherText} for each share
  */
-public record CiphertextTable(@NonNull List<GroupElement> sharedRandomness, @NonNull CipherText[] shareCiphertexts) {
+public record CiphertextTable(@NonNull List<GroupElement> sharedRandomness, @NonNull CipherText[] shareCiphertexts)
+        implements TssShareTable<CipherText> {
 
     /**
      * Combines this representation into a compressed representation still containing all the information.
@@ -46,5 +48,11 @@ public record CiphertextTable(@NonNull List<GroupElement> sharedRandomness, @Non
                 .map(poly -> poly.evaluate(base))
                 .toList();
         return new CombinedCiphertext(randomness, values);
+    }
+
+    @NonNull
+    @Override
+    public CipherText getForShareId(final int shareId) {
+        return this.shareCiphertexts[shareId - 1];
     }
 }

@@ -20,16 +20,17 @@ import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssPrivateShare;
-import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssServiceRekeyStage;
+import com.hedera.cryptography.tss.api.TssShareExtractor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 import java.util.Random;
 
 /**
- *  The rekey stage of Groth21 based TssService implementation.
- *  In this stage, the {@link TssMessage} is based on previous material
- *  The aggregation rules for {@link TssPrivateShare} and {@link TssPrivateShare} follows {@link com.hedera.cryptography.tss.extensions.Lagrange} interpolation.
+ *  The rekey stage of a Threshold Signature Scheme based on Groth21 implementation.
+ *  In this stage, the generated {@link TssMessage} is based on previous material.
+ *  When extracting keys, the aggregation rules for {@link TssPrivateShare} and {@link TssPrivateShare} follows {@link com.hedera.cryptography.tss.extensions.Lagrange} interpolation
+ *  and the list of {@link com.hedera.cryptography.tss.api.TssPublicShare} obtained aggregate to the previously obtained ledgerId
  * @see TssServiceRekeyStage
  */
 public class Groth21RekeyStage extends Groth21Stage implements TssServiceRekeyStage {
@@ -43,17 +44,14 @@ public class Groth21RekeyStage extends Groth21Stage implements TssServiceRekeySt
         super(signatureSchema, random);
     }
 
-    @NonNull
+    /**
+     * {@inheritDoc}
+     * When extracting keys, the aggregation rules for {@link TssPrivateShare} and {@link TssPrivateShare} follows {@link com.hedera.cryptography.tss.extensions.Lagrange} interpolation
+     *  and the list of {@link com.hedera.cryptography.tss.api.TssPublicShare} obtained aggregate to the previously obtained ledgerId
+     */
     @Override
-    public List<TssPrivateShare> obtainPrivateShares(
-            @NonNull final TssParticipantDirectory participantDirectory,
-            @NonNull final List<TssMessage> validTssMessages) {
-        throw new UnsupportedOperationException("Unsupported operation");
-    }
-
     @NonNull
-    @Override
-    public List<TssPublicShare> obtainPublicShares(
+    public TssShareExtractor shareExtractor(
             @NonNull final TssParticipantDirectory participantDirectory,
             @NonNull final List<TssMessage> validTssMessages) {
         throw new UnsupportedOperationException("Unsupported operation");

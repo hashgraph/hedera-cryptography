@@ -20,44 +20,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
-import com.hedera.cryptography.bls.SignatureSchema;
-import com.hedera.cryptography.pairings.api.Field;
-import com.hedera.cryptography.pairings.api.FieldElement;
-import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import java.util.List;
 import java.util.stream.IntStream;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 class TssParticipantDirectoryTest {
-
-    private SignatureSchema signatureSchema;
-
-    @BeforeEach
-    void setUp() {
-        signatureSchema = mock(SignatureSchema.class);
-        var curve = mock(PairingFriendlyCurve.class);
-        when(signatureSchema.getPairingFriendlyCurve()).thenReturn(curve);
-        final Field field = mock(Field.class);
-        when(curve.field()).thenReturn(field);
-        when(field.fromLong(anyLong())).thenReturn(mock(FieldElement.class));
-    }
 
     @Test
     void testInvalidThreshold() {
         final TssParticipantDirectory.Builder builder = TssParticipantDirectory.createBuilder();
-        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
         final BlsPublicKey publicKey = mock(BlsPublicKey.class);
 
-        builder.withSelf(1, privateKey);
         builder.withParticipant(1, 1, publicKey);
 
         // Test threshold too low
@@ -70,7 +48,7 @@ class TssParticipantDirectoryTest {
 
         // Test threshold too high
         builder.withThreshold(3);
-        exception = assertThrows(IllegalStateException.class, () -> builder.build(Mockito.mock(SignatureSchema.class)));
+        exception = assertThrows(IllegalStateException.class, builder::build);
         assertTrue(
                 exception.getMessage().contains("Threshold exceeds the number of shares"),
                 "threshold check did not work");
@@ -82,24 +60,10 @@ class TssParticipantDirectoryTest {
     }
 
     @Test
-    void testEmptyBuilder() {
-        final TssParticipantDirectory.Builder builder = TssParticipantDirectory.createBuilder();
-        final Exception exception = assertThrows(
-                IllegalStateException.class, () -> builder.build(signatureSchema), "participant check did not work");
-        assertTrue(
-                exception.getMessage().contains("There should be an entry for the current participant"),
-                "participant check did not work");
-    }
-
-    @Test
     void testEmptyParticipants() {
-        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
         final Exception exception = assertThrows(
                 IllegalStateException.class,
-                () -> TssParticipantDirectory.createBuilder()
-                        .withSelf(1, privateKey)
-                        .withThreshold(1)
-                        .build(signatureSchema),
+                () -> TssParticipantDirectory.createBuilder().withThreshold(1).build(),
                 "participant check did not work");
 
         assertTrue(
@@ -108,34 +72,12 @@ class TssParticipantDirectoryTest {
     }
 
     @Test
-    void testParticipantsDoesNotContainSelf() {
-        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
-        final BlsPublicKey publicKey = mock(BlsPublicKey.class);
-        final Exception exception = assertThrows(
-                IllegalStateException.class,
-                () -> TssParticipantDirectory.createBuilder()
-                        .withSelf(1, privateKey)
-                        .withParticipant(2, 1, publicKey)
-                        .withThreshold(1)
-                        .build(signatureSchema),
-                "participant check did not work");
-
-        assertTrue(
-                exception
-                        .getMessage()
-                        .contains("The participant list does not contain a reference to the current participant"),
-                "participant check did not work");
-    }
-
-    @Test
     void testValidConstruction() {
-        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
         final BlsPublicKey publicKey = mock(BlsPublicKey.class);
         final TssParticipantDirectory directory = TssParticipantDirectory.createBuilder()
-                .withSelf(1, privateKey)
                 .withParticipant(1, 1, publicKey)
                 .withThreshold(1)
-                .build(signatureSchema);
+                .build();
 
         assertNotNull(directory, "directory should not be null");
     }
@@ -146,17 +88,13 @@ class TssParticipantDirectoryTest {
         final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
         final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
         final TssParticipantDirectory directory = TssParticipantDirectory.createBuilder()
-                .withSelf(1, privateKey)
                 .withParticipant(1, 5, publicKey1)
                 .withParticipant(2, 2, publicKey2)
                 .withThreshold(1)
-                .build(signatureSchema);
+                .build();
 
         assertNotNull(directory, "directory should not be null");
         assertEquals(1, directory.getThreshold());
-        assertEquals(5, directory.getOwnedShareIds().size());
-        assertEquals(privateKey, directory.tssDecryptionPrivateKey());
-        assertEquals(List.of(1, 2, 3, 4, 5), directory.getOwnedShareIds());
         assertEquals(List.of(1, 2, 3, 4, 5, 6, 7), directory.getShareIds());
         var keys =
                 new BlsPublicKey[] {publicKey1, publicKey1, publicKey1, publicKey1, publicKey1, publicKey2, publicKey2};
@@ -169,11 +107,10 @@ class TssParticipantDirectoryTest {
         final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
         final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
         final TssParticipantDirectory directory = TssParticipantDirectory.createBuilder()
-                .withSelf(1, privateKey)
                 .withParticipant(1, 5, publicKey1)
                 .withParticipant(2, 2, publicKey2)
                 .withThreshold(1)
-                .build(signatureSchema);
+                .build();
 
         assertEquals(publicKey1, directory.getForShareId(1));
         assertEquals(publicKey1, directory.getForShareId(5));

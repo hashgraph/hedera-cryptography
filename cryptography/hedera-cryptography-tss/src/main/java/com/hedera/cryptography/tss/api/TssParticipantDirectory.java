@@ -16,99 +16,70 @@
 
 package com.hedera.cryptography.tss.api;
 
-import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
-import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
-import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.tss.extensions.TssEncryptionKeyMap;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.IntStream;
 
 /**
- * Represents a directory of participants in a Threshold Signature Scheme (TSS).
- *<p>Each participant has an associated id (called {@code participantId}), shares count and a tss encryption public key.
- * It is responsibility of the user to assign each participant with a different deterministic integer representation.</p>
+ * Represents a public directory of participants in a Threshold Signature Scheme (TSS).
+ *<p>Each participant has an {@code participantId}, an assigned number of shares and a {@code tssEncryptionPublicKey}.
+ *<p>The directory will come up with a consecutive integer representation of each participant of the scheme.
  *
- *<p>The current participant is represented by a {@code self} entry, and includes {@code participantId}'s id and the tss decryption private key.</p>
  *<p>The expected {@code participantId} is the unique {@link Long} identification for each participant executing the scheme.</p>
  * <pre>{@code
- * PairingPrivateKey tssDecryptionPrivateKey = ...;
- * List<PairingPublicKey> tssEncryptionPublicKeys = ...;
+ * List<PairingPublicKey> tssEncryptionPublicKeys = ...; //retrieve all the participant's keys from whatever storage
  * TssParticipantDirectory participantDirectory = TssParticipantDirectory.createBuilder()
- *     //id, tss private decryption key
- *     .self(0, persistentParticipantKey)
- *     //id, number of shares, tss public encryption key
+ *     //participantId, number-of-shares, tssEncryptionPublicKey
  *     .withParticipant(0, 5, tssEncryptionPublicKeys.get(0))
  *     .withParticipant(1, 2, tssEncryptionPublicKeys.get(1))
  *     .withParticipant(2, 1, tssEncryptionPublicKeys.get(2))
  *     .withParticipant(3, 1, tssEncryptionPublicKeys.get(3))
- *     .withThreshold(5)
- *     .build(signatureScheme);
+ *     .withThreshold(6)
+ *     .build();
  * }</pre>
- *
  */
 public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey> {
     /**
-     * Stores the ID of the {@code participant} owning this directory.
-     */
-    private final int participantId;
-    /**
      * A list of all assigned {@code shareIds} in the directory. The values are sorted, consecutive and starting from 1.
-     * ShareId 0 does not exist and is reserved.
-     * This contains the numeric value of the share, not the index.
+     * This contains the numeric value of the share, not the index. ShareId 0 does not exist and is reserved.
      */
     private final List<Integer> shareIds;
     /**
-     * The list of participant's owned shareIds.
-     */
-    private final List<Integer> ownedShareIds;
-    /**
-     * The key to decrypt TssMessage parts intended for the participant that created this directory.
-     * It is transient to assure it does not get serialized and exposed outside.
-     */
-    private final transient BlsPrivateKey tssDecryptionPrivateKey;
-    /**
-     * In an originating directory, the {@code threshold} value is the minimum number of messages that assures the correct recovery of
+     * In directory used to generate TssMessages, the {@code threshold} defines the number of shares-of-shares that will be created to perform shamir-secret-sharing.
+     * In a directory used to validate and latter process TssMessages, the {@code threshold} value is the minimum number of messages that assures the correct recovery of
      * {@link TssPrivateShare} and {@link TssPublicShare}.
-     * In a target directory the {@code threshold} defines the number of shares-of-shares that will be created to perform shamir-secret-sharing.
+     * While executing the scheme there exist up to two threshold values:
+     *   a candidate threshold which is used for generating new sharing.
+     *   and, a current threshold which is used for validating existing committee and assure the correct recovery of the secrets/public keys.
+     * In any case, to which of those of this property refers to, depends on whether the directory represents a candidate directory or an adopted one.
      */
     private final int threshold;
 
     /**
      * Stores the {@link BlsPublicKey} of each {@code ShareId} in the protocol.
      */
-    private final TssShareTable<BlsPublicKey> tssEncryptionTable;
+    private final TssEncryptionKeyMap tssEncryptionTable;
 
     /**
      * Constructs a {@link TssParticipantDirectory}.
      *
-     * @param participantId the participant owning this directory
      * @param shareIds list of participants ids
-     * @param ownedShareIds the list of owned share IDs
      * @param tssEncryptionTable share to participant public keys table
-     * @param tssDecryptionPrivateKey key to decrypt TssMessage parts intended
      * @param threshold  the threshold value for the TSS
      */
     private TssParticipantDirectory(
-            final int participantId,
             @NonNull final List<Integer> shareIds,
-            @NonNull final List<Integer> ownedShareIds,
-            @NonNull final TssShareTable<BlsPublicKey> tssEncryptionTable,
-            @NonNull final BlsPrivateKey tssDecryptionPrivateKey,
+            @NonNull final TssEncryptionKeyMap tssEncryptionTable,
             final int threshold) {
-        this.participantId = participantId;
         this.shareIds = List.copyOf(shareIds);
-        this.ownedShareIds = List.copyOf(ownedShareIds);
         this.tssEncryptionTable = tssEncryptionTable;
-        this.tssDecryptionPrivateKey = tssDecryptionPrivateKey;
         this.threshold = threshold;
     }
 
@@ -123,15 +94,6 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
     }
 
     /**
-     * Returns the participant owning this directory.
-     *
-     * @return the participant owning this directory
-     */
-    public int getParticipantId() {
-        return participantId;
-    }
-
-    /**
      * Returns the threshold value.
      * In an originating directory, the {@code threshold} value is the minimum number of messages that assures the correct recovery of
      * {@link TssPrivateShare} and {@link TssPublicShare}.
@@ -143,16 +105,6 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
     }
 
     /**
-     * The list of participant's owned shareIds.
-     * This returns the numeric value of the share, not the index.
-     * @return the shares owned by the participant represented as self.
-     */
-    @NonNull
-    public List<Integer> getOwnedShareIds() {
-        return ownedShareIds;
-    }
-
-    /**
      * Return the list of all the shareIds.
      * In this list, the first share has value of 1.
      * This returns the numeric value of the share, not the index.
@@ -161,6 +113,29 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
     @NonNull
     public List<Integer> getShareIds() {
         return shareIds;
+    }
+
+    /**
+     * The list of participant's owned shareIds.
+     * This returns the numeric value of the share, not the index.
+     * @param participantId the participant that wants to know the ids of its shares.
+     * @return the shares owned by the participant {@code participantId}.
+     */
+    @NonNull
+    public List<Integer> ownedShares(long participantId) {
+        int pi = getParticipantIndex(participantId);
+        return tssEncryptionTable.getSharesForParticipantId(pi);
+    }
+
+    /**
+     * Given that participantId are long based, and we want to map it to a sequential index, to save storage
+     * @param participantId the participant that wants to know the ids of its shares.
+     * @return the shares owned by the participant {@code participantId}.
+     */
+    private int getParticipantIndex(final long participantId) {
+        return (int)
+                participantId; // FUTURE-WORK: #16481 strengthen this mapping of participantId to a sequential index, to
+        // save storage
     }
 
     /**
@@ -176,41 +151,13 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
     }
 
     /**
-     * Returns the tssDecryptionPrivateKey.
-     * The tssDecryptionPrivateKey is the key used to decrypt TssMessage parts intended for the participant
-     * that created this directory.
-     * @return the tssDecryptionPrivateKey
-     */
-    @NonNull
-    public BlsPrivateKey tssDecryptionPrivateKey() {
-        return tssDecryptionPrivateKey;
-    }
-
-    /**
      * A builder for creating {@link TssParticipantDirectory} instances.
      */
     public static class Builder {
-        private SelfEntry selfEntry;
         private final Map<Integer, ParticipantEntry> participantEntries = new HashMap<>();
         private int threshold;
 
         private Builder() {}
-
-        /**
-         * Sets the self entry for the builder.
-         *
-         * @param participantId the participant unique {@link Long} representation
-         * @param tssEncryptionPrivateKey the pairing private key used to decrypt tss share portions
-         * @return the builder instance
-         */
-        @NonNull
-        public Builder withSelf(final int participantId, @NonNull final BlsPrivateKey tssEncryptionPrivateKey) {
-            if (selfEntry != null) {
-                throw new IllegalArgumentException("There is already an for the current participant");
-            }
-            selfEntry = new SelfEntry(participantId, tssEncryptionPrivateKey);
-            return this;
-        }
 
         /**
          * Sets the threshold value for the TSS.
@@ -253,7 +200,6 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
         /**
          * Builds and returns a {@link TssParticipantDirectory} instance based on the provided entries and signatureSchema.
          *
-         * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
          * @return the constructed ParticipantDirectory instance
          * @throws NullPointerException if signatureSchema is null
          * @throws IllegalStateException if there is no entry for the current participant
@@ -261,20 +207,10 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
          * @throws IllegalStateException if the threshold value is higher than the total shares
          */
         @NonNull
-        public TssParticipantDirectory build(@NonNull final SignatureSchema signatureSchema) {
-            Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
-
-            if (isNull(selfEntry)) {
-                throw new IllegalStateException("There should be an entry for the current participant");
-            }
+        public TssParticipantDirectory build() {
 
             if (participantEntries.isEmpty()) {
                 throw new IllegalStateException("There should be at least one participant in the protocol");
-            }
-
-            if (!participantEntries.containsKey(selfEntry.participantId())) {
-                throw new IllegalStateException(
-                        "The participant list does not contain a reference to the current participant");
             }
 
             // Get the total number of shares of to distribute in the protocol
@@ -294,7 +230,6 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
                     IntStream.rangeClosed(1, totalShares).boxed().toList();
             final int[] shareOwnershipTable = new int[totalShares];
             final BlsPublicKey[] tssEncryptionPublicKeyTable = new BlsPublicKey[maxId + 1];
-            final List<Integer> ownedShares = new ArrayList<>();
 
             int currentIndex = 0;
             // Iteration of the sorted int representation to make sure we assign the shares deterministically.
@@ -303,35 +238,11 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
                 tssEncryptionPublicKeyTable[participantId] = entry.tssEncryptionPublicKey;
                 // Add the public encryption key for each participant id in the iteration.
                 Arrays.fill(shareOwnershipTable, currentIndex, currentIndex + entry.shareCount(), participantId);
-                if (participantId == selfEntry.participantId()) {
-                    for (int i = currentIndex; i < currentIndex + entry.shareCount(); i++) {
-                        ownedShares.add(i + 1);
-                    }
-                }
                 currentIndex += entry.shareCount();
             }
 
             return new TssParticipantDirectory(
-                    selfEntry.participantId,
-                    shareIds,
-                    ownedShares,
-                    new TssEncryptionKeyMap(shareOwnershipTable, tssEncryptionPublicKeyTable),
-                    selfEntry.tssEncryptionPrivateKey,
-                    threshold);
-        }
-    }
-
-    /**
-     * Represents an entry for the participant executing the protocol, containing the ID and private key.
-     * @param participantId identification of the participant
-     */
-    private record SelfEntry(int participantId, @NonNull BlsPrivateKey tssEncryptionPrivateKey) {
-        /**
-         * Constructor
-         * @param participantId identification of the participant
-         */
-        public SelfEntry {
-            requireNonNull(tssEncryptionPrivateKey, "tssEncryptionPrivateKey must not be null");
+                    shareIds, new TssEncryptionKeyMap(shareOwnershipTable, tssEncryptionPublicKeyTable), threshold);
         }
     }
 

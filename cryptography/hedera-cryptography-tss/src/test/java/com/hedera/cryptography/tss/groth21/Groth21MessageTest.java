@@ -27,7 +27,7 @@ import com.hedera.cryptography.pairings.extensions.EcPolynomial;
 import com.hedera.cryptography.tss.api.TssShareTable;
 import com.hedera.cryptography.tss.extensions.elgamal.CombinedCiphertext;
 import com.hedera.cryptography.tss.extensions.nizk.NizkStatement;
-import com.hedera.cryptography.tss.test.fixtures.DkgUtils;
+import com.hedera.cryptography.tss.test.fixtures.TssTestUtils;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ class Groth21MessageTest {
 
     @Test
     void fromBytes() {
-        var tssMessage = DkgUtils.testTssMessage(SIGNATURE_SCHEMA, 0, 2, 3);
+        var tssMessage = TssTestUtils.testTssMessage(SIGNATURE_SCHEMA, 0, 2, 3);
         final Groth21Message actual = Groth21Message.fromBytes(tssMessage.bytes());
         assertNotNull(actual);
         assertEquals(0, actual.generatingShare());
@@ -56,7 +56,7 @@ class Groth21MessageTest {
 
     @Test
     void fromTssMessage() {
-        var tssMessage = DkgUtils.testTssMessage(SIGNATURE_SCHEMA, 0, 2, 3);
+        var tssMessage = TssTestUtils.testTssMessage(SIGNATURE_SCHEMA, 0, 2, 3);
         final Groth21Message actual = Groth21Message.fromTssMessage(tssMessage);
         assertNotNull(actual);
         assertNotSame(actual, tssMessage);
@@ -74,14 +74,14 @@ class Groth21MessageTest {
 
     @Test
     void fromTssMessageReturnsSameInstance() {
-        var tssMessage = DkgUtils.testTssMessage(SIGNATURE_SCHEMA, 0, 2, 3);
+        var tssMessage = TssTestUtils.testTssMessage(SIGNATURE_SCHEMA, 0, 2, 3);
         final Groth21Message actual = Groth21Message.fromTssMessage(tssMessage);
         assertSame(actual, Groth21Message.fromTssMessage(actual));
     }
 
     @Test
     void toBytes() {
-        var tssMessage = DkgUtils.testTssMessage(SIGNATURE_SCHEMA, 0, 2, 3);
+        var tssMessage = TssTestUtils.testTssMessage(SIGNATURE_SCHEMA, 0, 2, 3);
         final Groth21Message actual = Groth21Message.fromBytes(
                 Groth21Message.fromTssMessage(tssMessage).bytes());
         assertNotNull(actual);
