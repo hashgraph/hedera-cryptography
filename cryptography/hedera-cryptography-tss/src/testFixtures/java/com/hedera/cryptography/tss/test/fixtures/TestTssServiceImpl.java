@@ -82,9 +82,30 @@ public class TestTssServiceImpl implements TssService {
                         return this;
                     }
 
+                    @NonNull
                     @Override
                     public TssShareExtractionStatus status() {
-                        return null;
+                        return new TssShareExtractionStatus() {
+                            @Override
+                            public boolean isCompleted() {
+                                return false;
+                            }
+
+                            @Override
+                            public byte percentComplete() {
+                                return 0;
+                            }
+
+                            @Override
+                            public long elapsedTimeMs() {
+                                return 0;
+                            }
+
+                            @Override
+                            public long approximateRemainingTimeMs() {
+                                return 0;
+                            }
+                        };
                     }
 
                     @NonNull
@@ -149,9 +170,31 @@ public class TestTssServiceImpl implements TssService {
                         return this;
                     }
 
+                    @NonNull
                     @Override
                     public TssShareExtractionStatus status() {
-                        return null;
+                        return new TssShareExtractionStatus() {
+
+                            @Override
+                            public boolean isCompleted() {
+                                return false;
+                            }
+
+                            @Override
+                            public byte percentComplete() {
+                                return 0;
+                            }
+
+                            @Override
+                            public long elapsedTimeMs() {
+                                return 0;
+                            }
+
+                            @Override
+                            public long approximateRemainingTimeMs() {
+                                return 0;
+                            }
+                        };
                     }
 
                     @NonNull

@@ -50,6 +50,7 @@ public interface TssShareExtractor {
      * Returns the progress of the process
      * @return the progress of the process
      */
+    @NonNull
     TssShareExtractionStatus status();
 
     /**
