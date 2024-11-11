@@ -21,16 +21,15 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 /**
  * A Threshold Signature Scheme Service.
  * <p>
- * Contract of TSS:
+ * Contract of TSSService:
  *   <ul>
- *       <li>Get a {@link TssServiceGenesisStage}</li>
- *       <li>Get a {@link TssServiceRekeyStage}</li>
+ *       <li>Get a {@link TssServiceGenesisStage}: Returns the genesis stage</li>
+ *       <li>Get a {@link TssServiceRekeyStage}: Returns the rekey stage.</li>
  *   </ul>
  */
 public interface TssService {
 
     /**
-     * Returns the genesis stage.
      * In this stage all participants collaborate to discover a shared polynomial.
      * <p>
      * Contract of {@link TssServiceGenesisStage} stage:
@@ -45,7 +44,6 @@ public interface TssService {
     TssServiceGenesisStage genesisStage();
 
     /**
-     * Returns the rekey stage.
      * In this stage all participants recover keys belonging to an already established polynomial.
      *  Contract of {@link TssServiceRekeyStage} stage:
      * <ul>

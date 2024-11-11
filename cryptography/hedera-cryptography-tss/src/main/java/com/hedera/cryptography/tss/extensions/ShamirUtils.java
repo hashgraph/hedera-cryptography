@@ -38,7 +38,7 @@ public class ShamirUtils {
 
     /**
      * Creates a random degree d polynomial with a fixed point at x = 0.
-     * The polynomial generated here has d+1 number of coefficients: {@code a_0, a_1, ..., a_d} such that: <br/>
+     * The polynomial generated here has d+1 number of coefficients: {@code a_0, a_1, ..., a_d} such that: <br>
      * {@code p(x) = a_0 + a_1 * x + a_2 * x^2 + ... + a_d * x^d}
      *
      * @param random    a source of randomness

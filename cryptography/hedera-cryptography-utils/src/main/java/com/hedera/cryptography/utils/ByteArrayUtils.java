@@ -267,10 +267,11 @@ public class ByteArrayUtils {
         /**
          * Constructs a Deserializer with the given byte array.
          *
-         * @param bytes The byte array containing serialized data.
+         * @param message The byte array containing serialized data.
          */
-        public Deserializer(@NonNull byte[] bytes) {
-            final ByteArrayInputStream buffer = new ByteArrayInputStream(bytes);
+        public Deserializer(@NonNull byte[] message) {
+            Objects.requireNonNull(message, "message must not be null");
+            final ByteArrayInputStream buffer = new ByteArrayInputStream(message);
             this.is = new DataInputStream(buffer);
         }
 
@@ -287,8 +288,8 @@ public class ByteArrayUtils {
         public <T> T read(@NonNull final Function<byte[], T> f, int size) {
             var bytes = new byte[size];
             try {
-                if (is.read(bytes) != size) throw new IllegalStateException("Not enough bytes to read");
-                {
+                if (is.read(bytes) != size) {
+                    throw new IllegalStateException("Not enough bytes to read");
                 }
             } catch (IOException e) {
                 throw new IllegalStateException("Cannot read", e);

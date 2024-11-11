@@ -16,7 +16,7 @@
 
 package com.hedera.cryptography.tss;
 
-import static com.hedera.cryptography.tss.test.fixtures.DkgUtils.rndSks;
+import static com.hedera.cryptography.tss.test.fixtures.TssTestUtils.rndSks;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -28,10 +28,12 @@ import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
+import com.hedera.cryptography.tss.api.TssShareExtractor;
 import com.hedera.cryptography.tss.api.TssShareSignature;
-import com.hedera.cryptography.tss.test.fixtures.DkgCommittee;
-import com.hedera.cryptography.tss.test.fixtures.DkgUtils;
 import com.hedera.cryptography.tss.test.fixtures.TestTssServiceImpl;
+import com.hedera.cryptography.tss.test.fixtures.TssTestCommittee;
+import com.hedera.cryptography.tss.test.fixtures.TssTestUtils;
+import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import com.hedera.cryptography.utils.test.fixtures.stream.StreamUtils;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,11 +44,11 @@ import org.junit.jupiter.api.Test;
 /**
  * A test to showcase the Tss protocol for a specific use-case
  */
+@WithRng
 class TssTest {
 
     public static final SignatureSchema SIGNATURE_SCHEMA =
             SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
-    public static final Random TEST_RNG = new Random();
     public static final int GENESIS_SIZE = 2;
     public static final int GENESIS_SHARES = 5;
     public static final int TARGET_SIZE = 4;
@@ -56,45 +58,46 @@ class TssTest {
     private TssService tssService;
 
     @BeforeEach
-    void setup() {
-        Random rng = new Random(TEST_RNG.nextInt());
+    void setup(Random rng) {
         keys = rndSks(SIGNATURE_SCHEMA, rng, Math.max(GENESIS_SIZE, TARGET_SIZE));
         tssService = new TestTssServiceImpl(SIGNATURE_SCHEMA);
     }
 
     @Test
     void testGenesis() {
-        var genesisCommittee = new DkgCommittee(GENESIS_SIZE, GENESIS_SHARES, keys);
-        var myDirectory = genesisCommittee.directoryFor(SIGNATURE_SCHEMA, 1);
-        var myMessage = tssService.genesisStage().generateTssMessage(myDirectory);
+        var genesisCommittee = new TssTestCommittee(GENESIS_SIZE, GENESIS_SHARES, keys);
+        var participantDirectory = genesisCommittee.participantDirectory();
+        var myMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
+        var myInfo = genesisCommittee.privateInfoOf(0);
         assertNotNull(myMessage);
         assertNotNull(tssService.messageFromBytes(myMessage.bytes()));
-        final var otherDirectory = genesisCommittee.directoryFor(SIGNATURE_SCHEMA, 2);
-        assertTrue(tssService.genesisStage().verifyTssMessage(otherDirectory, myMessage));
-        var otherMessage = tssService.genesisStage().generateTssMessage(myDirectory);
+        var otherMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
+        final TssShareExtractor tssShareExtractor =
+                tssService.genesisStage().shareExtractor(participantDirectory, List.of(myMessage, otherMessage));
 
-        final var allPublicShares =
-                tssService.genesisStage().obtainPublicShares(myDirectory, List.of(myMessage, otherMessage));
+        final var allPublicShares = tssShareExtractor.allPublicShares();
         assertNotNull(allPublicShares);
         assertEquals(GENESIS_SIZE * GENESIS_SHARES, allPublicShares.size());
 
         final BlsPublicKey aggregatedPublicKey = TssPublicShare.aggregate(allPublicShares);
         assertNotNull(aggregatedPublicKey);
 
-        final var privateShares =
-                tssService.genesisStage().obtainPrivateShares(myDirectory, List.of(myMessage, otherMessage));
+        final var privateShares = tssShareExtractor.ownedPrivateShares(myInfo);
         assertNotNull(privateShares);
         assertEquals(GENESIS_SHARES, privateShares.size());
 
-        var ownedPublicShares = myDirectory.getOwnedShareIds().stream()
+        var ownedPublicShares = myInfo.ownedShares(participantDirectory).stream()
                 .map(share -> allPublicShares.get(share - 1))
                 .toList();
         StreamUtils.zipStream(privateShares, ownedPublicShares)
                 .forEach(e -> assertEquals(
                         e.getKey().privateKey().createPublicKey(), e.getValue().publicKey()));
 
-        final var otherPrivateShares =
-                tssService.genesisStage().obtainPrivateShares(otherDirectory, List.of(myMessage, otherMessage));
+        var otherInfo = genesisCommittee.privateInfoOf(1);
+        final var otherPrivateShares = tssService
+                .genesisStage()
+                .shareExtractor(participantDirectory, List.of(myMessage, otherMessage))
+                .ownedPrivateShares(otherInfo);
         assertNotNull(otherPrivateShares);
 
         var allPrivateShares = new ArrayList<>(privateShares);
@@ -108,27 +111,48 @@ class TssTest {
     }
 
     @Test
-    void testRekey() {
-        var genesisCommittee = new DkgCommittee(GENESIS_SIZE, GENESIS_SHARES, keys);
-        var targetCommittee = new DkgCommittee(TARGET_SIZE, TARGET_SHARES, keys);
+    void testRekey(Random random) {
+        var self = 0;
+        var genesisCommittee = new TssTestCommittee(GENESIS_SIZE, GENESIS_SHARES, keys);
 
-        var setupGenesis = DkgUtils.setupGenesis(tssService, SIGNATURE_SCHEMA, genesisCommittee);
-        var pastPublicShares = setupGenesis.obtainPublicShares(tssService.genesisStage());
+        var genesisMessages = TssTestUtils.simulateGenesisMessaging(tssService, genesisCommittee);
+        final TssShareExtractor genesisShareExtractor = tssService
+                .genesisStage()
+                .shareExtractor(genesisCommittee.participantDirectory(), genesisMessages)
+                .extract(genesisCommittee.privateInfoOf(self));
+
+        var pastPublicShares = genesisShareExtractor.allPublicShares();
         var pastLedgerId = TssPublicShare.aggregate(pastPublicShares);
-        var allPastPrivateShares = setupGenesis.retrieveAllPrivateShares(tssService.genesisStage(), genesisCommittee);
+        var allPrivateShares = genesisCommittee.allPrivateInfo().stream()
+                .map(privateInfo -> tssService
+                        .genesisStage()
+                        .shareExtractor(genesisCommittee.participantDirectory(), genesisMessages)
+                        .ownedPrivateShares(privateInfo))
+                .toList();
 
-        var setupRekey = DkgUtils.setupRekey(tssService, SIGNATURE_SCHEMA, targetCommittee, allPastPrivateShares);
-        var presentDirectory = setupRekey.dirs().getFirst();
-        for (var message : setupRekey.validMessages()) {
-            assertTrue(tssService.rekeyStage().verifyTssMessage(presentDirectory, pastPublicShares, message));
+        // *************** Rekey process
+        var targetCommittee = new TssTestCommittee(TARGET_SIZE, TARGET_SHARES, keys);
+        var rekeyMessages = TssTestUtils.simulateRekeyMessaging(tssService, targetCommittee, allPrivateShares);
+
+        for (var message : rekeyMessages) {
+            assertTrue(tssService
+                    .rekeyStage()
+                    .verifyTssMessage(targetCommittee.participantDirectory(), pastPublicShares, message));
         }
-        var privateShares = tssService.rekeyStage().obtainPrivateShares(presentDirectory, setupRekey.validMessages());
-        var publicShares = tssService.rekeyStage().obtainPublicShares(presentDirectory, setupRekey.validMessages());
+
+        final TssShareExtractor tssShareExtractor =
+                tssService.rekeyStage().shareExtractor(targetCommittee.participantDirectory(), rekeyMessages);
+
+        var selectedParticipantPrivateInfo = targetCommittee.privateInfoOf(self);
+        tssShareExtractor.extract(selectedParticipantPrivateInfo);
+        var privateShares = tssShareExtractor.ownedPrivateShares(selectedParticipantPrivateInfo);
+        var publicShares = tssShareExtractor.allPublicShares();
         assertNotNull(privateShares);
         assertNotNull(publicShares);
-        var ownedPublicShares = presentDirectory.getOwnedShareIds().stream()
-                .map(share -> publicShares.get(share - 1))
-                .toList();
+        var ownedPublicShares =
+                selectedParticipantPrivateInfo.ownedShares(targetCommittee.participantDirectory()).stream()
+                        .map(share -> publicShares.get(share - 1))
+                        .toList();
 
         StreamUtils.zipStream(privateShares, ownedPublicShares)
                 .forEach(e -> assertEquals(
