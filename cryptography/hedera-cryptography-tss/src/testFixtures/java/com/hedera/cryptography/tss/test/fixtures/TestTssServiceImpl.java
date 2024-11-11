@@ -55,6 +55,7 @@ public class TestTssServiceImpl implements TssService {
     public TssServiceGenesisStage genesisStage() {
         return new TssServiceGenesisStage() {
 
+            @NonNull
             @Override
             public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory participantDirectory) {
                 return TssTestUtils.testTssMessage(
