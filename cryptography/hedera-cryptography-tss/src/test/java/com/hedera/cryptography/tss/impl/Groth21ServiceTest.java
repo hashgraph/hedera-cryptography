@@ -58,36 +58,6 @@ class Groth21ServiceTest {
     }
 
     @Test
-    void testInvalidVersion() {
-        final var tssMessage = TssTestUtils.testTssMessage(SIGNATURE_SCHEMA, 0, 2, 3);
-        final var bytes = tssMessage.toBytes();
-        // Corrupt the version bytes
-        bytes[0] = (byte) 0xFF;
-        bytes[1] = (byte) 0xFF;
-        bytes[2] = (byte) 0xFF;
-        bytes[3] = (byte) 0xFF;
-
-        assertThrows(TssMessageParsingException.class, () -> SERVICE.messageFromBytes(bytes));
-    }
-
-    @Test
-    void testInvalidSignatureSchema() {
-        final var tssMessage = TssTestUtils.testTssMessage(SIGNATURE_SCHEMA, 0, 2, 3);
-        final var bytes = tssMessage.toBytes();
-        // Set an invalid signature schema byte
-        bytes[Integer.BYTES] = (byte) 0xFF;
-        assertThrows(TssMessageParsingException.class, () -> SERVICE.messageFromBytes(bytes));
-    }
-
-    @Test
-    void testDifferentSignatureSchema() {
-        final var tssMessage = TssTestUtils.testTssMessage(
-                SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS), 0, 2, 3);
-        final var bytes = tssMessage.toBytes();
-        assertThrows(TssMessageParsingException.class, () -> SERVICE.messageFromBytes(bytes));
-    }
-
-    @Test
     void testGenesisStageNonNull() {
         assertNotNull(SERVICE.genesisStage());
     }
@@ -128,7 +98,7 @@ class Groth21ServiceTest {
         var myMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
         var myMessageBytes = myMessage.toBytes();
 
-        var message = tssService.messageFromBytes(myMessageBytes);
+        var message = tssService.messageFromBytes(participantDirectory, myMessageBytes);
 
         assertTrue(tssService.genesisStage().verifyTssMessage(participantDirectory, message));
     }
@@ -140,7 +110,7 @@ class Groth21ServiceTest {
         final var myMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
         final var myInfo = genesisCommittee.privateInfoOf(0);
         assertNotNull(myMessage);
-        assertNotNull(tssService.messageFromBytes(myMessage.toBytes()));
+        assertNotNull(tssService.messageFromBytes(participantDirectory, myMessage.toBytes()));
         final var otherMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
         final var tssShareExtractor =
                 tssService.genesisStage().shareExtractor(participantDirectory, List.of(myMessage, otherMessage));

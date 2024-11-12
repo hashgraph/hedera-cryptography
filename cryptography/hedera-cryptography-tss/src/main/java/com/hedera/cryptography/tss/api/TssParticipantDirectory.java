@@ -98,6 +98,14 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
     }
 
     /**
+     * Returns the total number of shares.
+     * @return the total number of shares.
+     */
+    public int getTotalShares() {
+        return participantAssigmentMapping.totalShares();
+    }
+
+    /**
      * Return the list of all the shareIds.
      * In this list, the first share has value of 1.
      * This returns the numeric value of the share, not the index.

@@ -17,9 +17,16 @@
 package com.hedera.cryptography.tss.test.fixtures;
 
 import com.hedera.cryptography.tss.api.TssMessage;
+import java.util.Arrays;
 
 /**
  * An opaque representation of the message.
- * @param toBytes the bytes that represents this message
+ * @param bytes the bytes that represents this message
  */
-public record OpaqueTssMessage(byte[] toBytes) implements TssMessage {}
+public record OpaqueTssMessage(byte[] bytes) implements TssMessage {
+
+    @Override
+    public byte[] toBytes() {
+        return Arrays.copyOf(bytes, bytes.length);
+    }
+}

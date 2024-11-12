@@ -229,7 +229,8 @@ public class FakeTssServiceImpl implements TssService {
 
     @NonNull
     @Override
-    public TssMessage messageFromBytes(@NonNull final byte[] message) {
+    public TssMessage messageFromBytes(
+            @NonNull final TssParticipantDirectory tssParticipantDirectory, @NonNull final byte[] message) {
         return new OpaqueTssMessage(message);
     }
 }

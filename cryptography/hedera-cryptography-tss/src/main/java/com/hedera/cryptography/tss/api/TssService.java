@@ -63,10 +63,12 @@ public interface TssService {
     /**
      * Creates a {@link TssMessage} from a byte array representation.
      * @see TssMessage#toBytes() for the specification that message needs to follow.
+     * @param tssParticipantDirectory the candidate tss directory
      * @param message the byte representation of the opaque underlying structure used by the library
      * @return a TssMessage instance
      * @throws TssMessageParsingException in case of error while parsing the TssMessage from its byte array format
      */
     @NonNull
-    TssMessage messageFromBytes(@NonNull byte[] message) throws TssMessageParsingException;
+    TssMessage messageFromBytes(@NonNull TssParticipantDirectory tssParticipantDirectory, @NonNull byte[] message)
+            throws TssMessageParsingException;
 }

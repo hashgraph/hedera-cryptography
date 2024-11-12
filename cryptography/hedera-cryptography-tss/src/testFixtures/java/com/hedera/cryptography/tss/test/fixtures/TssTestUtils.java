@@ -95,14 +95,13 @@ public class TssTestUtils {
         final int n = signatureSchema.getPairingFriendlyCurve().field().elementSize();
         final var zeroElement = signatureSchema.getPublicKeyGroup().zero();
         final var zeros = Collections.nCopies(n, zeroElement);
-        final var commitmentCoefficients = Collections.nCopies(threshold + 1, zeroElement);
+        final var commitmentCoefficients = Collections.nCopies(threshold, zeroElement);
 
         final var serializer = new Serializer()
                 .put(TssMessage.MESSAGE_CURRENT_VERSION)
                 .put(signatureSchema.toByte())
                 .put(generatingShare)
-                .putListSameSize(zeros, GroupElement::toBytes)
-                .put(totalShares);
+                .putListSameSize(zeros, GroupElement::toBytes);
         for (int i = 0; i < totalShares; i++) {
             serializer.putListSameSize(zeros, GroupElement::toBytes);
         }
