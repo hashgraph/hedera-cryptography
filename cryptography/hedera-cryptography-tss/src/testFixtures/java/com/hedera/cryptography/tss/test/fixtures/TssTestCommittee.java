@@ -63,7 +63,7 @@ public record TssTestCommittee(int size, int sharesPerParticipant, @NonNull BlsP
 
     /**
      *
-     * @param participantId participant id
+     * @param participantId participant participantId
      * @return the private info of {@code participantId}
      */
     @NonNull
