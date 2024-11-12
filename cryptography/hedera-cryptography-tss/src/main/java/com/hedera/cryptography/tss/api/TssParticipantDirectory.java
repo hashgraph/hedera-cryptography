@@ -32,7 +32,7 @@ import java.util.Map.Entry;
  *
  *<p>The expected {@code participantId} is the unique {@link Long} identification for each participant executing the scheme.</p>
  * <pre>{@code
- * List<PairingPublicKey> tssEncryptionPublicKeys = ...; //retrieve all the participant's keys from whatever storage
+ * List<PairingPublicKey> tssEncryptionPublicKeys = ...; //retrieve all participant's keys from whatever storage
  * TssParticipantDirectory participantDirectory = TssParticipantDirectory.createBuilder()
  *     //participantId, number-of-shares, tssEncryptionPublicKey
  *     .withParticipant(0, 5, tssEncryptionPublicKeys.get(0))
@@ -45,17 +45,18 @@ import java.util.Map.Entry;
  */
 public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey> {
     /**
-     * In directory used to generate TssMessages, the {@code threshold} defines the number of shares-of-shares that will be created to perform shamir-secret-sharing.
-     * In a directory used to validate and latter process TssMessages, the {@code threshold} value is the minimum number of messages that assures the correct recovery of
-     * {@link TssPrivateShare} and {@link TssPublicShare}.
-     * While executing the scheme there exist up to two threshold values:
-     *   a candidate threshold which is used for generating new sharing.
-     *   and, a current threshold which is used for validating existing committee and assure the correct recovery of the secrets/public keys.
+     * While executing the scheme there exist up to two threshold values:<p>
+     * <ul>
+     *   <li>a candidate threshold.</li>
+     *   <li>and, a current threshold.</li>
+     * </ul>
+     * In directory used to generate TssMessages, the candidate {@code threshold} value defines the number of shares-of-shares that will be created to perform shamir-secret-sharing.<p>
+     * The current {@code threshold} value is the minimum number of messages that assures the correct recovery of {@link TssPrivateShare} and {@link TssPublicShare}.<p>
      * In any case, to which of those of this property refers to, depends on whether the directory represents a candidate directory or an adopted one.
      */
     private final int threshold;
     /**
-     * Stores the {@link BlsPublicKey} of each {@code ShareId} in the protocol.
+     * Stores different kinds of necessary mappings among them, the {@link BlsPublicKey} of each assigned {@code ShareId}.
      */
     private final TssParticipantAssigmentMapping participantAssigmentMapping;
 
@@ -72,7 +73,7 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
     }
 
     /**
-     * Creates a new Builder for constructing a {@link TssParticipantDirectory}.
+     * Creates a new Builder for {@link TssParticipantDirectory}.
      *
      * @return a new Builder instance
      */
@@ -82,14 +83,26 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
     }
 
     /**
-     * Returns the threshold value.
-     * In an originating directory, the {@code threshold} value is the minimum number of messages that assures the correct recovery of
-     * {@link TssPrivateShare} and {@link TssPublicShare}.
-     * In a target directory the {@code threshold} defines the number of shares-of-shares that will be created to perform shamir-secret-sharing.
-     * @return the threshold value
+     * While executing the scheme there exist up to two threshold values:<br>
+     * <ul>
+     *   <li>a candidate threshold.</li>
+     *   <li>and, a current threshold.</li>
+     * </ul>
+     * In directory used to generate TssMessages, the candidate {@code threshold} value defines the number of shares-of-shares that will be created to perform shamir-secret-sharing.<p>
+     * The current {@code threshold} value is the minimum number of messages that assures the correct recovery of {@link TssPrivateShare} and {@link TssPublicShare}.<p>
+     * In any case, to which of those of this property refers to, depends on whether the directory represents a candidate directory or an adopted one.
+     * @return the threshold value.
      */
     public int getThreshold() {
         return threshold;
+    }
+
+    /**
+     * Returns the total number of shares.
+     * @return the total number of shares.
+     */
+    public int getTotalShares() {
+        return participantAssigmentMapping.totalShares();
     }
 
     /**
@@ -116,7 +129,6 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
 
     /**
      * Returns a tssShareId owner's {@link BlsPublicKey}.
-     * If null, the participant does not belong to the directory.
      * @param shareId the numeric value of the share, not the index.
      * @return a BlsPublicKey belonging to the owner of the share.
      */
@@ -175,11 +187,9 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
         }
 
         /**
-         * Builds and returns a {@link TssParticipantDirectory} instance based on the provided entries and signatureSchema.
+         * Builds and returns a {@link TssParticipantDirectory} instance based on the provided entries.
          *
          * @return the constructed ParticipantDirectory instance
-         * @throws NullPointerException if signatureSchema is null
-         * @throws IllegalStateException if there is no entry for the current participant
          * @throws IllegalStateException if there are no configured participants
          * @throws IllegalStateException if the threshold value is higher than the total shares
          */

@@ -125,7 +125,7 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
     @NonNull
     public byte[] toBytes() {
         return new Serializer()
-                .put(this.signatureSchema().getIdByte())
+                .put(this.signatureSchema().toByte())
                 .put(this.element()::toBytes)
                 .toBytes();
     }

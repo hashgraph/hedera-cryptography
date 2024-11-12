@@ -130,6 +130,13 @@ public class TssParticipantAssigmentMapping {
     }
 
     /**
+     * Returns the total number of shares.
+     * @return the total number of shares.
+     */
+    public int totalShares() {
+        return shareAllocationTable.length;
+    }
+    /**
      * Return the list of all the shareIds.
      * In this list, the first share has value of 1.
      * This returns the numeric value of the share, not the index.
