@@ -53,7 +53,7 @@ class TssParticipantDirectoryTest {
 
         exception = assertThrows(IllegalArgumentException.class, () -> builder.withParticipant(1, 1, publicKey));
         assertTrue(
-                exception.getMessage().contains("Participant with id 1 was previously added to the directory"),
+                exception.getMessage().contains("Participant with participantId 1 was previously added to the directory"),
                 "participant check did not work");
     }
 
@@ -112,7 +112,7 @@ class TssParticipantDirectoryTest {
                 .withParticipant(
                         Long.MAX_VALUE / 2,
                         1,
-                        publicKey4) // there is a big gap between the last participant id and this one
+                        publicKey4) // there is a big gap between the last participant participantId and this one
                 .withParticipant(Long.MAX_VALUE - 2, 2, publicKey5) // there are 2 remaining possible ids not assigned
                 .withThreshold(1)
                 .build();

@@ -16,15 +16,14 @@
 
 package com.hedera.cryptography.tss.api;
 
-import static java.util.Objects.requireNonNull;
-
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.tss.extensions.TssParticipantAssigmentMapping;
+import com.hedera.cryptography.tss.extensions.TssParticipantAssigmentMapping.ParticipantMappingEntry;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Represents a public directory of participants in a Threshold Signature Scheme (TSS).
@@ -131,7 +130,7 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
      * A builder for creating {@link TssParticipantDirectory} instances.
      */
     public static class Builder {
-        private final Map<Long, ParticipantEntry> participantEntries = new HashMap<>();
+        private final Map<Long, ParticipantMappingEntry> participantEntries = new HashMap<>();
         private int threshold;
 
         private Builder() {}
@@ -168,9 +167,10 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
                 @NonNull final BlsPublicKey tssEncryptionPublicKey) {
             if (participantEntries.containsKey(participantId))
                 throw new IllegalArgumentException(
-                        "Participant with id " + participantId + " was previously added to the directory");
+                        "Participant with participantId " + participantId + " was previously added to the directory");
 
-            participantEntries.put(participantId, new ParticipantEntry(numberOfShares, tssEncryptionPublicKey));
+            participantEntries.put(
+                    participantId, new ParticipantMappingEntry(participantId, numberOfShares, tssEncryptionPublicKey));
             return this;
         }
 
@@ -192,60 +192,20 @@ public final class TssParticipantDirectory implements TssShareTable<BlsPublicKey
 
             // Get the total number of shares of to distribute in the protocol
             final int totalShares = participantEntries.values().stream()
-                    .map(ParticipantEntry::shareCount)
+                    .map(ParticipantMappingEntry::shareCount)
                     .reduce(0, Integer::sum);
-
-            final var participantIds = participantEntries.keySet().stream()
-                    .sorted(Long::compareTo)
-                    .mapToLong(Long::longValue)
-                    .toArray();
 
             if (threshold > totalShares) {
                 throw new IllegalStateException("Threshold exceeds the number of shares");
             }
 
-            final int[] shareOwnersTable = new int[totalShares];
-            final int[][] participantShares = new int[participantIds.length][2];
-            final BlsPublicKey[] tssEncryptionPublicKeyTable = new BlsPublicKey[participantIds.length];
-            final Map<Long, Integer> participantIndexes = new HashMap<>();
-            int currentIndex = 0;
-            // Iteration of the sorted int representation to make sure we assign the shares deterministically.
-            for (int i = 0; i < participantIds.length; i++) {
-                final ParticipantEntry entry = participantEntries.get(participantIds[i]);
-                tssEncryptionPublicKeyTable[i] = entry.tssEncryptionPublicKey;
-
-                // ParticipantId-->ParticipantIndex
-                participantIndexes.put(participantIds[i], i);
-                // ShareIndex-->ParticipantIndex
-                Arrays.fill(shareOwnersTable, currentIndex, currentIndex + entry.shareCount(), i);
-                // ParticipantIndex-->First Share; Share count
-                participantShares[i][0] = currentIndex + 1; // adds the first share and the last share
-                participantShares[i][1] = entry.shareCount();
-
-                currentIndex += entry.shareCount();
-            }
+            final ParticipantMappingEntry[] sortedEntries = participantEntries.entrySet().stream()
+                    .sorted(Entry.comparingByKey())
+                    .map(Entry::getValue)
+                    .toArray(ParticipantMappingEntry[]::new);
 
             return new TssParticipantDirectory(
-                    new TssParticipantAssigmentMapping(
-                            participantShares, shareOwnersTable, participantIndexes, tssEncryptionPublicKeyTable),
-                    threshold);
-        }
-    }
-
-    /**
-     * Represents an entry for a participant, containing the ID, share count, and public key.
-     * @param shareCount number of shares owned by the participant represented by this record
-     * @param tssEncryptionPublicKey the pairing public key used to encrypt tss share portions designated to the participant represented by this record
-     */
-    private record ParticipantEntry(int shareCount, @NonNull BlsPublicKey tssEncryptionPublicKey) {
-        /**
-         * Constructor
-         *
-         * @param shareCount number of shares owned by the participant represented by this record
-         * @param tssEncryptionPublicKey the pairing public key used to encrypt tss share portions designated to the participant represented by this record
-         */
-        public ParticipantEntry {
-            requireNonNull(tssEncryptionPublicKey, "tssEncryptionPublicKey must not be null");
+                    new TssParticipantAssigmentMapping(totalShares, sortedEntries), threshold);
         }
     }
 }

@@ -16,8 +16,12 @@
 
 package com.hedera.cryptography.tss.extensions;
 
+import static java.util.Objects.requireNonNull;
+
 import com.hedera.cryptography.bls.BlsPublicKey;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
@@ -59,21 +63,35 @@ public class TssParticipantAssigmentMapping {
     /**
      * Constructor
      *
-     * @param participantsShares  a table where each index is a participant and each value the first share assigned to it, and the second value the number-of-shares
-     * @param shareAllocationTable  Stores the {@code participant} that is the owner of each shareId in the protocol.
-     * @param participantIds list of sorted by value participant ids
-     * @param tssKeyTable Stores the {@link BlsPublicKey} of each {@code participant} in the protocol.
+     * @param totalShares total assigned shares.
+     * @param sortedParticipantEntries a sorted array of entries per participant
      */
-    public TssParticipantAssigmentMapping(
-            @NonNull final int[][] participantsShares,
-            @NonNull final int[] shareAllocationTable,
-            @NonNull final Map<Long, Integer> participantIds,
-            @NonNull final BlsPublicKey[] tssKeyTable) {
-        this.participantsShares = participantsShares;
-        ;
-        this.shareAllocationTable = shareAllocationTable;
-        this.tssKeyTable = tssKeyTable;
-        this.participantIds = participantIds;
+    public TssParticipantAssigmentMapping(final int totalShares, final ParticipantMappingEntry... sortedParticipantEntries) {
+        final int[] shareOwnersTable = new int[totalShares];
+        final int[][] participantShares = new int[sortedParticipantEntries.length][2];
+        final BlsPublicKey[] tssEncryptionPublicKeyTable = new BlsPublicKey[sortedParticipantEntries.length];
+        final Map<Long, Integer> participantIndexes = new HashMap<>(sortedParticipantEntries.length);
+        int currentIndex = 0;
+        // Iteration of the sorted int representation to make sure we assign the shares deterministically.
+        for (int i = 0; i < sortedParticipantEntries.length; i++) {
+            final ParticipantMappingEntry entry = sortedParticipantEntries[i];
+            tssEncryptionPublicKeyTable[i] = entry.tssEncryptionPublicKey;
+
+            // ParticipantId-->ParticipantIndex
+            participantIndexes.put(entry.participantId, i);
+            // ShareIndex-->ParticipantIndex
+            Arrays.fill(shareOwnersTable, currentIndex, currentIndex + entry.shareCount(), i);
+            // ParticipantIndex-->First Share; Share count
+            participantShares[i][0] = currentIndex + 1;
+            participantShares[i][1] = entry.shareCount();
+
+            currentIndex += entry.shareCount();
+        }
+
+        this.participantsShares = participantShares;
+        this.shareAllocationTable = shareOwnersTable;
+        this.tssKeyTable = tssEncryptionPublicKeyTable;
+        this.participantIds = participantIndexes;
     }
 
     /**
@@ -119,5 +137,23 @@ public class TssParticipantAssigmentMapping {
     @NonNull
     public List<Integer> getShareIds() {
         return IntStream.rangeClosed(1, shareAllocationTable.length).boxed().toList();
+    }
+
+    /**
+     * Represents an entry for a participant, containing the ID, share count, and public key.
+     * @param participantId identification of the participant
+     * @param shareCount number of shares owned by the participant represented by this record
+     * @param tssEncryptionPublicKey the pairing public key used to encrypt tss share portions designated to the participant represented by this record
+     */
+    public record ParticipantMappingEntry(long participantId, int shareCount, @NonNull BlsPublicKey tssEncryptionPublicKey) {
+        /**
+         * Constructor
+         *
+         * @param shareCount number of shares owned by the participant represented by this record
+         * @param tssEncryptionPublicKey the pairing public key used to encrypt tss share portions designated to the participant represented by this record
+         */
+        public ParticipantMappingEntry {
+            requireNonNull(tssEncryptionPublicKey, "tssEncryptionPublicKey must not be null");
+        }
     }
 }
