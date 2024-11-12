@@ -66,7 +66,8 @@ public class TssParticipantAssigmentMapping {
      * @param totalShares total assigned shares.
      * @param sortedParticipantEntries a sorted array of entries per participant
      */
-    public TssParticipantAssigmentMapping(final int totalShares, final ParticipantMappingEntry... sortedParticipantEntries) {
+    public TssParticipantAssigmentMapping(
+            final int totalShares, @NonNull final ParticipantMappingEntry... sortedParticipantEntries) {
         final int[] shareOwnersTable = new int[totalShares];
         final int[][] participantShares = new int[sortedParticipantEntries.length][2];
         final BlsPublicKey[] tssEncryptionPublicKeyTable = new BlsPublicKey[sortedParticipantEntries.length];
@@ -145,7 +146,8 @@ public class TssParticipantAssigmentMapping {
      * @param shareCount number of shares owned by the participant represented by this record
      * @param tssEncryptionPublicKey the pairing public key used to encrypt tss share portions designated to the participant represented by this record
      */
-    public record ParticipantMappingEntry(long participantId, int shareCount, @NonNull BlsPublicKey tssEncryptionPublicKey) {
+    public record ParticipantMappingEntry(
+            long participantId, int shareCount, @NonNull BlsPublicKey tssEncryptionPublicKey) {
         /**
          * Constructor
          *

@@ -53,7 +53,9 @@ class TssParticipantDirectoryTest {
 
         exception = assertThrows(IllegalArgumentException.class, () -> builder.withParticipant(1, 1, publicKey));
         assertTrue(
-                exception.getMessage().contains("Participant with participantId 1 was previously added to the directory"),
+                exception
+                        .getMessage()
+                        .contains("Participant with participantId 1 was previously added to the directory"),
                 "participant check did not work");
     }
 

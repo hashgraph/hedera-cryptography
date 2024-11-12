@@ -83,7 +83,8 @@ public abstract class Groth21Stage {
         // The value in the free coefficient is the secret that we want to share.
         final FiniteFieldPolynomial finiteFieldPolynomial =
                 ShamirUtils.interpolationPolynomial(random, secret, participantDirectory.getThreshold() - 1);
-        // The secrets we will end up sharing are the result of evaluating the polynomial with x= receiving-share-participantId
+        // The secrets we will end up sharing are the result of evaluating the polynomial with x=
+        // receiving-share-participantId
         final List<FieldElement> secrets =
                 receivingShareIds.stream().map(finiteFieldPolynomial::evaluate).toList();
         // Generating some shared entropy for ElGamal encryption algorithm. The randomness is reused for efficiency.
