@@ -18,7 +18,6 @@ package com.hedera.cryptography.tss.test.fixtures;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.SignatureSchema;
-import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssPrivateShare;
@@ -76,7 +75,7 @@ public class TssTestUtils {
      */
     @NonNull
     public static BlsPrivateKey[] rndSks(
-            @NonNull final SignatureSchema signatureSchema, @NonNull final Random rng, int n) {
+            @NonNull final SignatureSchema signatureSchema, @NonNull final Random rng, final int n) {
         return IntStream.range(0, n)
                 .boxed()
                 .map(i -> BlsPrivateKey.create(signatureSchema, rng))
@@ -84,7 +83,7 @@ public class TssTestUtils {
     }
 
     /**
-     * Generates a 0 value {@link TssMessage}
+     * Generates a {@link TssMessage} from 0 values
      */
     @NonNull
     public static TssMessage testTssMessage(
@@ -92,8 +91,7 @@ public class TssTestUtils {
             final int generatingShare,
             final int totalShares,
             final int threshold) {
-        final FieldElement zero =
-                signatureSchema.getPairingFriendlyCurve().field().fromLong(0);
+        final var zero = signatureSchema.getPairingFriendlyCurve().field().fromLong(0);
         final int n = signatureSchema.getPairingFriendlyCurve().field().elementSize();
         final var zeroElement = signatureSchema.getPublicKeyGroup().zero();
         final var zeros = Collections.nCopies(n, zeroElement);
@@ -101,10 +99,9 @@ public class TssTestUtils {
 
         final var serializer = new Serializer()
                 .put(TssMessage.MESSAGE_CURRENT_VERSION)
-                .put(signatureSchema.getIdByte())
+                .put(signatureSchema.toByte())
                 .put(generatingShare)
-                .putListSameSize(zeros, GroupElement::toBytes)
-                .put(totalShares);
+                .putListSameSize(zeros, GroupElement::toBytes);
         for (int i = 0; i < totalShares; i++) {
             serializer.putListSameSize(zeros, GroupElement::toBytes);
         }
@@ -119,13 +116,19 @@ public class TssTestUtils {
         return new OpaqueTssMessage(serializer.toBytes());
     }
 
+    /**
+     * Generates all random privateShares for each participant in the committee
+     */
+    @NonNull
     public static List<List<TssPrivateShare>> randomPrivateShares(
-            final TssTestCommittee committee, final Random rng, SignatureSchema signatureSchema) {
+            @NonNull final TssTestCommittee committee,
+            @NonNull final Random rng,
+            @NonNull final SignatureSchema signatureSchema) {
         final var pks = rndSks(signatureSchema, rng, committee.size() * committee.sharesPerParticipant());
         return IntStream.range(0, committee.size())
                 .mapToObj(i -> IntStream.range(0, committee.sharesPerParticipant())
-                        .map(j -> i * committee.size() + j)
-                        .mapToObj(j -> new TssPrivateShare(j, pks[j]))
+                        .map(j -> i * committee.sharesPerParticipant() + j)
+                        .mapToObj(j -> new TssPrivateShare(j + 1, pks[j]))
                         .toList())
                 .toList();
     }

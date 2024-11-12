@@ -64,7 +64,7 @@ public interface TssServiceRekeyStage {
             @NonNull TssMessage tssMessage);
 
     /**
-     *  Creates a stateful tssShareExtractor that allows to extract:
+     *Creates a stateful tssShareExtractor that allows to extract:
      * <ul>
      *      <li>all private shares that belongs to this participant</li>
      *      <li>all public shares for all the participants in the scheme.</li>
