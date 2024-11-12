@@ -32,6 +32,23 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class Utils {
 
+    public static @NonNull String toBinaryString(@NonNull final byte[] bytes) {
+        final StringBuilder sb = new StringBuilder();
+        for (final byte b : bytes) {
+            sb.append(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
+            sb.append('\n');
+        }
+        return sb.toString();
+    }
+
+    public static byte lastByte(final byte[] bytes) {
+        return bytes[bytes.length - 1];
+    }
+
+    public static boolean getBit(final byte b, final int bit) {
+        return (b & (1 << bit)) != 0;
+    }
+
     /**
      * Creates a string representation of the following FieldElement
      * @param element an element to write as string
