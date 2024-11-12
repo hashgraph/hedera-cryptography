@@ -21,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
-import com.hedera.cryptography.pairings.test.spi.PairingMockFriendlyCurveProvider;
+import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves;
+import com.hedera.cryptography.pairings.test.fixtures.curve.spi.NaiveCurveProvider;
 import java.util.NoSuchElementException;
 import org.junit.jupiter.api.Test;
 
@@ -32,29 +32,29 @@ class PairingsFriendlyCurvesTest {
 
     @Test
     void implementedCurveIsFound() {
-        assertDoesNotThrow(() -> PairingFriendlyCurves.instanceFor(Curve.ALT_BN128));
+        assertDoesNotThrow(() -> PairingFriendlyCurves.instanceFor(TestFixtureCurves.NO_PAIRING_CURVE));
     }
 
     @Test
     void multipleCallsReturnSameInstance() {
-        PairingFriendlyCurveProvider expected = PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
-        assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(Curve.ALT_BN128));
-        assertSame(expected, PairingFriendlyCurves.findInstance(Curve.ALT_BN128));
+        PairingFriendlyCurveProvider expected = PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE);
+        assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE));
+        assertSame(expected, PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE));
     }
 
     @Test
     void bilinearPairingIsInitialized() {
-        PairingFriendlyCurveProvider expected = PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
-        PairingMockFriendlyCurveProvider secondRequest =
-                ((PairingMockFriendlyCurveProvider) PairingFriendlyCurves.findInstance(Curve.ALT_BN128));
+        PairingFriendlyCurveProvider expected = PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE);
+        NaiveCurveProvider secondRequest =
+                ((NaiveCurveProvider) PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE));
         assertEquals(1, secondRequest.getInitializedCount());
         assertSame(expected, secondRequest);
     }
 
     @Test
     void multipleInitializationsAreIgnored() {
-        PairingMockFriendlyCurveProvider bilinearPairingProvider =
-                (PairingMockFriendlyCurveProvider) PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
+        NaiveCurveProvider bilinearPairingProvider =
+                (NaiveCurveProvider) PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE);
         bilinearPairingProvider.init();
         assertDoesNotThrow(
                 bilinearPairingProvider

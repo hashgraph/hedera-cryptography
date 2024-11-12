@@ -21,6 +21,7 @@ import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
 import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve;
 import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -34,11 +35,24 @@ public class NaiveCurveProvider extends PairingFriendlyCurveProvider {
     final AtomicReference<PairingFriendlyCurve> pairingFriendlyCurve = new AtomicReference<>();
 
     /**
+     * Counts the number of times {@link NaiveCurveProvider#doInit()} method gets invoked
+     */
+    private final AtomicInteger initializedCount = new AtomicInteger(0);
+
+    /**
+     * @return the number of times the {@link NaiveCurveProvider#doInit()}  method got invoked
+     */
+    public int getInitializedCount() {
+        return initializedCount.get();
+    }
+
+    /**
      * Initializes the library.
      * @implNote This method is only called once.
      */
     @Override
     protected void doInit() {
+        initializedCount.incrementAndGet();
         pairingFriendlyCurve.set(new NaiveCurve());
     }
 
