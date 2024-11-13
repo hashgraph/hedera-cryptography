@@ -1,13 +1,16 @@
 package com.hedera.cryptography.altbn128;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
-public enum SerializationInfo {
-    FIELD_ELEMENT(1, false),
-    GROUP1_ELEMENT(2, true),
-    GROUP2_ELEMENT(4, true);
+public enum ElementInfo {
+    FIELD_ELEMENT(1, false, null),
+    GROUP1_ELEMENT(2, true, AltBN128CurveGroup.GROUP1),
+    GROUP2_ELEMENT(4, true, AltBN128CurveGroup.GROUP2);
 
     /**
      * The size of each number in bytes. Note: the numbers are actually 254-bit, so the last 2 bits are either
@@ -19,11 +22,13 @@ public enum SerializationInfo {
 
     private final int numberCount;
     private final boolean hasFlags;
+    private final AltBN128CurveGroup group;
     private final Set<Integer> unusedBits;
 
-    SerializationInfo(final int numberCount, final boolean hasFlags) {
+    ElementInfo(final int numberCount, final boolean hasFlags, @Nullable final AltBN128CurveGroup group) {
         this.numberCount = numberCount;
         this.hasFlags = hasFlags;
+        this.group = group;
 
         final Set<Integer> unusedBits = new HashSet<>();
         for (int i = 1; i <= numberCount; i++) {
@@ -44,6 +49,11 @@ public enum SerializationInfo {
 
     public boolean hasFlags() {
         return hasFlags;
+    }
+
+
+    public @NonNull AltBN128CurveGroup getGroup() {
+        return Optional.of(group).orElseThrow();
     }
 
     public Set<Integer> getUnusedBits() {
