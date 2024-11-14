@@ -100,6 +100,10 @@ public final class FieldFacade {
         if (Objects.requireNonNull(representation, "representation must not be null").length != size) {
             throw new IllegalArgumentException("Invalid byte[] representation");
         }
+        if ((representation[size - 1] & 0b1100000) != 0) {
+            throw new IllegalArgumentException(
+                    "Invalid byte[] representation, the number is expected to be a 254-bit number, so the 2 most significant bits must be unset");
+        }
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsFromBytes(representation, output);
         if (result != SUCCESS) {

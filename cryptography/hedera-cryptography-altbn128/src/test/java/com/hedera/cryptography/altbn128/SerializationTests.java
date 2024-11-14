@@ -19,9 +19,15 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+/**
+ * This class contains tests for the Arkworks serialization of the different types of elements in the AltBN128 curve.
+ */
 @WithRng
 public class SerializationTests {
 
+    /**
+     * Each element has unused bits, the expectation is that when generating a random element, these bits are unset.
+     */
     @ParameterizedTest
     @EnumSource(ElementInfo.class)
     void unusedBitsAreUnset(final ElementInfo info, final Random rng) {
@@ -29,10 +35,14 @@ public class SerializationTests {
         final BitSet bitSet = BitSet.valueOf(bytes);
 
         for (final Integer unusedBit : info.getUnusedBits()) {
-            assertFalse(bitSet.get(unusedBit));
+            assertFalse(bitSet.get(unusedBit), "Bit at index %d is set".formatted(unusedBit));
         }
     }
 
+    /**
+     * Each element type has a zero element, the expectation is that when generating a zero element, all bits are unset
+     * except for the zero flag bit, if it exists.
+     */
     @ParameterizedTest
     @EnumSource(ElementInfo.class)
     void zeroElementBits(final ElementInfo info) {
@@ -42,9 +52,9 @@ public class SerializationTests {
         // if the element has flags, all bits should be zero except the zero flag bit
         for (int i = 0; i < bytes.length; i++) {
             if (info.hasFlags() && info.getZeroFlagBitIndex() == i) {
-                assertTrue(bitSet.get(i));
+                assertTrue(bitSet.get(i), "Zero flag bit is not set");
             } else {
-                assertFalse(bitSet.get(i));
+                assertFalse(bitSet.get(i), "Bit at index %d is set".formatted(i));
             }
         }
     }
@@ -90,9 +100,11 @@ public class SerializationTests {
         );
     }
 
+    /**
+     * Flipping any unused bit should throw an exception when deserializing the element.
+     */
     @ParameterizedTest
     @EnumSource(ElementInfo.class)
-    @Disabled("Flipping unused bits in field elements does not throw an exception")
     void flippingUnusedBits(final ElementInfo info, final Random rng) {
         final byte[] bytes = randomElementBytes(info, rng);
         final BitSet bitSet = BitSet.valueOf(bytes);
@@ -103,15 +115,25 @@ public class SerializationTests {
 
         final byte[] flippedBytes = bitSet.toByteArray();
 
-        switch (info) {
-            case FIELD_ELEMENT -> assertDoesNotThrow(() -> new AltBn128Field().fromBytes(flippedBytes));
-            case GROUP1_ELEMENT -> assertThrows(IllegalArgumentException.class,
-                    () -> new AltBn128Group(AltBN128CurveGroup.GROUP1).fromBytes(flippedBytes));
-            case GROUP2_ELEMENT -> assertThrows(IllegalArgumentException.class,
-                    () -> new AltBn128Group(AltBN128CurveGroup.GROUP2).fromBytes(flippedBytes));
-        }
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    switch (info) {
+                        case FIELD_ELEMENT -> new AltBn128Field().fromBytes(flippedBytes);
+                        case GROUP1_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP1).fromBytes(flippedBytes);
+                        case GROUP2_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP2).fromBytes(flippedBytes);
+                    }
+                }
+        );
     }
 
+    /**
+     * Generate a random element and serialize it to bytes
+     *
+     * @param info The type of element to generate
+     * @param rng  The random number generator
+     * @return The bytes of the generated element
+     */
     private static @NonNull byte[] randomElementBytes(final ElementInfo info, final Random rng) {
         return switch (info) {
             case FIELD_ELEMENT -> new AltBn128Field().random(rng).toBytes();
@@ -120,6 +142,12 @@ public class SerializationTests {
         };
     }
 
+    /**
+     * Generate the bytes of the zero element
+     *
+     * @param info The type of element to generate
+     * @return The bytes of the zero element
+     */
     private static @NonNull byte[] zeroElementBytes(final ElementInfo info) {
         return switch (info) {
             case FIELD_ELEMENT -> new AltBn128Field().zero().toBytes();
@@ -128,6 +156,12 @@ public class SerializationTests {
         };
     }
 
+    /**
+     * Get the group facade for the given element info
+     *
+     * @param info The element info
+     * @return The group facade
+     */
     private static @NonNull GroupFacade getGroupFacade(final ElementInfo info) {
         return new GroupFacade(
                 info.getGroup().getId(),

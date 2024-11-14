@@ -32,21 +32,18 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class Utils {
 
+    /**
+     * Creates a binary string representation of the following byte array
+     * @param bytes the byte array to represent
+     * @return a string representation of the byte array
+     */
     public static @NonNull String toBinaryString(@NonNull final byte[] bytes) {
         final StringBuilder sb = new StringBuilder();
         for (final byte b : bytes) {
             sb.append(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
-            sb.append('\n');
+            sb.append(' ');
         }
         return sb.toString();
-    }
-
-    public static byte lastByte(final byte[] bytes) {
-        return bytes[bytes.length - 1];
-    }
-
-    public static boolean getBit(final byte b, final int bit) {
-        return (b & (1 << bit)) != 0;
     }
 
     /**
