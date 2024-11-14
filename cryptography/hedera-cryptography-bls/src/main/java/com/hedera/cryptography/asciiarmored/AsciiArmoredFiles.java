@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.blskeygen;
+package com.hedera.cryptography.asciiarmored;
 
-import static com.hedera.cryptography.blskeygen.asciiarmored.AsciiArmoredType.PRIVATE_KEY;
-import static com.hedera.cryptography.blskeygen.asciiarmored.AsciiArmoredType.PUBLIC_KEY;
+import static com.hedera.cryptography.asciiarmored.AsciiArmoredType.PRIVATE_KEY;
+import static com.hedera.cryptography.asciiarmored.AsciiArmoredType.PUBLIC_KEY;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
-import com.hedera.cryptography.blskeygen.asciiarmored.AsciiArmoredFile;
-import com.hedera.cryptography.blskeygen.asciiarmored.AsciiArmoredType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -132,20 +130,19 @@ public class AsciiArmoredFiles {
             @NonNull final Path path, @NonNull final String content, @NonNull final AsciiArmoredType asciiArmoredType)
             throws IOException {
         Objects.requireNonNull(asciiArmoredType, "pemType must not be null");
-        final String pemContent = asciiArmoredType.getHeader()
-                + formatPemContent(Objects.requireNonNull(content, "content must not be null"))
+        final String asciiArmoredContent = asciiArmoredType.getHeader()
+                + formatContent(Objects.requireNonNull(content, "content must not be null"))
                 + asciiArmoredType.getFooter();
 
         Files.write(
                 Objects.requireNonNull(path, "path must not be null"),
-                pemContent.getBytes(),
+                asciiArmoredContent.getBytes(),
                 StandardOpenOption.CREATE,
                 StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     /**
-     * @param base64 the base64 string to format according to <a
-     *               href="https://datatracker.ietf.org/doc/html/rfc7468">...</a>
+     * @param base64 the base64 string
      * @return the formatted base64 string able to be written in a PEM file.
      * @implNote Generators MUST wrap the base64-encoded lines so that each line consists of exactly 64 characters
      * except for the final line, which will encode the remainder of the data (within the 64-character line boundary),
@@ -153,13 +150,13 @@ public class AsciiArmoredFiles {
      * consistent with PEM
      */
     @NonNull
-    private static String formatPemContent(@NonNull final String base64) {
+    private static String formatContent(@NonNull final String base64) {
         StringBuilder builder = new StringBuilder();
         int index = 0;
         while (index < Objects.requireNonNull(base64, "base64 must not be null").length()) {
             builder.append(base64, index, Math.min(index + 64, base64.length()));
             builder.append("\n");
-            // Insert line breaks every 64 characters to conform with PEM format standards
+            // Insert line breaks every 64 characters to conform with format standards
             index += 64;
         }
         return builder.toString();

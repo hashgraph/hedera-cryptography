@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.blskeygen;
 
+import com.hedera.cryptography.asciiarmored.AsciiArmoredFiles;
 import com.hedera.cryptography.bls.BlsKeyPair;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;

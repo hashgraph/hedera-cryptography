@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.blskeygen.asciiarmored;
+package com.hedera.cryptography.asciiarmored;
 
 /**
- * Subset of handled Pem File Types as defined in <a href="https://www.rfc-editor.org/rfc/rfc1422">rfc1422</a>
+ * Subset of handled File Types as defined in <a href="https://www.rfc-editor.org/rfc/rfc1422">rfc1422</a>
  */
 public enum AsciiArmoredType {
 
