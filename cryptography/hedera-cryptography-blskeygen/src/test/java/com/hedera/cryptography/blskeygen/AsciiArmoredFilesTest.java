@@ -28,7 +28,7 @@ import java.util.Base64;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class PemFilesTest {
+public class AsciiArmoredFilesTest {
     private static final String BASE_64_KEY = "AWUoGGXtbZQ8SSfe1LxzvTSmVCuom+DxxXnYx3riBRYl";
 
     @TempDir
@@ -42,17 +42,17 @@ public class PemFilesTest {
                 BlsPrivateKey.fromBytes(Base64.getDecoder().decode(BASE_64_KEY));
         String expectedContent = "-----BEGIN PRIVATE KEY-----\n" + BASE_64_KEY + "\n" + "-----END PRIVATE KEY-----";
 
-        PemFiles.writeKey(keyPath, originalKey);
+        AsciiArmoredFiles.writeKey(keyPath, originalKey);
         assertTrue(keyPath.toFile().exists(), "Key should have been written to file");
         final String fileContents = Files.readString(keyPath);
         assertEquals(expectedContent, fileContents, "File contents should match expected");
-        final BlsPrivateKey readKey = PemFiles.readPrivateKey(keyPath);
+        final BlsPrivateKey readKey = AsciiArmoredFiles.readPrivateKey(keyPath);
         assertEquals(BASE_64_KEY, Base64.getEncoder().encodeToString(readKey.toBytes()));
     }
 
     @Test
-    public void testPemReadWithNullPath() {
-        Exception exception = assertThrows(NullPointerException.class, () -> PemFiles.readPrivateKey(null));
+    public void testAsciiArmoredReadWithNullPath() {
+        Exception exception = assertThrows(NullPointerException.class, () -> AsciiArmoredFiles.readPrivateKey(null));
         assertEquals("path must not be null", exception.getMessage());
     }
 
@@ -60,7 +60,7 @@ public class PemFilesTest {
     public void testPemWriteWithNullPath() {
         Exception exception = assertThrows(
                 NullPointerException.class,
-                () -> PemFiles.writeKey(
+                () -> AsciiArmoredFiles.writeKey(
                         null, BlsPrivateKey.fromBytes(Base64.getDecoder().decode(BASE_64_KEY))));
         assertEquals("path must not be null", exception.getMessage());
     }
@@ -68,7 +68,8 @@ public class PemFilesTest {
     @Test
     public void testPemWriteWithNullBase64Key() {
         Exception exception = assertThrows(
-                NullPointerException.class, () -> PemFiles.writeKey(Path.of("test.pem"), (BlsPrivateKey) null));
+                NullPointerException.class,
+                () -> AsciiArmoredFiles.writeKey(Path.of("test.pem"), (BlsPrivateKey) null));
         assertEquals("key must not be null", exception.getMessage());
     }
 }
