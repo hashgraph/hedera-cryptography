@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.blskeygen.pem;
+package com.hedera.cryptography.asciiarmored;
 
 /**
- * Subset of handled Pem File Types as defined in <a href="https://www.rfc-editor.org/rfc/rfc1422">rfc1422</a>
+ * Subset of handled File Types as defined in <a href="https://www.rfc-editor.org/rfc/rfc1422">rfc1422</a>
  */
-public enum PemType {
+public enum AsciiArmoredType {
 
     /**
      * Represents a private key
@@ -36,7 +36,7 @@ public enum PemType {
     private static final String HEADER_FORMAT = "-----BEGIN %s-----\n";
     private static final String FOOTER_FORMAT = "-----END %s-----";
 
-    PemType(final String pemTypeName) {
+    AsciiArmoredType(final String pemTypeName) {
         this.pemTypeName = pemTypeName;
     }
 

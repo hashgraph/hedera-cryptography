@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.blskeygen.pem;
+package com.hedera.cryptography.asciiarmored;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 
 /**
- * A parsed PEM file
+ * A parsed Ascii armored file
  *
  * @param contents the contents of the file
- * @param pemType  the type of the file
+ * @param asciiArmoredType  the type of the file
  */
-public record ParsedPemFile(@NonNull String contents, @NonNull PemType pemType) {
+public record AsciiArmoredFile(@NonNull String contents, @NonNull AsciiArmoredType asciiArmoredType) {
     /** Creates a new instance of this class */
-    public ParsedPemFile {
+    public AsciiArmoredFile {
         Objects.requireNonNull(contents, "contents must not be null");
-        Objects.requireNonNull(pemType, "pemType must not be null");
+        Objects.requireNonNull(asciiArmoredType, "asciiArmoredType must not be null");
     }
 }
