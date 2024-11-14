@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.blskeygen;
+package com.hedera.cryptography.asciiarmored;
 
-import static com.hedera.cryptography.blskeygen.pem.PemType.PRIVATE_KEY;
-import static com.hedera.cryptography.blskeygen.pem.PemType.PUBLIC_KEY;
+import static com.hedera.cryptography.asciiarmored.AsciiArmoredType.PRIVATE_KEY;
+import static com.hedera.cryptography.asciiarmored.AsciiArmoredType.PUBLIC_KEY;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
-import com.hedera.cryptography.blskeygen.pem.ParsedPemFile;
-import com.hedera.cryptography.blskeygen.pem.PemType;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,14 +30,15 @@ import java.util.Base64;
 import java.util.Objects;
 
 /**
- * Writes and reads the base64 string in Pem files according to <a
- * href="https://datatracker.ietf.org/doc/html/rfc7468">...</a>
+ * ASCII-Armor, also known as ASCII Armor, is a technique used to convert binary data into ASCII text format.
+ * This encoding ensures that the data remains intact when transmitted or shared across systems or platforms, which might otherwise corrupt the information.
+ * It is often employed in email encryption, such as PGP, to safely send encrypted messages as text.
  */
-public class PemFiles {
+public class AsciiArmoredFiles {
     /**
      * Empty constructor for helper static classes
      */
-    private PemFiles() {
+    private AsciiArmoredFiles() {
         // Empty constructor for helper static classes
     }
 
@@ -52,8 +51,8 @@ public class PemFiles {
      */
     @NonNull
     public static BlsPrivateKey readPrivateKey(@NonNull final Path path) throws IOException {
-        final ParsedPemFile fileRead = pemRead(Objects.requireNonNull(path, "path must not be null"));
-        if (fileRead.pemType() != PRIVATE_KEY) {
+        final AsciiArmoredFile fileRead = asciiArmoredRead(Objects.requireNonNull(path, "path must not be null"));
+        if (fileRead.asciiArmoredType() != PRIVATE_KEY) {
             throw new IllegalArgumentException("File does not contain a private key");
         }
         return BlsPrivateKey.fromBytes(Base64.getDecoder().decode(fileRead.contents()));
@@ -67,28 +66,28 @@ public class PemFiles {
      * @throws IOException In case of file reading error
      */
     @NonNull
-    private static ParsedPemFile pemRead(@NonNull final Path path) throws IOException {
+    private static AsciiArmoredFile asciiArmoredRead(@NonNull final Path path) throws IOException {
         final String pemContent = Files.readString(Objects.requireNonNull(path, "contents must not be null"));
-        final PemType pemType;
+        final AsciiArmoredType asciiArmoredType;
         if (pemContent.contains(PRIVATE_KEY.getHeader())) {
-            pemType = PRIVATE_KEY;
+            asciiArmoredType = PRIVATE_KEY;
         } else if (pemContent.contains(PUBLIC_KEY.getHeader())) {
-            pemType = PUBLIC_KEY;
+            asciiArmoredType = PUBLIC_KEY;
         } else {
             throw new IllegalArgumentException("Invalid PEM file");
         }
 
         // Remove header and footer
         final String contents = pemContent
-                .replace(pemType.getHeader(), "")
-                .replace(pemType.getFooter(), "")
+                .replace(asciiArmoredType.getHeader(), "")
+                .replace(asciiArmoredType.getFooter(), "")
                 .trim()
                 .replaceAll("\\s", "");
-        return new ParsedPemFile(contents, pemType);
+        return new AsciiArmoredFile(contents, asciiArmoredType);
     }
 
     /**
-     * Writes a private key to a PEM file.
+     * Writes a private key to a Ascii file.
      *
      * @param path       The location of the file to write to
      * @param privateKey The private key to write
@@ -104,7 +103,7 @@ public class PemFiles {
     }
 
     /**
-     * Writes a public key to a PEM file.
+     * Writes a public key to a Ascii armored file.
      *
      * @param path      The location of the file to write to
      * @param publicKey The public key to write
@@ -116,35 +115,34 @@ public class PemFiles {
                 Base64.getEncoder()
                         .encodeToString(Objects.requireNonNull(publicKey, "key must not be null")
                                 .toBytes()),
-                PemType.PUBLIC_KEY);
+                AsciiArmoredType.PUBLIC_KEY);
     }
 
     /**
-     * Writes the content in a PEM file.
+     * Writes the content in an ASCII armored file.
      *
      * @param path    The location of the file in the fileSystem
      * @param content The content to write to the file
-     * @param pemType eiter "PUBLIC KEY" or "PRIVATE KEY" string
+     * @param asciiArmoredType eiter "PUBLIC KEY" or "PRIVATE KEY" string
      * @throws IOException In case of file reading error
      */
     private static void writeKey(
-            @NonNull final Path path, @NonNull final String content, @NonNull final PemType pemType)
+            @NonNull final Path path, @NonNull final String content, @NonNull final AsciiArmoredType asciiArmoredType)
             throws IOException {
-        Objects.requireNonNull(pemType, "pemType must not be null");
-        final String pemContent = pemType.getHeader()
-                + formatPemContent(Objects.requireNonNull(content, "content must not be null"))
-                + pemType.getFooter();
+        Objects.requireNonNull(asciiArmoredType, "pemType must not be null");
+        final String asciiArmoredContent = asciiArmoredType.getHeader()
+                + formatContent(Objects.requireNonNull(content, "content must not be null"))
+                + asciiArmoredType.getFooter();
 
         Files.write(
                 Objects.requireNonNull(path, "path must not be null"),
-                pemContent.getBytes(),
+                asciiArmoredContent.getBytes(),
                 StandardOpenOption.CREATE,
                 StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     /**
-     * @param base64 the base64 string to format according to <a
-     *               href="https://datatracker.ietf.org/doc/html/rfc7468">...</a>
+     * @param base64 the base64 string
      * @return the formatted base64 string able to be written in a PEM file.
      * @implNote Generators MUST wrap the base64-encoded lines so that each line consists of exactly 64 characters
      * except for the final line, which will encode the remainder of the data (within the 64-character line boundary),
@@ -152,13 +150,13 @@ public class PemFiles {
      * consistent with PEM
      */
     @NonNull
-    private static String formatPemContent(@NonNull final String base64) {
+    private static String formatContent(@NonNull final String base64) {
         StringBuilder builder = new StringBuilder();
         int index = 0;
         while (index < Objects.requireNonNull(base64, "base64 must not be null").length()) {
             builder.append(base64, index, Math.min(index + 64, base64.length()));
             builder.append("\n");
-            // Insert line breaks every 64 characters to conform with PEM format standards
+            // Insert line breaks every 64 characters to conform with format standards
             index += 64;
         }
         return builder.toString();

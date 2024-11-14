@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.blskeygen;
 
+import com.hedera.cryptography.asciiarmored.AsciiArmoredFiles;
 import com.hedera.cryptography.bls.BlsKeyPair;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
@@ -85,8 +86,8 @@ public class KeyGen {
                             cliArguments.publicKeyPath());
                 }
                 final BlsKeyPair keyPair = BlsKeyPair.generate(SIGNATURE_SCHEMA);
-                PemFiles.writeKey(cliArguments.privateKeyPath(), keyPair.privateKey());
-                PemFiles.writeKey(cliArguments.publicKeyPath(), keyPair.publicKey());
+                AsciiArmoredFiles.writeKey(cliArguments.privateKeyPath(), keyPair.privateKey());
+                AsciiArmoredFiles.writeKey(cliArguments.publicKeyPath(), keyPair.publicKey());
                 System.out.printf(
                         "Saved private and public key files into: %s and %s %n",
                         cliArguments.privateKeyPath(), cliArguments.publicKeyPath());
@@ -100,9 +101,9 @@ public class KeyGen {
                             "The public key file already exists. Won't overwrite. Please delete %s %n",
                             cliArguments.publicKeyPath());
                 }
-                final BlsPrivateKey privateKey = PemFiles.readPrivateKey(cliArguments.privateKeyPath());
+                final BlsPrivateKey privateKey = AsciiArmoredFiles.readPrivateKey(cliArguments.privateKeyPath());
                 final BlsPublicKey publicKey = privateKey.createPublicKey();
-                PemFiles.writeKey(cliArguments.publicKeyPath(), publicKey);
+                AsciiArmoredFiles.writeKey(cliArguments.publicKeyPath(), publicKey);
                 System.out.printf("Saved public key file into: %s %n", cliArguments.publicKeyPath());
             }
         }
