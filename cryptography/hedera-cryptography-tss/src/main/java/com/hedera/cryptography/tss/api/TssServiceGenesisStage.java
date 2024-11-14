@@ -20,37 +20,61 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 
 /**
- * Threshold Signature Scheme Genesis Stage is the setup stage where all participants in the scheme collaborate to discover a shared polynomial.
+ * Threshold Signature Scheme (TSS) Genesis Stage is the setup stage where all participants in the scheme collaborate to discover a shared polynomial.
  * <p>
  *  Contract:
  * <ul>
- *     <li>Generate {@link TssMessage} from a random share</li>
+ *     <li>Generate a {@link TssMessage} from a random share</li>
  *     <li>Verify {@link TssMessage} with a {@link TssParticipantDirectory}</li>
- *     <li>Obtain the list of {@link TssPrivateShare} with a {@link TssParticipantDirectory}</li>
- *     <li>Obtain the list of {@link TssPublicShare} with a {@link TssParticipantDirectory}</li>
+ *     <li>Obtain a stateful {@link TssShareExtractor} from a {@link TssParticipantDirectory} and a list of <strong>previously verified</strong> {@link TssMessage}s</li>
  * </ul>
- *
- * The aggregation of the obtained {@link TssPublicShare}s using {@link TssPublicShare#aggregate(List)}
- *  will produce an aggregated {@link com.hedera.cryptography.bls.BlsPublicKey} (known as ledgerId)
  */
-public interface TssServiceGenesisStage extends TssServiceStage {
+public interface TssServiceGenesisStage {
 
     /**
-     * Generate a {@link TssMessage} for a {@code tssParticipantDirectory}, from a random private share.
-     * This method can be used to bootstrap the protocol as it does not need the existence of a previous {@link TssPrivateShare}
+     * Generate a {@link TssMessage} for a {@code participantDirectory}.
+     * This method is used to bootstrap the protocol as it does not need the existence of a previously generated key material.
      *
-     * @param tssParticipantDirectory the participant directory that we should generate the message for
+     * @param participantDirectory the candidate tss directory
      * @return a {@link TssMessage} produced from a random share.
      */
     @NonNull
-    TssMessage generateTssMessage(@NonNull TssParticipantDirectory tssParticipantDirectory);
+    TssMessage generateTssMessage(@NonNull TssParticipantDirectory participantDirectory);
 
     /**
-     * Verify that a {@link TssMessage} is valid.
+     * Verify that a {@link TssMessage} is valid against the zk proof.
      *
-     * @param participantDirectory the participant directory used to generate the message
+     * @apiNote It is responsibility of callers to make sure the call of this method happens before any processing.
+     * @param participantDirectory the candidate directory
      * @param tssMessage the {@link TssMessage} to validate
      * @return true if the message is valid, false otherwise
      */
     boolean verifyTssMessage(@NonNull TssParticipantDirectory participantDirectory, @NonNull TssMessage tssMessage);
+
+    /**
+     * Creates a stateful tssShareExtractor that allows to extract:
+     * <ul>
+     *      <li>all private shares that belongs to this participant</li>
+     *      <li>all public shares for all the participants in the scheme.</li>
+     * </ul>
+     *<p>
+     * It is the responsibility of the caller to ensure:
+     * <ul>
+     *  <li> that the list of processed {@link TssMessage} messages were previously verified</li>
+     * </ul>
+     *
+     * The aggregation of the obtained {@link TssPublicShare}s using {@link TssPublicShare#aggregate(List)}
+     *  will produce a new aggregated {@link com.hedera.cryptography.bls.BlsPublicKey} (known as ledgerId)
+     *
+     * @apiNote In this case the existence of threshold number of messages is not a requirement but a desired situation.
+     * The more participants collaborating to the entropy of the protocol produces better results.
+     * Ideally every participant in the scheme collaborates in the generation phase, but if not, one can consider the same threshold as if
+     * we were rekeying a committee where every participant has exactly one share.
+     *
+     * @param participantDirectory the candidate directory
+     * @param validMessages a list of <strong>previously verified</strong> {@link TssMessage}s
+     * @return a stateful instance of the {@link TssShareExtractor}
+     */
+    TssShareExtractor shareExtractor(
+            @NonNull TssParticipantDirectory participantDirectory, @NonNull List<TssMessage> validMessages);
 }

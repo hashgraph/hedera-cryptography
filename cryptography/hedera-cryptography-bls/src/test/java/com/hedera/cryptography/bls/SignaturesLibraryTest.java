@@ -73,9 +73,7 @@ class SignaturesLibraryTest {
         assertNotNull(other, "Should have created a SignatureSchema");
         assertNotNull(other.getPairingFriendlyCurve(), "should have created a pairing friendly curve instance");
         assertNotEquals(
-                actual.getIdByte(),
-                other.getIdByte(),
-                "different idBytes expected when different assignments are used");
+                actual.toByte(), other.toByte(), "different idBytes expected when different assignments are used");
         final var g2 = other.getPairingFriendlyCurve().group2();
         assertEquals(
                 g2,
@@ -83,9 +81,8 @@ class SignaturesLibraryTest {
                 "group2 assignment validation failed for: " + assignment);
 
         assertEquals(
-                actual, SignatureSchema.create(actual.getIdByte()), "creation from idByte should return same instance");
-        assertEquals(
-                other, SignatureSchema.create(other.getIdByte()), "creation from idByte should return same instance");
+                actual, SignatureSchema.create(actual.toByte()), "creation from idByte should return same instance");
+        assertEquals(other, SignatureSchema.create(other.toByte()), "creation from idByte should return same instance");
     }
 
     @ParameterizedTest
@@ -106,7 +103,7 @@ class SignaturesLibraryTest {
                 IllegalArgumentException.class,
                 () -> BlsPrivateKey.fromBytes(invalidKey),
                 "Invalid key should throw an exception");
-        final byte[] invalidKey2 = new byte[] {schema.getIdByte(), 0, 0, 0, 0};
+        final byte[] invalidKey2 = new byte[] {schema.toByte(), 0, 0, 0, 0};
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BlsPrivateKey.fromBytes(invalidKey2),
@@ -164,7 +161,7 @@ class SignaturesLibraryTest {
                 "Should be able to obtain the same signature from its byte array representation");
 
         final byte[] invalidSignature = new byte[0];
-        final byte[] invalidSignature2 = new byte[] {schema.getIdByte(), 0, 0, 0, 0};
+        final byte[] invalidSignature2 = new byte[] {schema.toByte(), 0, 0, 0, 0};
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BlsSignature.fromBytes(invalidSignature),
@@ -217,7 +214,7 @@ class SignaturesLibraryTest {
      * @param original the original with where the flipping will occur. The original is modified
      * @param consumer the consumer to invoke on each flip
      */
-    void flipEachBitAndConsume(@NonNull final byte[] original, final @NonNull Consumer<byte[]> consumer) {
+    public static void flipEachBitAndConsume(@NonNull final byte[] original, final @NonNull Consumer<byte[]> consumer) {
         final byte[] copy = Arrays.copyOf(original, original.length);
 
         for (int i = 0; i < copy.length - 1; i++) {

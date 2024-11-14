@@ -18,6 +18,8 @@ package com.hedera.cryptography.tss.impl;
 
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.tss.api.TssMessage;
+import com.hedera.cryptography.tss.api.TssMessageParsingException;
+import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.api.TssServiceGenesisStage;
 import com.hedera.cryptography.tss.api.TssServiceRekeyStage;
@@ -28,7 +30,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Random;
 
 /**
- * A Threshold Signature Scheme based on Groth21.
+ * A Threshold Signature Scheme (TSS) Service based on Groth21.
  * Use the service to:
  *   <ul>
  *       <li>Get a {@link Groth21GenesisStage}</li>
@@ -36,6 +38,7 @@ import java.util.Random;
  *   </ul>
  */
 public class Groth21Service implements TssService {
+    private final SignatureSchema signatureSchema;
     private final Groth21GenesisStage genesisStage;
     private final Groth21RekeyStage rekeyStage;
 
@@ -45,6 +48,7 @@ public class Groth21Service implements TssService {
      * @param random a source of randomness
      */
     public Groth21Service(final @NonNull SignatureSchema signatureSchema, final @NonNull Random random) {
+        this.signatureSchema = signatureSchema;
         this.genesisStage = new Groth21GenesisStage(signatureSchema, random);
         this.rekeyStage = new Groth21RekeyStage(signatureSchema, random);
     }
@@ -69,10 +73,17 @@ public class Groth21Service implements TssService {
 
     /**
      * {@inheritDoc}
+     * @throws TssMessageParsingException if the message cannot be correctly parsed
      */
     @NonNull
     @Override
-    public TssMessage messageFromBytes(@NonNull final byte[] message) {
-        return Groth21Message.fromBytes(message);
+    public TssMessage messageFromBytes(
+            @NonNull final TssParticipantDirectory tssParticipantDirectory, @NonNull final byte[] message)
+            throws TssMessageParsingException {
+        try {
+            return Groth21Message.fromBytes(message, tssParticipantDirectory, signatureSchema);
+        } catch (Exception e) {
+            throw new TssMessageParsingException("Could not read tss message", e);
+        }
     }
 }

@@ -21,16 +21,15 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 /**
  * A Threshold Signature Scheme Service.
  * <p>
- * Contract of TSS:
+ * Contract of TssService:
  *   <ul>
- *       <li>Get a {@link TssServiceGenesisStage}</li>
- *       <li>Get a {@link TssServiceRekeyStage}</li>
+ *       <li>Get a {@link TssServiceGenesisStage}: Returns the genesis stage</li>
+ *       <li>Get a {@link TssServiceRekeyStage}: Returns the rekey stage.</li>
  *   </ul>
  */
 public interface TssService {
 
     /**
-     * Returns the genesis stage.
      * In this stage all participants collaborate to discover a shared polynomial.
      * <p>
      * Contract of {@link TssServiceGenesisStage} stage:
@@ -42,10 +41,10 @@ public interface TssService {
      * </ul>
      * @return the genesis stage.
      */
+    @NonNull
     TssServiceGenesisStage genesisStage();
 
     /**
-     * Returns the rekey stage.
      * In this stage all participants recover keys belonging to an already established polynomial.
      *  Contract of {@link TssServiceRekeyStage} stage:
      * <ul>
@@ -58,14 +57,18 @@ public interface TssService {
      *
      * @return the rekey stage.
      */
+    @NonNull
     TssServiceRekeyStage rekeyStage();
 
     /**
      * Creates a {@link TssMessage} from a byte array representation.
-     * @see TssMessage#bytes() for the specification that message needs to follow.
+     * @see TssMessage#toBytes() for the specification that message needs to follow.
+     * @param tssParticipantDirectory the candidate tss directory
      * @param message the byte representation of the opaque underlying structure used by the library
      * @return a TssMessage instance
+     * @throws TssMessageParsingException in case of error while parsing the TssMessage from its byte array format
      */
     @NonNull
-    TssMessage messageFromBytes(@NonNull byte[] message);
+    TssMessage messageFromBytes(@NonNull TssParticipantDirectory tssParticipantDirectory, @NonNull byte[] message)
+            throws TssMessageParsingException;
 }

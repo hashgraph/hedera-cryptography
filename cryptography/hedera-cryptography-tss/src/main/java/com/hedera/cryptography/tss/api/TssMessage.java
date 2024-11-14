@@ -32,32 +32,31 @@ public interface TssMessage {
     int MESSAGE_CURRENT_VERSION = 0;
 
     /**
-     * Specification of the format:
-     * Given {@code e}: {@link FieldElement#size()} of the chosen curve
-     * and {@code g}: {@link GroupElement#size()} of the defined
-     * {@link SignatureSchema#getPublicKeyGroup()}
-     * A TssMessage will consist of:
-     * <ul>
-     *  <li>4 fixed bytes representing the version of the message
-     *  <li>1 byte representing the SignatureSchema that originated the message
-     *  <li>4 fixed bytes representing the shareId that originated the message
-     *  <li>4 fixed bytes representing the size N_1 of the next list
-     *  <li>(total of N_1*g bytes) a list of N_1 elements of g size representing the shared randomness
-     *  <li>4 fixed bytes representing the size M of the next lists
-     *  <li>(total of M*N_2*g)
-     *  (0 to M):
+     * Specification of the format:<p>
+     *  Given
      *  <ul>
-     *       <li>4 bytes representing the size N_2 of the next list
-     *       <li>(total of N_2*g bytes) a list of N_2 elements of g size representing the encrypted shares
-     *      </ul>
-     *  <li>4 fixed bytes representing the size N_3 of the next list
-     *  <li>(total of N_3*g bytes) a list of N_3 elements of g size representing the polynomial commitment
-     *  <li>g bytes representing the proof f element
-     *  <li>g bytes representing the proof a element
-     *  <li>s bytes representing the proof zr element
-     *  <li>s bytes representing the proof za element
+     *      <li>{@code e}: {@link FieldElement#size()}</li>
+     *      <li>{@code g}: {@link GroupElement#size()} of {@link SignatureSchema#getPublicKeyGroup()}</li>
+     *      <li>{@code t}: threshold value</li>
+     *      <li>{@code s}: total-shares (Participants*Shares)</li>
      *  </ul>
+     * A {@link TssMessage} byte representation will consist of:<br>
+     * <ul>
+     *     <li>4 bytes (big-endian) representing the version of the message. Must be {@code MESSAGE_CURRENT_VERSION} constant value</li>
+     *     <li>1 byte for {@link SignatureSchema} that originated the message.</li>
+     *     <li>4 bytes (big-endian) representing the shareId that originated the message.</li>
+     *     <li>A list of {@code e} elements, each of size {@code g} bytes, representing the shared randomness (total of {@code e * g} bytes).</li>
+     *     <li>{@code s} lists of {@code e} elements, each of size {@code g} bytes, representing the encrypted shares (total of {@code s * e * g} bytes).</li>
+     *     <li>A list of {@code t} elements, each of size {@code g} bytes, representing the polynomial commitment (total of {@code t * g} bytes).</li>
+     *     <li>{@code g} bytes representing the proof element {@code f}.</li>
+     *     <li>{@code g} bytes representing the proof element {@code a}.</li>
+     *     <li>{@code e} bytes representing the proof scalar {@code zr}.</li>
+     *     <li>{@code e} bytes representing the proof scalar {@code za}.</li>
+     * </ul>
      * @return the byte representation of a TssMessage
+     * @see SignatureSchema#toByte()
+     * @see GroupElement#toBytes()
+     * @see FieldElement#toBytes()
      */
-    byte[] bytes();
+    byte[] toBytes();
 }

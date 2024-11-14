@@ -25,7 +25,6 @@ import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssPrivateShare;
 import com.hedera.cryptography.tss.api.TssPublicShare;
-import com.hedera.cryptography.tss.api.TssServiceStage;
 import com.hedera.cryptography.tss.extensions.ShamirUtils;
 import com.hedera.cryptography.tss.extensions.elgamal.CiphertextTable;
 import com.hedera.cryptography.tss.extensions.elgamal.CombinedCiphertext;
@@ -40,17 +39,17 @@ import java.util.Objects;
 import java.util.Random;
 
 /**
- * A Groth21Stage
- * @see TssServiceStage
+ * All common behaviour for the between the stages implementations of TSS.
+ * Contains all common code for implementing the {@link com.hedera.cryptography.tss.api.TssServiceGenesisStage}
+ * or {@link com.hedera.cryptography.tss.api.TssServiceRekeyStage}
  */
-public abstract class Groth21Stage implements TssServiceStage {
+public abstract class Groth21Stage {
     /**
-     * defines which and how elliptic curve is used in the protocol
-     *
+     * defines which elliptic curve is used in the protocol, and how it's used
      */
     protected final SignatureSchema signatureSchema;
     /**
-     * random a source of randomness
+     * a random number generator
      */
     protected final Random random;
 
@@ -65,23 +64,56 @@ public abstract class Groth21Stage implements TssServiceStage {
     }
 
     /**
-     * {@inheritDoc}
+     * Cast the message to the instance this service will work.
+     *
+     * @param tssMessage the tssMessage to convert
+     * @return a cast version of tssMessage
+     * @throws IllegalArgumentException if it is not the valid instance of the message
      */
     @NonNull
-    @Override
+    protected static Groth21Message fromTssMessage(@NonNull final TssMessage tssMessage) {
+        if (!(tssMessage instanceof Groth21Message))
+            throw new IllegalArgumentException(
+                    "invalid message type: " + tssMessage.getClass().getSimpleName());
+        return (Groth21Message) tssMessage;
+    }
+
+    /**
+     * Cast the messages to the instance this service will work with.
+     *
+     * @param tssMessages the list of tssMessage to convert
+     * @return a cast version of tssMessage
+     * @throws IllegalArgumentException if it is not the valid instance of the message
+     * @throws NullPointerException if the list is null
+     */
+    protected static List<Groth21Message> fromTssMessages(@NonNull final List<TssMessage> tssMessages) {
+        return Objects.requireNonNull(tssMessages, "tssMessages must not be null").stream()
+                .map(Groth21Stage::fromTssMessage)
+                .toList();
+    }
+
+    /**
+     * Generates a TssMessage from a participantDirectory and a generatingShare
+     *
+     * @param participantDirectory the candidate tss directory
+     * @param generatingShare the secret to redistribute
+     * @return a {@link TssMessage} for this share.
+     */
+    @NonNull
     public TssMessage generateTssMessage(
-            @NonNull final TssParticipantDirectory tssTargetParticipantDirectory,
+            @NonNull final TssParticipantDirectory participantDirectory,
             @NonNull final TssPrivateShare generatingShare) {
 
-        final List<Integer> receivingShareIds = tssTargetParticipantDirectory.getShareIds();
+        final List<Integer> receivingShareIds = participantDirectory.getShareIds();
         final FieldElement secret = generatingShare.privateKey().element();
 
         // First, crate a polynomial of degree d = threshold -1 so that threshold number of points can recover this
         // polynomial.
         // The value in the free coefficient is the secret that we want to share.
         final FiniteFieldPolynomial finiteFieldPolynomial =
-                ShamirUtils.interpolationPolynomial(random, secret, tssTargetParticipantDirectory.getThreshold() - 1);
-        // The secrets we will end up sharing are the result of evaluating the polynomial with x= receiving-share-id
+                ShamirUtils.interpolationPolynomial(random, secret, participantDirectory.getThreshold() - 1);
+        // The secrets we will end up sharing are the result of evaluating the polynomial with x=
+        // receiving-share-participantId
         final List<FieldElement> secrets =
                 receivingShareIds.stream().map(finiteFieldPolynomial::evaluate).toList();
         // Generating some shared entropy for ElGamal encryption algorithm. The randomness is reused for efficiency.
@@ -89,8 +121,8 @@ public abstract class Groth21Stage implements TssServiceStage {
                 random, signatureSchema.getPairingFriendlyCurve().field().elementSize(), signatureSchema);
         // This ciphertextTable contains the secrets encrypted for each receiver using the shared randomness and each
         // receiver tssEncryptionKey.
-        final CiphertextTable ciphertextTable = ElGamalUtils.ciphertextTable(
-                signatureSchema, elGamalRandomness, tssTargetParticipantDirectory, secrets);
+        final CiphertextTable ciphertextTable =
+                ElGamalUtils.ciphertextTable(signatureSchema, elGamalRandomness, participantDirectory, secrets);
 
         // Zk proof: Create a collapsed representation of the cipherTable that can be used for a zk proof.
         final CombinedCiphertext elGamalCombinedCipherText = ciphertextTable.combine(
@@ -100,8 +132,8 @@ public abstract class Groth21Stage implements TssServiceStage {
         final EcPolynomial commitment =
                 ShamirUtils.feldmanCommitment(signatureSchema.getPublicKeyGroup(), finiteFieldPolynomial);
         // Zk proof: Creating the public statement
-        final NizkStatement nizkStatement = new NizkStatement(
-                receivingShareIds, tssTargetParticipantDirectory, commitment, elGamalCombinedCipherText);
+        final NizkStatement nizkStatement =
+                new NizkStatement(receivingShareIds, participantDirectory, commitment, elGamalCombinedCipherText);
         // Zk proof: Creating the private witness
         final NizkWitness nizkWitness = NizkWitness.create(elGamalRandomness, secrets);
         // Zk proof: Creating the private witness
@@ -116,42 +148,38 @@ public abstract class Groth21Stage implements TssServiceStage {
     }
 
     /**
-     * Allows verification of the message against the zk proof and the previous public shares if used.
+     * Allows verification of the message against the zk proof and the previous public shares if sent.
      * @param tssTargetParticipantDirectory the directory
-     * @param publicShares the previous public shares. optional parameter.
+     * @param previousPublicShares The sorted list by shareId of the previous TssPublicShare. optional parameter.
      * @param tssMessage the message to verify
      * @return if the message is valid.
      */
     public boolean verifyTssMessage(
             @NonNull final TssParticipantDirectory tssTargetParticipantDirectory,
-            @Nullable final List<TssPublicShare> publicShares,
+            @Nullable final List<TssPublicShare> previousPublicShares,
             @NonNull final TssMessage tssMessage) {
-        final Groth21Message message = Groth21Message.fromTssMessage(tssMessage);
+        final Groth21Message message = fromTssMessage(tssMessage);
 
         if (message.version() != TssMessage.MESSAGE_CURRENT_VERSION) {
             return false;
         }
-        if (message.signatureSchema().getCurve() != signatureSchema.getCurve()
-                || message.signatureSchema().getGroupAssignment() != signatureSchema.getGroupAssignment()) {
+        if (!signatureSchema.equals(message.signatureSchema())) {
             return false;
         }
 
-        if (publicShares != null) {
-            final BlsPublicKey pk = publicShares.stream()
-                    .filter(ps -> ps.shareId().equals(message.generatingShare()))
-                    .findAny()
-                    .map(TssPublicShare::publicKey)
-                    .orElse(null);
-            if (pk == null) {
+        if (previousPublicShares != null) {
+            final int shareId = message.generatingShare();
+            if (shareId < 1 || shareId > previousPublicShares.size()) {
                 return false;
             }
+            final BlsPublicKey pk = previousPublicShares.get(shareId - 1).publicKey();
             if (!pk.element()
                     .equals(message.polynomialCommitment().coefficients().getFirst())) {
                 return false;
             }
         }
 
-        CombinedCiphertext combinedCipher = message.cipherTable()
+        final CombinedCiphertext combinedCipher = message.cipherTable()
                 .combine(signatureSchema
                         .getPairingFriendlyCurve()
                         .field()

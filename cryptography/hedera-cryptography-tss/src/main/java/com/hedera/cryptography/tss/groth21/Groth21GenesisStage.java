@@ -17,18 +17,20 @@
 package com.hedera.cryptography.tss.groth21;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
+import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssPrivateShare;
 import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssServiceGenesisStage;
+import com.hedera.cryptography.tss.api.TssShareExtractor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 import java.util.Random;
 
 /**
- *  The genesis stage of Groth21 based TssService implementation.
+ *  The genesis stage of Threshold Signature Scheme based on Groth21 implementation.
  *  In this stage, given the lack of previous material, the generation of {@link TssMessage} is based on random information,
  *  and the aggregation rules for {@link TssPrivateShare} and {@link TssPrivateShare} follows bls addition.
  * @see TssServiceGenesisStage
@@ -59,32 +61,28 @@ public class Groth21GenesisStage extends Groth21Stage implements TssServiceGenes
      */
     @NonNull
     @Override
-    public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory tssGenesisParticipantDirectory) {
-        final int tssShareId = tssGenesisParticipantDirectory.getParticipantId() + 1;
-        final TssPrivateShare randomTssPrivateShare =
-                new TssPrivateShare(tssShareId, BlsPrivateKey.create(signatureSchema, random));
-        return generateTssMessage(tssGenesisParticipantDirectory, randomTssPrivateShare);
+    public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory participantDirectory) {
+        final TssPrivateShare randomTssPrivateShare = // In genesis, we don't have an originating shareId
+                new TssPrivateShare(-1, BlsPrivateKey.create(signatureSchema, random));
+        return generateTssMessage(participantDirectory, randomTssPrivateShare);
     }
 
     /**
      * {@inheritDoc}
+     * Aggregation by using {@link TssPublicShare#aggregate(List)} of the returned {@link TssPublicShare}s of this Extractor,
+     *  will produce a new aggregated {@link BlsPublicKey} (known as ledgerId)
      */
-    @NonNull
     @Override
-    public List<TssPrivateShare> obtainPrivateShares(
+    @NonNull
+    public TssShareExtractor shareExtractor(
             @NonNull final TssParticipantDirectory participantDirectory,
             @NonNull final List<TssMessage> validTssMessages) {
-        throw new UnsupportedOperationException("Unsupported operation");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public List<TssPublicShare> obtainPublicShares(
-            @NonNull final TssParticipantDirectory participantDirectory,
-            @NonNull final List<TssMessage> validTssMessages) {
-        throw new UnsupportedOperationException("Unsupported operation");
+        final KeyExtractionHelper<BlsPrivateKey, BlsPublicKey> helper = new KeyExtractionHelper<>(
+                (i, s) -> s, // Just return the same key, in genesis we do bls aggregate
+                BlsPrivateKey::aggregate,
+                (i, p) -> p, // Just return the same key, in genesis we do bls aggregate
+                BlsPublicKey::aggregate);
+        return new Groth21ShareExtractor<>(
+                signatureSchema, fromTssMessages(validTssMessages), participantDirectory, helper);
     }
 }

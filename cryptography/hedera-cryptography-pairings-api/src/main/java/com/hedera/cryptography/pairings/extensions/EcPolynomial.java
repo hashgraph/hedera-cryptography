@@ -26,7 +26,7 @@ import java.util.Objects;
  * A polynomial, represented as a list of coefficients over the one of the groups of a defined EllipticCurve
  * where each {@code coefficients[i]} is an element of that field, and corresponds to the coefficient for {@code x^i}.
  *<p>
- * The degree of the polynomial is the size of the coefficients +1 such that: <br/>
+ * The degree of the polynomial is the size of the coefficients +1 such that: <br>
  *{@code p(x) = a_0 + a_1 * x + a_2 * x^2 + ... + a_d * x^d}
  *
  * @implNote it is responsibility of the user that the {@link GroupElement} instances are compatible with each-other.
