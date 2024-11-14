@@ -38,7 +38,7 @@ plugins {
 }
 
 val publishingPackageGroup =
-    providers.gradleProperty("publishingPackageGroup").getOrElse("org.hedera")
+    providers.gradleProperty("publishingPackageGroup").getOrElse("com.hedera")
 
 version =
     providers.fileContents(rootProject.layout.projectDirectory.versionTxt()).asText.get().trim()
@@ -65,7 +65,15 @@ tasks.named("closeSonatypeStagingRepository") {
 
 tasks.named("releaseMavenCentral") {
     group = "release"
-    dependsOn(tasks.closeAndReleaseStagingRepository)
+    // For initial release and testing builds, we should use the closeSonatypeStagingRepository task
+    // instead of the closeAndReleaseStagingRepository task. Left in for testing and the first
+    // release.
+    // Once automation has been tested and the initial release manually completed, this should be
+    // reverted
+    // to the closeAndReleaseStagingRepository task.
+
+    // dependsOn(tasks.closeAndReleaseStagingRepository)
+    dependsOn(tasks.named("closeSonatypeStagingRepository"))
 }
 
 tasks.register("releaseMavenCentralSnapshot") {

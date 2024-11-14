@@ -62,9 +62,8 @@ public class Groth21GenesisStage extends Groth21Stage implements TssServiceGenes
     @NonNull
     @Override
     public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory participantDirectory) {
-        final int tssShareId = random.nextInt(); // In genesis we don't care to send this shareId
-        final TssPrivateShare randomTssPrivateShare =
-                new TssPrivateShare(tssShareId, BlsPrivateKey.create(signatureSchema, random));
+        final TssPrivateShare randomTssPrivateShare = // In genesis, we don't have an originating shareId
+                new TssPrivateShare(-1, BlsPrivateKey.create(signatureSchema, random));
         return generateTssMessage(participantDirectory, randomTssPrivateShare);
     }
 
@@ -78,6 +77,12 @@ public class Groth21GenesisStage extends Groth21Stage implements TssServiceGenes
     public TssShareExtractor shareExtractor(
             @NonNull final TssParticipantDirectory participantDirectory,
             @NonNull final List<TssMessage> validTssMessages) {
-        throw new UnsupportedOperationException("Unsupported operation");
+        final KeyExtractionHelper<BlsPrivateKey, BlsPublicKey> helper = new KeyExtractionHelper<>(
+                (i, s) -> s, // Just return the same key, in genesis we do bls aggregate
+                BlsPrivateKey::aggregate,
+                (i, p) -> p, // Just return the same key, in genesis we do bls aggregate
+                BlsPublicKey::aggregate);
+        return new Groth21ShareExtractor<>(
+                signatureSchema, fromTssMessages(validTssMessages), participantDirectory, helper);
     }
 }

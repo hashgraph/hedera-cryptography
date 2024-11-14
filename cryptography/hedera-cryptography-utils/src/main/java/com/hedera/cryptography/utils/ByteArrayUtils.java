@@ -202,9 +202,7 @@ public class ByteArrayUtils {
         @NonNull
         public <T> Serializer putListSameSize(
                 @NonNull final List<T> list, @NonNull final Function<T, byte[]> serializer) {
-            var totalSize = Objects.requireNonNull(list).size();
             Objects.requireNonNull(serializer);
-            put(totalSize);
             for (var entry : list) {
                 try {
                     os.write(serializer.apply(entry));
@@ -291,10 +289,10 @@ public class ByteArrayUtils {
                 if (is.read(bytes) != size) {
                     throw new IllegalStateException("Not enough bytes to read");
                 }
-            } catch (IOException e) {
+                return Objects.requireNonNull(f).apply(bytes);
+            } catch (Exception e) {
                 throw new IllegalStateException("Cannot read", e);
             }
-            return Objects.requireNonNull(f).apply(bytes);
         }
 
         /**
@@ -326,21 +324,23 @@ public class ByteArrayUtils {
         }
 
         /**
-         * Deserializes a list of elements using the provided function and specified size for each element.
+         * Deserializes a list of elements using the provided function and specified elementSize for each element.
          *
          * @param <T> The type of elements in the list.
          * @param f The function that converts a byte array into an object of type T.
-         * @param size The byte size of each element.
+         * @param listSize The number of elements in the list.
+         * @param elementSize The size in bytes of each element.
          * @return The list of deserialized objects.
          * @throws IllegalStateException if there are not enough bytes to read.
          */
         @NonNull
-        public <T> List<T> readListSameSize(@NonNull final Function<byte[], T> f, final int size) {
-            var elements = readInt();
-            var list = new ArrayList<T>(elements);
-            while (elements > 0) {
-                list.add(read(f, size));
-                elements--;
+        public <T> List<T> readListSameSize(
+                @NonNull final Function<byte[], T> f, final int listSize, final int elementSize) {
+            var elems = listSize;
+            var list = new ArrayList<T>(elems);
+            while (elems > 0) {
+                list.add(read(f, elementSize));
+                elems--;
             }
             return list;
         }

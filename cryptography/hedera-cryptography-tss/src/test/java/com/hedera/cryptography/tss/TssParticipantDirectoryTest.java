@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import java.util.List;
@@ -39,7 +38,6 @@ class TssParticipantDirectoryTest {
         builder.withParticipant(1, 1, publicKey);
 
         // Test threshold too low
-
         Exception exception = assertThrows(IllegalArgumentException.class, () -> builder.withThreshold(0));
         assertTrue(exception.getMessage().contains("Invalid threshold: 0"), "threshold check did not work");
 
@@ -55,7 +53,9 @@ class TssParticipantDirectoryTest {
 
         exception = assertThrows(IllegalArgumentException.class, () -> builder.withParticipant(1, 1, publicKey));
         assertTrue(
-                exception.getMessage().contains("Participant with id 1 was previously added to the directory"),
+                exception
+                        .getMessage()
+                        .contains("Participant with participantId 1 was previously added to the directory"),
                 "participant check did not work");
     }
 
@@ -83,8 +83,7 @@ class TssParticipantDirectoryTest {
     }
 
     @Test
-    void testValidConstructionHasValidPrivateSharesSize() {
-        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
+    void testValidConstructionHasValidOwnedSharesSize() {
         final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
         final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
         final TssParticipantDirectory directory = TssParticipantDirectory.createBuilder()
@@ -102,22 +101,52 @@ class TssParticipantDirectoryTest {
     }
 
     @Test
-    void testGetForShareId() {
-        final BlsPrivateKey privateKey = mock(BlsPrivateKey.class);
+    void testValidShareAssignment() {
         final BlsPublicKey publicKey1 = mock(BlsPublicKey.class);
         final BlsPublicKey publicKey2 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey3 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey4 = mock(BlsPublicKey.class);
+        final BlsPublicKey publicKey5 = mock(BlsPublicKey.class);
         final TssParticipantDirectory directory = TssParticipantDirectory.createBuilder()
                 .withParticipant(1, 5, publicKey1)
                 .withParticipant(2, 2, publicKey2)
+                .withParticipant(3, 0, publicKey3) // a participant that doesn't get any share
+                .withParticipant(
+                        Long.MAX_VALUE / 2,
+                        1,
+                        publicKey4) // there is a big gap between the last participant participantId and this one
+                .withParticipant(Long.MAX_VALUE - 2, 2, publicKey5) // there are 2 remaining possible ids not assigned
                 .withThreshold(1)
                 .build();
 
         assertEquals(publicKey1, directory.getForShareId(1));
+        assertEquals(publicKey1, directory.getForShareId(2));
+        assertEquals(publicKey1, directory.getForShareId(3));
+        assertEquals(publicKey1, directory.getForShareId(4));
         assertEquals(publicKey1, directory.getForShareId(5));
         assertEquals(publicKey2, directory.getForShareId(6));
         assertEquals(publicKey2, directory.getForShareId(7));
-        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(8));
+        assertEquals(
+                publicKey4,
+                directory.getForShareId(
+                        8)); // shareIds are given sequentially, so there should not be any assigned to publicKey3
+        assertEquals(publicKey5, directory.getForShareId(9));
+        assertEquals(publicKey5, directory.getForShareId(10));
+        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(Integer.MIN_VALUE));
         assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(0));
         assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(-1));
+        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(11));
+        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(12));
+        assertThrows(IllegalArgumentException.class, () -> directory.getForShareId(Integer.MAX_VALUE));
+
+        assertEquals(List.of(1, 2, 3, 4, 5), directory.ownedShares(1));
+        assertEquals(List.of(6, 7), directory.ownedShares(2));
+        assertEquals(List.of(), directory.ownedShares(3)); // ParticipantId 3 does not have any shares
+        assertEquals(List.of(8), directory.ownedShares(Long.MAX_VALUE / 2));
+        assertEquals(List.of(9, 10), directory.ownedShares(Long.MAX_VALUE - 2));
+        assertEquals(List.of(), directory.ownedShares(8)); // ParticipantId:8 is not part of the dealing
+        assertEquals(
+                List.of(),
+                directory.ownedShares(Long.MAX_VALUE)); // ParticipantId:Long.MAX_VALUE is not part of the dealing
     }
 }

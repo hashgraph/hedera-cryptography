@@ -30,7 +30,7 @@ import java.util.Objects;
 /**
  * The public part of a Nizk proof.
  *
- * @param tssShareIds a list of tssIds, should be consecutive and each id value should match the index in the list.
+ * @param tssShareIds a list of tssIds, should be consecutive and each participantId value should match the index in the list.
  * @param tssEncryptionKeys a Map to retrieve the corresponding tssEncryptionKey of the participant owning the share
  * @param polynomialCommitment a {@link EcPolynomial}
  * @param combinedCiphertext a {@link CombinedCiphertext}

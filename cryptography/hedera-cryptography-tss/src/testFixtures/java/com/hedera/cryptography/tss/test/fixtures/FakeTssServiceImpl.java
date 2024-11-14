@@ -36,7 +36,7 @@ import java.util.concurrent.ExecutorService;
 /**
  * A prototype implementation of the TssService.
  */
-public class TestTssServiceImpl implements TssService {
+public class FakeTssServiceImpl implements TssService {
     private final SignatureSchema signatureSchema;
     private final BlsPrivateKey sharedZeroKey;
 
@@ -45,16 +45,18 @@ public class TestTssServiceImpl implements TssService {
      *
      * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      */
-    public TestTssServiceImpl(@NonNull final SignatureSchema signatureSchema) {
+    public FakeTssServiceImpl(@NonNull final SignatureSchema signatureSchema) {
         this.signatureSchema = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
         this.sharedZeroKey = new BlsPrivateKey(
                 signatureSchema.getPairingFriendlyCurve().field().fromLong(0), signatureSchema);
     }
 
+    @NonNull
     @Override
     public TssServiceGenesisStage genesisStage() {
         return new TssServiceGenesisStage() {
 
+            @NonNull
             @Override
             public TssMessage generateTssMessage(@NonNull final TssParticipantDirectory participantDirectory) {
                 return TssTestUtils.testTssMessage(
@@ -135,6 +137,7 @@ public class TestTssServiceImpl implements TssService {
         };
     }
 
+    @NonNull
     @Override
     public TssServiceRekeyStage rekeyStage() {
         return new TssServiceRekeyStage() {
@@ -226,7 +229,8 @@ public class TestTssServiceImpl implements TssService {
 
     @NonNull
     @Override
-    public TssMessage messageFromBytes(@NonNull final byte[] message) {
+    public TssMessage messageFromBytes(
+            @NonNull final TssParticipantDirectory tssParticipantDirectory, @NonNull final byte[] message) {
         return new OpaqueTssMessage(message);
     }
 }

@@ -26,7 +26,7 @@ import java.util.stream.IntStream;
 /**
  * For testing purposes, where we are executing code in behalf of more than one participant of the protocol,
  * A committee is able to build the {@link TssParticipantDirectory},
- * and the {@link TssParticipantPrivateInfo} for  one, or a selected number of participants given their ids.
+ * and the {@link TssParticipantPrivateInfo} for one, or a selected number of participants given their ids.
  *
  * @param size the total size of the committee.
  * @param sharesPerParticipant how many shares are assigned to each participant
@@ -34,6 +34,10 @@ import java.util.stream.IntStream;
  */
 public record TssTestCommittee(int size, int sharesPerParticipant, @NonNull BlsPrivateKey... keys) {
 
+    /**
+     * Returns the threshold.
+     * @return the default threshold value
+     */
     public int threshold() {
         return (size * sharesPerParticipant + 2) / 2;
     }
@@ -62,8 +66,8 @@ public record TssTestCommittee(int size, int sharesPerParticipant, @NonNull BlsP
     }
 
     /**
-     *
-     * @param participantId participant id
+     * Returns the private info of {@code participantId}
+     * @param participantId participant participantId
      * @return the private info of {@code participantId}
      */
     @NonNull

@@ -64,6 +64,35 @@ public abstract class Groth21Stage {
     }
 
     /**
+     * Cast the message to the instance this service will work.
+     *
+     * @param tssMessage the tssMessage to convert
+     * @return a cast version of tssMessage
+     * @throws IllegalArgumentException if it is not the valid instance of the message
+     */
+    @NonNull
+    protected static Groth21Message fromTssMessage(@NonNull final TssMessage tssMessage) {
+        if (!(tssMessage instanceof Groth21Message))
+            throw new IllegalArgumentException(
+                    "invalid message type: " + tssMessage.getClass().getSimpleName());
+        return (Groth21Message) tssMessage;
+    }
+
+    /**
+     * Cast the messages to the instance this service will work with.
+     *
+     * @param tssMessages the list of tssMessage to convert
+     * @return a cast version of tssMessage
+     * @throws IllegalArgumentException if it is not the valid instance of the message
+     * @throws NullPointerException if the list is null
+     */
+    protected static List<Groth21Message> fromTssMessages(@NonNull final List<TssMessage> tssMessages) {
+        return Objects.requireNonNull(tssMessages, "tssMessages must not be null").stream()
+                .map(Groth21Stage::fromTssMessage)
+                .toList();
+    }
+
+    /**
      * Generates a TssMessage from a participantDirectory and a generatingShare
      *
      * @param participantDirectory the candidate tss directory
@@ -83,7 +112,8 @@ public abstract class Groth21Stage {
         // The value in the free coefficient is the secret that we want to share.
         final FiniteFieldPolynomial finiteFieldPolynomial =
                 ShamirUtils.interpolationPolynomial(random, secret, participantDirectory.getThreshold() - 1);
-        // The secrets we will end up sharing are the result of evaluating the polynomial with x= receiving-share-id
+        // The secrets we will end up sharing are the result of evaluating the polynomial with x=
+        // receiving-share-participantId
         final List<FieldElement> secrets =
                 receivingShareIds.stream().map(finiteFieldPolynomial::evaluate).toList();
         // Generating some shared entropy for ElGamal encryption algorithm. The randomness is reused for efficiency.
@@ -120,7 +150,7 @@ public abstract class Groth21Stage {
     /**
      * Allows verification of the message against the zk proof and the previous public shares if sent.
      * @param tssTargetParticipantDirectory the directory
-     * @param previousPublicShares the previous public shares. optional parameter.
+     * @param previousPublicShares The sorted list by shareId of the previous TssPublicShare. optional parameter.
      * @param tssMessage the message to verify
      * @return if the message is valid.
      */
@@ -128,25 +158,21 @@ public abstract class Groth21Stage {
             @NonNull final TssParticipantDirectory tssTargetParticipantDirectory,
             @Nullable final List<TssPublicShare> previousPublicShares,
             @NonNull final TssMessage tssMessage) {
-        final Groth21Message message = Groth21Message.fromTssMessage(tssMessage);
+        final Groth21Message message = fromTssMessage(tssMessage);
 
         if (message.version() != TssMessage.MESSAGE_CURRENT_VERSION) {
             return false;
         }
-        if (message.signatureSchema().getCurve() != signatureSchema.getCurve()
-                || message.signatureSchema().getGroupAssignment() != signatureSchema.getGroupAssignment()) {
+        if (!signatureSchema.equals(message.signatureSchema())) {
             return false;
         }
 
         if (previousPublicShares != null) {
-            final BlsPublicKey pk = previousPublicShares.stream()
-                    .filter(ps -> ps.shareId().equals(message.generatingShare()))
-                    .findAny()
-                    .map(TssPublicShare::publicKey)
-                    .orElse(null);
-            if (pk == null) {
+            final int shareId = message.generatingShare();
+            if (shareId < 1 || shareId > previousPublicShares.size()) {
                 return false;
             }
+            final BlsPublicKey pk = previousPublicShares.get(shareId - 1).publicKey();
             if (!pk.element()
                     .equals(message.polynomialCommitment().coefficients().getFirst())) {
                 return false;

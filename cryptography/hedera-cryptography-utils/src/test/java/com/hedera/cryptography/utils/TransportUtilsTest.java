@@ -62,7 +62,7 @@ class TransportUtilsTest {
         serializer.putListSameSize(strings, s -> s.getBytes(StandardCharsets.UTF_8));
 
         Deserializer deserializer = new Deserializer(serializer.toBytes());
-        var deserializedStrings = deserializer.readListSameSize(s -> new String(s, StandardCharsets.UTF_8), 6);
+        var deserializedStrings = deserializer.readListSameSize(s -> new String(s, StandardCharsets.UTF_8), 3, 6);
 
         assertEquals(strings, deserializedStrings);
     }
@@ -88,9 +88,24 @@ class TransportUtilsTest {
 
         Deserializer deserializer = new Deserializer(serializer.toBytes());
         List<String> deserializedList =
-                deserializer.readListSameSize(bytes -> new String(bytes, StandardCharsets.UTF_8), 0);
+                deserializer.readListSameSize(bytes -> new String(bytes, StandardCharsets.UTF_8), 0, 0);
 
         assertTrue(deserializedList.isEmpty());
+    }
+
+    @Test
+    void testSerializationNotEnoughElements() {
+        List<String> emptyList = List.of();
+        Serializer serializer = new Serializer();
+        serializer.putListSameSize(emptyList, s -> s.getBytes(StandardCharsets.UTF_8));
+
+        Deserializer deserializer = new Deserializer(serializer.toBytes());
+        assertThrows(
+                IllegalStateException.class,
+                () -> deserializer.readListSameSize(bytes -> new String(bytes, StandardCharsets.UTF_8), 1, 0));
+        assertThrows(
+                IllegalStateException.class,
+                () -> deserializer.readListSameSize(bytes -> new String(bytes, StandardCharsets.UTF_8), 1, 1));
     }
 
     @Test

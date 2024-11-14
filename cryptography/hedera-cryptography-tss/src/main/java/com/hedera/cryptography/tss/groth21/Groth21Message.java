@@ -21,6 +21,7 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.extensions.EcPolynomial;
 import com.hedera.cryptography.tss.api.TssMessage;
+import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.extensions.elgamal.CipherText;
 import com.hedera.cryptography.tss.extensions.elgamal.CiphertextTable;
 import com.hedera.cryptography.tss.extensions.nizk.NizkProof;
@@ -50,29 +51,16 @@ public record Groth21Message(
         implements TssMessage {
 
     /**
-     * Cast or transform a {@link TssMessage} into a {@link Groth21Message}
-     * @param tssMessage the message to cast or transform
-     * @return the cast or transformed message
-     */
-    @NonNull
-    static Groth21Message fromTssMessage(final @NonNull TssMessage tssMessage) {
-        return Objects.requireNonNull(tssMessage, "tssMessage must not be null") instanceof Groth21Message message
-                ? message
-                : Groth21Message.fromBytes(tssMessage.bytes());
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     @NonNull
-    public byte[] bytes() {
+    public byte[] toBytes() {
         final Serializer serializer = new Serializer()
                 .put(version)
-                .put(signatureSchema.getIdByte())
+                .put(signatureSchema.toByte())
                 .put(generatingShare)
-                .putListSameSize(cipherTable.sharedRandomness(), GroupElement::toBytes)
-                .put(cipherTable.shareCiphertexts().length);
+                .putListSameSize(cipherTable.sharedRandomness(), GroupElement::toBytes);
         for (var cipherText : cipherTable.shareCiphertexts()) {
             serializer.putListSameSize(cipherText.cipherText(), GroupElement::toBytes);
         }
@@ -87,35 +75,64 @@ public record Groth21Message(
     }
 
     /**
-     * Reads a {@link Groth21Message} from its serialized form following the specs in
-     * {@link TssMessage#bytes()}
+     * Reads a {@link Groth21Message} from its serialized form following the specs in {@link TssMessage#toBytes()}
+     *
      * @param message the byte array representation of the message
+     * @param tssParticipantDirectory the candidate tss directory
+     * @param expectedSchema the signatureSchema expected
      * @return a Groth21Message instance
      * @throws IllegalStateException if the message cannot be read
      */
     @NonNull
-    public static Groth21Message fromBytes(@NonNull final byte[] message) {
-        final Deserializer deserializer = new Deserializer(message);
-        final int version = deserializer.readInt();
-        final SignatureSchema schema = SignatureSchema.create(deserializer.readByte());
-        final int fieldElementSize = schema.getPairingFriendlyCurve().field().elementSize();
-        final int groupElementSize = schema.getPublicKeyGroup().elementSize();
-
+    public static Groth21Message fromBytes(
+            @NonNull final byte[] message,
+            @NonNull final TssParticipantDirectory tssParticipantDirectory,
+            @NonNull final SignatureSchema expectedSchema) {
+        final Deserializer deserializer = new Deserializer(Objects.requireNonNull(message, "message must not be null"));
+        Objects.requireNonNull(tssParticipantDirectory, "tssParticipantDirectory must not be null");
+        Objects.requireNonNull(expectedSchema, "expectedSchema must not be null");
+        final int fieldElementSize =
+                expectedSchema.getPairingFriendlyCurve().field().elementSize();
+        final int groupElementSize = expectedSchema.getPublicKeyGroup().elementSize();
         final Function<byte[], FieldElement> fieldElementFunction =
-                schema.getPairingFriendlyCurve().field()::fromBytes;
-        final Function<byte[], GroupElement> groupElementFunction = schema.getPublicKeyGroup()::fromBytes;
+                expectedSchema.getPairingFriendlyCurve().field()::fromBytes;
+        final Function<byte[], GroupElement> groupElementFunction = expectedSchema.getPublicKeyGroup()::fromBytes;
+        final int totalShares = tssParticipantDirectory.getTotalShares();
+        final int threshold = tssParticipantDirectory.getThreshold();
+        final int version = deserializer.readInt();
+
+        final int expectedSize = Integer.BYTES
+                + Byte.BYTES
+                + Integer.BYTES
+                + fieldElementSize * groupElementSize
+                + totalShares * fieldElementSize * groupElementSize
+                + threshold * groupElementSize
+                + groupElementSize * 3
+                + fieldElementSize * 2;
+
+        if (message.length != expectedSize) {
+            throw new IllegalStateException("Invalid message length");
+        }
+
+        if (version != TssMessage.MESSAGE_CURRENT_VERSION) {
+            throw new IllegalStateException("Invalid message version: " + version);
+        }
+        if (deserializer.readByte() != expectedSchema.toByte()) {
+            throw new IllegalStateException("Invalid signature schema");
+        }
 
         final int generatingShareElement = deserializer.readInt();
         final List<GroupElement> sharedRandomness =
-                deserializer.readListSameSize(groupElementFunction, groupElementSize);
-        final int elements = deserializer.readInt();
-        final CipherText[] cipherTable = new CipherText[elements];
-        for (int i = 0; i < elements; i++) {
-            final List<GroupElement> values = deserializer.readListSameSize(groupElementFunction, groupElementSize);
+                deserializer.readListSameSize(groupElementFunction, fieldElementSize, groupElementSize);
+
+        final CipherText[] cipherTable = new CipherText[totalShares];
+        for (int i = 0; i < totalShares; i++) {
+            final List<GroupElement> values =
+                    deserializer.readListSameSize(groupElementFunction, fieldElementSize, groupElementSize);
             cipherTable[i] = new CipherText(values);
         }
         final List<GroupElement> polynomialCommitment =
-                deserializer.readListSameSize(groupElementFunction, groupElementSize);
+                deserializer.readListSameSize(groupElementFunction, threshold, groupElementSize);
         final GroupElement f = deserializer.read(groupElementFunction, groupElementSize);
         final GroupElement a = deserializer.read(groupElementFunction, groupElementSize);
         final GroupElement y = deserializer.read(groupElementFunction, groupElementSize);
@@ -126,7 +143,7 @@ public record Groth21Message(
         final NizkProof nizkProof = new NizkProof(f, a, y, zR, zA);
         return new Groth21Message(
                 version,
-                schema,
+                expectedSchema,
                 generatingShareElement,
                 combinedCipherText,
                 new EcPolynomial(polynomialCommitment),

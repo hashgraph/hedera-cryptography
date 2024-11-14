@@ -25,7 +25,7 @@ import java.util.Objects;
 
 /**
  * Represents the private information of the participant executing the protocol.
- * Containing its id and the private key to decrypt {@link TssMessage} CipherTexts intended for the {@code participantId}.
+ * Containing its participantId and the private key to decrypt {@link TssMessage} CipherTexts intended for the {@code participantId}.
  *
  * @param participantId the ID of the {@code participant} owning this directory.
  * @param tssDecryptPrivateKey the key to decrypt {@link TssMessage} CipherTexts intended for the {@code participantId}.

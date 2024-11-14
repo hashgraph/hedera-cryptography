@@ -48,7 +48,7 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
     @NonNull
     public byte[] toBytes() {
         return new Serializer()
-                .put(this.signatureSchema().getIdByte())
+                .put(this.signatureSchema().toByte())
                 .put(this.element()::toBytes)
                 .toBytes();
     }
