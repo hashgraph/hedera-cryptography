@@ -174,8 +174,6 @@ jobs:
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_PASSWORD }}
-          SIGNING_KEY: ${{ secrets.GPG_KEY_CONTENTS }}
-          SIGNING_PASSPHRASE: ${{ secrets.GPG_KEY_PASSPHRASE }}
         with:
           gradle-version: ${{ inputs.gradle-version }}
           # always run with --no-parallel to avoid sonatype maven publish issues which result in invalid publications
