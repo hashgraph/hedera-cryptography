@@ -71,8 +71,10 @@ on:
       git-user-email:
         required: false
       ossrh-user-name:
+        description: "The username used to authenticate with Maven Central"
         required: true
       ossrh-user-password:
+        description: "The user password used to authenticate with Maven Central"
         required: true
 
 defaults:
@@ -172,9 +174,9 @@ jobs:
         uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3.5.0
         if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
         env:
-          NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USERNAME }}
-          NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_PASSWORD }}
+          NEXUS_USERNAME: ${{ secrets.ossrh-user-name }}
+          NEXUS_PASSWORD: ${{ secrets.ossrh-user-password }}
         with:
           gradle-version: ${{ inputs.gradle-version }}
           # always run with --no-parallel to avoid sonatype maven publish issues which result in invalid publications
-          arguments: releaseMavenCentral --scan -PpublishSigningEnabled=true --no-parallel
+          arguments: releaseMavenCentral --scan -PpublishSigningEnabled=true --no-parallel --no-build-cache --no-configuration-cache
