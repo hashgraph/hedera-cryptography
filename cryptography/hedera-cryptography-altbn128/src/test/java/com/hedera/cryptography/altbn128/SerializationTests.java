@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hedera.cryptography.altbn128;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -79,8 +95,7 @@ public class SerializationTests {
         assertTrue(groupFacade.equals(bytes, flippedFlagBytes));
         assertEquals(
                 new AltBn128Group(info.getGroup()).fromBytes(bytes),
-                new AltBn128Group(info.getGroup()).fromBytes(flippedFlagBytes)
-        );
+                new AltBn128Group(info.getGroup()).fromBytes(flippedFlagBytes));
     }
 
     /**
@@ -92,11 +107,13 @@ public class SerializationTests {
             value = ElementInfo.class,
             // Y coordinate flag is only present in group elements
             names = {"GROUP1_ELEMENT", "GROUP2_ELEMENT"})
-    @Disabled("Arkworks ignores most other bits if the zero bit flag is set, the Y coordinate flag seems to be an exception")
+    @Disabled(
+            "Arkworks ignores most other bits if the zero bit flag is set, the Y coordinate flag seems to be an exception")
     void equalsConsistencyZeroFlag(final ElementInfo info, final Random rng) {
         final byte[] zeroBytes = zeroElementBytes(info);
         final BitSet bitSet = BitSet.valueOf(zeroBytes);
-        final Set<Integer> allOtherBits = IntStream.range(0, info.numberOfBits()).boxed().collect(Collectors.toSet());
+        final Set<Integer> allOtherBits =
+                IntStream.range(0, info.numberOfBits()).boxed().collect(Collectors.toSet());
         allOtherBits.remove(info.getZeroFlagBitIndex());
 
         // flip a random bit that is not the zero flag bit
@@ -104,8 +121,8 @@ public class SerializationTests {
         Collections.shuffle(bitsList, rng);
         bitSet.flip(bitsList.getFirst());
 
-        assertThrows(IllegalArgumentException.class,
-                () -> new AltBn128Group(info.getGroup()).fromBytes(bitSet.toByteArray()));
+        assertThrows(IllegalArgumentException.class, () -> new AltBn128Group(info.getGroup())
+                .fromBytes(bitSet.toByteArray()));
     }
 
     /**
@@ -117,22 +134,20 @@ public class SerializationTests {
         final byte[] bytes = randomElementBytes(info, rng);
         final BitSet bitSet = BitSet.valueOf(bytes);
 
-        final List<Integer> unusedBits = new ArrayList<>(info.getUnusedBits().stream().toList());
+        final List<Integer> unusedBits =
+                new ArrayList<>(info.getUnusedBits().stream().toList());
         Collections.shuffle(unusedBits, rng);
         bitSet.flip(unusedBits.getFirst());
 
         final byte[] flippedBytes = bitSet.toByteArray();
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    switch (info) {
-                        case FIELD_ELEMENT -> new AltBn128Field().fromBytes(flippedBytes);
-                        case GROUP1_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP1).fromBytes(flippedBytes);
-                        case GROUP2_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP2).fromBytes(flippedBytes);
-                    }
-                }
-        );
+        assertThrows(IllegalArgumentException.class, () -> {
+            switch (info) {
+                case FIELD_ELEMENT -> new AltBn128Field().fromBytes(flippedBytes);
+                case GROUP1_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP1).fromBytes(flippedBytes);
+                case GROUP2_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP2).fromBytes(flippedBytes);
+            }
+        });
     }
 
     /**
@@ -145,8 +160,12 @@ public class SerializationTests {
     private static @NonNull byte[] randomElementBytes(final ElementInfo info, final Random rng) {
         return switch (info) {
             case FIELD_ELEMENT -> new AltBn128Field().random(rng).toBytes();
-            case GROUP1_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP1).random(rng).toBytes();
-            case GROUP2_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP2).random(rng).toBytes();
+            case GROUP1_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP1)
+                    .random(rng)
+                    .toBytes();
+            case GROUP2_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP2)
+                    .random(rng)
+                    .toBytes();
         };
     }
 
@@ -159,8 +178,12 @@ public class SerializationTests {
     private static @NonNull byte[] zeroElementBytes(final ElementInfo info) {
         return switch (info) {
             case FIELD_ELEMENT -> new AltBn128Field().zero().toBytes();
-            case GROUP1_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP1).zero().toBytes();
-            case GROUP2_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP2).zero().toBytes();
+            case GROUP1_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP1)
+                    .zero()
+                    .toBytes();
+            case GROUP2_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP2)
+                    .zero()
+                    .toBytes();
         };
     }
 
