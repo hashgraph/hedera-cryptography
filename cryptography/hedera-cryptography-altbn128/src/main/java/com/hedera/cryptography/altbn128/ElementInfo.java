@@ -102,6 +102,15 @@ public enum ElementInfo {
     }
 
     /**
+     * Get the number of bits used to serialize this element
+     *
+     * @return The number of bits used to serialize this element
+     */
+    public int numberOfBits() {
+        return NUMBER_SIZE_BYTES * Byte.SIZE * numberCount;
+    }
+
+    /**
      * Get the bit index of the Y coordinate flag
      *
      * @return the index of the flag
