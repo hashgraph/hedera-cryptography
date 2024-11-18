@@ -65,7 +65,7 @@ public class SerializationTests {
      */
     @Test
     @Disabled("Arkworks mods the field element when a larger one is deserialized, so this test fails")
-    void deserializeSerializeEquality(){
+    void deserializeSerializeEquality() {
         final AltBn128Field field = new AltBn128Field();
         final byte[] bytes = new byte[field.elementSize()];
         Arrays.fill(bytes, (byte) 0b11111111);
