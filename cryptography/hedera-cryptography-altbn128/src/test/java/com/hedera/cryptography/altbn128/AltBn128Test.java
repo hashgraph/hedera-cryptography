@@ -24,8 +24,6 @@ import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.curves.KnownCurves;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
-import java.math.BigInteger;
-import java.util.List;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 

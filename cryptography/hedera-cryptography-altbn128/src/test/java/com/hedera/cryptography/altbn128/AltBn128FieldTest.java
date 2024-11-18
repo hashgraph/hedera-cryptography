@@ -170,7 +170,7 @@ class AltBn128FieldTest {
         var field = new AltBn128Field();
         var a = field.random(rng);
         var inverseA = field.fromLong(0).subtract(a); // Assuming this would give -a
-        assertEquals(field.zero(), a.add(inverseA));  // a + (-a) = 0
+        assertEquals(field.zero(), a.add(inverseA)); // a + (-a) = 0
     }
 
     @Test

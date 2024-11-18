@@ -22,7 +22,6 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.Random;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 @WithRng
@@ -91,7 +90,8 @@ class AltBn128BilinearPairingTest {
 
         // Pairing with zero elements should behave consistently
         AltBn128BilinearPairing zeroPairing1 = new AltBn128BilinearPairing(zeroP, zeroQ);
-        AltBn128BilinearPairing zeroPairing2 = new AltBn128BilinearPairing(g1.generator().multiply(zero), g2.generator());
+        AltBn128BilinearPairing zeroPairing2 =
+                new AltBn128BilinearPairing(g1.generator().multiply(zero), g2.generator());
 
         assertTrue(zeroPairing1.compare(zeroPairing2), "Pairing with zero elements should match!");
     }
