@@ -30,6 +30,8 @@ class AltBn128BilinearPairingTest {
 
     @Test
     void testBilinearityWithRandomValues(final Random rand) {
+        // Bilinearity: “a”, “b” member of “Fq” (Finite Field), “P” member of “G₁”, and “Q” member of “G₂”,
+        // then e(a×P, b×Q) = e(ab×P, Q) = e(P, ab×Q) = e(P, Q)^(ab)
         AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1);
         AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         AltBn128Field fq = new AltBn128Field();
