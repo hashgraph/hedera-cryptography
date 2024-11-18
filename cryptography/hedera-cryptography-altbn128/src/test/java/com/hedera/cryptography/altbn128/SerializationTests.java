@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.altbn128;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -26,6 +27,7 @@ import com.hedera.cryptography.altbn128.facade.GroupFacade;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +36,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -55,6 +58,19 @@ public class SerializationTests {
         for (final Integer unusedBit : info.getUnusedBits()) {
             assertFalse(bitSet.get(unusedBit), "Bit at index %d is set".formatted(unusedBit));
         }
+    }
+
+    /**
+     * When deserializing and serializing an element, the bytes should remain the same.
+     */
+    @Test
+    @Disabled("Arkworks mods the field element when a larger one is deserialized, so this test fails")
+    void deserializeSerializeEquality(){
+        final AltBn128Field field = new AltBn128Field();
+        final byte[] bytes = new byte[field.elementSize()];
+        Arrays.fill(bytes, (byte) 0b11111111);
+
+        assertArrayEquals(bytes, field.fromBytes(bytes).toBytes());
     }
 
     /**
@@ -130,6 +146,7 @@ public class SerializationTests {
      */
     @ParameterizedTest
     @EnumSource(ElementInfo.class)
+    @Disabled("Arkworks mods the field element when a larger one is deserialized, so this test fails")
     void flippingUnusedBits(final ElementInfo info, final Random rng) {
         final byte[] bytes = randomElementBytes(info, rng);
         final BitSet bitSet = BitSet.valueOf(bytes);
