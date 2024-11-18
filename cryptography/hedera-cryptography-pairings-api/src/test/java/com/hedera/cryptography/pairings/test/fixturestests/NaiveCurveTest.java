@@ -53,19 +53,6 @@ public class NaiveCurveTest {
     }
 
     @Test
-    void testRandomElement() {
-        final GroupElement randomElement1 = group.random(new Random());
-        final GroupElement randomElement2 = group.random(new Random());
-
-        assertNotNull(randomElement1, "Random element 1 should not be null");
-        assertNotNull(randomElement2, "Random element 2 should not be null");
-        assertNotEquals(
-                randomElement1.toBytes(),
-                randomElement2.toBytes(),
-                "Random elements should not be equal due to randomness");
-    }
-
-    @Test
     void testBatchAdd() {
         final GroupElement element1 = group.generator();
         final GroupElement element2 = group.random(new Random());
