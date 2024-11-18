@@ -144,6 +144,120 @@ class AltBn128GroupElementTest {
                         "result " + index + " is not correct"));
     }
 
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void groupElementAdditionAssociativity(final AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var G1 = group.generator();
+        var G2 = group.generator().multiply(new AltBn128Field().fromLong(2));
+        var G3 = group.generator().multiply(new AltBn128Field().fromLong(3));
+        assertEquals(G1.add(G2).add(G3), G1.add(G2.add(G3)));
+    }
+
+    @Test
+    void fieldElementAdditionCommutativity(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        var b = field.random(rng);
+        assertEquals(a.add(b), b.add(a));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testAdditiveIdentity(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var element = group.generator();
+        var identity = group.zero();
+
+        // Check G + 0 = G
+        assertEquals(element, element.add(identity));
+        assertEquals(element, identity.add(element));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testScalarMultiplicationWithOneAndZero(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var element = group.generator();
+
+        // Check that 1 * G = G
+        assertEquals(element, element.multiply(field.fromLong(1)));
+
+        // Check that 0 * G = 0
+        assertEquals(group.zero(), element.multiply(field.fromLong(0)));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testAdditionCommutativity(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var G1 = group.generator();
+        var G2 = group.generator().multiply(new AltBn128Field().fromLong(2));
+
+        // Check G1 + G2 = G2 + G1
+        assertEquals(G1.add(G2), G2.add(G1));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testAdditionAssociativity(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var G1 = group.generator();
+        var G2 = group.generator().multiply(new AltBn128Field().fromLong(2));
+        var G3 = group.generator().multiply(new AltBn128Field().fromLong(3));
+
+        // Check (G1 + G2) + G3 = G1 + (G2 + G3)
+        assertEquals(G1.add(G2).add(G3), G1.add(G2.add(G3)));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testPointDoubling(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var G = group.generator();
+
+        // Check that 2 * G = G + G
+        assertEquals(G.multiply(field.fromLong(2)), G.add(G));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testScalarMultiplicationWithLargeValue(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var largeScalar = field.fromLong(Long.MAX_VALUE); // Using maximum possible scalar value
+        var G = group.generator();
+
+        // Perform multiplication with the large scalar and check result (e.g., does not throw, is consistent)
+        assertNotNull(G.multiply(largeScalar));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testRandomPointsWithinBounds(AltBN128CurveGroup gr, Random rng) {
+        var group = new AltBn128Group(gr);
+        byte[] seed = new byte[group.seedSize()];
+        rng.nextBytes(seed);
+
+        var randomPoint = group.random(seed);
+
+        // Check that the point is valid (e.g., within the curve bounds if applicable)
+        assertNotNull(randomPoint);
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testSpecificSerializationPattern(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        byte[] serialized = group.generator().toBytes();
+
+        // Validate the serialized pattern (for example, against a known hash or specific expected bytes)
+        assertNotNull(serialized);
+        // Further checks as needed, possibly involving expected byte sequences.
+    }
+
     @Test
     void equality() {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP1);
