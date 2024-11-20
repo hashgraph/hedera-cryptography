@@ -104,6 +104,8 @@ public interface GroupElement {
     @NonNull
     byte[] toBytes();
 
+    byte[] compress();
+
     /**
      * Returns the x-coordinate of the group element as a unsigned big-endian byte array
      *

@@ -22,6 +22,22 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * This interface acts as a facade that simplifies the interaction for operating with the elements for alt-bn-128
  */
 public sealed interface ElementFacade permits FieldFacade, GroupFacade {
+
+    /**
+     * @param bytes
+     * @param validate
+     * @return
+     */
+    @NonNull
+    byte[] fromCompressed(@NonNull byte[] bytes, final boolean validate);
+
+    /**
+     * @param bytes
+     * @return
+     */
+    @NonNull
+    byte[] compress(@NonNull byte[] bytes);
+
     /**
      * Return the occupied size in bytes of the random seed.
      *
@@ -60,8 +76,9 @@ public sealed interface ElementFacade permits FieldFacade, GroupFacade {
      * Reads the element representation and checks if it's valid.
      *
      * @param representation the representation of the element
+     * @param validate
      * @return the (possibly modified) representation of the element
      */
     @NonNull
-    byte[] fromBytes(@NonNull final byte[] representation);
+    byte[] fromBytes(@NonNull final byte[] representation, final boolean validate);
 }

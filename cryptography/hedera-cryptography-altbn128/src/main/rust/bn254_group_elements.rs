@@ -16,9 +16,9 @@
 
 use crate::group_element_utils::*;
 use crate::jni_helpers;
-use crate::jni_helpers::{G1, G2};
+use crate::jni_helpers::{to_point, BUSINESS_ERROR_POINT_NOT_IN_CURVE, G1, G2};
 use jni::objects::{JByteArray, JLongArray, JObject, JObjectArray};
-use jni::sys::{jint, jlong};
+use jni::sys::{jboolean, jint, jlong};
 use jni::JNIEnv;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -115,17 +115,64 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     env: JNIEnv,
     _instance: JObject,
     group_id: jint,
+    compress: jboolean,
+    validate: jboolean,
     value: JByteArray,
+    output: JByteArray,
 ) -> jint {
-    let input_bytes = match jni_helpers::from_jbytearray_to_vec(env, &value) {
+    let input_bytes = match jni_helpers::from_jbytearray_to_vec(&env, &value) {
         Ok(value) => value,
         Err(value) => return value,
     };
     match group_id {
-        GROUP1 => jni_helpers::validate_g1point(&input_bytes),
-        _ => jni_helpers::validate_g2point(&input_bytes),
+        GROUP1 => {
+            type G = G1;
+            let point = match group_elements_deserialize_with_modes::<G>(&input_bytes, compress != 0, validate!=0) {
+                Ok(a) => a,
+                Err(_) =>  return BUSINESS_ERROR_POINT_NOT_IN_CURVE,
+            };
+            jni_helpers::serialize_to_jbytearray(env, &point, output).unwrap_or_else(|value| value)
+        }
+        _ => {
+            type G = G2;
+            let point = match group_elements_deserialize_with_modes::<G>(&input_bytes, compress !=0, validate!=0) {
+                Ok(a) => a,
+                Err(_) =>  return BUSINESS_ERROR_POINT_NOT_IN_CURVE,
+            };
+            jni_helpers::serialize_to_jbytearray(env, &point, output).unwrap_or_else(|value| value)
+        }
     }
 }
+
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_groupElementsCompressedBytes(
+    env: JNIEnv,
+    _instance: JObject,
+    group_id: jint,
+    value: JByteArray,
+    output: JByteArray,
+) -> jint {
+
+    match group_id {
+        GROUP1 => {
+            type G = G1;
+            let point = match to_point::<G>(&env, &value, false) {
+                Ok(value) => value,
+                Err(value) => return value,
+            };
+            jni_helpers::serialize_to_jbytearray_compress(env, &point, output).unwrap_or_else(|value| value)
+        }
+        _ => {
+            type G = G2;
+            let point = match to_point::<G>(&env, &value, false) {
+                Ok(value) => value,
+                Err(value) => return value,
+            };
+            jni_helpers::serialize_to_jbytearray_compress(env, &point, output).unwrap_or_else(|value| value)
+        }
+    }
+}
+
 
 /// Returns the zero group element
 /// # Arguments

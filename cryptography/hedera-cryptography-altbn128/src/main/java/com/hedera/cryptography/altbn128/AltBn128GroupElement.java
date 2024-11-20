@@ -121,6 +121,11 @@ public class AltBn128GroupElement implements GroupElement {
     }
 
     @Override
+    public byte[] compress() {
+        return facade.compress(this.representation);
+    }
+
+    @Override
     public boolean equals(final Object obj) {
         if (this == obj) {
             return true;

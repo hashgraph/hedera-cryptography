@@ -151,6 +151,11 @@ public class NaiveGroup implements Group {
         return new NaiveGroupElement(this, curve.field(), ByteBuffer.wrap(bytes).getInt());
     }
 
+    @Override
+    public GroupElement fromCompressed(@NonNull final byte[] bytes) {
+        return fromBytes(bytes);
+    }
+
     @NonNull
     @Override
     public GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {

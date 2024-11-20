@@ -109,6 +109,11 @@ public final class NaiveGroupElement implements GroupElement {
         return value.toBytes();
     }
 
+    @Override
+    public byte[] compress() {
+        return toBytes();
+    }
+
     @NonNull
     @Override
     public List<BigInteger> getXCoordinate() {

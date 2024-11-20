@@ -97,6 +97,7 @@ public final class FieldFacade implements ElementFacade {
      * Creates a byte array representation of a fieldElement form another byte array representation
      * TODO: review if this is necessary, what validation is being provided.
      * @param representation the byte representation to validate
+     * @param validate
      * @return a byte array representation of a fieldElement form the provided byte array representation
      * @throws NullPointerException if the representation is null
      * @throws IllegalArgumentException if the representation is invalid
@@ -104,7 +105,7 @@ public final class FieldFacade implements ElementFacade {
      */
     @Override
     @NonNull
-    public byte[] fromBytes(@NonNull final byte[] representation) {
+    public byte[] fromBytes(@NonNull final byte[] representation, final boolean validate) {
         Objects.requireNonNull(representation, "representation must not be null");
 
         final byte[] output = new byte[size];
@@ -168,6 +169,18 @@ public final class FieldFacade implements ElementFacade {
      */
     public int size() {
         return this.size;
+    }
+
+    @NonNull
+    @Override
+    public byte[] fromCompressed(@NonNull final byte[] bytes, final boolean validate) {
+        return fromBytes(bytes, true);
+    }
+
+    @NonNull
+    @Override
+    public byte[] compress(@NonNull final byte[] bytes) {
+        return bytes;
     }
 
     @Override

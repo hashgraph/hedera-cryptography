@@ -267,12 +267,25 @@ public final class ArkBn254Adapter
     /**
      * Validates if a byte array is a valid representation of a point in the curve
      *
-     * @param group on which of the groups of the curve to perform the operation
-     * @param point a byte array that will be used as the seed to create the
-     *              point
-     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE} if the point is invalid or a less than zero error code if there was an error
+     * @param group    on which of the groups of the curve to perform the operation
+     * @param compress
+     * @param validate
+     * @param input    a byte array that will be used as the seed to create the point
+     * @param output
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE}
+     * if the point is invalid or a less than zero error code if there was an error
      */
-    public native int groupElementsBytes(final int group, final byte[] point);
+    public native int groupElementsBytes(
+            final int group, final boolean compress, final boolean validate, final byte[] input, final byte[] output);
+
+    /**
+     * @param group  on which of the groups of the curve to perform the operation
+     * @param input  a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that will be used as the
+     *               seed to create the point
+     * @param output
+     * @return
+     */
+    public native int groupElementsCompressedBytes(final int group, final byte[] input, final byte[] output);
 
     /**
      * Returns the scalar multiplication between code {@code point} and {@code scalar}.

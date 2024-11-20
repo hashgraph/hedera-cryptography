@@ -53,6 +53,31 @@ public class DefaultGroupElementSerialization {
     /**
      * Default deserializer
      */
+    public static Deserializer<GroupElement> getCompressedDeserializer(Group group) {
+        return new DefaultGroupElementSerialization.CompressedDeserializer(group);
+    }
+
+    /**
+     * Default serializer
+     */
+    public static Serializer<GroupElement> getCompressSerializer() {
+        return new DefaultGroupElementSerialization.CompressedSerializer();
+    }
+
+    /**
+     * Default serializer
+     */
+    private static final class DefaultSerializer implements Serializer<GroupElement> {
+
+        @Override
+        public byte[] serialize(final GroupElement element) {
+            return element.toBytes();
+        }
+    }
+
+    /**
+     * Default deserializer
+     */
     private record DefaultDeserializer(Group group) implements Deserializer<GroupElement> {
 
         @NonNull
@@ -66,14 +91,24 @@ public class DefaultGroupElementSerialization {
         }
     }
 
-    /**
-     * Default serializer
-     */
-    private static final class DefaultSerializer implements Serializer<GroupElement> {
+    private record CompressedDeserializer(Group group) implements Deserializer<GroupElement> {
+
+        @NonNull
+        @Override
+        public GroupElement deserialize(@NonNull final byte[] element) {
+            try {
+                return group.fromCompressed(element);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException("Cannot deserialize GroupElement", e);
+            }
+        }
+    }
+
+    private static final class CompressedSerializer implements Serializer<GroupElement> {
 
         @Override
         public byte[] serialize(final GroupElement element) {
-            return element.toBytes();
+            return element.compress();
         }
     }
 }

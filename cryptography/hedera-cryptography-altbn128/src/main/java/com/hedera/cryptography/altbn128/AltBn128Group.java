@@ -216,7 +216,17 @@ public class AltBn128Group implements Group {
     @NonNull
     @Override
     public GroupElement fromBytes(@NonNull final byte[] bytes) {
-        return new AltBn128GroupElement(this, facade.fromBytes(bytes));
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes, true));
+    }
+
+    @NonNull
+    public GroupElement fromBytes(@NonNull final byte[] bytes, final boolean validate) {
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes, validate));
+    }
+
+    @Override
+    public GroupElement fromCompressed(@NonNull final byte[] bytes) {
+        return new AltBn128GroupElement(this, facade.fromCompressed(bytes, true));
     }
 
     /**

@@ -191,6 +191,8 @@ public interface Group {
     @NonNull
     GroupElement fromBytes(@NonNull byte[] bytes);
 
+    GroupElement fromCompressed(@NonNull byte[] bytes);
+
     /**
      * Creates a group element from its x and y coordinates
      *
