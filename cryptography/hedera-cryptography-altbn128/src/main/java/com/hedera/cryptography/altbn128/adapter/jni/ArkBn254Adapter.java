@@ -167,6 +167,25 @@ public final class ArkBn254Adapter
     public native int fieldElementsInverse(final byte[] input, final byte[] output);
 
     /**
+     * Returns the result of the multiplication of each scalar in the {@code scalars} list
+     *
+     * @param scalars a long array representing a list of N scalars
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an
+     * error
+     */
+    public native int fieldElementsBatchMul(final long[] scalars, final byte[] output);
+
+    /**
+     * Returns the result of the total sum a collection of scalars
+     *
+     * @param scalars a byte matrix representing a list of N scalars
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    public native int fieldElementsBatchAdd(final byte[][] scalars, final byte[] output);
+
+    /**
      * Creates a GroupElement byte internal representation from a seed byte array
      * @param group on which of the groups of the curve to perform the operation
      * @param input a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
@@ -246,6 +265,17 @@ public final class ArkBn254Adapter
             final int group, final byte[] point, final byte[] scalar, final byte[] output);
 
     /**
+     * Returns the scalar multiplication between code {@code point} and {@code scalar}.
+     *
+     * @param group on which of the groups of the curve to perform the operation
+     * @param point a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that will be used as the seed to create the point
+     * @param scalar a long representation of the scalar
+     * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal representation of the point
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    @Deprecated
+    public native int groupElementsLongMul(final int group, final byte[] point, final long scalar, final byte[] output);
+    /**
      * Validates if a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} is a valid representation of a point in the curve
      *
      * @param group on which of the groups of the curve to perform the operation
@@ -256,14 +286,21 @@ public final class ArkBn254Adapter
     public native int groupElementsBytes(final int group, final byte[] point);
 
     /**
-     * Returns the result of the multiplication of the {@link GroupElementsLibraryAdapter#groupElementsGenerator(int, byte[])} for each scalar in the {@code scalars} list
+     * Returns the result of the multiplication of the
+     * {@link GroupElementsLibraryAdapter#groupElementsGenerator(int, byte[])} for each scalar in the {@code scalars}
+     * list
      *
-     * @param group on which of the groups of the curve to perform the operation
-     * @param scalars a byte matrix representing a list of N byte arrays of {@link FieldElementsLibraryAdapter#fieldElementsSize()}} size each representing a scalar
-     * @param outputs a byte matrix of N byte arrays {@link GroupElementsLibraryAdapter#groupElementsSize(int)}size to hold the internal representation of the generator point times the scalar in {@code scalars}
-     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @param group   on which of the groups of the curve to perform the operation
+     * @param scalars a long array of scalar
+     * @param points a byte matrix representing a list of N byte arrays of
+     *                {@link GroupElementsLibraryAdapter#groupElementsSize(int)} size each representing a scalar
+     * @param outputs a byte matrix of N byte arrays {@link GroupElementsLibraryAdapter#groupElementsSize(int)}size to
+     *                hold the internal representation of the generator point times the scalar in {@code scalars}
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an
+     * error
      */
-    public native int groupElementsBatchScalarMul(final int group, final byte[][] scalars, final byte[][] outputs);
+    public native int groupElementsBatchScalarMul(
+            final int group, final byte[][] scalars, final byte[][] points, final byte[] outputs);
 
     /**
      * Returns the point that is the result of the total sum a collection of points

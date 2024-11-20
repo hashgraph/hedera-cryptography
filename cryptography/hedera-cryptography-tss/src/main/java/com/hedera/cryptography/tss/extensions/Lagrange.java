@@ -21,6 +21,7 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
@@ -49,7 +50,7 @@ public class Lagrange {
      */
     @NonNull
     public static FieldElement recoverFieldElement(
-            @NonNull final List<FieldElement> xs, @NonNull final List<FieldElement> ys) {
+            @NonNull final List<Integer> xs, @NonNull final List<FieldElement> ys) {
         if (Objects.requireNonNull(xs, "xs must not be null").isEmpty()) {
             throw new IllegalArgumentException("xs must not be empty");
         }
@@ -60,11 +61,11 @@ public class Lagrange {
             throw new IllegalArgumentException("xs and ys must have the same size");
         }
 
+        final Field field = ys.getFirst().field();
         final List<FieldElement> weightedElements = IntStream.range(0, ys.size())
                 .boxed()
-                .map(i -> coefficient(xs, i).multiply(ys.get(i)))
+                .map(i -> coefficient(field, xs, i).multiply(ys.get(i)))
                 .toList();
-        final Field field = ys.getFirst().field();
         return field.add(weightedElements);
     }
 
@@ -81,7 +82,7 @@ public class Lagrange {
      */
     @NonNull
     public static GroupElement recoverGroupElement(
-            @NonNull final List<FieldElement> xs, @NonNull final List<GroupElement> ys) {
+            @NonNull final List<Integer> xs, @NonNull final List<GroupElement> ys) {
         if (Objects.requireNonNull(xs, "xs must not be null").isEmpty()) {
             throw new IllegalArgumentException("xs must not be empty");
         }
@@ -93,42 +94,38 @@ public class Lagrange {
         }
 
         final Group group = ys.getFirst().getGroup();
-        final List<GroupElement> weightedElements = IntStream.range(0, ys.size())
-                .boxed()
-                .map(i -> ys.get(i).multiply(coefficient(xs, i)))
-                .toList();
-        return group.add(weightedElements);
+        final Field field = ys.getFirst().getGroup().field();
+        final List<FieldElement> weights = new ArrayList<>(ys.size());
+        for (int i = 0; i < ys.size(); i++) {
+            weights.add(coefficient(field, xs, i));
+        }
+
+        return group.mbc(ys, weights);
     }
 
     /**
-     * Computes the Lagrange coefficient given by {@code L_i(x) = Π ((x - x_j) / (x_i - x_j)) for j ≠ i}.
-     * for the i-th {@code indexToCompute} point amongst the x-coordinates {@code xs};
-     * @param xs   the x-coordinates
+     * Computes the Lagrange coefficient given by
+     * {@code L_i(x) = Π ((x - x_j) / (x_i - x_j)) for j ≠ i}.
+     * for x=0 and the i-th {@code indexToCompute} point amongst the x-coordinates {@code xs};
+     *
+     * @param field the field
+     * @param xs the x-coordinates
      * @param indexToCompute the index to compute the lagrange coefficient for
      * @return the result of evaluating the Lagrange polynomial at the point {@code indexToCompute}.
+     * @implNote non-null and collection size checks are responsibility of the callers
      */
     @NonNull
-    private static FieldElement coefficient(@NonNull final List<FieldElement> xs, final int indexToCompute) {
-
-        if (indexToCompute >= xs.size()) {
-            throw new IllegalArgumentException("y-coordinate to compute must be within the range of x-coordinates");
-        }
-
-        final FieldElement xi = xs.get(indexToCompute);
-        final Field field = xi.field();
-        final FieldElement zeroElement = field.fromLong(0L);
-        final FieldElement oneElement = field.fromLong(1L);
-
-        FieldElement numerator = oneElement;
-        FieldElement denominator = oneElement;
+    private static FieldElement coefficient(
+            @NonNull final Field field, @NonNull final List<Integer> xs, final int indexToCompute) {
+        final List<Integer> numerators = new ArrayList<>(xs.size() - 1);
+        final List<Integer> denominators = new ArrayList<>(xs.size() - 1);
         for (int j = 0; j < xs.size(); j++) {
             if (j != indexToCompute) {
-                final FieldElement xj = xs.get(j);
-                numerator = numerator.multiply(zeroElement.subtract(xj));
-                denominator = denominator.multiply(xi.subtract(xj));
+                numerators.add(-xs.get(j));
+                denominators.add(xs.get(indexToCompute) - xs.get(j));
             }
         }
 
-        return numerator.multiply(denominator.inverse());
+        return field.multiply(numerators).multiply(field.multiply(denominators).inverse());
     }
 }

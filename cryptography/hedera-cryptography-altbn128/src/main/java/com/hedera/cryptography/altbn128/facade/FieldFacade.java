@@ -20,6 +20,8 @@ import static com.hedera.cryptography.altbn128.adapter.FieldElementsLibraryAdapt
 
 import com.hedera.cryptography.altbn128.AltBn128Exception;
 import com.hedera.cryptography.altbn128.adapter.FieldElementsLibraryAdapter;
+import com.hedera.cryptography.altbn128.adapter.GroupElementsLibraryAdapter;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 
@@ -234,7 +236,8 @@ public final class FieldFacade implements ElementFacade {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsInverse(value, output);
         if (result == FieldElementsLibraryAdapter.CANNOT_INVERT) {
-            throw new IllegalArgumentException("The scalar cannot be inverted");
+            throw new IllegalArgumentException(
+                    "The scalar cannot be inverted " + ByteArrayUtils.fromLittleEndianBytes(value));
         }
         if (result < SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsMultiply");
@@ -258,5 +261,41 @@ public final class FieldFacade implements ElementFacade {
             throw new AltBn128Exception(result, "fieldElementsPow");
         }
         return output;
+    }
+
+    /**
+     * Returns the result of the multiplication of each scalar in the collection.
+     *
+     * @param scalars a list of N scalars
+     * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
+     * @throws NullPointerException if points is null
+     * @throws AltBn128Exception in case of an error during the batch addition
+     */
+    public byte[] batchMultiply(final long[] scalars) {
+        Objects.requireNonNull(scalars, "scalars must not be null");
+        final byte[] array = new byte[this.size];
+        int result = adapter.fieldElementsBatchMul(scalars, array);
+        if (result != GroupElementsLibraryAdapter.SUCCESS) {
+            throw new AltBn128Exception(result, "fieldElementsBatchMul");
+        }
+        return array;
+    }
+
+    /**
+     * Returns the result of the multiplication of each scalar in the collection.
+     *
+     * @param scalars a list of N scalars
+     * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
+     * @throws NullPointerException if points is null
+     * @throws AltBn128Exception in case of an error during the batch addition
+     */
+    public byte[] batchAdd(final byte[][] scalars) {
+        Objects.requireNonNull(scalars, "scalars must not be null");
+        final byte[] array = new byte[this.size];
+        int result = adapter.fieldElementsBatchAdd(scalars, array);
+        if (result != GroupElementsLibraryAdapter.SUCCESS) {
+            throw new AltBn128Exception(result, "fieldElementsBatchMul");
+        }
+        return array;
     }
 }

@@ -16,12 +16,12 @@
 
 use crate::group_element_utils::*;
 use crate::jni_helpers;
+use crate::jni_helpers::{G1, G2};
 use jni::objects::{JByteArray, JObject, JObjectArray};
 use jni::sys::jint;
 use jni::JNIEnv;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use crate::jni_helpers::{G1, G2};
 const GROUP1_ELEMENT_SIZE: usize = 64;
 const GROUP2_ELEMENT_SIZE: usize = 128;
 const GROUP1: i32 = 0;
@@ -335,6 +335,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
 /// * `group_id`  in which group to perform the operation
+/// * `scalars`   the long array that represents the collection of scalars
 /// * `values`   the byte matrix that represents the collection of group elements
 /// * `output`   the byte array that will be filled with the new point representing the result of the operation
 /// # Returns
@@ -345,17 +346,18 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     env: JNIEnv,
     _instance: JObject,
     group_id: jint,
+    scalars: JObjectArray,
     values: JObjectArray,
-    outputs: JObjectArray,
+    outputs: JByteArray,
 ) -> jint {
     match group_id {
         GROUP1 => {
             type G = G1;
-            jni_helpers::batch_multiply_points::<G>(env, values, outputs)
+            jni_helpers::batch_accum_multiply_scalar_points::<G>(env, scalars, values, outputs)
         }
         _ => {
             type G = G2;
-            jni_helpers::batch_multiply_points::<G>(env, values, outputs)
+            jni_helpers::batch_accum_multiply_scalar_points::<G>(env, scalars, values, outputs)
         }
     }
 }

@@ -38,6 +38,18 @@ pub fn scalars_curve_from_bytes<G: CurveGroup>(value: &[u8]) -> ScalarField<G> {
     ScalarField::<G>::from_le_bytes_mod_order(&value)
 }
 
+/// Same as before but extracts F from the curve config
+pub fn scalars_curve_from_i64<G: CurveGroup>(value: i64) -> ScalarField<G> {
+    if value >= 0 {
+        scalars_curve_from_u64::<G>(value as u64)
+    } else {
+        scalars_curve_from_u64::<G>(0) - scalars_curve_from_u64::<G>((-value) as u64)
+    }
+}
+
+pub fn scalars_curve_from_u64<G: CurveGroup>(value: u64) -> ScalarField<G> {
+    ScalarField::<G>::from(value)
+}
 /// creates an u8 vector from a scalar
 pub fn scalars_to_bytes(value: F) -> Result<Vec<u8>, String> {
     let mut serialized = Vec::new();
@@ -63,7 +75,7 @@ pub fn scalars_from_random<R: Rng>(rng: &mut R) -> F {
 }
 
 /// creates a scalar from an u64
-pub fn scalars_from_u64(value: u64) -> F {
+pub fn scalars_from_i64(value: i64) -> F {
     F::from(value)
 }
 
@@ -93,4 +105,20 @@ pub fn scalars_minus(value: F, value2: F) -> F {
 /// multiplies two scalars and returns the result
 pub fn scalars_multiply(value: F, value2: F) -> F {
     value * value2
+}
+
+/// given a vec of N scalars, return multiplication of s[0]*s[1]...*s[N]
+pub fn scalars_batch_multiply(scalars: Vec<F>) -> F {
+    scalars.iter().fold(F::one(), |acum, value| acum * value)
+}
+
+/// given a vec of N scalars, return addition of s[0]+s[1]...+s[N]
+pub fn scalars_batch_add(scalars: Vec<F>) -> F {
+    scalars.iter().fold(F::zero(), |acum, value| acum + value)
+}
+/// given a vec of N scalars, return multiplication of s[0]*s[1]...*s[N]
+pub fn scalars_curve_batch_multiply<G: CurveGroup>(scalars: Vec<ScalarField<G>>) -> ScalarField<G> {
+    scalars
+        .iter()
+        .fold(G::ScalarField::one(), |acum, value| acum * value)
 }

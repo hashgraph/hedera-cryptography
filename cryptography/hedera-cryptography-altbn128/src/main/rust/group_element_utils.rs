@@ -67,14 +67,13 @@ pub fn group_elements_total_sum<G: CurveGroup>(values: Vec<G>) -> G {
     values.iter().fold(G::zero(), |acc, point| acc + point)
 }
 
-/// given a collection of N scalars, return a generator element multiplied by each of the scalars in the collection
-pub fn group_elements_batch_multiply<G: CurveGroup>(values: Vec<ScalarField<G>>) -> Vec<G> {
-    let generator = G::generator();
-    values
-        .iter()
-        .map(|coeff| generator.mul(coeff))
-        .collect::<Vec<G>>()
+/// given a vec of N scalars, and N points return the sum of multiplying s[0]*p[0]+...+s[N]*p[N]
+pub fn group_elements_batch_acum_multiply<G: CurveGroup>(scalars:Vec< ScalarField<G>>, points: Vec<G>) -> G {
+    points.iter().zip(scalars)
+        .map(|pair| pair.0.mul(pair.1))
+        .fold(G::zero(),|acum, value| acum+value )
 }
+
 
 /// ******************
 /// (De)/Serialization
@@ -96,11 +95,11 @@ pub fn group_elements_deserialize<G: CurveGroup>(value: &[u8]) -> Result<G, Stri
     }
 }
 
-/// returns the point from an affine byte representation of a point
+/// returns the point from a projective byte representation of a point
 pub fn group_elements_deserialize_and_validate<G: CurveGroup>(
     value: &[u8],
-) -> Result<G::Affine, String> {
-    match G::Affine::deserialize_uncompressed_unchecked(value) {
+) -> Result<G, String> {
+    match G::deserialize_uncompressed(value) {
         Ok(val) => Ok(val),
         Err(err) => Err(err.to_string()),
     }

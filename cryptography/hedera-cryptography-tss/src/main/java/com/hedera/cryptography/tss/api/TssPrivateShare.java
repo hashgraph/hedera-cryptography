@@ -83,10 +83,7 @@ public record TssPrivateShare(@NonNull Integer shareId, @NonNull BlsPrivateKey p
             throw new IllegalArgumentException("privateShares must not contain more than one signatureSchema");
         }
         final SignatureSchema signatureSchema = s.stream().findFirst().orElseThrow();
-        var xs = privateShares.stream()
-                .map(TssPrivateShare::shareId)
-                .map(signatureSchema.getPairingFriendlyCurve().field()::fromLong)
-                .toList();
+        var xs = privateShares.stream().map(TssPrivateShare::shareId).toList();
         var ys = privateShares.stream()
                 .map(TssPrivateShare::privateKey)
                 .map(BlsPrivateKey::element)

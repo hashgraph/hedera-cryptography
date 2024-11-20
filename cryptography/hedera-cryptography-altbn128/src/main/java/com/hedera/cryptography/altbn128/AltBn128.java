@@ -58,11 +58,11 @@ public class AltBn128 extends PairingFriendlyCurve {
     /**
      * First group of the curve
      */
-    private final AltBn128Group group1 = new AltBn128Group(AltBN128CurveGroup.GROUP1);
+    private final AltBn128Group group1 = new AltBn128Group(AltBN128CurveGroup.GROUP1, field);
     /**
      * Second group of the curve
      */
-    private final AltBn128Group group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+    private final AltBn128Group group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2, field);
 
     /**
      * {@inheritDoc}

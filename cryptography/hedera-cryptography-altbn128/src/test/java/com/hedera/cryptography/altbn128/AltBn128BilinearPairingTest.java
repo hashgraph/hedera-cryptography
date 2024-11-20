@@ -33,9 +33,9 @@ class AltBn128BilinearPairingTest {
     void testBilinearityWithRandomValues(final Random rand) {
         // Bilinearity: “a”, “b” member of “Fq” (Finite Field), “P” member of “G₁”, and “Q” member of “G₂”,
         // then e(a×P, b×Q) = e(ab×P, Q) = e(P, ab×Q) = e(P, Q)^(ab)
-        final AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1);
-        final AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         final AltBn128Field fq = new AltBn128Field();
+        final AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1, fq);
+        final AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2, fq);
 
         final FieldElement a = fq.random(rand);
         final FieldElement b = fq.random(rand);
@@ -47,9 +47,9 @@ class AltBn128BilinearPairingTest {
 
     @Test
     void testBilinearity() {
-        final AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1);
-        final AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         final AltBn128Field fq = new AltBn128Field();
+        final AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1, fq);
+        final AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2, fq);
 
         final FieldElement a = fq.fromLong(1); // Identity scalar
         final FieldElement b = fq.fromLong(0); // Zero scalar
@@ -83,9 +83,9 @@ class AltBn128BilinearPairingTest {
 
     @Test
     void testPairingWithZeroElement() {
-        final AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1);
-        final AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
         final AltBn128Field fq = new AltBn128Field();
+        final AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1, fq);
+        final AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2, fq);
 
         final FieldElement zero = fq.zero();
         final GroupElement zeroP = g1.zero();
@@ -101,8 +101,9 @@ class AltBn128BilinearPairingTest {
 
     @Test
     void testPairingWithGenerators() {
-        final AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1);
-        final AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+        final AltBn128Field fq = new AltBn128Field();
+        final AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1, fq);
+        final AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2, fq);
 
         final GroupElement G1 = g1.generator();
         final GroupElement G2 = g2.generator();
@@ -132,8 +133,9 @@ class AltBn128BilinearPairingTest {
      */
     @Test
     void testPairingWithMultiples() {
-        final AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1);
-        final AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+        final AltBn128Field fq = new AltBn128Field();
+        final AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1, fq);
+        final AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2,fq);
 
         // Precomputed values from the Python output
         final BigInteger a1 =

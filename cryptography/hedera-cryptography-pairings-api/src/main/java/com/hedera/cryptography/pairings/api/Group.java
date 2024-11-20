@@ -18,6 +18,7 @@ package com.hedera.cryptography.pairings.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -52,6 +53,14 @@ public interface Group {
     PairingFriendlyCurve getPairingFriendlyCurve();
 
     /**
+     * Returns the finite field “Fq” associated with the curves of G₁ and G₂.
+     *
+     * @return the field
+     */
+    @NonNull
+    Field field();
+
+    /**
      * Returns the group's generator.
      * A generator is a point that when multiplied to every different scalar value, it can produce all other elements of the group.
      *
@@ -67,6 +76,14 @@ public interface Group {
      */
     @NonNull
     GroupElement zero();
+    /**
+     * Creates a new group element with value 0
+     *
+     * @return the new group element
+     */
+    @NonNull
+    @Deprecated
+    GroupElement mbc(List<GroupElement> elements, List<FieldElement> scalars);
 
     /**
      * Creates a group element from a rng

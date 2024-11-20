@@ -20,7 +20,6 @@ import static java.util.Objects.requireNonNull;
 
 import com.hedera.cryptography.bls.BlsSignature;
 import com.hedera.cryptography.bls.SignatureSchema;
-import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.tss.extensions.Lagrange;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -83,10 +82,8 @@ public record TssShareSignature(@NonNull Integer shareId, @NonNull BlsSignature 
             throw new IllegalArgumentException("publicKeys must not contain more than one signatureSchema");
         }
         final SignatureSchema signatureSchema = s.stream().findFirst().orElseThrow();
-        final List<FieldElement> xs = partialSignatures.stream()
-                .map(TssShareSignature::shareId)
-                .map(signatureSchema.getPairingFriendlyCurve().field()::fromLong)
-                .toList();
+        final List<Integer> xs =
+                partialSignatures.stream().map(TssShareSignature::shareId).toList();
         final List<GroupElement> ys = partialSignatures.stream()
                 .map(TssShareSignature::signature)
                 .map(BlsSignature::element)
