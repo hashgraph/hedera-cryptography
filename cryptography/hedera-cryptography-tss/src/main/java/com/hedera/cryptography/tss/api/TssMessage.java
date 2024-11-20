@@ -50,6 +50,7 @@ public interface TssMessage {
      *     <li>A list of {@code t} elements, each of size {@code g} bytes, representing the polynomial commitment (total of {@code t * g} bytes).</li>
      *     <li>{@code g} bytes representing the proof element {@code f}.</li>
      *     <li>{@code g} bytes representing the proof element {@code a}.</li>
+     *     <li>{@code g} bytes representing the proof element {@code y}.</li>
      *     <li>{@code e} bytes representing the proof scalar {@code zr}.</li>
      *     <li>{@code e} bytes representing the proof scalar {@code za}.</li>
      * </ul>

@@ -28,4 +28,5 @@ testModuleInfo {
     requires("org.junit.jupiter.api")
     requires("org.mockito")
     requires("com.hedera.cryptography.utils.test.fixtures")
+    requires("com.hedera.cryptography.pairings.test.fixtures")
 }
