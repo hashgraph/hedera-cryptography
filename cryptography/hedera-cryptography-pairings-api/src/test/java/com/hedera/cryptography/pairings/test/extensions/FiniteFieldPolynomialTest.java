@@ -37,8 +37,7 @@ import org.junit.jupiter.api.Test;
 // possibly investigate: https://github.com/PoslavskySV/rings
 @WithRng
 class FiniteFieldPolynomialTest {
-    private static final PairingFriendlyCurve CURVE =
-            PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve();
+    private static final PairingFriendlyCurve CURVE = PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
 
     @Test
     void testEmptyCoefficientsThrowsException() {
