@@ -119,12 +119,12 @@ public class AltBn128GroupElement implements GroupElement {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof AltBn128GroupElement)) {
+        if (!(obj instanceof final AltBn128GroupElement that)) {
             return false;
         }
-        if (this.group.getGroup() != ((AltBn128GroupElement) obj).group.getGroup()) return false;
+        if (this.group.getGroup() != that.group.getGroup()) return false;
 
-        return Arrays.equals(this.representation, ((AltBn128GroupElement) obj).representation);
+        return facade.equals(this.representation, that.representation);
     }
 
     @Override
