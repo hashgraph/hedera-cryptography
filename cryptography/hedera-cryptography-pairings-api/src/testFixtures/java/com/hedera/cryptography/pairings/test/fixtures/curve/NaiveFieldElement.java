@@ -138,4 +138,35 @@ public class NaiveFieldElement implements FieldElement {
     public byte[] toBytes() {
         return value.toByteArray();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "NaiveFieldElement{" + "value=" + value + '}';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final NaiveFieldElement that = (NaiveFieldElement) o;
+        return Objects.equals(value, that.value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
+    }
 }
