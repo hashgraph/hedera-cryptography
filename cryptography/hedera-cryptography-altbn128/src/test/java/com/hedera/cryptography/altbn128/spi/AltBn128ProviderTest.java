@@ -30,8 +30,6 @@ class AltBn128ProviderTest {
         assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(KnownCurves.ALT_BN128));
         assertEquals(
                 KnownCurves.ALT_BN128,
-                PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
-                        .pairingFriendlyCurve()
-                        .curve());
+                PairingFriendlyCurves.findInstance(Curve.ALT_BN128).curve());
     }
 }

@@ -41,9 +41,7 @@ class SignaturesLibraryTest {
         assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(KnownCurves.ALT_BN128));
         assertEquals(
                 KnownCurves.ALT_BN128,
-                PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
-                        .pairingFriendlyCurve()
-                        .curve(),
+                PairingFriendlyCurves.findInstance(Curve.ALT_BN128).curve(),
                 "The pairing friendly curve should be ALT_BN128");
     }
 
@@ -55,7 +53,7 @@ class SignaturesLibraryTest {
         assertNotNull(actual.getPairingFriendlyCurve(), "Should have created a pairing friendly curve instance");
 
         assertEquals(
-                PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve(),
+                PairingFriendlyCurves.findInstance(Curve.ALT_BN128),
                 actual.getPairingFriendlyCurve(),
                 "PairingFriendlyCurve should be a singleton");
         final var g1 = actual.getPairingFriendlyCurve().group1();
