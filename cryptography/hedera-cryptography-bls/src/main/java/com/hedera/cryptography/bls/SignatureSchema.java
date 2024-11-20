@@ -41,7 +41,7 @@ public final class SignatureSchema {
     private SignatureSchema(@NonNull final GroupAssignment groupAssignment, @NonNull final Curve curve) {
         this.groupAssignment = Objects.requireNonNull(groupAssignment, "groupAssignment must not be null");
         this.curve = Objects.requireNonNull(curve, "curve must not be null");
-        this.pairingFriendlyCurve = PairingFriendlyCurves.findInstance(curve).pairingFriendlyCurve();
+        this.pairingFriendlyCurve = PairingFriendlyCurves.findInstance(curve);
     }
 
     /**

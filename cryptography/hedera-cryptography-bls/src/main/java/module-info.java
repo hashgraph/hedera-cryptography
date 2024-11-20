@@ -10,5 +10,5 @@ module com.hedera.cryptography.bls {
     exports com.hedera.cryptography.bls;
     exports com.hedera.cryptography.asciiarmored;
 
-    uses com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
+    uses com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 }

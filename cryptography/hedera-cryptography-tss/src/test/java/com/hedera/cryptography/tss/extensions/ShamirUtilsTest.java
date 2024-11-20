@@ -29,9 +29,7 @@ class ShamirUtilsTest {
 
     @Test
     void testNegativeOrZeroDegreeThrowsException(Random rng) {
-        var field = PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
-                .pairingFriendlyCurve()
-                .field();
+        var field = PairingFriendlyCurves.findInstance(Curve.ALT_BN128).field();
         assertThrows(
                 IllegalArgumentException.class, () -> ShamirUtils.interpolationPolynomial(rng, field.fromLong(0), -1));
         assertThrows(
@@ -40,9 +38,7 @@ class ShamirUtilsTest {
 
     @Test
     void testNullRandomOrSecretThrowsException(Random rng) {
-        var field = PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
-                .pairingFriendlyCurve()
-                .field();
+        var field = PairingFriendlyCurves.findInstance(Curve.ALT_BN128).field();
         assertThrows(
                 NullPointerException.class, () -> ShamirUtils.interpolationPolynomial(null, field.fromLong(0), 10));
         assertThrows(NullPointerException.class, () -> ShamirUtils.interpolationPolynomial(rng, null, 10));
