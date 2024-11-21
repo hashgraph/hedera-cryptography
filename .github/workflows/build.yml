@@ -84,7 +84,7 @@ jobs:
         run: ./gradlew :reports:testCodeCoverageReport test --scan --continue
 
       - name: Publish Unit Test Results
-        uses: step-security/publish-unit-test-result-action@4519d7c9f71dd765f8bbb98626268780f23bab28 # v2.17.0
+        uses: step-security/publish-unit-test-result-action@cc82caac074385ae176d39d2d143ad05e1130b2d # v2.18.0
         with:
           files: "**/build/test-results/test/TEST-*.xml"
 
