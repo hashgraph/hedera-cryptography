@@ -29,12 +29,20 @@ import java.util.Objects;
  * A naive implementation of the PairingFriendlyCurve interface for testing purposes.
  * This implementation provides basic methods to interact with the curve, field, and groups.
  */
-public class NaiveCurve implements PairingFriendlyCurve {
+public class NaiveCurve extends PairingFriendlyCurve {
 
     /**
      * The size of the field elements in bytes. For simplicity, using 256-bit elements.
      */
     public static final int EXAMPLE_SIZE = 12;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void doInit() {
+        // no-op
+    }
 
     /**
      * {@inheritDoc}
