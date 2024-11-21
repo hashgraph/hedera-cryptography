@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.blskeygen.pem;
+package com.hedera.cryptography.utils.test.fixtures;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Objects;
 
-/**
- * A parsed PEM file
- *
- * @param contents the contents of the file
- * @param pemType  the type of the file
- */
-public record ParsedPemFile(@NonNull String contents, @NonNull PemType pemType) {
-    /** Creates a new instance of this class */
-    public ParsedPemFile {
-        Objects.requireNonNull(contents, "contents must not be null");
-        Objects.requireNonNull(pemType, "pemType must not be null");
+public class ByteUtils {
+    /**
+     * Creates a binary string representation of the following byte array
+     * @param bytes the byte array to represent
+     * @return a string representation of the byte array
+     */
+    @SuppressWarnings("unused") // useful for debugging
+    public static @NonNull String toBinaryString(@NonNull final byte[] bytes) {
+        final StringBuilder sb = new StringBuilder();
+        for (final byte b : bytes) {
+            sb.append(String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0'));
+            sb.append(' ');
+        }
+        return sb.toString();
     }
 }

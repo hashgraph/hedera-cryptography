@@ -17,6 +17,7 @@
 package com.hedera.cryptography.tss.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.List;
 
 /**
  * Allows to obtain a {@code T} element given a shareId
@@ -32,4 +33,17 @@ public interface TssShareTable<T> {
      */
     @NonNull
     T getForShareId(int shareId);
+
+    /**
+     * Retrieves an element from a list of T values stored in a way where index 0 belongs to shareId=1,
+     *  Meaning that to retrieve x^1 we need to access shareId-1 index.
+     * @param shareId The id of the share to retrieve an element for. Not the index.
+     * @param valuesSoredByShareIndex The list of values sorted by share that posses it.
+     * @param <T> The type of the value
+     * @return the value owned by the requested share
+     */
+    @NonNull
+    static <T> T getForShareId(@NonNull final List<T> valuesSoredByShareIndex, final int shareId) {
+        return valuesSoredByShareIndex.get(shareId - 1);
+    }
 }

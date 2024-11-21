@@ -31,7 +31,6 @@ import java.util.List;
  */
 @SuppressWarnings("unused")
 public class Utils {
-
     /**
      * Creates a string representation of the following FieldElement
      * @param element an element to write as string

@@ -8,6 +8,7 @@ module com.hedera.cryptography.bls {
     requires static transitive com.github.spotbugs.annotations;
 
     exports com.hedera.cryptography.bls;
+    exports com.hedera.cryptography.asciiarmored;
 
-    uses com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
+    uses com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 }

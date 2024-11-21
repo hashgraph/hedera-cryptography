@@ -41,9 +41,7 @@ class SignaturesLibraryTest {
         assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(KnownCurves.ALT_BN128));
         assertEquals(
                 KnownCurves.ALT_BN128,
-                PairingFriendlyCurves.findInstance(Curve.ALT_BN128)
-                        .pairingFriendlyCurve()
-                        .curve(),
+                PairingFriendlyCurves.findInstance(Curve.ALT_BN128).curve(),
                 "The pairing friendly curve should be ALT_BN128");
     }
 
@@ -55,7 +53,7 @@ class SignaturesLibraryTest {
         assertNotNull(actual.getPairingFriendlyCurve(), "Should have created a pairing friendly curve instance");
 
         assertEquals(
-                PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve(),
+                PairingFriendlyCurves.findInstance(Curve.ALT_BN128),
                 actual.getPairingFriendlyCurve(),
                 "PairingFriendlyCurve should be a singleton");
         final var g1 = actual.getPairingFriendlyCurve().group1();
@@ -73,9 +71,7 @@ class SignaturesLibraryTest {
         assertNotNull(other, "Should have created a SignatureSchema");
         assertNotNull(other.getPairingFriendlyCurve(), "should have created a pairing friendly curve instance");
         assertNotEquals(
-                actual.getIdByte(),
-                other.getIdByte(),
-                "different idBytes expected when different assignments are used");
+                actual.toByte(), other.toByte(), "different idBytes expected when different assignments are used");
         final var g2 = other.getPairingFriendlyCurve().group2();
         assertEquals(
                 g2,
@@ -83,9 +79,8 @@ class SignaturesLibraryTest {
                 "group2 assignment validation failed for: " + assignment);
 
         assertEquals(
-                actual, SignatureSchema.create(actual.getIdByte()), "creation from idByte should return same instance");
-        assertEquals(
-                other, SignatureSchema.create(other.getIdByte()), "creation from idByte should return same instance");
+                actual, SignatureSchema.create(actual.toByte()), "creation from idByte should return same instance");
+        assertEquals(other, SignatureSchema.create(other.toByte()), "creation from idByte should return same instance");
     }
 
     @ParameterizedTest
@@ -106,7 +101,7 @@ class SignaturesLibraryTest {
                 IllegalArgumentException.class,
                 () -> BlsPrivateKey.fromBytes(invalidKey),
                 "Invalid key should throw an exception");
-        final byte[] invalidKey2 = new byte[] {schema.getIdByte(), 0, 0, 0, 0};
+        final byte[] invalidKey2 = new byte[] {schema.toByte(), 0, 0, 0, 0};
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BlsPrivateKey.fromBytes(invalidKey2),
@@ -164,7 +159,7 @@ class SignaturesLibraryTest {
                 "Should be able to obtain the same signature from its byte array representation");
 
         final byte[] invalidSignature = new byte[0];
-        final byte[] invalidSignature2 = new byte[] {schema.getIdByte(), 0, 0, 0, 0};
+        final byte[] invalidSignature2 = new byte[] {schema.toByte(), 0, 0, 0, 0};
         assertThrows(
                 IllegalArgumentException.class,
                 () -> BlsSignature.fromBytes(invalidSignature),
@@ -217,7 +212,7 @@ class SignaturesLibraryTest {
      * @param original the original with where the flipping will occur. The original is modified
      * @param consumer the consumer to invoke on each flip
      */
-    void flipEachBitAndConsume(@NonNull final byte[] original, final @NonNull Consumer<byte[]> consumer) {
+    public static void flipEachBitAndConsume(@NonNull final byte[] original, final @NonNull Consumer<byte[]> consumer) {
         final byte[] copy = Arrays.copyOf(original, original.length);
 
         for (int i = 0; i < copy.length - 1; i++) {
@@ -245,8 +240,8 @@ class SignaturesLibraryTest {
     /**
      *  Asserts that either throws an IllegalArgumentException or that the result of invoking the consumer is not the same as the original value
      *
-     * @param originalValue expected value to be different than this one
-     * @param creator the function that creates the elements out of an array
+     * @param originalValue expected value to be different from this one
+     * @param creator the function that creates the elements from an array
      * @param message the message to show in case validation fails
      * @param <T> the type of the comparison object
      * @return a consumer that performs the check when requested

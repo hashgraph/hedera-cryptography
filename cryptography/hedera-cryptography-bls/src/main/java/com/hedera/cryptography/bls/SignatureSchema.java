@@ -41,7 +41,7 @@ public final class SignatureSchema {
     private SignatureSchema(@NonNull final GroupAssignment groupAssignment, @NonNull final Curve curve) {
         this.groupAssignment = Objects.requireNonNull(groupAssignment, "groupAssignment must not be null");
         this.curve = Objects.requireNonNull(curve, "curve must not be null");
-        this.pairingFriendlyCurve = PairingFriendlyCurves.findInstance(curve).pairingFriendlyCurve();
+        this.pairingFriendlyCurve = PairingFriendlyCurves.findInstance(curve);
     }
 
     /**
@@ -99,7 +99,7 @@ public final class SignatureSchema {
     }
 
     /**
-     * Returns a signature scheme corresponding to a curve and a groupAssignment
+     * Returns a {@link SignatureSchema} corresponding to a curve and a groupAssignment
      *
      * @param groupAssignment the group assignment
      * @param curve           the curve
@@ -111,7 +111,7 @@ public final class SignatureSchema {
     }
 
     /**
-     * Returns a signature scheme out of a packed representation of this object
+     * Returns a {@link SignatureSchema} from a byte-packed representation
      *
      * @param idByte the group assignment
      * @return the SignatureSchema instance
@@ -151,11 +151,17 @@ public final class SignatureSchema {
     }
 
     /**
-     * Get the ID byte representing this schema
+     * Get the byte representation of this {@link SignatureSchema} instance
+     * Which consist of:
+     * <ul>
+     *     <li>1 bit for GroupAssignment according to {@link GroupAssignment#getId()} value</li>
+     *     <li>7 bits for curve type. Allowing us to support 127 different curves</li>
+     * </ul>
      *
-     * @return the ID byte
+     * @see GroupAssignment#getId()
+     * @return the byte representation.
      */
-    public byte getIdByte() {
+    public byte toByte() {
         return BytePacker.pack(groupAssignment, curve.getId());
     }
 

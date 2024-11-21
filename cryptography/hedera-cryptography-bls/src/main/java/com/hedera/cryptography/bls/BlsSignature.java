@@ -29,14 +29,14 @@ import java.util.Objects;
 /**
  *  A bls element for a {@code PairingFriendlyCurve} under a specific {@link SignatureSchema}
  * @param element the element
- * @param signatureSchema a signature schema
+ * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
  */
 public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSchema signatureSchema) {
 
     /**
      * Constructor.
      * @param element the element
-     * @param signatureSchema a signature schema
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
      */
     public BlsSignature {
         Objects.requireNonNull(element, "element must not be null");
@@ -51,7 +51,7 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
     @NonNull
     public byte[] toBytes() {
         return new Serializer()
-                .put(this.signatureSchema().getIdByte())
+                .put(this.signatureSchema().toByte())
                 .put(this.element()::toBytes)
                 .toBytes();
     }

@@ -114,19 +114,17 @@ tasks.register("versionAsSnapshot") {
 tasks.register("versionAsSpecified") {
     group = "versioning"
 
-    inputs.property(
-        "newVersion",
-        providers
-            .gradleProperty("newVersion")
-            .orElse(
-                provider {
-                    throw IllegalArgumentException(
-                        "No newVersion property provided! " +
-                            "Please add the parameter -PnewVersion=<version> when running this task."
-                    )
-                }
+    inputs.property("newVersion", providers.gradleProperty("newVersion").orNull)
+
+    if (inputs.properties["newVersion"] == null) {
+        // Do not throw an exception if running the `gradlew tasks` task
+        if (project.gradle.startParameter.taskNames.contains("versionAsSpecified")) {
+            throw IllegalArgumentException(
+                "No newVersion property provided! " +
+                    "Please add the parameter -PnewVersion=<version> when running this task."
             )
-    )
+        }
+    }
     outputs.file(layout.projectDirectory.versionTxt())
 
     doLast {

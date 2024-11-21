@@ -16,14 +16,15 @@
 
 package com.hedera.cryptography.pairings.api;
 
-import com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Utility class for finding implementations of a {@link PairingFriendlyCurve}.
@@ -31,29 +32,12 @@ import java.util.ServiceLoader;
 public final class PairingFriendlyCurves {
 
     /**
-     * An inner class to hold and lazy initialize constant value
+     * Cache so that every time findInstance is called returns the already created instance
      */
-    protected static class InstanceHolder {
-        /**
-         * lazy initialize a loader and hold the instance so that every time findInstance is called returns the same instance
-         */
-        public static final ServiceLoader<PairingFriendlyCurveProvider> LOADER =
-                ServiceLoader.load(PairingFriendlyCurveProvider.class);
-    }
+    private static final Map<Curve, PairingFriendlyCurve> CACHE = new ConcurrentHashMap<>();
 
     /**
-     * Obtain an instance of a {@link PairingFriendlyCurve} implementation which provides the given {@code curve}.
-     *
-     * @param curve the curve name for which to locate an implementation.
-     * @return an instance of the {@link PairingFriendlyCurve} implementing the requested {@link Curve}
-     */
-    @NonNull
-    public static PairingFriendlyCurve instanceFor(@NonNull final Curve curve) {
-        return findInstance(curve).pairingFriendlyCurve();
-    }
-
-    /**
-     * Locates a {@link PairingFriendlyCurveProvider} instance based on the searched {@link Curve}.
+     * Locates a {@link PairingFriendlyCurve} instance based on the searched {@link Curve}.
      * The provider is initialized before being returned.
      *
      * @param curve the curve value for which to locate an implementation.
@@ -65,16 +49,19 @@ public final class PairingFriendlyCurves {
      * @return the BilinearPairingProvider implementation corresponding to the curve.
      */
     @NonNull
-    public static PairingFriendlyCurveProvider findInstance(@NonNull final Curve curve) {
+    public static PairingFriendlyCurve findInstance(@NonNull final Curve curve) {
         Objects.requireNonNull(curve, "curve must not be null");
-        for (final PairingFriendlyCurveProvider provider : InstanceHolder.LOADER) {
-            if (curve == provider.curve()) {
-                try {
+        PairingFriendlyCurve pairingFriendlyCurve = CACHE.computeIfAbsent(curve, curve1 -> {
+            for (final PairingFriendlyCurve provider : ServiceLoader.load(PairingFriendlyCurve.class)) {
+                if (curve == provider.curve()) {
                     return provider.init();
-                } catch (final Exception e) {
-                    throw new IllegalStateException("Could not initialize provider " + provider, e);
                 }
             }
+            return null;
+        });
+
+        if (pairingFriendlyCurve != null) {
+            return pairingFriendlyCurve;
         }
 
         throw new NoSuchElementException(
@@ -89,7 +76,7 @@ public final class PairingFriendlyCurves {
     @NonNull
     public static Collection<Curve> allSupportedCurves() {
         List<Curve> supportedCurves = new ArrayList<>();
-        for (final PairingFriendlyCurveProvider provider : InstanceHolder.LOADER) {
+        for (final PairingFriendlyCurve provider : ServiceLoader.load(PairingFriendlyCurve.class)) {
             supportedCurves.add(provider.curve());
         }
         return supportedCurves;

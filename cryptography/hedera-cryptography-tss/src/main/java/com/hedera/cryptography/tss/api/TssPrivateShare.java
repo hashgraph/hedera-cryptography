@@ -80,7 +80,7 @@ public record TssPrivateShare(@NonNull Integer shareId, @NonNull BlsPrivateKey p
                 .map(BlsPrivateKey::signatureSchema)
                 .collect(Collectors.toSet());
         if (s.size() > 1) {
-            throw new IllegalArgumentException("privateShares must not contain more than one schema");
+            throw new IllegalArgumentException("privateShares must not contain more than one signatureSchema");
         }
         final SignatureSchema signatureSchema = s.stream().findFirst().orElseThrow();
         var xs = privateShares.stream()

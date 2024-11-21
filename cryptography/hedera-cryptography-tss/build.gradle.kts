@@ -17,12 +17,11 @@
 plugins {
     id("com.hedera.gradle.java-module")
     id("com.hedera.gradle.hedera-cryptography-publish")
+    id("com.hedera.gradle.java-test-fixtures")
+    id("com.hedera.gradle.benchmark")
 }
 
-mainModuleInfo {
-    runtimeOnly("com.hedera.cryptography.altbn128")
-    // requires("org.assertj.core")
-}
+mainModuleInfo { runtimeOnly("com.hedera.cryptography.altbn128") }
 
 testModuleInfo {
     requires("org.junit.jupiter.api")
@@ -30,4 +29,9 @@ testModuleInfo {
     requires("org.mockito")
     requires("com.hedera.common.testfixtures")
     requires("jakarta.inject")
+}
+
+jmhModuleInfo {
+    requires("com.hedera.cryptography.utils.test.fixtures")
+    requires("com.hedera.cryptography.tss.test.fixtures")
 }
