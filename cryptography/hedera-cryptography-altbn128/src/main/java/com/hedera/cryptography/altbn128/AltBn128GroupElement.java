@@ -124,7 +124,7 @@ public class AltBn128GroupElement implements GroupElement {
         }
         if (this.group.getGroup() != that.group.getGroup()) return false;
 
-        return Arrays.equals(this.representation, that.representation);
+        return facade.equals(this.representation, that.representation);
     }
 
     @Override
