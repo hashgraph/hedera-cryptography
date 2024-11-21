@@ -136,7 +136,8 @@ public class ArkworksSerializationTests {
         Collections.shuffle(bitsList, rng);
         bitSet.flip(bitsList.getFirst());
 
-        assertTrue(facade.equals(zeroBytes, bitSet.toByteArray()),
+        assertTrue(
+                facade.equals(zeroBytes, bitSet.toByteArray()),
                 "When the zero bit flag is set, Arkwors seems to ignore all other bits, except for the Y flag bit");
         assertDoesNotThrow(() -> facade.fromBytes(bitSet.toByteArray()));
 
@@ -146,9 +147,8 @@ public class ArkworksSerializationTests {
         assertThrows(
                 AltBn128Exception.class,
                 () -> facade.equals(zeroBytes, bitSet.toByteArray()),
-                "Arkworks seems to fail the equality when the Y coordinate flag bit is flipped"
-        );
-        assertThrows(IllegalArgumentException.class,() -> facade.fromBytes(bitSet.toByteArray()));
+                "Arkworks seems to fail the equality when the Y coordinate flag bit is flipped");
+        assertThrows(IllegalArgumentException.class, () -> facade.fromBytes(bitSet.toByteArray()));
     }
 
     /**
@@ -171,10 +171,7 @@ public class ArkworksSerializationTests {
 
         final byte[] flippedBytes = bitSet.toByteArray();
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> getFacade(info).fromBytes(flippedBytes)
-        );
+        assertThrows(IllegalArgumentException.class, () -> getFacade(info).fromBytes(flippedBytes));
     }
 
     /**
@@ -201,8 +198,8 @@ public class ArkworksSerializationTests {
         return info == ElementInfo.FIELD_ELEMENT
                 ? new FieldFacade(ArkBn254Adapter.getInstance())
                 : new GroupFacade(
-                info.getGroup().getId(),
-                ArkBn254Adapter.getInstance(),
-                ArkBn254Adapter.getInstance().fieldElementsSize());
+                        info.getGroup().getId(),
+                        ArkBn254Adapter.getInstance(),
+                        ArkBn254Adapter.getInstance().fieldElementsSize());
     }
 }
