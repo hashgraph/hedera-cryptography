@@ -28,7 +28,7 @@ import java.util.Objects;
  *  It abstracts the complexities of dealing with return codes and input and output parameters
  *  providing a higher-level interface easier to interact with from Java.
  **/
-public final class FieldFacade {
+public final class FieldFacade implements ElementFacade {
 
     /** the underlying library adapter  */
     private final FieldElementsLibraryAdapter adapter;
@@ -75,7 +75,8 @@ public final class FieldFacade {
      * @throws IllegalArgumentException if the seed is of invalid size
      * @throws AltBn128Exception in case of error
      */
-    public byte[] fromRandomSeed(@NonNull final byte[] seed) {
+    @Override
+    public @NonNull byte[] fromRandomSeed(@NonNull final byte[] seed) {
         if (Objects.requireNonNull(seed, "Seed must not be null").length != randomSeedSize) {
             throw new IllegalArgumentException("Invalid random seed");
         }
@@ -96,7 +97,8 @@ public final class FieldFacade {
      * @throws IllegalArgumentException if the representation is invalid
      * @throws AltBn128Exception in case of error
      */
-    public byte[] fromBytes(@NonNull final byte[] representation) {
+    @Override
+    public @NonNull byte[] fromBytes(@NonNull final byte[] representation) {
         if (Objects.requireNonNull(representation, "representation must not be null").length != size) {
             throw new IllegalArgumentException("Invalid byte[] representation");
         }
@@ -113,7 +115,8 @@ public final class FieldFacade {
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the element 0
      * @throws AltBn128Exception in case of error
      */
-    public byte[] zero() {
+    @Override
+    public @NonNull byte[] zero() {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsZero(output);
         if (result != SUCCESS) {
@@ -143,7 +146,8 @@ public final class FieldFacade {
      * @return {@code true} if {@code value} and {@code other} are equals. {@code false} otherwise
      * @throws AltBn128Exception in case of error
      */
-    public boolean equals(byte[] value, byte[] other) {
+    @Override
+    public boolean equals(@NonNull byte[] value, @NonNull byte[] other) {
         final int result = adapter.fieldElementsEquals(value, other);
         if (result < SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsEquals");
@@ -159,10 +163,7 @@ public final class FieldFacade {
         return this.size;
     }
 
-    /**
-     * Return the occupied size in bytes of the random seed.
-     * @return the size in bytes for the random seed.
-     */
+    @Override
     public int randomSeedSize() {
         return this.randomSeedSize;
     }

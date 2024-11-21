@@ -17,12 +17,14 @@
 package com.hedera.cryptography.altbn128;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
+import com.hedera.cryptography.altbn128.facade.ElementFacade;
+import com.hedera.cryptography.altbn128.facade.FieldFacade;
 import com.hedera.cryptography.altbn128.facade.GroupFacade;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -44,7 +46,7 @@ import org.junit.jupiter.params.provider.EnumSource;
  * This class contains tests for the Arkworks serialization of the different types of elements in the AltBN128 curve.
  */
 @WithRng
-public class SerializationTests {
+public class ArkworksSerializationTests {
 
     /**
      * Each element has unused bits, the expectation is that when generating a random element, these bits are unset.
@@ -66,11 +68,11 @@ public class SerializationTests {
     @Test
     @Disabled("Arkworks mods the field element when a larger one is deserialized, so this test fails")
     void deserializeSerializeEquality() {
-        final AltBn128Field field = new AltBn128Field();
-        final byte[] bytes = new byte[field.elementSize()];
+        final FieldFacade facade = new FieldFacade(ArkBn254Adapter.getInstance());
+        final byte[] bytes = new byte[facade.size()];
         Arrays.fill(bytes, (byte) 0b11111111);
 
-        assertArrayEquals(bytes, field.fromBytes(bytes).toBytes());
+        assertArrayEquals(bytes, facade.fromBytes(bytes));
     }
 
     /**
@@ -80,7 +82,7 @@ public class SerializationTests {
     @ParameterizedTest
     @EnumSource(ElementInfo.class)
     void zeroElementBits(final ElementInfo info) {
-        final byte[] bytes = zeroElementBytes(info);
+        final byte[] bytes = getFacade(info).zero();
         final BitSet bitSet = BitSet.valueOf(bytes);
 
         // if the element has flags, all bits should be zero except the zero flag bit
@@ -94,7 +96,7 @@ public class SerializationTests {
     }
 
     /**
-     * Flipping the Y coordinate flag in the uncompressed format is ignored by Arkworks, we should ignore it as well.
+     * Flipping the Y coordinate flag in the uncompressed format is ignored by Arkworks.
      */
     @ParameterizedTest
     @EnumSource(
@@ -107,46 +109,57 @@ public class SerializationTests {
         bitSet.flip(info.getYCoordinateFlagBitIndex());
         final byte[] flippedFlagBytes = bitSet.toByteArray();
 
-        final GroupFacade groupFacade = getGroupFacade(info);
-        assertTrue(groupFacade.equals(bytes, flippedFlagBytes));
-        assertEquals(
-                new AltBn128Group(info.getGroup()).fromBytes(bytes),
-                new AltBn128Group(info.getGroup()).fromBytes(flippedFlagBytes));
+        final ElementFacade facade = getFacade(info);
+        assertTrue(facade.equals(bytes, flippedFlagBytes));
     }
 
     /**
-     * If the zero element flag is set, all other bits are meaningless. The expectation is that they should be all 0, so
-     * an element with the zero flag should have all other bits set to 0.
+     * If the zero element flag is set, all other bits are meaningless. Arkworks seems to ignore them, exept for the Y
+     * coordinate flag bit.
      */
     @ParameterizedTest
     @EnumSource(
             value = ElementInfo.class,
             // Y coordinate flag is only present in group elements
             names = {"GROUP1_ELEMENT", "GROUP2_ELEMENT"})
-    @Disabled(
-            "Arkworks ignores most other bits if the zero bit flag is set, the Y coordinate flag seems to be an exception")
     void equalsConsistencyZeroFlag(final ElementInfo info, final Random rng) {
-        final byte[] zeroBytes = zeroElementBytes(info);
+        final ElementFacade facade = getFacade(info);
+        final byte[] zeroBytes = facade.zero();
         final BitSet bitSet = BitSet.valueOf(zeroBytes);
         final Set<Integer> allOtherBits =
                 IntStream.range(0, info.numberOfBits()).boxed().collect(Collectors.toSet());
         allOtherBits.remove(info.getZeroFlagBitIndex());
+        allOtherBits.remove(info.getYCoordinateFlagBitIndex());
 
-        // flip a random bit that is not the zero flag bit
+        // flip a random bit that is not a flag bit
         final List<Integer> bitsList = new ArrayList<>(allOtherBits.stream().toList());
         Collections.shuffle(bitsList, rng);
         bitSet.flip(bitsList.getFirst());
 
-        assertThrows(IllegalArgumentException.class, () -> new AltBn128Group(info.getGroup())
-                .fromBytes(bitSet.toByteArray()));
+        assertTrue(facade.equals(zeroBytes, bitSet.toByteArray()),
+                "When the zero bit flag is set, Arkwors seems to ignore all other bits, except for the Y flag bit");
+        assertDoesNotThrow(() -> facade.fromBytes(bitSet.toByteArray()));
+
+        // flip the Y coordinate flag bit
+        bitSet.flip(info.getYCoordinateFlagBitIndex());
+
+        assertThrows(
+                AltBn128Exception.class,
+                () -> facade.equals(zeroBytes, bitSet.toByteArray()),
+                "Arkworks seems to fail the equality when the Y coordinate flag bit is flipped"
+        );
+        assertThrows(IllegalArgumentException.class,() -> facade.fromBytes(bitSet.toByteArray()));
     }
 
     /**
      * Flipping any unused bit should throw an exception when deserializing the element.
      */
     @ParameterizedTest
-    @EnumSource(ElementInfo.class)
-    @Disabled("Arkworks mods the field element when a larger one is deserialized, so this test fails")
+    @EnumSource(
+            value = ElementInfo.class,
+            // Arkworks mods the field element when a larger one is deserialized
+            // Until we figure out the resolution on this, we will disable the test for field elements
+            names = {"GROUP1_ELEMENT", "GROUP2_ELEMENT"})
     void flippingUnusedBits(final ElementInfo info, final Random rng) {
         final byte[] bytes = randomElementBytes(info, rng);
         final BitSet bitSet = BitSet.valueOf(bytes);
@@ -158,13 +171,10 @@ public class SerializationTests {
 
         final byte[] flippedBytes = bitSet.toByteArray();
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            switch (info) {
-                case FIELD_ELEMENT -> new AltBn128Field().fromBytes(flippedBytes);
-                case GROUP1_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP1).fromBytes(flippedBytes);
-                case GROUP2_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP2).fromBytes(flippedBytes);
-            }
-        });
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> getFacade(info).fromBytes(flippedBytes)
+        );
     }
 
     /**
@@ -175,43 +185,22 @@ public class SerializationTests {
      * @return The bytes of the generated element
      */
     private static @NonNull byte[] randomElementBytes(final ElementInfo info, final Random rng) {
-        return switch (info) {
-            case FIELD_ELEMENT -> new AltBn128Field().random(rng).toBytes();
-            case GROUP1_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP1)
-                    .random(rng)
-                    .toBytes();
-            case GROUP2_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP2)
-                    .random(rng)
-                    .toBytes();
-        };
+        final ElementFacade facade = getFacade(info);
+        final byte[] seed = new byte[facade.randomSeedSize()];
+        rng.nextBytes(seed);
+        return facade.fromRandomSeed(seed);
     }
 
     /**
-     * Generate the bytes of the zero element
-     *
-     * @param info The type of element to generate
-     * @return The bytes of the zero element
-     */
-    private static @NonNull byte[] zeroElementBytes(final ElementInfo info) {
-        return switch (info) {
-            case FIELD_ELEMENT -> new AltBn128Field().zero().toBytes();
-            case GROUP1_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP1)
-                    .zero()
-                    .toBytes();
-            case GROUP2_ELEMENT -> new AltBn128Group(AltBN128CurveGroup.GROUP2)
-                    .zero()
-                    .toBytes();
-        };
-    }
-
-    /**
-     * Get the group facade for the given element info
+     * Get the facade for the given element info
      *
      * @param info The element info
-     * @return The group facade
+     * @return The facade
      */
-    private static @NonNull GroupFacade getGroupFacade(final ElementInfo info) {
-        return new GroupFacade(
+    private static @NonNull ElementFacade getFacade(final ElementInfo info) {
+        return info == ElementInfo.FIELD_ELEMENT
+                ? new FieldFacade(ArkBn254Adapter.getInstance())
+                : new GroupFacade(
                 info.getGroup().getId(),
                 ArkBn254Adapter.getInstance(),
                 ArkBn254Adapter.getInstance().fieldElementsSize());

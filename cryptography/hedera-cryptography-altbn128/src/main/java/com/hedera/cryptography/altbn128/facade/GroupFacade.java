@@ -31,7 +31,7 @@ import java.util.Objects;
  *  It abstracts the complexities of dealing with return codes and input and output parameters
  *  providing a higher-level interface easier to interact with from Java.
  **/
-public final class GroupFacade {
+public final class GroupFacade implements ElementFacade {
 
     /** The underlying library adapter */
     private final GroupElementsLibraryAdapter adapter;
@@ -60,12 +60,13 @@ public final class GroupFacade {
     }
 
     /**
-     * Creates a Group2 point from a random seed.
+     * Creates a Group point from a random seed.
      * @param seed the byte array seed.
-     * @return the byte array representation of the Group2 point.
+     * @return the byte array representation of the Group point.
      * @throws AltBn128Exception in case of error.
      */
-    public byte[] fromSeed(@NonNull final byte[] seed) {
+    @Override
+    public @NonNull byte[] fromRandomSeed(@NonNull final byte[] seed) {
         validateSize(seed, randomSeedSize, "Invalid random seed size");
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsFromSeed(group, seed, output);
@@ -96,7 +97,8 @@ public final class GroupFacade {
      * @return the byte array representation of the point at infinity.
      * @throws AltBn128Exception in case of error.
      */
-    public byte[] zero() {
+    @Override
+    public @NonNull byte[] zero() {
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsZero(group, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
@@ -126,6 +128,7 @@ public final class GroupFacade {
      * @return true if points are equal, false otherwise.
      * @throws AltBn128Exception in case of error.
      */
+    @Override
     public boolean equals(@NonNull final byte[] point1, @NonNull final byte[] point2) {
         if (point1.length != point2.length) {
             return false;
@@ -184,10 +187,11 @@ public final class GroupFacade {
      * @throws IllegalArgumentException if the bytes is of invalid size or the point does not belong to the curve
      * @throws AltBn128Exception in case of error.
      */
-    public byte[] fromBytes(@NonNull final byte[] bytes) {
+    @Override
+    public @NonNull byte[] fromBytes(@NonNull final byte[] bytes) {
         validateSize(Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
 
-        int result = adapter.groupElementsBytes(group, bytes);
+        final int result = adapter.groupElementsBytes(group, bytes);
         if (result == GroupElementsLibraryAdapter.NOT_IN_CURVE) {
             throw new IllegalArgumentException("The point is not in curve");
         } else if (result != GroupElementsLibraryAdapter.SUCCESS) {
@@ -225,10 +229,7 @@ public final class GroupFacade {
         return this.size;
     }
 
-    /**
-     * Return the occupied size in bytes of the random seed.
-     * @return the size in bytes for the random seed.
-     */
+    @Override
     public int randomSeedSize() {
         return this.randomSeedSize;
     }
