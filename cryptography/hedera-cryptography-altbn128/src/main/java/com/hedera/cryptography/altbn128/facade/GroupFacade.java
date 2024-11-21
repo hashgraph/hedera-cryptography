@@ -66,7 +66,8 @@ public final class GroupFacade implements ElementFacade {
      * @throws AltBn128Exception in case of error.
      */
     @Override
-    @NonNull public byte[] fromRandomSeed(@NonNull final byte[] seed) {
+    @NonNull
+    public byte[] fromRandomSeed(@NonNull final byte[] seed) {
         validateSize(seed, randomSeedSize, "Invalid random seed size");
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsFromSeed(group, seed, output);
@@ -98,7 +99,8 @@ public final class GroupFacade implements ElementFacade {
      * @throws AltBn128Exception in case of error.
      */
     @Override
-    @NonNull public byte[] zero() {
+    @NonNull
+    public byte[] zero() {
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsZero(group, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
@@ -112,7 +114,8 @@ public final class GroupFacade implements ElementFacade {
      * @return the byte array representation of the generator point.
      * @throws AltBn128Exception in case of error.
      */
-    @NonNull public byte[] generator() {
+    @NonNull
+    public byte[] generator() {
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsGenerator(group, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
@@ -147,7 +150,8 @@ public final class GroupFacade implements ElementFacade {
      * @return the byte array representation of the resulting point.
      * @throws AltBn128Exception in case of error.
      */
-    @NonNull public byte[] add(@NonNull final byte[] point1, @NonNull final byte[] point2) {
+    @NonNull
+    public byte[] add(@NonNull final byte[] point1, @NonNull final byte[] point2) {
         validateSize(point1, size, "Invalid point size");
         validateSize(point2, size, "Invalid point size");
         final byte[] output = new byte[size];
@@ -165,7 +169,8 @@ public final class GroupFacade implements ElementFacade {
      * @return the byte array representation of the resulting point.
      * @throws AltBn128Exception in case of error.
      */
-    @NonNull public byte[] scalarMul(@NonNull final byte[] point, @NonNull final byte[] scalar) {
+    @NonNull
+    public byte[] scalarMul(@NonNull final byte[] point, @NonNull final byte[] scalar) {
         validateSize(point, size, "Invalid point size");
         validateSize(scalar, fieldElementsSize, "Invalid scalar size");
         final byte[] output = new byte[size];
@@ -188,7 +193,8 @@ public final class GroupFacade implements ElementFacade {
      * @throws AltBn128Exception in case of error.
      */
     @Override
-    @NonNull public byte[] fromBytes(@NonNull final byte[] bytes) {
+    @NonNull
+    public byte[] fromBytes(@NonNull final byte[] bytes) {
         validateSize(Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
 
         final int result = adapter.groupElementsBytes(group, bytes);
@@ -211,7 +217,8 @@ public final class GroupFacade implements ElementFacade {
      * @throws NullPointerException if points is null
      * @throws AltBn128Exception in case of an error during the batch addition
      */
-    @NonNull public byte[] batchAdd(@NonNull final byte[][] points) {
+    @NonNull
+    public byte[] batchAdd(@NonNull final byte[][] points) {
         Objects.requireNonNull(points, "points must not be null");
         final byte[] output = new byte[size];
         int result = adapter.groupElementsBatchAdd(group, points, output);
@@ -244,7 +251,8 @@ public final class GroupFacade implements ElementFacade {
      * @throws NullPointerException if scalars is null
      * @throws AltBn128Exception in case of an error during the batch addition
      */
-    @NonNull public byte[][] batchMultiply(final byte[][] scalars) {
+    @NonNull
+    public byte[][] batchMultiply(final byte[][] scalars) {
         Objects.requireNonNull(scalars, "scalars must not be null");
         final byte[][] array = new byte[scalars.length][this.size];
         int result = adapter.groupElementsBatchScalarMul(group, scalars, array);
