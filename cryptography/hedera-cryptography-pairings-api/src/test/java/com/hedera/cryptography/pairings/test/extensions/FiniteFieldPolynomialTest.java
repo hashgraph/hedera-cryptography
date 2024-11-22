@@ -18,12 +18,12 @@ package com.hedera.cryptography.pairings.test.extensions;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import com.hedera.cryptography.pairings.extensions.FiniteFieldPolynomial;
+import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +37,8 @@ import org.junit.jupiter.api.Test;
 // possibly investigate: https://github.com/PoslavskySV/rings
 @WithRng
 class FiniteFieldPolynomialTest {
-    private static final PairingFriendlyCurve CURVE = PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
+    private static final PairingFriendlyCurve CURVE =
+            PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE);
 
     @Test
     void testEmptyCoefficientsThrowsException() {
@@ -65,7 +66,7 @@ class FiniteFieldPolynomialTest {
         var poly = new FiniteFieldPolynomial(freeCoeff1);
         assertEquals(freeCoeff, poly.evaluate(0));
         var result = poly.evaluate(1);
-        for (int i = 0; i < degree; i++) {
+        for (int i = 0; i < degree - 1; i++) {
             result = result.subtract(freeCoeff);
         }
         assertEquals(freeCoeff, result);

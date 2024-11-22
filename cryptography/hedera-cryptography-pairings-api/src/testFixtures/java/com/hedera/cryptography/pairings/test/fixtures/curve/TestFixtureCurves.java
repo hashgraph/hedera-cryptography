@@ -14,20 +14,27 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.pairings.test.api;
+package com.hedera.cryptography.pairings.test.fixtures.curve;
 
 import com.hedera.cryptography.pairings.api.Curve;
 
-/**
- * List of Curves supported for this test
- */
-public enum TestCurves implements Curve {
-    NON_EXISTENT_CURVE,
-    FAIL_CURVE,
-    TEST;
+public enum TestFixtureCurves implements Curve {
+    NO_PAIRING_CURVE((byte) 0),
+    NON_EXISTENT_CURVE((byte) 1),
+    FAIL_CURVE((byte) 2),
+    TEST((byte) 3);
+
+    /**
+     * An internal unique id per curve.
+     */
+    final byte id;
+
+    TestFixtureCurves(byte id) {
+        this.id = id;
+    }
 
     @Override
     public byte getId() {
-        return -1;
+        return id;
     }
 }

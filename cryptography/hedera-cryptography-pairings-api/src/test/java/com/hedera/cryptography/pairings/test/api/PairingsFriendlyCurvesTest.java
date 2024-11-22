@@ -22,11 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
-import com.hedera.cryptography.pairings.test.spi.TestPairingFriendlyCurve.FailingCurveException;
-import com.hedera.cryptography.pairings.test.spi.TestPairingFriendlyCurve.TestBn;
+import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve.FailingCurveException;
+import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve.TestBn;
+import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -41,31 +41,33 @@ class PairingsFriendlyCurvesTest {
 
     @Test
     void implementedCurveIsFound() {
-        assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(Curve.ALT_BN128));
+        assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE));
     }
 
     @Test
     void multipleCallsReturnSameInstance() {
-        PairingFriendlyCurve expected = PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
-        assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(Curve.ALT_BN128));
-        assertSame(expected, PairingFriendlyCurves.findInstance(Curve.ALT_BN128));
+        PairingFriendlyCurve expected = PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE);
+        assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE));
+        assertSame(expected, PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE));
     }
 
     @Test
     void bilinearPairingIsInitialized() {
-        IntStream.range(0, 10).forEach(i -> PairingFriendlyCurves.findInstance(TestCurves.TEST));
-        assertEquals(1, ((TestBn) PairingFriendlyCurves.findInstance(TestCurves.TEST)).getInitializedCount());
+        IntStream.range(0, 10).forEach(i -> PairingFriendlyCurves.findInstance(TestFixtureCurves.TEST));
+        assertEquals(1, ((TestBn) PairingFriendlyCurves.findInstance(TestFixtureCurves.TEST)).getInitializedCount());
     }
 
     @Test
     void unknownCurveThrowsException() {
         assertThrows(
-                NoSuchElementException.class, () -> PairingFriendlyCurves.findInstance(TestCurves.NON_EXISTENT_CURVE));
+                NoSuchElementException.class,
+                () -> PairingFriendlyCurves.findInstance(TestFixtureCurves.NON_EXISTENT_CURVE));
     }
 
     @Test
     void failingCurveThrowsException() {
-        assertThrows(FailingCurveException.class, () -> PairingFriendlyCurves.findInstance(TestCurves.FAIL_CURVE));
+        assertThrows(
+                FailingCurveException.class, () -> PairingFriendlyCurves.findInstance(TestFixtureCurves.FAIL_CURVE));
     }
 
     @Test
@@ -73,14 +75,14 @@ class PairingsFriendlyCurvesTest {
         final int threadCount = 100;
         final int taskCount = 100;
         try (ExecutorService executorService = Executors.newFixedThreadPool(threadCount)) {
-            final List<Callable<PairingFriendlyCurve>> callables =
-                    Collections.nCopies(taskCount, () -> PairingFriendlyCurves.findInstance(Curve.ALT_BN128));
+            final List<Callable<PairingFriendlyCurve>> callables = Collections.nCopies(
+                    taskCount, () -> PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE));
 
             final var results = executorService.invokeAll(callables);
-            for (Future<PairingFriendlyCurve> result : results) {
+            for (final Future<PairingFriendlyCurve> result : results) {
                 final PairingFriendlyCurve actual = result.get();
                 assertNotNull(actual);
-                assertEquals(Curve.ALT_BN128, actual.curve());
+                assertEquals(TestFixtureCurves.NO_PAIRING_CURVE, actual.curve());
             }
             executorService.shutdown();
         }
