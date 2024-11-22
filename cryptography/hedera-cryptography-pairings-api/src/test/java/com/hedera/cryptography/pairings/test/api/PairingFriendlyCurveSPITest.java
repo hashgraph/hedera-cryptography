@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
-import com.hedera.cryptography.pairings.test.spi.TestPairingFriendlyCurve;
+import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve;
 import java.util.Collections;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -41,7 +41,7 @@ class PairingFriendlyCurveSPITest {
         assertTrue(
                 () -> ServiceLoader.load(PairingFriendlyCurve.class).findFirst().isPresent());
         assertInstanceOf(
-                TestPairingFriendlyCurve.class,
+                NaiveCurve.class,
                 ServiceLoader.load(PairingFriendlyCurve.class).findFirst().get());
     }
 
