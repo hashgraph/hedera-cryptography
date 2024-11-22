@@ -96,7 +96,7 @@ public class AltBn128Group implements Group {
     @NonNull
     @Override
     public GroupElement random(@NonNull final byte[] seed) {
-        return new AltBn128GroupElement(this, facade.fromSeed(seed));
+        return new AltBn128GroupElement(this, facade.fromRandomSeed(seed));
     }
 
     /**

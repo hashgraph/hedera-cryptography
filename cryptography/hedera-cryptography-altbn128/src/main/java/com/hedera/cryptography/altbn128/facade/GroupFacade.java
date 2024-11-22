@@ -31,7 +31,7 @@ import java.util.Objects;
  *  It abstracts the complexities of dealing with return codes and input and output parameters
  *  providing a higher-level interface easier to interact with from Java.
  **/
-public final class GroupFacade {
+public final class GroupFacade implements ElementFacade {
 
     /** The underlying library adapter */
     private final GroupElementsLibraryAdapter adapter;
@@ -60,12 +60,14 @@ public final class GroupFacade {
     }
 
     /**
-     * Creates a Group2 point from a random seed.
+     * Creates a Group point from a random seed.
      * @param seed the byte array seed.
-     * @return the byte array representation of the Group2 point.
+     * @return the byte array representation of the Group point.
      * @throws AltBn128Exception in case of error.
      */
-    public byte[] fromSeed(@NonNull final byte[] seed) {
+    @Override
+    @NonNull
+    public byte[] fromRandomSeed(@NonNull final byte[] seed) {
         validateSize(seed, randomSeedSize, "Invalid random seed size");
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsFromSeed(group, seed, output);
@@ -96,6 +98,8 @@ public final class GroupFacade {
      * @return the byte array representation of the point at infinity.
      * @throws AltBn128Exception in case of error.
      */
+    @Override
+    @NonNull
     public byte[] zero() {
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsZero(group, output);
@@ -110,6 +114,7 @@ public final class GroupFacade {
      * @return the byte array representation of the generator point.
      * @throws AltBn128Exception in case of error.
      */
+    @NonNull
     public byte[] generator() {
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsGenerator(group, output);
@@ -126,6 +131,7 @@ public final class GroupFacade {
      * @return true if points are equal, false otherwise.
      * @throws AltBn128Exception in case of error.
      */
+    @Override
     public boolean equals(@NonNull final byte[] point1, @NonNull final byte[] point2) {
         if (point1.length != point2.length) {
             return false;
@@ -144,6 +150,7 @@ public final class GroupFacade {
      * @return the byte array representation of the resulting point.
      * @throws AltBn128Exception in case of error.
      */
+    @NonNull
     public byte[] add(@NonNull final byte[] point1, @NonNull final byte[] point2) {
         validateSize(point1, size, "Invalid point size");
         validateSize(point2, size, "Invalid point size");
@@ -162,6 +169,7 @@ public final class GroupFacade {
      * @return the byte array representation of the resulting point.
      * @throws AltBn128Exception in case of error.
      */
+    @NonNull
     public byte[] scalarMul(@NonNull final byte[] point, @NonNull final byte[] scalar) {
         validateSize(point, size, "Invalid point size");
         validateSize(scalar, fieldElementsSize, "Invalid scalar size");
@@ -184,10 +192,12 @@ public final class GroupFacade {
      * @throws IllegalArgumentException if the bytes is of invalid size or the point does not belong to the curve
      * @throws AltBn128Exception in case of error.
      */
+    @Override
+    @NonNull
     public byte[] fromBytes(@NonNull final byte[] bytes) {
         validateSize(Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
 
-        int result = adapter.groupElementsBytes(group, bytes);
+        final int result = adapter.groupElementsBytes(group, bytes);
         if (result == GroupElementsLibraryAdapter.NOT_IN_CURVE) {
             throw new IllegalArgumentException("The point is not in curve");
         } else if (result != GroupElementsLibraryAdapter.SUCCESS) {
@@ -207,6 +217,7 @@ public final class GroupFacade {
      * @throws NullPointerException if points is null
      * @throws AltBn128Exception in case of an error during the batch addition
      */
+    @NonNull
     public byte[] batchAdd(@NonNull final byte[][] points) {
         Objects.requireNonNull(points, "points must not be null");
         final byte[] output = new byte[size];
@@ -225,10 +236,7 @@ public final class GroupFacade {
         return this.size;
     }
 
-    /**
-     * Return the occupied size in bytes of the random seed.
-     * @return the size in bytes for the random seed.
-     */
+    @Override
     public int randomSeedSize() {
         return this.randomSeedSize;
     }
@@ -243,6 +251,7 @@ public final class GroupFacade {
      * @throws NullPointerException if scalars is null
      * @throws AltBn128Exception in case of an error during the batch addition
      */
+    @NonNull
     public byte[][] batchMultiply(final byte[][] scalars) {
         Objects.requireNonNull(scalars, "scalars must not be null");
         final byte[][] array = new byte[scalars.length][this.size];
