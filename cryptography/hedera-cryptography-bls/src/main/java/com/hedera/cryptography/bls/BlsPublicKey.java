@@ -44,8 +44,10 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
      * Serializes this {@link BlsPublicKey} into a byte array.
      *
      * @return the serialized form of this object
+     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
+    @Deprecated(forRemoval = true)
     public byte[] toBytes() {
         return new Serializer()
                 .put(this.signatureSchema().toByte())
@@ -58,8 +60,10 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
      * @param bytes the serialized form of this object
      * @return a {@link BlsPublicKey} instance
      * @throws IllegalArgumentException if the key representation is invalid
+     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
+    @Deprecated(forRemoval = true)
     public static BlsPublicKey fromBytes(@NonNull final byte[] bytes) {
         try {
 

@@ -46,7 +46,9 @@ public interface GroupElement {
      * Returns the size of the group element in bytes
      *
      * @return the size of the group element in bytes
+     * @deprecated the size will depend on the serialization, which will be externalized
      */
+    @Deprecated(forRemoval = true)
     int size();
 
     /**
@@ -88,7 +90,9 @@ public interface GroupElement {
      * Returns the external byte array representation of the group element
      *
      * @return the external byte array representation of the group element
+     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
+    @Deprecated(forRemoval = true)
     byte[] toBytes();
 }

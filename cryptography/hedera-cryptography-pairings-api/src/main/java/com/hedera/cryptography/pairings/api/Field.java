@@ -71,8 +71,10 @@ public interface Field {
      *
      * @param bytes serialized form
      * @return the new field element
+     * @deprecated will be replaced by a similar method that does not rely on Arkworks serilization
      */
     @NonNull
+    @Deprecated(forRemoval = true)
     FieldElement fromBytes(@NonNull byte[] bytes);
 
     /**

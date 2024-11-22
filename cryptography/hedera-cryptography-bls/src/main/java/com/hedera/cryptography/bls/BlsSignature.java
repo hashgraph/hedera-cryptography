@@ -47,8 +47,10 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
      * Serializes this {@link BlsPrivateKey} into a byte array.
      *
      * @return the serialized form of this object
+     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
+    @Deprecated(forRemoval = true)
     public byte[] toBytes() {
         return new Serializer()
                 .put(this.signatureSchema().toByte())
@@ -61,8 +63,10 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
      * @param bytes the serialized form of this object
      * @return a {@link BlsSignature} instance
      * @throws IllegalArgumentException if the key representation is invalid
+     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
+    @Deprecated(forRemoval = true)
     public static BlsSignature fromBytes(@NonNull final byte[] bytes) {
         try {
             final Deserializer deserializer = new Deserializer(bytes);

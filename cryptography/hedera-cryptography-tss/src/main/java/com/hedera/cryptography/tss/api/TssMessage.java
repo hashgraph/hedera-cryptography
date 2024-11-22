@@ -58,6 +58,8 @@ public interface TssMessage {
      * @see SignatureSchema#toByte()
      * @see GroupElement#toBytes()
      * @see FieldElement#toBytes()
+     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
+    @Deprecated(forRemoval = true)
     byte[] toBytes();
 }

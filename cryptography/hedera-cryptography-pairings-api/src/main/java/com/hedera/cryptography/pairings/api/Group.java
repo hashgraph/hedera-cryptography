@@ -114,8 +114,10 @@ public interface Group {
      * @param bytes serialized form
      * @return the new group element
      * @throws IllegalArgumentException if the byte representation is not a valid point on the curve
+     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
+    @Deprecated(forRemoval = true)
     GroupElement fromBytes(@NonNull byte[] bytes);
 
     /**
@@ -129,6 +131,8 @@ public interface Group {
      * Gets the size in bytes of a group element
      *
      * @return the size in bytes of a group element
+     * @deprecated the size will depend on the serialization, which will be externalized
      */
+    @Deprecated(forRemoval = true)
     int elementSize();
 }

@@ -67,8 +67,10 @@ public interface TssService {
      * @param message the byte representation of the opaque underlying structure used by the library
      * @return a TssMessage instance
      * @throws TssMessageParsingException in case of error while parsing the TssMessage from its byte array format
+     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
+    @Deprecated(forRemoval = true)
     TssMessage messageFromBytes(@NonNull TssParticipantDirectory tssParticipantDirectory, @NonNull byte[] message)
             throws TssMessageParsingException;
 }
