@@ -19,6 +19,8 @@ package com.hedera.cryptography.pairings.test.fixtures.curve;
 import static com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve.EXAMPLE_SIZE;
 import static com.hedera.cryptography.pairings.test.fixtures.curve.NaiveFieldElement.PRIME_MODULUS;
 
+import com.hedera.cryptography.pairings.api.Field;
+import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
@@ -26,6 +28,7 @@ import com.hedera.cryptography.utils.HashUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -53,6 +56,12 @@ public class NaiveGroup implements Group {
         return curve;
     }
 
+    @NonNull
+    @Override
+    public Field field() {
+        return curve.field();
+    }
+
     /**
      * Returns a simple generator for demonstration purposes.
      *
@@ -73,6 +82,19 @@ public class NaiveGroup implements Group {
     @NonNull
     public GroupElement zero() {
         return new NaiveGroupElement(this, BigInteger.ZERO);
+    }
+
+    @NonNull
+    @Override
+    public GroupElement mbc(final List<GroupElement> elements, final List<FieldElement> scalars) {
+        Objects.requireNonNull(elements, "elements must not be null");
+        Objects.requireNonNull(scalars, "scalars must not be null");
+
+        GroupElement result = elements.get(0).multiply(scalars.get(0));
+        for (int i = 1; i < elementSize(); i++) {
+            result = result.add(elements.get(i).multiply(scalars.get(i)));
+        }
+        return result;
     }
 
     /**

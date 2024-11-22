@@ -89,7 +89,7 @@ public class ElGamalUtils {
                 // This should never happen: It means that the ElGamalSubstitutionTable is incorrectly configured
                 throw new TssException("Wrong ElGamalSubstitutionTable");
             }
-            final GroupElement c2_j = group.mbc(List.of(encryptionPublicKeyElement, generator),List.of(r_j,m_j));
+            final GroupElement c2_j = group.mbc(List.of(encryptionPublicKeyElement, generator), List.of(r_j, m_j));
             encryptedShareElements.add(c2_j);
         }
 

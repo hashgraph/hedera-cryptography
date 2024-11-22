@@ -40,9 +40,8 @@ public record CiphertextTable(@NonNull List<GroupElement> sharedRandomness, @Non
      */
     @NonNull
     public CombinedCiphertext combine() {
-        final FieldElement base = sharedRandomness.getFirst()
-                .getGroup()
-                .field().fromLong(ElGamalUtils.TOTAL_NUMBER_OF_ELEMENTS);
+        final FieldElement base =
+                sharedRandomness.getFirst().getGroup().field().fromLong(ElGamalUtils.TOTAL_NUMBER_OF_ELEMENTS);
         final GroupElement randomness = new EcPolynomial(sharedRandomness).evaluate(base);
         final List<GroupElement> values = Arrays.stream(shareCiphertexts)
                 .map(cipherText -> new EcPolynomial(cipherText.cipherText()))

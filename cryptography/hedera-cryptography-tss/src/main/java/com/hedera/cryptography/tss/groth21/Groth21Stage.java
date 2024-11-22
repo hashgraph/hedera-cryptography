@@ -178,8 +178,7 @@ public abstract class Groth21Stage {
             }
         }
 
-        final CombinedCiphertext combinedCipher = message.cipherTable()
-                .combine();
+        final CombinedCiphertext combinedCipher = message.cipherTable().combine();
         // Zk proof: Creating the public statement
         final NizkStatement nizkStatement = new NizkStatement(
                 tssTargetParticipantDirectory.getShareIds(),

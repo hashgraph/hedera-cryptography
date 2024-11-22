@@ -35,6 +35,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -66,8 +68,8 @@ public class TssBenchmark {
     public static final Random TEST_RNG = new Random();
     public static Random rng = new Random(TEST_RNG.nextInt());
 
-    @Param({"P100S1", "P100S3", "P100S5", "P100S10", "P130S10"})
-    static BenchmarkTest benchmarkTest;
+    @Param({"P50S2"})
+    static String benchmarkTest;
 
     @Param({"SHORT_SIGNATURES", "SHORT_PUBLIC_KEYS"})
     static GroupAssignment groupAssignment;
@@ -282,51 +284,92 @@ public class TssBenchmark {
     // TssBenchmark.signatureAggregation                P130S10  SHORT_PUBLIC_KEYS           1024    ss          4.912
     //         s/op
 
+    // Benchmark                                (benchmarkTest)  (groupAssignment)  (messageSize)  Mode  Cnt  Score
+    // Error  Units
+    // TssBenchmark.genesisObtainPrivateShares            P10S3   SHORT_SIGNATURES            N/A    ss       0.321
+    //      s/op
+    // TssBenchmark.genesisObtainPrivateShares            P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.124
+    //      s/op
+    // TssBenchmark.genesisObtainPublicShares             P10S3   SHORT_SIGNATURES            N/A    ss       0.082
+    //      s/op
+    // TssBenchmark.genesisObtainPublicShares             P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.059
+    //      s/op
+    // TssBenchmark.p0Signs                               P10S3   SHORT_SIGNATURES             32    ss       0.001
+    //      s/op
+    // TssBenchmark.p0Signs                               P10S3   SHORT_SIGNATURES            256    ss       0.001
+    //      s/op
+    // TssBenchmark.p0Signs                               P10S3   SHORT_SIGNATURES           1024    ss       0.001
+    //      s/op
+    // TssBenchmark.p0Signs                               P10S3  SHORT_PUBLIC_KEYS             32    ss       0.002
+    //      s/op
+    // TssBenchmark.p0Signs                               P10S3  SHORT_PUBLIC_KEYS            256    ss       0.002
+    //      s/op
+    // TssBenchmark.p0Signs                               P10S3  SHORT_PUBLIC_KEYS           1024    ss       0.002
+    //      s/op
+    // TssBenchmark.rekeyObtainPrivateShares              P10S3   SHORT_SIGNATURES            N/A    ss       0.326
+    //      s/op
+    // TssBenchmark.rekeyObtainPrivateShares              P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.130
+    //      s/op
+    // TssBenchmark.rekeyObtainPublicShares               P10S3   SHORT_SIGNATURES            N/A    ss       0.149
+    //      s/op
+    // TssBenchmark.rekeyObtainPublicShares               P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.102
+    //      s/op
+    // TssBenchmark.signatureAggregation                  P10S3   SHORT_SIGNATURES             32    ss       0.007
+    //      s/op
+    // TssBenchmark.signatureAggregation                  P10S3   SHORT_SIGNATURES            256    ss       0.007
+    //      s/op
+    // TssBenchmark.signatureAggregation                  P10S3   SHORT_SIGNATURES           1024    ss       0.007
+    //      s/op
+    // TssBenchmark.signatureAggregation                  P10S3  SHORT_PUBLIC_KEYS             32    ss       0.008
+    //      s/op
+    // TssBenchmark.signatureAggregation                  P10S3  SHORT_PUBLIC_KEYS            256    ss       0.008
+    //      s/op
+    // TssBenchmark.signatureAggregation                  P10S3  SHORT_PUBLIC_KEYS           1024    ss       0.008
+    //      s/op
 
-    //Benchmark                                (benchmarkTest)  (groupAssignment)  (messageSize)  Mode  Cnt  Score   Error  Units
-    //TssBenchmark.genesisObtainPrivateShares            P10S3   SHORT_SIGNATURES            N/A    ss       0.321           s/op
-    //TssBenchmark.genesisObtainPrivateShares            P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.124           s/op
-    //TssBenchmark.genesisObtainPublicShares             P10S3   SHORT_SIGNATURES            N/A    ss       0.082           s/op
-    //TssBenchmark.genesisObtainPublicShares             P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.059           s/op
-    //TssBenchmark.p0Signs                               P10S3   SHORT_SIGNATURES             32    ss       0.001           s/op
-    //TssBenchmark.p0Signs                               P10S3   SHORT_SIGNATURES            256    ss       0.001           s/op
-    //TssBenchmark.p0Signs                               P10S3   SHORT_SIGNATURES           1024    ss       0.001           s/op
-    //TssBenchmark.p0Signs                               P10S3  SHORT_PUBLIC_KEYS             32    ss       0.002           s/op
-    //TssBenchmark.p0Signs                               P10S3  SHORT_PUBLIC_KEYS            256    ss       0.002           s/op
-    //TssBenchmark.p0Signs                               P10S3  SHORT_PUBLIC_KEYS           1024    ss       0.002           s/op
-    //TssBenchmark.rekeyObtainPrivateShares              P10S3   SHORT_SIGNATURES            N/A    ss       0.326           s/op
-    //TssBenchmark.rekeyObtainPrivateShares              P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.130           s/op
-    //TssBenchmark.rekeyObtainPublicShares               P10S3   SHORT_SIGNATURES            N/A    ss       0.149           s/op
-    //TssBenchmark.rekeyObtainPublicShares               P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.102           s/op
-    //TssBenchmark.signatureAggregation                  P10S3   SHORT_SIGNATURES             32    ss       0.007           s/op
-    //TssBenchmark.signatureAggregation                  P10S3   SHORT_SIGNATURES            256    ss       0.007           s/op
-    //TssBenchmark.signatureAggregation                  P10S3   SHORT_SIGNATURES           1024    ss       0.007           s/op
-    //TssBenchmark.signatureAggregation                  P10S3  SHORT_PUBLIC_KEYS             32    ss       0.008           s/op
-    //TssBenchmark.signatureAggregation                  P10S3  SHORT_PUBLIC_KEYS            256    ss       0.008           s/op
-    //TssBenchmark.signatureAggregation                  P10S3  SHORT_PUBLIC_KEYS           1024    ss       0.008           s/op
-
-    //non check
-    //Benchmark                                (benchmarkTest)  (groupAssignment)  (messageSize)  Mode  Cnt  Score   Error  Units
-    //TssBenchmark.genesisObtainPrivateShares            P10S3   SHORT_SIGNATURES            N/A    ss       0.327           s/op
-    //TssBenchmark.genesisObtainPrivateShares            P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.126           s/op
-    //TssBenchmark.genesisObtainPublicShares             P10S3   SHORT_SIGNATURES            N/A    ss       0.081           s/op
-    //TssBenchmark.genesisObtainPublicShares             P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.062           s/op
-    //TssBenchmark.p0Signs                               P10S3   SHORT_SIGNATURES             32    ss       0.001           s/op
-    //TssBenchmark.p0Signs                               P10S3   SHORT_SIGNATURES            256    ss       0.001           s/op
-    //TssBenchmark.p0Signs                               P10S3   SHORT_SIGNATURES           1024    ss       0.001           s/op
-    //TssBenchmark.p0Signs                               P10S3  SHORT_PUBLIC_KEYS             32    ss       0.002           s/op
-    //TssBenchmark.p0Signs                               P10S3  SHORT_PUBLIC_KEYS            256    ss       0.002           s/op
-    //TssBenchmark.p0Signs                               P10S3  SHORT_PUBLIC_KEYS           1024    ss       0.002           s/op
-    //TssBenchmark.rekeyObtainPrivateShares              P10S3   SHORT_SIGNATURES            N/A    ss       0.309           s/op
-    //TssBenchmark.rekeyObtainPrivateShares              P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.129           s/op
-    //TssBenchmark.rekeyObtainPublicShares               P10S3   SHORT_SIGNATURES            N/A    ss       0.149           s/op
-    //TssBenchmark.rekeyObtainPublicShares               P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.102           s/op
-    //TssBenchmark.signatureAggregation                  P10S3   SHORT_SIGNATURES             32    ss       0.007           s/op
-    //TssBenchmark.signatureAggregation                  P10S3   SHORT_SIGNATURES            256    ss       0.007           s/op
-    //TssBenchmark.signatureAggregation                  P10S3   SHORT_SIGNATURES           1024    ss       0.007           s/op
-    //TssBenchmark.signatureAggregation                  P10S3  SHORT_PUBLIC_KEYS             32    ss       0.009           s/op
-    //TssBenchmark.signatureAggregation                  P10S3  SHORT_PUBLIC_KEYS            256    ss       0.009           s/op
-    //TssBenchmark.signatureAggregation                  P10S3  SHORT_PUBLIC_KEYS           1024    ss       0.008           s/op
+    // non check
+    // Benchmark                                (benchmarkTest)  (groupAssignment)  (messageSize)  Mode  Cnt  Score
+    // Error  Units
+    // TssBenchmark.genesisObtainPrivateShares            P10S3   SHORT_SIGNATURES            N/A    ss       0.327
+    //      s/op
+    // TssBenchmark.genesisObtainPrivateShares            P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.126
+    //      s/op
+    // TssBenchmark.genesisObtainPublicShares             P10S3   SHORT_SIGNATURES            N/A    ss       0.081
+    //      s/op
+    // TssBenchmark.genesisObtainPublicShares             P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.062
+    //      s/op
+    // TssBenchmark.p0Signs                               P10S3   SHORT_SIGNATURES             32    ss       0.001
+    //      s/op
+    // TssBenchmark.p0Signs                               P10S3   SHORT_SIGNATURES            256    ss       0.001
+    //      s/op
+    // TssBenchmark.p0Signs                               P10S3   SHORT_SIGNATURES           1024    ss       0.001
+    //      s/op
+    // TssBenchmark.p0Signs                               P10S3  SHORT_PUBLIC_KEYS             32    ss       0.002
+    //      s/op
+    // TssBenchmark.p0Signs                               P10S3  SHORT_PUBLIC_KEYS            256    ss       0.002
+    //      s/op
+    // TssBenchmark.p0Signs                               P10S3  SHORT_PUBLIC_KEYS           1024    ss       0.002
+    //      s/op
+    // TssBenchmark.rekeyObtainPrivateShares              P10S3   SHORT_SIGNATURES            N/A    ss       0.309
+    //      s/op
+    // TssBenchmark.rekeyObtainPrivateShares              P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.129
+    //      s/op
+    // TssBenchmark.rekeyObtainPublicShares               P10S3   SHORT_SIGNATURES            N/A    ss       0.149
+    //      s/op
+    // TssBenchmark.rekeyObtainPublicShares               P10S3  SHORT_PUBLIC_KEYS            N/A    ss       0.102
+    //      s/op
+    // TssBenchmark.signatureAggregation                  P10S3   SHORT_SIGNATURES             32    ss       0.007
+    //      s/op
+    // TssBenchmark.signatureAggregation                  P10S3   SHORT_SIGNATURES            256    ss       0.007
+    //      s/op
+    // TssBenchmark.signatureAggregation                  P10S3   SHORT_SIGNATURES           1024    ss       0.007
+    //      s/op
+    // TssBenchmark.signatureAggregation                  P10S3  SHORT_PUBLIC_KEYS             32    ss       0.009
+    //      s/op
+    // TssBenchmark.signatureAggregation                  P10S3  SHORT_PUBLIC_KEYS            256    ss       0.009
+    //      s/op
+    // TssBenchmark.signatureAggregation                  P10S3  SHORT_PUBLIC_KEYS           1024    ss       0.008
+    //      s/op
     @Benchmark
     public List<?> genesisObtainPublicShares(TssGenesisState state) {
         return state.genesisExtractor.allPublicShares();
@@ -369,7 +412,10 @@ public class TssBenchmark {
 
             System.out.printf("%n%d:init started%n", System.currentTimeMillis());
             TssService tssService = new Groth21Service(signatureSchema, rng);
-            final BlsPrivateKey[] keys = TssTestUtils.rndSks(signatureSchema, rng, benchmarkTest.size());
+            final BlsPrivateKey[] keys = TssTestUtils.rndSks(
+                    signatureSchema,
+                    rng,
+                    parseBenchmarkTestString(benchmarkTest).participants());
 
             var genesisCommittee = from(benchmarkTest, keys);
             var setupMessages = TssTestUtils.simulateGenesisMessaging(tssService, genesisCommittee);
@@ -390,7 +436,10 @@ public class TssBenchmark {
             System.out.printf("%n%d:init started%n", System.currentTimeMillis());
 
             TssService tssService = new Groth21Service(signatureSchema, rng);
-            final BlsPrivateKey[] keys = TssTestUtils.rndSks(signatureSchema, rng, benchmarkTest.size());
+            final BlsPrivateKey[] keys = TssTestUtils.rndSks(
+                    signatureSchema,
+                    rng,
+                    parseBenchmarkTestString(benchmarkTest).participants());
             var privateSharesPerParticipant =
                     TssTestUtils.randomPrivateShares(from(benchmarkTest, keys), rng, signatureSchema);
             var targetCommittee = from(benchmarkTest, keys);
@@ -420,7 +469,10 @@ public class TssBenchmark {
         public void init() {
             this.message = new byte[messageSize];
             rng.nextBytes(message);
-            final BlsPrivateKey[] keys = TssTestUtils.rndSks(signatureSchema, rng, benchmarkTest.size());
+            final BlsPrivateKey[] keys = TssTestUtils.rndSks(
+                    signatureSchema,
+                    rng,
+                    parseBenchmarkTestString(benchmarkTest).participants());
             this.privateShares = TssTestUtils.randomPrivateShares(from(benchmarkTest, keys), rng, signatureSchema);
             var publicShares = privateShares.stream()
                     .map(l -> l.stream()
@@ -437,30 +489,33 @@ public class TssBenchmark {
         }
     }
 
-    public enum BenchmarkTest {
-        P10S3(10, 3),
-        P100S1(100, 1),
-        P100S3(100, 3),
-        P100S5(100, 5),
-        P100S10(100,20),
-        P130S10(130,20);
-        private final int size;
-        private final int shares;
+    /**
+     * Parses a string in the format "PXSY" and extracts the integers X and Y.
+     *
+     * @param input The input string in the format "PXSY" (e.g., "P100S10").
+     * @return An array of two integers where the first element is X and the second is Y.
+     * @throws IllegalArgumentException If the input string is not in the expected format.
+     */
+    public static BenchmarkTest parseBenchmarkTestString(final String input) {
+        // Define the regular expression pattern for "PXSY"
+        Pattern pattern = Pattern.compile("^P(\\d+)S(\\d+)$");
+        Matcher matcher = pattern.matcher(input);
 
-        BenchmarkTest(final int i, final int s) {
-            size = i;
-            shares = s;
-        }
-
-        public int size() {
-            return size;
-        }
-        public int shares() {
-            return shares;
+        // If the pattern matches, extract the integers
+        if (matcher.matches()) {
+            int x = Integer.parseInt(matcher.group(1)); // Extract X
+            int y = Integer.parseInt(matcher.group(2)); // Extract Y
+            return new BenchmarkTest(x, y);
+        } else {
+            // Throw an exception if the input is not valid
+            throw new IllegalArgumentException("Invalid input format. Expected format: PXSY (e.g., P100S10)");
         }
     }
 
-    static TssTestCommittee from(BenchmarkTest test, BlsPrivateKey... keys) {
-        return new TssTestCommittee(test.size(), test.shares(), keys);
+    public record BenchmarkTest(int participants, int shares) {}
+
+    static TssTestCommittee from(String param, BlsPrivateKey... keys) {
+        var test = parseBenchmarkTestString(param);
+        return new TssTestCommittee(test.participants(), test.shares(), keys);
     }
 }

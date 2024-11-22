@@ -58,48 +58,77 @@ import org.openjdk.jmh.annotations.Warmup;
 @OutputTimeUnit(TimeUnit.SECONDS)
 public class GenerateMessagesBenchmark {
 
-    //************************************************
+    // ************************************************
     // COMPRESSED
-    // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt    Score   Error  Units
-    //GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss         2.391           s/op
-    //GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             128         2    ss         6.363           s/op
-    //GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss        72.449           s/op
-    //GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             128         2    ss       198.247           s/op
+    // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
+    //  Score   Error  Units
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss
+    //  2.391           s/op
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             128         2    ss
+    //  6.363           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss
+    // 72.449           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             128         2    ss
+    // 198.247           s/op
 
     //
-    //Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt    Score   Error  Units
-    //GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             256         2    ss         4.902           s/op
-    //GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             256         2    ss        12.882           s/op
-    //GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             256         2    ss       287.540           s/op
-    //GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             256         2    ss       792.447           s/op
+    // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
+    //  Score   Error  Units
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             256         2    ss
+    //  4.902           s/op
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             256         2    ss
+    // 12.882           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             256         2    ss
+    // 287.540           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             256         2    ss
+    // 792.447           s/op
 
-    //Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt     Score   Error  Units
-    //GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             512         2    ss         10.450           s/op
-    //GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             512         2    ss         27.221           s/op
-    //GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             512         2    ss       1151.315           s/op
-    //GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             512         2    ss       3143.904           s/op
+    // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
+    //   Score   Error  Units
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             512         2    ss
+    //  10.450           s/op
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             512         2    ss
+    //  27.221           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             512         2    ss
+    // 1151.315           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             512         2    ss
+    // 3143.904           s/op
 
-
-    //************************************************
+    // ************************************************
     // UN-COMPRESSED
 
-    //Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt    Score   Error  Units
-    //GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss         1.714           s/op
-    //GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             128         2    ss         4.006           s/op
-    //GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss        65.922           s/op
-    //GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             128         2    ss       175.585           s/op
+    // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
+    //  Score   Error  Units
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss
+    //  1.714           s/op
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             128         2    ss
+    //  4.006           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss
+    // 65.922           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             128         2    ss
+    // 175.585           s/op
 
-    //Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt    Score   Error  Units
-    //GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             256         2    ss         3.558           s/op
-    //GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             256         2    ss         8.243           s/op
-    //GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             256         2    ss       262.770           s/op
-    //GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             256         2    ss       700.824           s/op
+    // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
+    //  Score   Error  Units
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             256         2    ss
+    //  3.558           s/op
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             256         2    ss
+    //  8.243           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             256         2    ss
+    // 262.770           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             256         2    ss
+    // 700.824           s/op
 
-    //Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt     Score   Error  Units
-    //GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             512         2    ss          7.643           s/op
-    //GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             512         2    ss         16.985           s/op
-    //GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             512         2    ss       1041.317           s/op
-    //GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             512         2    ss       2790.024           s/op
+    // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
+    //   Score   Error  Units
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             512         2    ss
+    //   7.643           s/op
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             512         2    ss
+    //  16.985           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             512         2    ss
+    // 1041.317           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             512         2    ss
+    // 2790.024           s/op
 
     public static final Random TEST_RNG = new Random();
     public static Random rng = new Random(TEST_RNG.nextInt());

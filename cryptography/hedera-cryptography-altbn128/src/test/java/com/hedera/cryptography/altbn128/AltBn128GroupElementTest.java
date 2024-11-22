@@ -120,18 +120,20 @@ class AltBn128GroupElementTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void zeroIsZero(AltBN128CurveGroup g) {
-        var group = new AltBn128Group(g);
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(g, field);
 
-        assertEquals(group.zero(), group.fromBytes(group.zero().toBytes()) );
+        assertEquals(group.zero(), group.fromBytes(group.zero().toBytes()));
     }
 
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void pointNotInCurve(AltBN128CurveGroup g) {
-        var group = new AltBn128Group(g);
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(g, field);
         var nonZero = new byte[group.elementSize()];
-        Arrays.fill(nonZero, (byte)0);
-        assertThrows(IllegalArgumentException.class,()-> group.fromBytes(nonZero) );
+        Arrays.fill(nonZero, (byte) 0);
+        assertThrows(IllegalArgumentException.class, () -> group.fromBytes(nonZero));
     }
 
     @Test
@@ -158,16 +160,15 @@ class AltBn128GroupElementTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void fromInvalidPointOperation(AltBN128CurveGroup gr) {
-        //We've chosen not to do this to gain some performance
-        var group = new AltBn128Group(gr);
+        // We've chosen not to do this to gain some performance
         var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
         var something = ByteArrayUtils.toLittleEndianBytes(
                 group.elementSize(), BigInteger.ONE, new BigInteger("10"), BigInteger.ONE, BigInteger.ONE);
-        var invalid = new AltBn128GroupElement(group, something );
-        assertDoesNotThrow( ()->group.generator().add(invalid));
-        assertDoesNotThrow( ()->invalid.multiply(field.one()));
+        var invalid = new AltBn128GroupElement(group, something);
+        assertDoesNotThrow(() -> group.generator().add(invalid));
+        assertDoesNotThrow(() -> invalid.multiply(field.one()));
     }
-
 
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
