@@ -36,13 +36,14 @@ public record CiphertextTable(@NonNull List<GroupElement> sharedRandomness, @Non
     /**
      * Combines this representation into a compressed representation still containing all the information.
      * This representation is used for Nizk proofs.
-     * @param base generally 256 value (which represents all the possibly distinct values we can encrypt in a byte
      * @return the compressed representation of this {@link CiphertextTable}
      */
     @NonNull
-    public CombinedCiphertext combine(@NonNull final FieldElement base) {
+    public CombinedCiphertext combine() {
+        final FieldElement base = sharedRandomness.getFirst()
+                .getGroup()
+                .field().fromLong(ElGamalUtils.TOTAL_NUMBER_OF_ELEMENTS);
         final GroupElement randomness = new EcPolynomial(sharedRandomness).evaluate(base);
-
         final List<GroupElement> values = Arrays.stream(shareCiphertexts)
                 .map(cipherText -> new EcPolynomial(cipherText.cipherText()))
                 .map(poly -> poly.evaluate(base))
