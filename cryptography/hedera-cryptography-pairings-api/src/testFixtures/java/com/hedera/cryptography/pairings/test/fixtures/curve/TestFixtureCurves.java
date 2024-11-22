@@ -19,7 +19,10 @@ package com.hedera.cryptography.pairings.test.fixtures.curve;
 import com.hedera.cryptography.pairings.api.Curve;
 
 public enum TestFixtureCurves implements Curve {
-    NO_PAIRING_CURVE((byte) 0);
+    NO_PAIRING_CURVE((byte) 0),
+    NON_EXISTENT_CURVE((byte) 1),
+    FAIL_CURVE((byte) 2),
+    TEST((byte) 3);
 
     /**
      * An internal unique id per curve.
