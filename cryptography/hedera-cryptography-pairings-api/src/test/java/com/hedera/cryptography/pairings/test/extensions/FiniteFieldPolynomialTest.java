@@ -18,7 +18,6 @@ package com.hedera.cryptography.pairings.test.extensions;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
@@ -38,7 +37,8 @@ import org.junit.jupiter.api.Test;
 // possibly investigate: https://github.com/PoslavskySV/rings
 @WithRng
 class FiniteFieldPolynomialTest {
-    private static final PairingFriendlyCurve CURVE = PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE);
+    private static final PairingFriendlyCurve CURVE =
+            PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE);
 
     @Test
     void testEmptyCoefficientsThrowsException() {
