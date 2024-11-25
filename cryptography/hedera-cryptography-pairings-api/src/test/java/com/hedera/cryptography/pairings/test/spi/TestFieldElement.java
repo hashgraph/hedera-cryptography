@@ -81,4 +81,10 @@ record TestFieldElement(Field field) implements FieldElement {
     public byte[] toBytes() {
         return BYTES;
     }
+
+    @NonNull
+    @Override
+    public byte[] toByteArray() {
+        return BYTES;
+    }
 }

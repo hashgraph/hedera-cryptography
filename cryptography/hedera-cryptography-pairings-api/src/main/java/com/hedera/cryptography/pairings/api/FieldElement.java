@@ -111,4 +111,12 @@ public interface FieldElement {
     @NonNull
     @Deprecated(forRemoval = true)
     byte[] toBytes();
+
+    /**
+     * Returns this field element as an unsigned big-endian number in a byte array
+     *
+     * @return the field element as a byte array
+     */
+    @NonNull
+    byte[] toByteArray();
 }

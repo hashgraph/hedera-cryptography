@@ -27,6 +27,7 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.utils.ByteArrayUtils;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -98,6 +99,16 @@ class AltBn128FieldElementTest {
         assertEquals(field.fromBytes(representation), field.one());
         assertEquals(field.one(), field.fromBytes(representation));
         assertEquals(field.fromBytes(representation), field.one());
+    }
+
+    @Test
+    void fieldElementFromByteArrayAndBack() {
+        final BigInteger bigInteger = new BigInteger("123456789");
+        final var field = new AltBn128Field();
+        final byte[] originalArray = bigInteger.toByteArray();
+        final FieldElement element = field.fromByteArray(originalArray);
+        final byte[] secondArray = element.toByteArray();
+        assertArrayEquals(originalArray, secondArray);
     }
 
     @Test

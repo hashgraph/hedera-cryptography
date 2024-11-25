@@ -148,6 +148,24 @@ public class ByteArrayUtils {
     }
 
     /**
+     * Reverses the order of bytes in the array.
+     * Note: this method modifies the input array in place.
+     *
+     * @param array the byte array to reverse
+     * @return the reversed byte array
+     */
+    @NonNull
+    public static byte[] reverseByteOrder(@NonNull final byte[] array) {
+        for(int i = 0; i < array.length / 2; i++)
+        {
+            final byte tmp = array[i];
+            array[i] = array[array.length - i - 1];
+            array[array.length - i - 1] = tmp;
+        }
+        return array;
+    }
+
+    /**
      * Transforms an integer value into a byte array
      * @param value  the integer to transform
      * @return the resulting byte array

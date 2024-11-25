@@ -145,6 +145,13 @@ public class AltBn128FieldElement implements FieldElement {
         return this.representation.clone();
     }
 
+    @NonNull
+    @Override
+    public byte[] toByteArray() {
+        //TODO what should be the size of this array?
+        return toBigInteger().toByteArray();
+    }
+
     /**
      * Returns the internal byte[] of this element.
      * @implNote This has limited visibility as is only intended to be used internally in the library.

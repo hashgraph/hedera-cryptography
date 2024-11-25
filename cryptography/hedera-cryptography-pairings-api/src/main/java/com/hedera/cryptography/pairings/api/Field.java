@@ -78,6 +78,16 @@ public interface Field {
     FieldElement fromBytes(@NonNull byte[] bytes);
 
     /**
+     * Creates a field element from a non-negative number represented by an unsigned big-endian byte array. If the
+     * number is larger than the modulus p of this Field, this method performs the appropriate reduction.
+     *
+     * @param bytes the number as a byte array
+     * @return the new field element
+     */
+    @NonNull
+    FieldElement fromByteArray(@NonNull byte[] bytes);
+
+    /**
      * Creates a field element from a non-negative {@link BigInteger} value.
      * If {@code bigInteger} is larger than the modulus p of this Field, this method performs the appropriate reduction.
      *

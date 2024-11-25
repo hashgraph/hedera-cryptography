@@ -47,6 +47,12 @@ record TestField(PairingFriendlyCurve curve) implements Field {
         return new TestFieldElement(this);
     }
 
+    @NonNull
+    @Override
+    public FieldElement fromByteArray(@NonNull final byte[] bytes) {
+        return new TestFieldElement(this);
+    }
+
     /** {@inheritDoc} */
     @NonNull
     @Override

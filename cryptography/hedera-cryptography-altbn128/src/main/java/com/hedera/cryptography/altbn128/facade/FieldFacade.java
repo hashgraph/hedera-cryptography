@@ -113,6 +113,17 @@ public final class FieldFacade implements ElementFacade {
         return output;
     }
 
+    @NonNull
+    public byte[] fromByteArray(@NonNull final byte[] array) {
+        Objects.requireNonNull(array, "array must not be null");
+        final byte[] output = new byte[size];
+        final int result = adapter.fieldElementsFromBytes(array, output);
+        if (result != SUCCESS) {
+            throw new AltBn128Exception(result, "fieldElementFromBytes");
+        }
+        return output;
+    }
+
     /**
      * Return a byte array representation of a fieldElement of value 0.
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the element 0
