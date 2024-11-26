@@ -179,4 +179,4 @@ jobs:
         with:
           gradle-version: ${{ inputs.gradle-version }}
           # always run with --no-parallel to avoid sonatype maven publish issues which result in invalid publications
-          arguments: releaseMavenCentral --scan -PpublishSigningEnabled=true --no-parallel --no-configuration-cache
+          arguments: releaseMavenCentral --scan -PpublishSigningEnabled=true --no-parallel --no-build-cache --no-configuration-cache
