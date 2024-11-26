@@ -14,8 +14,15 @@
 // limitations under the License.
 //
 
-use crate::group_element_utils::{canonical_serialize, group_elements_add, group_elements_batch_acum_multiply, group_elements_deserialize, group_elements_deserialize_and_validate, group_elements_scalar_multiply, group_elements_total_sum};
-use crate::scalars_utils::{scalars_batch_add, scalars_batch_multiply, scalars_curve_from_bytes, scalars_from_bytes, scalars_from_i64, scalars_to_bytes, F};
+use crate::group_element_utils::{
+    canonical_serialize, group_elements_add, group_elements_deserialize,
+    group_elements_deserialize_and_validate, group_elements_total_sum,
+};
+use crate::scalars_utils::{
+    scalars_batch_add, scalars_batch_multiply, scalars_curve_from_bytes, scalars_curve_from_i64,
+    scalars_curve_group_elements_msm, scalars_curve_group_elements_multiply, scalars_from_bytes,
+    scalars_from_i64, scalars_to_bytes, F,
+};
 use ark_bn254::{G1Projective, G2Projective};
 use ark_ec::{CurveConfig, CurveGroup};
 use ark_serialize::CanonicalSerialize;
@@ -218,26 +225,48 @@ pub fn from_jobjects_to_vec_of_scalars_curve<G: CurveGroup>(
 }
 
 /// Utility function read a list of scalars form a JObjectArray, if the scalar is bigger than the field a reduction is performed
-pub fn from_jlongs_to_vec_of_scalars(
-    env: &mut JNIEnv,
-    values: JLongArray,
-) -> Result<Vec<F>, jint> {
+pub fn from_jlongs_to_vec_of_scalars(env: &mut JNIEnv, values: JLongArray) -> Result<Vec<F>, jint> {
     let n = match env.get_array_length(&values) {
         Ok(val) => val as usize,
         Err(_) => return Err(JNI_ERROR_COULD_NOT_GET_ARGUMENT_SIZE),
     };
 
     // Prepare a buffer to hold the element
-    let mut buffer: Vec<jlong> = vec![0;n];
-    match env.get_long_array_region(&values, 0 as jsize, &mut buffer){
+    let mut buffer: Vec<jlong> = vec![0; n];
+    match env.get_long_array_region(&values, 0 as jsize, &mut buffer) {
         Ok(val) => val,
         Err(_) => return Err(JNI_ERROR_COULD_NOT_GET_ARGUMENT_SIZE),
     };
 
-
-    let scalars = buffer.iter()
+    let scalars = buffer
+        .iter()
         .map(|&x| x as i64)
         .map(|sel| scalars_from_i64(sel))
+        .collect();
+    Ok(scalars)
+}
+
+/// Utility function read a list of scalars form a JObjectArray, if the scalar is bigger than the field a reduction is performed
+pub fn from_jlongs_to_vec_of_curve_scalars<G: CurveGroup>(
+    env: &mut JNIEnv,
+    values: JLongArray,
+) -> Result<Vec<ScalarField<G>>, jint> {
+    let n = match env.get_array_length(&values) {
+        Ok(val) => val as usize,
+        Err(_) => return Err(JNI_ERROR_COULD_NOT_GET_ARGUMENT_SIZE),
+    };
+
+    // Prepare a buffer to hold the element
+    let mut buffer: Vec<jlong> = vec![0; n];
+    match env.get_long_array_region(&values, 0 as jsize, &mut buffer) {
+        Ok(val) => val,
+        Err(_) => return Err(JNI_ERROR_COULD_NOT_GET_ARGUMENT_SIZE),
+    };
+
+    let scalars = buffer
+        .iter()
+        .map(|&x| x as i64)
+        .map(|sel| scalars_curve_from_i64::<G>(sel))
         .collect();
     Ok(scalars)
 }
@@ -253,17 +282,17 @@ pub fn from_jbytearray_to_vec(env: JNIEnv, value: &JByteArray) -> Result<Vec<u8>
 
 /// Utility function to validate a g1 point
 pub fn validate_g1point(input_bytes: &Vec<u8>) -> i32 {
-    match  group_elements_deserialize_and_validate::<G1Projective>(&input_bytes) {
+    match group_elements_deserialize_and_validate::<G1Projective>(&input_bytes) {
         Ok(_) => SUCCESS,
-        Err(_) =>  BUSINESS_ERROR_POINT_NOT_IN_CURVE,
+        Err(_) => BUSINESS_ERROR_POINT_NOT_IN_CURVE,
     }
 }
 
 /// Utility function to validate a g2 point
 pub fn validate_g2point(input_bytes: &Vec<u8>) -> i32 {
-    match  group_elements_deserialize_and_validate::<G2Projective>(&input_bytes) {
+    match group_elements_deserialize_and_validate::<G2Projective>(&input_bytes) {
         Ok(_) => SUCCESS,
-        Err(_) =>  BUSINESS_ERROR_POINT_NOT_IN_CURVE,
+        Err(_) => BUSINESS_ERROR_POINT_NOT_IN_CURVE,
     }
 }
 
@@ -320,7 +349,7 @@ pub fn multiply_point_and_scalar<G: CurveGroup>(
         Err(value) => return value,
     };
 
-    let point = group_elements_scalar_multiply(point1, value);
+    let point = scalars_curve_group_elements_multiply(value, point1);
     serialize_to_jbytearray(env, &point, output).unwrap_or_else(|value| value)
 }
 
@@ -341,7 +370,7 @@ pub fn total_sum_points<G: CurveGroup>(
 }
 
 /// Utility function to multiply each scalar[i] with the point in values[i] and return the addition of all the results
-pub fn batch_accum_multiply_scalar_points<G: CurveGroup>(
+pub fn msm_scalars<G: CurveGroup>(
     mut env: JNIEnv,
     scalars: JObjectArray,
     values: JObjectArray,
@@ -357,17 +386,35 @@ pub fn batch_accum_multiply_scalar_points<G: CurveGroup>(
         Err(value) => return value,
     };
 
-    let result = group_elements_batch_acum_multiply::<G>(scalars, points);
+    let result = scalars_curve_group_elements_msm::<G>(scalars, points);
 
     serialize_to_jbytearray::<G>(env, &result, outputs).unwrap_or_else(|value| value)
 }
 
 /// Utility function to multiply each scalar[i] with the point in values[i] and return the addition of all the results
-pub fn batch_multiply_scalars(
+pub fn msm_scalars_longs<G: CurveGroup>(
     mut env: JNIEnv,
     scalars: JLongArray,
-    output: JByteArray,
+    values: JObjectArray,
+    outputs: JByteArray,
 ) -> i32 {
+    let scalars_vec = match from_jlongs_to_vec_of_curve_scalars::<G>(&mut env, scalars) {
+        Ok(value) => value,
+        Err(value) => return value,
+    };
+
+    let points = match to_vec_of_points::<G>(&mut env, values) {
+        Ok(value) => value,
+        Err(value) => return value,
+    };
+
+    let result = scalars_curve_group_elements_msm::<G>(scalars_vec, points);
+
+    serialize_to_jbytearray::<G>(env, &result, outputs).unwrap_or_else(|value| value)
+}
+
+/// Utility function to multiply each scalar[i] with the point in values[i] and return the addition of all the results
+pub fn batch_multiply_scalars(mut env: JNIEnv, scalars: JLongArray, output: JByteArray) -> i32 {
     let scalars = match from_jlongs_to_vec_of_scalars(&mut env, scalars) {
         Ok(value) => value,
         Err(value) => return value,
@@ -379,11 +426,7 @@ pub fn batch_multiply_scalars(
 }
 
 /// Utility function to multiply each scalar[i] with the point in values[i] and return the addition of all the results
-pub fn batch_add_scalars(
-    mut env: JNIEnv,
-    values: JObjectArray,
-    output: JByteArray,
-) -> i32 {
+pub fn batch_add_scalars(mut env: JNIEnv, values: JObjectArray, output: JByteArray) -> i32 {
     let scalars = match from_jobjects_to_vec_of_scalars(&mut env, values) {
         Ok(value) => value,
         Err(value) => return value,
@@ -392,4 +435,24 @@ pub fn batch_add_scalars(
     let result = scalars_batch_add(scalars);
 
     write_return_scalar(env, output, result).unwrap_or_else(|value| value)
+}
+
+/// Utility function to multiply a point and a scalar value
+pub fn multiply_point_and_scalar_long<G: CurveGroup>(
+    env: JNIEnv,
+    value: &JByteArray,
+    value2: jlong,
+    output: JByteArray,
+) -> i32 {
+    let point1 = match to_point::<G>(&env, &value) {
+        Ok(value) => value,
+        Err(value) => return value,
+    };
+
+    let scalar: i64 = value2 as i64;
+
+    let value: ScalarField<G> = scalars_curve_from_i64::<G>(scalar);
+
+    let point = scalars_curve_group_elements_multiply(value, point1);
+    serialize_to_jbytearray(env, &point, output).unwrap_or_else(|value| value)
 }

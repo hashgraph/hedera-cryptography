@@ -172,16 +172,33 @@ class AltBn128GroupElementTest {
 
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
-    void batchMultiply(AltBN128CurveGroup gr, Random random) {
+    void msm(AltBN128CurveGroup gr, Random random) {
         var field = new AltBn128Field();
         var group = new AltBn128Group(gr, field);
         List<FieldElement> scalars =
                 IntStream.range(0, 100).boxed().map(field::fromLong).toList();
         List<GroupElement> results =
                 IntStream.range(0, 100).boxed().map(i -> group.random(random)).toList();
-        var result = group.mbc(results, scalars);
+        var result = group.msm(results, scalars);
 
         var expected = StreamUtils.zipStream(scalars, results)
+                .map(e -> e.getValue().multiply(e.getKey()))
+                .reduce(group.zero(), GroupElement::add);
+
+        assertEquals(expected, result);
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void msmLong(AltBN128CurveGroup gr, Random random) {
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
+        var scalars = IntStream.range(0, 100).mapToLong(Long::valueOf).toArray();
+        List<GroupElement> results =
+                IntStream.range(0, 100).boxed().map(i -> group.random(random)).toList();
+        var result = group.msm(results, scalars);
+
+        var expected = StreamUtils.zipStream(Arrays.stream(scalars).boxed().toList(), results)
                 .map(e -> e.getValue().multiply(e.getKey()))
                 .reduce(group.zero(), GroupElement::add);
 

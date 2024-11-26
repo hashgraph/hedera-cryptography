@@ -182,7 +182,7 @@ public final class GroupFacade implements ElementFacade {
     }
 
     /**
-     * Performs scalar multiplication between a Group2 point and a scalar.
+     * Performs scalar multiplication between a point and a scalar.
      * @param point the Group2 point representation.
      * @param scalar the scalar.
      * @return the byte array representation of the resulting point.
@@ -260,6 +260,7 @@ public final class GroupFacade implements ElementFacade {
     }
 
     /**
+     * Performs multi scalar multiplication between a list of points and a list of scalars and returns the addition.
      * multiplies each scalar in a collection for the generator point and returns the resulting points.
      * This method takes a list of points (each in internal representation) and returns
      * the list of point that is the result of multiplying the scalar for the generator point.
@@ -271,14 +272,41 @@ public final class GroupFacade implements ElementFacade {
      * @throws AltBn128Exception in case of an error during the batch addition
      */
     @NonNull
-    public byte[] batchMultiply(final byte[][] scalars, final byte[][] points) {
+    public byte[] msm(final byte[][] scalars, final byte[][] points) {
         Objects.requireNonNull(scalars, "scalars must not be null");
         Objects.requireNonNull(points, "points must not be null");
         if (scalars.length != points.length) {
             throw new AltBn128Exception("The size of scalars and points must match");
         }
         final byte[] array = new byte[this.size];
-        int result = adapter.groupElementsBatchScalarMul(group, scalars, points, array);
+        int result = adapter.groupElementsMsm(group, scalars, points, array);
+        if (result != GroupElementsLibraryAdapter.SUCCESS) {
+            throw new AltBn128Exception(result, "groupElementsBatchScalarMul in " + this.group);
+        }
+        return array;
+    }
+
+    /**
+     * Performs multi scalar multiplication between a list of points and a list of scalars and returns the addition.
+     * multiplies each scalar in a collection for the generator point and returns the resulting points.
+     * This method takes a list of points (each in internal representation) and returns
+     * the list of point that is the result of multiplying the scalar for the generator point.
+     *
+     * @param scalars a list of N scalar
+     * @param points a byte matrix representing a list of N points of {@link FieldElementsLibraryAdapter#fieldElementsSize()}  representing each scalar
+     * @return N points each as a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} containing representation of the resulting point.
+     * @throws NullPointerException if points is null
+     * @throws AltBn128Exception in case of an error during the batch addition
+     */
+    @NonNull
+    public byte[] msm(final long[] scalars, final byte[][] points) {
+        Objects.requireNonNull(scalars, "scalars must not be null");
+        Objects.requireNonNull(points, "points must not be null");
+        if (scalars.length != points.length) {
+            throw new AltBn128Exception("The size of scalars and points must match");
+        }
+        final byte[] array = new byte[this.size];
+        int result = adapter.groupElementsMsm(group, scalars, points, array);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
             throw new AltBn128Exception(result, "groupElementsBatchScalarMul in " + this.group);
         }

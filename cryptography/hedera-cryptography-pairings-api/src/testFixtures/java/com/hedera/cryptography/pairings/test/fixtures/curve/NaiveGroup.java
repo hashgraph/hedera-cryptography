@@ -56,6 +56,9 @@ public class NaiveGroup implements Group {
         return curve;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public Field field() {
@@ -84,13 +87,16 @@ public class NaiveGroup implements Group {
         return new NaiveGroupElement(this, BigInteger.ZERO);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
-    public GroupElement mbc(final List<GroupElement> elements, final List<FieldElement> scalars) {
+    public GroupElement msm(final @NonNull List<GroupElement> elements, final @NonNull List<FieldElement> scalars) {
         Objects.requireNonNull(elements, "elements must not be null");
         Objects.requireNonNull(scalars, "scalars must not be null");
 
-        GroupElement result = elements.get(0).multiply(scalars.get(0));
+        GroupElement result = elements.getFirst().multiply(scalars.getFirst());
         for (int i = 1; i < elementSize(); i++) {
             result = result.add(elements.get(i).multiply(scalars.get(i)));
         }

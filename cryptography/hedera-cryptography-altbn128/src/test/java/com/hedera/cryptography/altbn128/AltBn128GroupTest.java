@@ -128,11 +128,11 @@ class AltBn128GroupTest {
                 IntStream.range(0, 100).boxed().map(field::fromLong).toList();
         List<GroupElement> points =
                 IntStream.range(0, 100).boxed().map(i -> group.random(random)).toList();
-        assertDoesNotThrow(() -> group.mbc(points, scalars));
+        assertDoesNotThrow(() -> group.msm(points, scalars));
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> group.mbc(
+                () -> group.msm(
                         List.of(group.zero(), mock(GroupElement.class)),
                         List.of(mock(FieldElement.class), mock(FieldElement.class))));
         assertThrows(IllegalArgumentException.class, () -> group.add(List.of(group.zero(), mock(GroupElement.class))));

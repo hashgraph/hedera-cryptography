@@ -100,7 +100,7 @@ public class Lagrange {
             weights.add(coefficient(field, xs, i));
         }
 
-        return group.mbc(ys, weights);
+        return group.msm(ys, weights);
     }
 
     /**

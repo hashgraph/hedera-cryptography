@@ -327,7 +327,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     jni_helpers::write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
 }
 
-
 /// JNI function to return the batch multiplication of the group generator with N scalars
 /// # Arguments
 /// * `env` _ The JNI environment.
@@ -346,7 +345,6 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     scalars: JLongArray,
     output: JByteArray,
 ) -> jint {
-
     batch_multiply_scalars(env, scalars, output)
 }
 
@@ -366,7 +364,5 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     values: JObjectArray,
     output: JByteArray,
 ) -> jint {
-
     batch_add_scalars(env, values, output)
 }
-

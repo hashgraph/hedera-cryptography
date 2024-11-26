@@ -17,8 +17,8 @@
 use crate::group_element_utils::*;
 use crate::jni_helpers;
 use crate::jni_helpers::{G1, G2};
-use jni::objects::{JByteArray, JObject, JObjectArray};
-use jni::sys::jint;
+use jni::objects::{JByteArray, JLongArray, JObject, JObjectArray};
+use jni::sys::{jint, jlong};
 use jni::JNIEnv;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -56,12 +56,14 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
         GROUP1 => {
             type G = G1;
             let point = group_elements_from_random::<G, ChaCha8Rng>(&mut rng);
-            jni_helpers::serialize_to_jbytearray::<G>(env, &point, output).unwrap_or_else(|value| value)
+            jni_helpers::serialize_to_jbytearray::<G>(env, &point, output)
+                .unwrap_or_else(|value| value)
         }
         _ => {
             type G = G2;
             let point = group_elements_from_random::<G, ChaCha8Rng>(&mut rng);
-            jni_helpers::serialize_to_jbytearray::<G>(env, &point, output).unwrap_or_else(|value| value)
+            jni_helpers::serialize_to_jbytearray::<G>(env, &point, output)
+                .unwrap_or_else(|value| value)
         }
     }
 }
@@ -330,19 +332,51 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     }
 }
 
-/// JNI function to return the batch multiplication of the group generator with N scalars
+/// JNI function to return the multi scalar multiplication of each groupElement with its corresponding scalar
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
 /// * `group_id`  in which group to perform the operation
-/// * `scalars`   the long array that represents the collection of scalars
+/// * `scalars`  the long array that represents the collection of scalars
 /// * `values`   the byte matrix that represents the collection of group elements
 /// * `output`   the byte array that will be filled with the new point representing the result of the operation
 /// # Returns
 /// *   0    Success
 /// * A less than 0 error code in case of error
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_groupElementsBatchScalarMul(
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_groupElementsMsm__I_3J_3_3B_3B(
+    env: JNIEnv,
+    _instance: JObject,
+    group_id: jint,
+    scalars: JLongArray,
+    values: JObjectArray,
+    outputs: JByteArray,
+) -> jint {
+    match group_id {
+        GROUP1 => {
+            type G = G1;
+            jni_helpers::msm_scalars_longs::<G>(env, scalars, values, outputs)
+        }
+        _ => {
+            type G = G2;
+            jni_helpers::msm_scalars_longs::<G>(env, scalars, values, outputs)
+        }
+    }
+}
+
+/// JNI function to return the multi scalar multiplication of each groupElement with its corresponding scalar
+/// # Arguments
+/// * `env` _ The JNI environment.
+/// * `_instance` _ The Java instance calling this function.
+/// * `group_id`  in which group to perform the operation
+/// * `scalars`  the byte matrix that represents the collection of scalars
+/// * `values`   the byte matrix that represents the collection of group elements
+/// * `output`   the byte array that will be filled with the new point representing the result of the operation
+/// # Returns
+/// *   0    Success
+/// * A less than 0 error code in case of error
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_groupElementsMsm__I_3_3B_3_3B_3B(
     env: JNIEnv,
     _instance: JObject,
     group_id: jint,
@@ -353,11 +387,44 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     match group_id {
         GROUP1 => {
             type G = G1;
-            jni_helpers::batch_accum_multiply_scalar_points::<G>(env, scalars, values, outputs)
+            jni_helpers::msm_scalars::<G>(env, scalars, values, outputs)
         }
         _ => {
             type G = G2;
-            jni_helpers::batch_accum_multiply_scalar_points::<G>(env, scalars, values, outputs)
+            jni_helpers::msm_scalars::<G>(env, scalars, values, outputs)
+        }
+    }
+}
+
+/// returns the multiplication of a group elements and a scalar
+/// in this notation this is the power operation
+/// # Arguments
+/// * `env` _ The JNI environment.
+/// * `_instance` _ The Java instance calling this function.
+/// * `group_id`  in which group to perform the operation
+/// * `value`   the byte that of size GROUP2_ELEMENT_SIZE represents the group element
+/// * `value2`  the byte that represents the scalar
+/// * `output`   the byte array of size GROUP2_ELEMENT_SIZE that will be filled with the resulting group element
+/// # Returns
+/// *   0    Success
+/// * A less than 0 error code in case of error
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_groupElementsLongMul(
+    env: JNIEnv,
+    _instance: JObject,
+    group_id: jint,
+    value: JByteArray,
+    value2: jlong,
+    output: JByteArray,
+) -> jint {
+    match group_id {
+        GROUP1 => {
+            type G = G1;
+            jni_helpers::multiply_point_and_scalar_long::<G>(env, &value, value2, output)
+        }
+        _ => {
+            type G = G2;
+            jni_helpers::multiply_point_and_scalar_long::<G>(env, &value, value2, output)
         }
     }
 }

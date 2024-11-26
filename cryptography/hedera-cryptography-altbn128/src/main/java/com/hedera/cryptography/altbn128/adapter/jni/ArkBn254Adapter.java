@@ -63,7 +63,7 @@ public final class ArkBn254Adapter
      * Creates a new random scalar from a seed value
      *
      * @param inputSeed the byte seed to be used to create the new scalar
-     * @param output    the byte array that will be filled with the new scalar
+     * @param output the byte array that will be filled with the result of the operation
      * @return {@link FieldElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsFromRandomSeed(final byte[] inputSeed, final byte[] output);
@@ -72,7 +72,7 @@ public final class ArkBn254Adapter
      * Creates a new scalar from a long
      *
      * @param inputLong the long to be used to create the new scalar
-     * @param output    the byte array that will be filled with the new scalar
+     * @param output the byte array that will be filled with the result of the operation
      * @return {@link FieldElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsFromLong(final long inputLong, final byte[] output);
@@ -80,8 +80,8 @@ public final class ArkBn254Adapter
     /**
      * Creates a new scalar from a byte[]
      *
-     * @param input  the that represents the scalar
-     * @param output the byte array that will be filled with the new scalar
+     * @param input  the byte array that represents the scalar
+     * @param output the byte array that will be filled with the result of the operation
      * @return {@link FieldElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsFromBytes(final byte[] input, final byte[] output);
@@ -89,7 +89,7 @@ public final class ArkBn254Adapter
     /**
      * Creates a new zero value scalar
      *
-     * @param output the byte array that will be filled with the new scalar
+     * @param output the byte array that will be filled with the result of the operation
      * @return {@link FieldElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsZero(final byte[] output);
@@ -97,7 +97,7 @@ public final class ArkBn254Adapter
     /**
      * Creates a new one value scalar.
      *
-     * @param output the byte array that will be filled with the new scalar
+     * @param output the byte array that will be filled with the result of the operation
      * @return {@link FieldElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int fieldElementsOne(final byte[] output);
@@ -186,20 +186,20 @@ public final class ArkBn254Adapter
     public native int fieldElementsBatchAdd(final byte[][] scalars, final byte[] output);
 
     /**
-     * Creates a GroupElement byte internal representation from a seed byte array
+     * Creates a point from a seed byte array
      * @param group on which of the groups of the curve to perform the operation
-     * @param input a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
-     * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal representation of the point
+     * @param input a byte array that contains the internal represents the point
+     * @param output the byte array that will be filled with the result of the operation
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int groupElementsFromSeed(final int group, final byte[] input, final byte[] output);
 
     /**
-     * Attempts to obtain a GroupElement byte internal representation from a given x coordinate
+     * Attempts to obtain a point from a given x coordinate
      *
      * @param group  on which of the groups of the curve to perform the operation
      * @param input  a 256-bit byte array of that represents an x coordinate
-     * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal
+     * @param output an array to hold the internal
      *               representation of the point, if the given x coordinate is not in the curve, the output will be
      *               unchanged
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE}
@@ -208,33 +208,33 @@ public final class ArkBn254Adapter
     public native int groupElementsFromXCoordinate(final int group, final byte[] input, final byte[] output);
 
     /**
-     * Returns the GroupElement byte internal representation of the point at infinity
+     * Returns the point at infinity
      * @param group on which of the groups of the curve to perform the operation
-     * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal representation of the point
+     * @param output the byte array that will be filled with the result of the operation
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int groupElementsZero(final int group, final byte[] output);
 
     /**
-     * Returns the GroupElement byte internal representation of the generator point of the group
+     * Returns the generator point of the group
      * @param group on which of the groups of the curve to perform the operation
-     * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal representation of the point
+     * @param output the byte array that will be filled with the result of the operation
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int groupElementsGenerator(final int group, final byte[] output);
 
     /**
-     * returns if two representations are the same
+     * Returns if two points are the same
      *
      * @param group on which of the groups of the curve to perform the operation
-     * @param value a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
-     * @param other a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)}  that contains the internal represents the point
+     * @param value a byte array that contains the internal represents the point
+     * @param other a byte array  that contains the internal represents the point
      * @return 0 if false, 1 if true, or a less than zero error code if there was an error
      */
     public native int groupElementsEquals(final int group, final byte[] value, final byte[] other);
 
     /**
-     * Returns the byte size of a groupElement internal representation.
+     * Returns the byte size of a point internal representation.
      *
      * @param group on which of the groups of the curve to perform the operation
      * @return the byte size of a groupElement internal representation.
@@ -245,9 +245,9 @@ public final class ArkBn254Adapter
      * Returns the addition of code {@code value} and  {@code other}.
      *
      * @param group on which of the groups of the curve to perform the operation
-     * @param value a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
-     * @param other a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
-     * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal representation of the point
+     * @param value a byte array that contains the internal represents the point
+     * @param other a byte array that contains the internal represents the point
+     * @param output the byte array that will be filled with the result of the operation
      * @return 0 if false, 1 if true, or a less than zero error code if there was an error
      */
     public native int groupElementsAdd(final int group, final byte[] value, final byte[] other, final byte[] output);
@@ -256,58 +256,68 @@ public final class ArkBn254Adapter
      * Returns the scalar multiplication between code {@code point} and {@code scalar}.
      *
      * @param group on which of the groups of the curve to perform the operation
-     * @param point a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that will be used as the seed to create the point
-     * @param scalar a byte array of {@link FieldElementsLibraryAdapter#fieldElementsSize()}} that contains the representation of the scalar
-     * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal representation of the point
+     * @param point a byte array that will be used as the seed to create the point
+     * @param scalar a byte array  that contains the representation of the scalar
+     * @param output the byte array that will be filled with the result of the operation
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int groupElementsScalarMul(
             final int group, final byte[] point, final byte[] scalar, final byte[] output);
 
     /**
-     * Returns the scalar multiplication between code {@code point} and {@code scalar}.
+     * Validates if a byte array is a valid representation of a point in the curve
      *
      * @param group on which of the groups of the curve to perform the operation
-     * @param point a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that will be used as the seed to create the point
-     * @param scalar a long representation of the scalar
-     * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal representation of the point
-     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
-     */
-    @Deprecated
-    public native int groupElementsLongMul(final int group, final byte[] point, final long scalar, final byte[] output);
-    /**
-     * Validates if a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} is a valid representation of a point in the curve
-     *
-     * @param group on which of the groups of the curve to perform the operation
-     * @param point a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that will be used as the seed to create the
+     * @param point a byte array that will be used as the seed to create the
      *              point
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE} if the point is invalid or a less than zero error code if there was an error
      */
     public native int groupElementsBytes(final int group, final byte[] point);
 
     /**
-     * Returns the result of the multiplication of the
-     * {@link GroupElementsLibraryAdapter#groupElementsGenerator(int, byte[])} for each scalar in the {@code scalars}
-     * list
+     * Returns the scalar multiplication between code {@code point} and {@code scalar}.
      *
-     * @param group   on which of the groups of the curve to perform the operation
-     * @param scalars a long array of scalar
-     * @param points a byte matrix representing a list of N byte arrays of
-     *                {@link GroupElementsLibraryAdapter#groupElementsSize(int)} size each representing a scalar
-     * @param outputs a byte matrix of N byte arrays {@link GroupElementsLibraryAdapter#groupElementsSize(int)}size to
-     *                hold the internal representation of the generator point times the scalar in {@code scalars}
+     * @param group on which of the groups of the curve to perform the operation
+     * @param point a byte array that will be used as the seed to create the point
+     * @param scalar a long representation of the scalars
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE} if the point is invalid or a less than zero error code if there was an error
+     */
+    public native int groupElementsLongMul(final int group, final byte[] point, final long scalar, final byte[] output);
+
+    /**
+     * Multi-scalar-multiplication operation.
+     * Multiplies a list of scalar values with a list of points and returns the result of adding them up
+     *
+     * @param group  on which of the groups of the curve to perform the operation
+     * @param scalars a byte matrix representing a list of N scalar
+     * @param points a byte matrix representing a list of N points
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE} if the point is invalid or a less than zero error code if there was an error
+     */
+    public native int groupElementsMsm(
+            final int group, final byte[][] scalars, final byte[][] points, final byte[] output);
+
+    /**
+     * Multi-scalar-multiplication operation.
+     * Multiplies a list of scalar values with a list of points and returns the result of adding them up
+     *
+     * @param group  on which of the groups of the curve to perform the operation
+     * @param scalars a long array representing a list of N scalars
+     * @param points a byte matrix representing a list of N points
+     * @param output the byte array that will be filled with the result of the operation
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an
      * error
      */
-    public native int groupElementsBatchScalarMul(
-            final int group, final byte[][] scalars, final byte[][] points, final byte[] outputs);
+    public native int groupElementsMsm(
+            final int group, final long[] scalars, final byte[][] points, final byte[] output);
 
     /**
      * Returns the point that is the result of the total sum a collection of points
      *
      * @param group on which of the groups of the curve to perform the operation
-     * @param input a byte matrix representing a list of N byte arrays of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} representing each point
-     * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal representation of the point
+     * @param input a byte matrix representing a list of N byte arrays representing each point
+     * @param output the byte array that will be filled with the result of the operation
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     public native int groupElementsBatchAdd(final int group, final byte[][] input, final byte[] output);
@@ -316,10 +326,10 @@ public final class ArkBn254Adapter
      * returns if the result of the pairings operation between the first two points is equals to the result of the pairings operation between the second two
      * {@code value2} and {@code value4} should belong to opposite groups than {@code value1} {@code value3}
      *
-     * @param value1 a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
-     * @param value2 a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
-     * @param value3 a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
-     * @param value4 a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that contains the internal represents the point
+     * @param value1 a byte array that contains the internal represents the point
+     * @param value2 a byte array that contains the internal represents the point
+     * @param value3 a byte array that contains the internal represents the point
+     * @param value4 a byte array that contains the internal represents the point
      * @return 0 if false, 1 if true, or a less than zero error code if there was an error
      */
     public native int pairingsEquals(

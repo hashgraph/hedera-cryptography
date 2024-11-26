@@ -14,20 +14,17 @@
 // limitations under the License.
 //
 
-use ark_ec::{AffineRepr, CurveConfig, CurveGroup};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use rand::Rng;
+use crate::jni_helpers;
 use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
+use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::{Field, PrimeField};
-use jni::JNIEnv;
+use ark_serialize::CanonicalSerialize;
 use jni::objects::JByteArray;
 use jni::sys::jint;
-use crate::jni_helpers;
+use jni::JNIEnv;
+use rand::Rng;
 
 /// Generic utility functions to instantiate and operate with curve points
-
-/// The Scalar field. It is the same Fr as bn254_field_elements. Fr is always [0,1,...r-1].
-type ScalarField<G> = <<G as CurveGroup>::Config as CurveConfig>::ScalarField;
 
 /// *********
 /// Factories
@@ -57,23 +54,10 @@ pub fn group_elements_add<G: CurveGroup>(value: G, value2: G) -> G {
     value + value2
 }
 
-/// multiplies a point with a scalar, ark uses this annotation to represent pow
-pub fn group_elements_scalar_multiply<G: CurveGroup>(value: G, value2: ScalarField<G>) -> G {
-    value.mul(value2)
-}
-
 /// returns the total sum of all the point in a collection
 pub fn group_elements_total_sum<G: CurveGroup>(values: Vec<G>) -> G {
     values.iter().fold(G::zero(), |acc, point| acc + point)
 }
-
-/// given a vec of N scalars, and N points return the sum of multiplying s[0]*p[0]+...+s[N]*p[N]
-pub fn group_elements_batch_acum_multiply<G: CurveGroup>(scalars:Vec< ScalarField<G>>, points: Vec<G>) -> G {
-    points.iter().zip(scalars)
-        .map(|pair| pair.0.mul(pair.1))
-        .fold(G::zero(),|acum, value| acum+value )
-}
-
 
 /// ******************
 /// (De)/Serialization
@@ -96,9 +80,7 @@ pub fn group_elements_deserialize<G: CurveGroup>(value: &[u8]) -> Result<G, Stri
 }
 
 /// returns the point from a projective byte representation of a point
-pub fn group_elements_deserialize_and_validate<G: CurveGroup>(
-    value: &[u8],
-) -> Result<G, String> {
+pub fn group_elements_deserialize_and_validate<G: CurveGroup>(value: &[u8]) -> Result<G, String> {
     match G::deserialize_uncompressed(value) {
         Ok(val) => Ok(val),
         Err(err) => Err(err.to_string()),
@@ -106,12 +88,10 @@ pub fn group_elements_deserialize_and_validate<G: CurveGroup>(
 }
 
 /// Converts a u8 array into the BaseField representation of the group (the field where the coordinates are represented) if there is such representation
-pub fn coordinate_from_bytes<G: SWCurveConfig>(candidate: &[u8]) ->Option<G::BaseField>{
+pub fn coordinate_from_bytes<G: SWCurveConfig>(candidate: &[u8]) -> Option<G::BaseField> {
     if G::BaseField::extension_degree() == 1 {
         // if the order is 1 the op is simpler
-        let f = <G::BaseField as Field>::BasePrimeField::from_be_bytes_mod_order(
-            &candidate,
-        );
+        let f = <G::BaseField as Field>::BasePrimeField::from_be_bytes_mod_order(&candidate);
         G::BaseField::from_base_prime_field_elems(&[f])
     } else {
         G::BaseField::from_random_bytes(&candidate)
@@ -120,13 +100,15 @@ pub fn coordinate_from_bytes<G: SWCurveConfig>(candidate: &[u8]) ->Option<G::Bas
 
 /// returns the point from an x coordinate if the point is in the curve
 pub fn point_from_x<CC: SWCurveConfig>(x: CC::BaseField) -> Option<Affine<CC>> {
-    if let Some(p) = Affine::<CC>::get_point_from_x_unchecked(x, false){
+    if let Some(p) = Affine::<CC>::get_point_from_x_unchecked(x, false) {
         let scaled = p.mul_by_cofactor();
         if scaled.is_zero() {
             return None;
         }
         Some(scaled)
-    }else { None }
+    } else {
+        None
+    }
 }
 
 /// returns the point from a hash if the point is in the curve
@@ -140,8 +122,9 @@ pub fn elements_from_hash_generic<CC: SWCurveConfig>(
         return jni_helpers::BUSINESS_ERROR_POINT_NOT_IN_CURVE;
     }
     let point_option = point_from_x::<CC>(x_option.unwrap());
-       if point_option.is_none() {
-           return jni_helpers::BUSINESS_ERROR_POINT_NOT_IN_CURVE;
-       }
-    jni_helpers::serialize_to_jbytearray::<Affine<CC>>(env, &point_option.unwrap(), output).unwrap_or_else(|value| value)
+    if point_option.is_none() {
+        return jni_helpers::BUSINESS_ERROR_POINT_NOT_IN_CURVE;
+    }
+    jni_helpers::serialize_to_jbytearray::<Affine<CC>>(env, &point_option.unwrap(), output)
+        .unwrap_or_else(|value| value)
 }

@@ -122,3 +122,20 @@ pub fn scalars_curve_batch_multiply<G: CurveGroup>(scalars: Vec<ScalarField<G>>)
         .iter()
         .fold(G::ScalarField::one(), |acum, value| acum * value)
 }
+
+/// multiplies two scalars and returns the result
+pub fn scalars_curve_group_elements_multiply<G: CurveGroup>(scalar: ScalarField<G>, point: G) -> G {
+    point * scalar
+}
+
+/// given a vec of N scalars, and N points return the sum of multiplying s[0]*p[0]+...+s[N]*p[N]
+pub fn scalars_curve_group_elements_msm<G: CurveGroup>(
+    scalars: Vec<ScalarField<G>>,
+    points: Vec<G>,
+) -> G {
+    points
+        .iter()
+        .zip(scalars)
+        .map(|pair| pair.0.mul(pair.1))
+        .fold(G::zero(), |acum, value| acum + value)
+}

@@ -65,7 +65,6 @@ public interface GroupElement {
      * @return a new group element which is this group element multiplied by the field element
      */
     @NonNull
-    @Deprecated
     GroupElement multiply(long other);
 
     /**

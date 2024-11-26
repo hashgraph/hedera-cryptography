@@ -146,8 +146,21 @@ public interface GroupElementsLibraryAdapter extends RandomElementsAdapter {
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an
      * error
      */
-    int groupElementsBatchScalarMul(
-            final int group, final byte[][] scalars, final byte[][] points, final byte[] outputs);
+    int groupElementsMsm(final int group, final byte[][] scalars, final byte[][] points, final byte[] outputs);
+
+    /**
+     * Returns the result of the multiplication of each point in the  {@code points} list with each scalar in the {@code scalars} list.
+     *
+     * @param group   on which of the groups of the curve to perform the operation
+     * @param scalars an int array representing a list of N scalars
+     * @param points a byte matrix representing a list of N byte arrays of
+     *                {@link GroupElementsLibraryAdapter#groupElementsSize(int)} size each representing a point
+     * @param outputs a byte matrix of N byte arrays {@link GroupElementsLibraryAdapter#groupElementsSize(int)}size to
+     *                hold the internal representation of the generator point times the scalar in {@code scalars}
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an
+     * error
+     */
+    int groupElementsMsm(final int group, final long[] scalars, final byte[][] points, final byte[] outputs);
 
     /**
      * Returns the point that is the result of the total sum a collection of points

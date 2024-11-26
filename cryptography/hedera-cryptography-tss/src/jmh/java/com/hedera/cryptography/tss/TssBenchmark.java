@@ -57,7 +57,7 @@ import org.openjdk.jmh.annotations.Warmup;
  */
 @State(Scope.Benchmark)
 @Timeout(time = 10, timeUnit = TimeUnit.HOURS)
-@Fork(value = 1, jvmArgsAppend = "-Xmx16048m")
+@Fork(value = 1, jvmArgsAppend = "-Xmx48g")
 @Threads(10)
 @Warmup(iterations = 0)
 @Measurement(iterations = 1)
@@ -68,7 +68,7 @@ public class TssBenchmark {
     public static final Random TEST_RNG = new Random();
     public static Random rng = new Random(TEST_RNG.nextInt());
 
-    @Param({"P50S2"})
+    @Param({"P100S1", "P100S3", "P100S5", "P100S10", "P130S10"})
     static String benchmarkTest;
 
     @Param({"SHORT_SIGNATURES", "SHORT_PUBLIC_KEYS"})

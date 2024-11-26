@@ -49,6 +49,7 @@ public class AltBn128 extends PairingFriendlyCurve {
     protected void doInit() {
         // We force the library loading in the init method
         ArkBn254Adapter.getInstance();
+        final Class<AltBn128Group> altBn128GroupClass = AltBn128Group.class; // if it was not loaded
     }
 
     /**

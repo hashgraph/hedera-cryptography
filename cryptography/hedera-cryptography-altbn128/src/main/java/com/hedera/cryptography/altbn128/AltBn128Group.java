@@ -146,22 +146,15 @@ public class AltBn128Group implements Group {
     }
 
     /**
-     * Multiplies a list of scalar values for with a list of group elements and returns the result of adding them up
-     *
-     *
-     * @param elements the scalar elements to multiply the generator
-     * @return same size list of points that are the generator point of this curve times the scalar in the same index
-     * @throws NullPointerException if the elements is null
-     * @throws IllegalArgumentException if the bytes are n
-     * @throws AltBn128Exception in case of error.
+     * {@inheritDoc}
      */
     @NonNull
     @Override
-    public GroupElement mbc(@NonNull final List<GroupElement> elements, @NonNull final List<FieldElement> scalars) {
+    public GroupElement msm(final @NonNull List<GroupElement> elements, final @NonNull List<FieldElement> scalars) {
         Objects.requireNonNull(elements, "elements must not be null");
         Objects.requireNonNull(scalars, "scalars must not be null");
         if (scalars.size() != elements.size()) {
-            throw new AltBn128Exception("Number of scalars and elements do not match");
+            throw new IllegalArgumentException("Number of scalars and elements do not match");
         }
         final byte[][] allElements = elements.stream()
                 .map(e -> AltBn128GroupElement.isSameAltBn128GroupElement(this, e))
@@ -172,7 +165,27 @@ public class AltBn128Group implements Group {
                 .map(e -> ValidationUtils.expectOrThrow(AltBn128FieldElement.class, e))
                 .map(AltBn128FieldElement::getRepresentation)
                 .toArray(byte[][]::new);
-        final byte[] groupElements = facade.batchMultiply(allScalars, allElements);
+        final byte[] groupElements = facade.msm(allScalars, allElements);
+        return new AltBn128GroupElement(this, groupElements);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public GroupElement msm(final @NonNull List<GroupElement> elements, final @NonNull long... scalars) {
+        Objects.requireNonNull(elements, "elements must not be null");
+        Objects.requireNonNull(scalars, "scalars must not be null");
+        if (scalars.length != elements.size()) {
+            throw new IllegalArgumentException("Number of scalars and elements do not match");
+        }
+        final byte[][] allElements = elements.stream()
+                .map(e -> AltBn128GroupElement.isSameAltBn128GroupElement(this, e))
+                .map(AltBn128GroupElement::getRepresentation)
+                .toArray(byte[][]::new);
+
+        final byte[] groupElements = facade.msm(scalars, allElements);
         return new AltBn128GroupElement(this, groupElements);
     }
 
