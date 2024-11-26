@@ -131,7 +131,7 @@ public class AltBn128FieldElement implements FieldElement {
     @NonNull
     @Override
     public BigInteger toBigInteger() {
-        return ByteArrayUtils.fromLittleEndianBytes(representation);
+        return new BigInteger(toByteArray());
     }
 
     /**

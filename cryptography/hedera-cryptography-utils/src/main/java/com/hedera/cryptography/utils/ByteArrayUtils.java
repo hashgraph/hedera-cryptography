@@ -49,6 +49,7 @@ public class ByteArrayUtils {
      * @throws NullPointerException if the BigInteger is null
      */
     @NonNull
+    @Deprecated
     public static byte[] toLittleEndianBytes(@NonNull final BigInteger value) {
         final byte[] bigEndianBytes =
                 Objects.requireNonNull(value, "value must not be null").toByteArray();
@@ -65,52 +66,20 @@ public class ByteArrayUtils {
      * @throws IllegalArgumentException if the byte array length is not divisible by the chunk size
      */
     @NonNull
-    public static List<BigInteger> toBigIntegers(final @NonNull byte[] byteArray, int chunkSize) {
+    public static List<BigInteger> toBigIntegers(final @NonNull byte[] byteArray, final int chunkSize) {
         if (byteArray.length % chunkSize != 0) {
             throw new IllegalArgumentException("Byte array length must be divisible by the chunk size.");
         }
 
-        List<BigInteger> bigIntegers = new ArrayList<>();
+        final List<BigInteger> bigIntegers = new ArrayList<>();
 
         for (int i = 0; i < byteArray.length; i += chunkSize) {
-            byte[] chunk = Arrays.copyOfRange(byteArray, i, i + chunkSize);
-            BigInteger bigInteger = new BigInteger(reverseBytes(chunk, chunkSize));
+            final byte[] chunk = Arrays.copyOfRange(byteArray, i, i + chunkSize);
+            final BigInteger bigInteger = new BigInteger(chunk);
             bigIntegers.add(bigInteger);
         }
 
         return bigIntegers;
-    }
-    /**
-     * Converts a little-endian byte array into a BigInteger.
-     *
-     * @param littleEndianBytes the byte array in little-endian order
-     * @return the corresponding BigInteger
-     */
-    @NonNull
-    public static BigInteger fromLittleEndianBytes(@NonNull final byte[] littleEndianBytes) {
-        Objects.requireNonNull(littleEndianBytes, "littleEndianBytes must not be null");
-        return new BigInteger(reverseBytes(littleEndianBytes, littleEndianBytes.length));
-    }
-
-    /**
-     * Reverses the order of bytes in the array.
-     *
-     * @param input the byte array to reverse
-     * @param size the end size of the array
-     * @return the reversed byte array
-     */
-    @NonNull
-    private static byte[] reverseBytes(@NonNull byte[] input, final int size) {
-        ByteBuffer buffer = ByteBuffer.allocate(size);
-        buffer.put(input);
-        buffer.flip();
-
-        final byte[] output = new byte[size];
-
-        for (int i = 0; i < input.length; i++) {
-            output[input.length - i - 1] = input[i];
-        }
-        return output;
     }
 
     /**

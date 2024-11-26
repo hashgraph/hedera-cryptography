@@ -16,8 +16,10 @@
 
 package com.hedera.cryptography.altbn128;
 
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
@@ -162,5 +164,18 @@ public enum ArkworksSerializationInfo {
 
     public static void removeFlags(final byte[] bytes) {
         bytes[bytes.length - 1] = (byte) (bytes[bytes.length - 1] & 0b00111111);
+    }
+
+    public static byte[] getCoordinate(final byte[] bytes, final boolean isX) {
+        if (isX) {
+            return Arrays.copyOfRange(bytes, 0, bytes.length / 2);
+        }
+        return Arrays.copyOfRange(bytes, bytes.length / 2, bytes.length);
+    }
+
+    public static void reverseCoordinateOrder(final byte[] bytes) {
+        for (int i = 0; i < bytes.length; i+=NUMBER_SIZE_BYTES) {
+            ByteArrayUtils.reverseByteOrder(bytes, i, i+NUMBER_SIZE_BYTES);
+        }
     }
 }

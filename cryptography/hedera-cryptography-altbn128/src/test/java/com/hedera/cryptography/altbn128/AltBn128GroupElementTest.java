@@ -22,6 +22,7 @@ import static org.mockito.Mockito.mock;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.utils.ByteArrayUtils;
+import com.hedera.cryptography.utils.test.fixtures.ByteUtils;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -112,13 +113,16 @@ class AltBn128GroupElementTest {
 
     @Test
     void g2GeneratorIsWellKnown() {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+        final GroupElement generator = new AltBn128Group(AltBN128CurveGroup.GROUP2).generator();
         assertEquals(
-                ByteArrayUtils.toBigIntegers(group.generator().toBytes(), 32),
+                ByteArrayUtils.toBigIntegers(generator.getXCoordinate(), 32),
                 List.of(
                         new BigInteger("10857046999023057135944570762232829481370756359578518086990519993285655852781"),
-                                new BigInteger(
-                                        "11559732032986387107991004021392285783925812861821192530917403151452391805634"),
+                        new BigInteger(
+                                "11559732032986387107991004021392285783925812861821192530917403151452391805634")));
+        assertEquals(
+                ByteArrayUtils.toBigIntegers(generator.getYCoordinate(), 32),
+                List.of(
                         new BigInteger("8495653923123431417604973247489272438418190587263600148770280649306958101930"),
                                 new BigInteger(
                                         "4082367875863433681332203403145435568316851327593401208105741076214120093531")));

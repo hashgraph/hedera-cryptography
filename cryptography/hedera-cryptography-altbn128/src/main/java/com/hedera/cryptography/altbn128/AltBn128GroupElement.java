@@ -16,6 +16,9 @@
 
 package com.hedera.cryptography.altbn128;
 
+import static com.hedera.cryptography.altbn128.ArkworksSerializationInfo.getCoordinate;
+import static com.hedera.cryptography.altbn128.ArkworksSerializationInfo.removeFlags;
+import static com.hedera.cryptography.utils.ByteArrayUtils.reverseByteOrder;
 import static com.hedera.cryptography.utils.ValidationUtils.expectOrThrow;
 
 import com.hedera.cryptography.altbn128.facade.GroupFacade;
@@ -153,15 +156,19 @@ public class AltBn128GroupElement implements GroupElement {
 
     @Override
     public byte[] getXCoordinate() {
-        final byte[] x = Arrays.copyOfRange(representation, 0, representation.length / 2);
-        return ByteArrayUtils.reverseByteOrder(x);
+        final byte[] x = getCoordinate(representation, true);
+        //return reverseByteOrder(x);
+        ArkworksSerializationInfo.reverseCoordinateOrder(x);
+        return x;
     }
 
     @Override
     public byte[] getYCoordinate() {
-        final byte[] y = Arrays.copyOfRange(representation, representation.length / 2, representation.length);
-        ArkworksSerializationInfo.removeFlags(y);
-        return ByteArrayUtils.reverseByteOrder(y);
+        final byte[] y = getCoordinate(representation, false);
+        removeFlags(y);
+        //return reverseByteOrder(y);
+        ArkworksSerializationInfo.reverseCoordinateOrder(y);
+        return y;
     }
 
     @Override
