@@ -52,8 +52,8 @@ public class ArkworksSerializationTests {
      * Each element has unused bits, the expectation is that when generating a random element, these bits are unset.
      */
     @ParameterizedTest
-    @EnumSource(ElementInfo.class)
-    void unusedBitsAreUnset(final ElementInfo info, final Random rng) {
+    @EnumSource(ArkworksSerializationInfo.class)
+    void unusedBitsAreUnset(final ArkworksSerializationInfo info, final Random rng) {
         final byte[] bytes = randomElementBytes(info, rng);
         final BitSet bitSet = BitSet.valueOf(bytes);
 
@@ -80,8 +80,8 @@ public class ArkworksSerializationTests {
      * except for the zero flag bit, if it exists.
      */
     @ParameterizedTest
-    @EnumSource(ElementInfo.class)
-    void zeroElementBits(final ElementInfo info) {
+    @EnumSource(ArkworksSerializationInfo.class)
+    void zeroElementBits(final ArkworksSerializationInfo info) {
         final byte[] bytes = getFacade(info).zero();
         final BitSet bitSet = BitSet.valueOf(bytes);
 
@@ -100,10 +100,10 @@ public class ArkworksSerializationTests {
      */
     @ParameterizedTest
     @EnumSource(
-            value = ElementInfo.class,
+            value = ArkworksSerializationInfo.class,
             // Y coordinate flag is only present in group elements
             names = {"GROUP1_ELEMENT", "GROUP2_ELEMENT"})
-    void equalsConsistencyYCoordinate(final ElementInfo info, final Random rng) {
+    void equalsConsistencyYCoordinate(final ArkworksSerializationInfo info, final Random rng) {
         final byte[] bytes = randomElementBytes(info, rng);
         final BitSet bitSet = BitSet.valueOf(bytes);
         bitSet.flip(info.getYCoordinateFlagBitIndex());
@@ -119,10 +119,10 @@ public class ArkworksSerializationTests {
      */
     @ParameterizedTest
     @EnumSource(
-            value = ElementInfo.class,
+            value = ArkworksSerializationInfo.class,
             // Y coordinate flag is only present in group elements
             names = {"GROUP1_ELEMENT", "GROUP2_ELEMENT"})
-    void equalsConsistencyZeroFlag(final ElementInfo info, final Random rng) {
+    void equalsConsistencyZeroFlag(final ArkworksSerializationInfo info, final Random rng) {
         final ElementFacade facade = getFacade(info);
         final byte[] zeroBytes = facade.zero();
         final BitSet bitSet = BitSet.valueOf(zeroBytes);
@@ -156,11 +156,11 @@ public class ArkworksSerializationTests {
      */
     @ParameterizedTest
     @EnumSource(
-            value = ElementInfo.class,
+            value = ArkworksSerializationInfo.class,
             // Arkworks mods the field element when a larger one is deserialized
             // Until we figure out the resolution on this, we will disable the test for field elements
             names = {"GROUP1_ELEMENT", "GROUP2_ELEMENT"})
-    void flippingUnusedBits(final ElementInfo info, final Random rng) {
+    void flippingUnusedBits(final ArkworksSerializationInfo info, final Random rng) {
         final byte[] bytes = randomElementBytes(info, rng);
         final BitSet bitSet = BitSet.valueOf(bytes);
 
@@ -181,7 +181,7 @@ public class ArkworksSerializationTests {
      * @param rng  The random number generator
      * @return The bytes of the generated element
      */
-    private static @NonNull byte[] randomElementBytes(final ElementInfo info, final Random rng) {
+    private static @NonNull byte[] randomElementBytes(final ArkworksSerializationInfo info, final Random rng) {
         final ElementFacade facade = getFacade(info);
         final byte[] seed = new byte[facade.randomSeedSize()];
         rng.nextBytes(seed);
@@ -194,8 +194,8 @@ public class ArkworksSerializationTests {
      * @param info The element info
      * @return The facade
      */
-    private static @NonNull ElementFacade getFacade(final ElementInfo info) {
-        return info == ElementInfo.FIELD_ELEMENT
+    private static @NonNull ElementFacade getFacade(final ArkworksSerializationInfo info) {
+        return info == ArkworksSerializationInfo.FIELD_ELEMENT
                 ? new FieldFacade(ArkBn254Adapter.getInstance())
                 : new GroupFacade(
                         info.getGroup().getId(),

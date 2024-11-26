@@ -148,8 +148,7 @@ public class AltBn128FieldElement implements FieldElement {
     @NonNull
     @Override
     public byte[] toByteArray() {
-        //TODO what should be the size of this array?
-        return toBigInteger().toByteArray();
+        return ByteArrayUtils.reverseByteOrder(representation.clone());
     }
 
     /**

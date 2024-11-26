@@ -67,4 +67,24 @@ record TestGroupElement(Group group) implements GroupElement {
     public byte[] toBytes() {
         return BYTES;
     }
+
+    @Override
+    public byte[] getXCoordinate() {
+        return BYTES;
+    }
+
+    @Override
+    public byte[] getYCoordinate() {
+        return BYTES;
+    }
+
+    @Override
+    public boolean isZero() {
+        return false;
+    }
+
+    @Override
+    public boolean isYSmaller() {
+        return false;
+    }
 }

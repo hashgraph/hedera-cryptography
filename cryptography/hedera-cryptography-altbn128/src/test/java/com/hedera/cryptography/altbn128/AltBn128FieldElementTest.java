@@ -27,7 +27,6 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.utils.ByteArrayUtils;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -103,9 +102,10 @@ class AltBn128FieldElementTest {
 
     @Test
     void fieldElementFromByteArrayAndBack() {
-        final BigInteger bigInteger = new BigInteger("123456789");
         final var field = new AltBn128Field();
-        final byte[] originalArray = bigInteger.toByteArray();
+        final byte[] originalArray = new byte[]
+                {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+                        24, 25, 26, 27, 28, 29, 30, 31, 32};
         final FieldElement element = field.fromByteArray(originalArray);
         final byte[] secondArray = element.toByteArray();
         assertArrayEquals(originalArray, secondArray);
@@ -125,16 +125,16 @@ class AltBn128FieldElementTest {
         assertEquals(BigInteger.TEN, field.fromLong(10L).toBigInteger());
         final BigInteger rMinusOne = R.subtract(BigInteger.ONE);
         assertArrayEquals(
-                ByteArrayUtils.toLittleEndianBytes(rMinusOne, SIZE),
-                field.fromBytes(ByteArrayUtils.toLittleEndianBytes(rMinusOne, SIZE))
+                ByteArrayUtils.toLittleEndianBytes(rMinusOne),
+                field.fromBytes(ByteArrayUtils.toLittleEndianBytes(rMinusOne))
                         .toBytes());
         assertEquals(
                 BigInteger.ZERO,
-                field.fromBytes(ByteArrayUtils.toLittleEndianBytes(R, SIZE)).toBigInteger());
+                field.fromBytes(ByteArrayUtils.toLittleEndianBytes(R)).toBigInteger());
         final BigInteger rPlusOne = R.add(BigInteger.ONE);
         assertEquals(
                 BigInteger.ONE,
-                field.fromBytes(ByteArrayUtils.toLittleEndianBytes(rPlusOne, SIZE))
+                field.fromBytes(ByteArrayUtils.toLittleEndianBytes(rPlusOne))
                         .toBigInteger());
     }
 

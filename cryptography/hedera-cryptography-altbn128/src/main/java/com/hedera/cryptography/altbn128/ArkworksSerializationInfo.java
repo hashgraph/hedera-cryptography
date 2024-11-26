@@ -27,7 +27,7 @@ import java.util.Set;
  * This enum contains Arkworks serialization information about the different types of elements that can be used in the
  * AltBN128 curve. Each element has a number of 254-bit numbers, and optionally flags in the last number.
  */
-public enum ElementInfo {
+public enum ArkworksSerializationInfo {
     /** {@link AltBn128FieldElement} */
     FIELD_ELEMENT(1, false, null),
     /** {@link AltBn128GroupElement} with group {@link AltBN128CurveGroup#GROUP1} */
@@ -44,6 +44,8 @@ public enum ElementInfo {
     private static final int BIT_FLAG_Y_COORDINATE_POSITION = 0;
     /** The index of the zero element flag starting from the last bit */
     private static final int BIT_FLAG_ZERO_POSITION = 1;
+    private static final byte MASK_Y_COORDINATE = (byte) 0b10000000;
+    private static final byte MASK_ZERO = 0b01000000;
 
     /** The number of 254-bit numbers contained in this element */
     private final int numberCount;
@@ -61,7 +63,7 @@ public enum ElementInfo {
      * @param hasFlags    Whether this element contains flags in the last number
      * @param group       The group of the element, if it is a group element
      */
-    ElementInfo(final int numberCount, final boolean hasFlags, @Nullable final AltBN128CurveGroup group) {
+    ArkworksSerializationInfo(final int numberCount, final boolean hasFlags, @Nullable final AltBN128CurveGroup group) {
         this.numberCount = numberCount;
         this.hasFlags = hasFlags;
         this.group = group;
@@ -77,6 +79,13 @@ public enum ElementInfo {
             unusedBits.add(NUMBER_SIZE_BYTES * Byte.SIZE * i - 2);
         }
         this.unusedBits = Collections.unmodifiableSet(unusedBits);
+    }
+
+    public static ArkworksSerializationInfo fromGroup(final AltBN128CurveGroup group) {
+        return switch (group) {
+            case GROUP1 -> GROUP1_ELEMENT;
+            case GROUP2 -> GROUP2_ELEMENT;
+        };
     }
 
     /**
@@ -141,5 +150,13 @@ public enum ElementInfo {
      */
     public int getZeroFlagBitIndex() {
         return NUMBER_SIZE_BYTES * Byte.SIZE * numberCount - 1 - BIT_FLAG_ZERO_POSITION;
+    }
+
+    public boolean isZeroElement(final byte[] bytes) {
+        return (bytes[bytes.length - 1] & MASK_ZERO) == MASK_ZERO;
+    }
+
+    public boolean isYSmaller(final byte[] bytes) {
+        return (bytes[bytes.length - 1] & MASK_Y_COORDINATE) == MASK_Y_COORDINATE;
     }
 }

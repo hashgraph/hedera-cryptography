@@ -42,52 +42,18 @@ public class ByteArrayUtils {
     }
 
     /**
-     * Converts a BigInteger into a byte array of the given size in little-endian order.
+     * Converts a BigInteger into a byte array in little-endian order.
      *
      * @param value the BigInteger to convert
-     * @param size  the size of the output byte array
-     * @return a byte array of the specified size representing the BigInteger in little-endian order
+     * @return a byte array of the representing the BigInteger in little-endian order
      * @throws NullPointerException if the BigInteger is null
-     * @throws IllegalArgumentException if the BigInteger cannot be represented in the specified size
      */
     @NonNull
-    public static byte[] toLittleEndianBytes(@NonNull final BigInteger value, final int size) {
-        byte[] bigEndianBytes =
+    public static byte[] toLittleEndianBytes(@NonNull final BigInteger value) {
+        final byte[] bigEndianBytes =
                 Objects.requireNonNull(value, "value must not be null").toByteArray();
-        if (bigEndianBytes.length > size) {
-            throw new IllegalArgumentException("BigInteger cannot be represented in " + size + " bytes.");
-        }
 
-        return reverseBytes(bigEndianBytes, size);
-    }
-    /**
-     * Converts a variable number of BigInteger arguments to their byte array representations,
-     * reverses each byte array, and concatenates them into a single byte array.
-     *
-     * @param size the desired final length of the resulting byte array
-     * @param args a variable number of BigInteger arguments
-     * @return a concatenated byte array containing the reversed byte array representations of each BigInteger
-     */
-    @NonNull
-    public static byte[] toLittleEndianBytes(final int size, @NonNull final BigInteger... args) {
-        int totalSize = 0;
-        ByteBuffer buffer = ByteBuffer.allocate(size);
-
-        for (BigInteger arg : args) {
-            final byte[] argByteArrays = arg.toByteArray();
-            totalSize += argByteArrays.length;
-
-            if (totalSize > size) {
-                break;
-            }
-
-            buffer.put(reverseBytes(argByteArrays, argByteArrays.length));
-        }
-        if (totalSize > size) {
-            throw new IllegalArgumentException("BigInteger cannot be represented in " + size + " bytes.");
-        }
-
-        return buffer.array();
+        return reverseByteOrder(bigEndianBytes);
     }
 
     /**

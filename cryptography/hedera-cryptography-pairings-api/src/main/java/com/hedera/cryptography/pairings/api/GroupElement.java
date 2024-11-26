@@ -95,4 +95,9 @@ public interface GroupElement {
     @NonNull
     @Deprecated(forRemoval = true)
     byte[] toBytes();
+
+    byte[] getXCoordinate();
+    byte[] getYCoordinate();
+    boolean isZero();
+    boolean isYSmaller();
 }

@@ -149,4 +149,28 @@ public class AltBn128GroupElement implements GroupElement {
     public int size() {
         return this.representation.length;
     }
+
+    @Override
+    public byte[] getXCoordinate() {
+        return new byte[0];
+    }
+
+    @Override
+    public byte[] getYCoordinate() {
+        return new byte[0];
+    }
+
+    @Override
+    public boolean isZero() {
+        return ArkworksSerializationInfo
+                .fromGroup(group.getGroup())
+                .isZeroElement(representation);
+    }
+
+    @Override
+    public boolean isYSmaller() {
+        return ArkworksSerializationInfo
+                .fromGroup(group.getGroup())
+                .isYSmaller(representation);
+    }
 }

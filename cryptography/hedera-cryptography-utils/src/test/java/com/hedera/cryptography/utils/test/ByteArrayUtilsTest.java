@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.cryptography.utils.ByteArrayUtils;
 import java.math.BigInteger;
-import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 class ByteArrayUtilsTest {
@@ -29,7 +28,7 @@ class ByteArrayUtilsTest {
     void testValidConversion() {
         BigInteger bigInt = new BigInteger("1234567890");
         int size = 32;
-        byte[] result = ByteArrayUtils.toLittleEndianBytes(bigInt, size);
+        byte[] result = ByteArrayUtils.toLittleEndianBytes(bigInt);
         BigInteger convertedBack = ByteArrayUtils.fromLittleEndianBytes(result);
         assertEquals(bigInt, convertedBack);
     }
@@ -37,15 +36,7 @@ class ByteArrayUtilsTest {
     @Test
     void testSmallerSize() {
         BigInteger bigInt = new BigInteger("1234567890");
-        assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toLittleEndianBytes(bigInt, 1));
-    }
-
-    @Test
-    void testSmallerSizeMultipleBigInts() {
-        BigInteger bigInt = new BigInteger("1");
-        BigInteger bigInt2 = new BigInteger("2");
-        assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toLittleEndianBytes(1, bigInt, bigInt2));
-        assertDoesNotThrow(() -> ByteArrayUtils.toLittleEndianBytes(2, bigInt, bigInt2));
+        assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toLittleEndianBytes(bigInt));
     }
 
     @Test
