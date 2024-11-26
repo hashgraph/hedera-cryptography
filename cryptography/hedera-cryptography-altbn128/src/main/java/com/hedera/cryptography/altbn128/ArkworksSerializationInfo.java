@@ -159,4 +159,8 @@ public enum ArkworksSerializationInfo {
     public boolean isYSmaller(final byte[] bytes) {
         return (bytes[bytes.length - 1] & MASK_Y_COORDINATE) == MASK_Y_COORDINATE;
     }
+
+    public static void removeFlags(final byte[] bytes) {
+        bytes[bytes.length - 1] = (byte) (bytes[bytes.length - 1] & 0b00111111);
+    }
 }

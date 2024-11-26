@@ -46,9 +46,17 @@ class AltBn128GroupElementTest {
 
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
-    void isZero(final AltBN128CurveGroup gr) {
-        final var group = new AltBn128Group(gr);
-        assertTrue(group.zero().isZero());
+    void zero(final AltBN128CurveGroup gr) {
+        final GroupElement zero = new AltBn128Group(gr).zero();
+        assertTrue(zero.isZero());
+        assertEquals(
+                new BigInteger("0"),
+                new BigInteger(zero.getXCoordinate())
+        );
+        assertEquals(
+                new BigInteger("0"),
+                new BigInteger(zero.getYCoordinate())
+        );
     }
 
     @ParameterizedTest
@@ -118,11 +126,15 @@ class AltBn128GroupElementTest {
 
     @Test
     void g1GeneratorIsWellKnown() {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP1);
-
+        final GroupElement generator = new AltBn128Group(AltBN128CurveGroup.GROUP1).generator();
         assertEquals(
-                ByteArrayUtils.toBigIntegers(group.generator().toBytes(), 32),
-                List.of(new BigInteger("1"), new BigInteger("2")));
+                new BigInteger("1"),
+                new BigInteger(generator.getXCoordinate())
+        );
+        assertEquals(
+                new BigInteger("2"),
+                new BigInteger(generator.getYCoordinate())
+        );
     }
 
     @ParameterizedTest

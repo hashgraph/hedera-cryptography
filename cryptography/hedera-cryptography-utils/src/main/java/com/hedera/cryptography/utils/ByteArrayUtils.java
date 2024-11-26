@@ -122,11 +122,17 @@ public class ByteArrayUtils {
      */
     @NonNull
     public static byte[] reverseByteOrder(@NonNull final byte[] array) {
-        for(int i = 0; i < array.length / 2; i++)
-        {
+        return reverseByteOrder(array, 0, array.length);
+    }
+
+    @NonNull
+    public static byte[] reverseByteOrder(@NonNull final byte[] array, final int start, final int end) {
+        final int iLimit = start + (end - start) / 2;
+        for (int i = start; i < iLimit; i++) {
+            final int j = end - (i - start) - 1;
             final byte tmp = array[i];
-            array[i] = array[array.length - i - 1];
-            array[array.length - i - 1] = tmp;
+            array[i] = array[j];
+            array[j] = tmp;
         }
         return array;
     }

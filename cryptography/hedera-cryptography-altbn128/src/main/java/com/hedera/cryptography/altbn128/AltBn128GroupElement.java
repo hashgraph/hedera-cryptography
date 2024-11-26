@@ -22,6 +22,7 @@ import com.hedera.cryptography.altbn128.facade.GroupFacade;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.Objects;
@@ -152,12 +153,15 @@ public class AltBn128GroupElement implements GroupElement {
 
     @Override
     public byte[] getXCoordinate() {
-        return new byte[0];
+        final byte[] x = Arrays.copyOfRange(representation, 0, representation.length / 2);
+        return ByteArrayUtils.reverseByteOrder(x);
     }
 
     @Override
     public byte[] getYCoordinate() {
-        return new byte[0];
+        final byte[] y = Arrays.copyOfRange(representation, representation.length / 2, representation.length);
+        ArkworksSerializationInfo.removeFlags(y);
+        return ByteArrayUtils.reverseByteOrder(y);
     }
 
     @Override
