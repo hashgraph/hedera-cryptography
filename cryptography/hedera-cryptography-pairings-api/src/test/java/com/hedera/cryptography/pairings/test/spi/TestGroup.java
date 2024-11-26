@@ -75,6 +75,12 @@ record TestGroup(PairingFriendlyCurve curve) implements Group {
         return new TestGroupElement(this);
     }
 
+    @NonNull
+    @Override
+    public GroupElement fromCoordinates(@NonNull final byte[] x, @NonNull final byte[] y) {
+        return new TestGroupElement(this);
+    }
+
     /** {@inheritDoc} */
     @Override
     public int seedSize() {

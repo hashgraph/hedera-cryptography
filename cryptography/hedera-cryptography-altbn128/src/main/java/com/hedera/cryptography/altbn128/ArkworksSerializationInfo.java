@@ -173,9 +173,10 @@ public enum ArkworksSerializationInfo {
         return Arrays.copyOfRange(bytes, bytes.length / 2, bytes.length);
     }
 
-    public static void reverseCoordinateOrder(final byte[] bytes) {
+    public static byte[] reverseCoordinateBytes(final byte[] bytes) {
         for (int i = 0; i < bytes.length; i+=NUMBER_SIZE_BYTES) {
             ByteArrayUtils.reverseByteOrder(bytes, i, i+NUMBER_SIZE_BYTES);
         }
+        return bytes;
     }
 }

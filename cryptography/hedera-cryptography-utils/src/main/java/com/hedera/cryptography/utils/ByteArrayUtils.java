@@ -106,6 +106,12 @@ public class ByteArrayUtils {
         return array;
     }
 
+    public static byte[] concat(final byte[] first, final byte[] second) {
+        final byte[] result = Arrays.copyOf(first, first.length + second.length);
+        System.arraycopy(second, 0, result, first.length, second.length);
+        return result;
+    }
+
     /**
      * Transforms an integer value into a byte array
      * @param value  the integer to transform

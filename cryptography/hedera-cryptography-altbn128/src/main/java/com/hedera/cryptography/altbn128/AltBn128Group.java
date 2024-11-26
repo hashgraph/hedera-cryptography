@@ -22,6 +22,7 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import com.hedera.cryptography.utils.HashUtils;
 import com.hedera.cryptography.utils.HashUtils.HashCalculator;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -196,6 +197,20 @@ public class AltBn128Group implements Group {
     @Override
     public GroupElement fromBytes(@NonNull final byte[] bytes) {
         return new AltBn128GroupElement(this, facade.fromBytes(bytes));
+    }
+
+    @NonNull
+    @Override
+    public GroupElement fromCoordinates(@NonNull final byte[] x, @NonNull final byte[] y) {
+        return new AltBn128GroupElement(
+                this,
+                facade.fromBytes(
+                        ByteArrayUtils.concat(
+                                ArkworksSerializationInfo.reverseCoordinateBytes(x.clone()),
+                                ArkworksSerializationInfo.reverseCoordinateBytes(y.clone())
+                        )
+                )
+        );
     }
 
     /**

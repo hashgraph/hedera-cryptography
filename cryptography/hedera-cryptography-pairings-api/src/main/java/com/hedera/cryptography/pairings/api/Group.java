@@ -120,6 +120,9 @@ public interface Group {
     @Deprecated(forRemoval = true)
     GroupElement fromBytes(@NonNull byte[] bytes);
 
+    @NonNull
+    GroupElement fromCoordinates(@NonNull final byte[] x, @NonNull final byte[] y);
+
     /**
      * Gets the size in bytes of the seed necessary to generate a new element
      *
