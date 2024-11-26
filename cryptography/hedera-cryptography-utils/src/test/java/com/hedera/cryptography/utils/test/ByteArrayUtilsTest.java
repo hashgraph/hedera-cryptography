@@ -25,15 +25,6 @@ import org.junit.jupiter.api.Test;
 class ByteArrayUtilsTest {
 
     @Test
-    void testValidConversion() {
-        BigInteger bigInt = new BigInteger("1234567890");
-        int size = 32;
-        byte[] result = ByteArrayUtils.toLittleEndianBytes(bigInt);
-        BigInteger convertedBack = ByteArrayUtils.fromLittleEndianBytes(result);
-        assertEquals(bigInt, convertedBack);
-    }
-
-    @Test
     void testSmallerSize() {
         BigInteger bigInt = new BigInteger("1234567890");
         assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toLittleEndianBytes(bigInt));
