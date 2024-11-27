@@ -28,14 +28,14 @@ import java.util.function.Function;
 public interface Transformer<S, T> extends Function<S, T> {
 
     /**
-     * Transforms <S> into <T>
+     * Transforms {@code s} into {@code T}
      * @param s source object
      * @return target object
      */
     T transform(S s);
 
     /**
-     * Transforms <S> into <T>
+     * Transforms {@code s} into {@code T}
      * @param s source object
      * @return target object
      */
