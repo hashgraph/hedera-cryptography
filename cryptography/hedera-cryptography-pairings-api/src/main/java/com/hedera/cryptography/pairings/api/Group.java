@@ -183,6 +183,9 @@ public interface Group {
      * @return the new group element
      * @throws IllegalArgumentException if the byte representation is not a valid point on the curve
      */
+    // TODO: (?)Maybe add:
+    //  + List<GroupElement> allFromBytes(List<byte[]> collection)
+    //  + fromBytes(byte[] bytes, Mode.NO_VALIDATE)
     @NonNull
     GroupElement fromBytes(@NonNull byte[] bytes);
 
