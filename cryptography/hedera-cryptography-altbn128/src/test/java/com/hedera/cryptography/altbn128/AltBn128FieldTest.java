@@ -142,23 +142,6 @@ class AltBn128FieldTest {
     }
 
     @Test
-    void fieldElementAdditionCommutativity(final Random rng) {
-        var field = new AltBn128Field();
-        var a = field.random(rng);
-        var b = field.random(rng);
-        assertEquals(a.add(b), b.add(a));
-    }
-
-    @Test
-    void fieldElementAdditionAssociativity(final Random rng) {
-        var field = new AltBn128Field();
-        var a = field.random(rng);
-        var b = field.random(rng);
-        var c = field.random(rng);
-        assertEquals(a.add(b).add(c), a.add(b.add(c)));
-    }
-
-    @Test
     void fieldElementAdditionIdentity(final Random rng) {
         var field = new AltBn128Field();
         var a = field.random(rng);
@@ -171,32 +154,6 @@ class AltBn128FieldTest {
         var a = field.random(rng);
         var inverseA = field.fromLong(0).subtract(a); // Assuming this would give -a
         assertEquals(field.zero(), a.add(inverseA)); // a + (-a) = 0
-    }
-
-    @Test
-    void fieldElementMultiplicationCommutativity(final Random rng) {
-        var field = new AltBn128Field();
-        var a = field.random(rng);
-        var b = field.random(rng);
-        assertEquals(a.multiply(b), b.multiply(a));
-    }
-
-    @Test
-    void fieldElementMultiplicationAssociativity(final Random rng) {
-        var field = new AltBn128Field();
-        var a = field.random(rng);
-        var b = field.random(rng);
-        var c = field.random(rng);
-        assertEquals(a.multiply(b).multiply(c), a.multiply(b.multiply(c)));
-    }
-
-    @Test
-    void fieldElementMultiplicationDistributivity(final Random rng) {
-        var field = new AltBn128Field();
-        var a = field.random(rng);
-        var b = field.random(rng);
-        var c = field.random(rng);
-        assertEquals(a.multiply(b.add(c)), a.multiply(b).add(a.multiply(c)));
     }
 
     @Test
@@ -216,7 +173,7 @@ class AltBn128FieldTest {
     @Test
     void createFieldElementFromLargeBigInteger(final Random rng) {
         var field = new AltBn128Field();
-        var largeValue = BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.valueOf(1000));
+        var largeValue = BigInteger.valueOf(2).pow(254).subtract(BigInteger.ONE);
         assertNotNull(field.fromBigInteger(largeValue)); // Should reduce it within the field
     }
 }

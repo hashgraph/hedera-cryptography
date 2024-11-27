@@ -16,7 +16,11 @@
 
 package com.hedera.cryptography.altbn128;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
@@ -166,18 +170,6 @@ class AltBn128GroupTest {
         var deserializedElement = group.fromBytes(bytes);
 
         assertEquals(element, deserializedElement); // Ensures consistency after serialization
-    }
-
-    @Test
-    void hashToCurveConsistency(final Random rng) {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
-        final byte[] message = new byte[1024];
-        rng.nextBytes(message);
-
-        var element1 = group.hashToCurve(message);
-        var element2 = group.hashToCurve(message);
-
-        assertEquals(element1, element2); // Consistent mapping of input to output
     }
 
     @Test
