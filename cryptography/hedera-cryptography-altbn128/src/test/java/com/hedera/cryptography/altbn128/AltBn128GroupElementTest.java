@@ -22,7 +22,6 @@ import static org.mockito.Mockito.mock;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.utils.ByteArrayUtils;
-import com.hedera.cryptography.utils.test.fixtures.ByteUtils;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -50,14 +49,8 @@ class AltBn128GroupElementTest {
     void zero(final AltBN128CurveGroup gr) {
         final GroupElement zero = new AltBn128Group(gr).zero();
         assertTrue(zero.isZero());
-        assertEquals(
-                new BigInteger("0"),
-                new BigInteger(zero.getXCoordinate())
-        );
-        assertEquals(
-                new BigInteger("0"),
-                new BigInteger(zero.getYCoordinate())
-        );
+        assertEquals(new BigInteger("0"), new BigInteger(zero.getXCoordinate()));
+        assertEquals(new BigInteger("0"), new BigInteger(zero.getYCoordinate()));
     }
 
     @ParameterizedTest
@@ -108,9 +101,7 @@ class AltBn128GroupElementTest {
     void toCoordinatesAndBack(final AltBN128CurveGroup gr) {
         final var group = new AltBn128Group(gr);
         final GroupElement element = group.generator();
-        assertEquals(element, group.fromCoordinates(
-                element.getXCoordinate(),
-                element.getYCoordinate()));
+        assertEquals(element, group.fromCoordinates(element.getXCoordinate(), element.getYCoordinate()));
     }
 
     @Test
@@ -126,21 +117,15 @@ class AltBn128GroupElementTest {
                 ByteArrayUtils.toBigIntegers(generator.getYCoordinate(), 32),
                 List.of(
                         new BigInteger("8495653923123431417604973247489272438418190587263600148770280649306958101930"),
-                                new BigInteger(
-                                        "4082367875863433681332203403145435568316851327593401208105741076214120093531")));
+                        new BigInteger(
+                                "4082367875863433681332203403145435568316851327593401208105741076214120093531")));
     }
 
     @Test
     void g1GeneratorIsWellKnown() {
         final GroupElement generator = new AltBn128Group(AltBN128CurveGroup.GROUP1).generator();
-        assertEquals(
-                new BigInteger("1"),
-                new BigInteger(generator.getXCoordinate())
-        );
-        assertEquals(
-                new BigInteger("2"),
-                new BigInteger(generator.getYCoordinate())
-        );
+        assertEquals(new BigInteger("1"), new BigInteger(generator.getXCoordinate()));
+        assertEquals(new BigInteger("2"), new BigInteger(generator.getYCoordinate()));
     }
 
     @ParameterizedTest
@@ -148,11 +133,11 @@ class AltBn128GroupElementTest {
     @Disabled
     void fromInvalidPoint(AltBN128CurveGroup gr) {
         var group = new AltBn128Group(gr);
-//        assertThrows(
-//                IllegalArgumentException.class,
-//                () -> group.fromBytes(ByteArrayUtils.toLittleEndianBytes(
-//                        128, BigInteger.ONE, new BigInteger("10"), BigInteger.ONE, BigInteger.ONE)));
-        //TODO implement better test
+        //        assertThrows(
+        //                IllegalArgumentException.class,
+        //                () -> group.fromBytes(ByteArrayUtils.toLittleEndianBytes(
+        //                        128, BigInteger.ONE, new BigInteger("10"), BigInteger.ONE, BigInteger.ONE)));
+        // TODO implement better test
     }
 
     @ParameterizedTest

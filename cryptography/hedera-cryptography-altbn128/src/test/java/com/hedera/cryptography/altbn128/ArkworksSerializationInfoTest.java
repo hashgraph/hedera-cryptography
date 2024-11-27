@@ -24,8 +24,17 @@ class ArkworksSerializationInfoTest {
 
     @Test
     void unusedBitsCount() {
-        assertEquals(2, ArkworksSerializationInfo.FIELD_ELEMENT.getUnusedBits().size(), "Field element should have 2 unused bits");
-        assertEquals(2, ArkworksSerializationInfo.GROUP1_ELEMENT.getUnusedBits().size(), "Group1 element should have 2 unused bits");
-        assertEquals(6, ArkworksSerializationInfo.GROUP2_ELEMENT.getUnusedBits().size(), "Group2 element should have 6 unused bits");
+        assertEquals(
+                2,
+                ArkworksSerializationInfo.FIELD_ELEMENT.getUnusedBits().size(),
+                "Field element should have 2 unused bits");
+        assertEquals(
+                2,
+                ArkworksSerializationInfo.GROUP1_ELEMENT.getUnusedBits().size(),
+                "Group1 element should have 2 unused bits");
+        assertEquals(
+                6,
+                ArkworksSerializationInfo.GROUP2_ELEMENT.getUnusedBits().size(),
+                "Group2 element should have 6 unused bits");
     }
 }

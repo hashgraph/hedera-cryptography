@@ -84,8 +84,7 @@ public class AltBn128Field implements Field {
         if (Objects.requireNonNull(bigInteger, "bigInteger must not be null").signum() == -1) {
             throw new IllegalArgumentException("bigInteger cannot be negative");
         }
-        return new AltBn128FieldElement(
-                facade.fromBytes(ByteArrayUtils.toLittleEndianBytes(bigInteger)), this);
+        return new AltBn128FieldElement(facade.fromBytes(ByteArrayUtils.toLittleEndianBytes(bigInteger)), this);
     }
 
     /**

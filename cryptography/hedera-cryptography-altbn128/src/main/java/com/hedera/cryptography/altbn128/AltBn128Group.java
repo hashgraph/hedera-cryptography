@@ -204,13 +204,9 @@ public class AltBn128Group implements Group {
     public GroupElement fromCoordinates(@NonNull final byte[] x, @NonNull final byte[] y) {
         return new AltBn128GroupElement(
                 this,
-                facade.fromBytes(
-                        ByteArrayUtils.concat(
-                                ArkworksSerializationInfo.reverseCoordinateBytes(x.clone()),
-                                ArkworksSerializationInfo.reverseCoordinateBytes(y.clone())
-                        )
-                )
-        );
+                facade.fromBytes(ByteArrayUtils.concat(
+                        ArkworksSerializationInfo.reverseCoordinateBytes(x.clone()),
+                        ArkworksSerializationInfo.reverseCoordinateBytes(y.clone()))));
     }
 
     /**

@@ -18,7 +18,6 @@ package com.hedera.cryptography.altbn128;
 
 import static com.hedera.cryptography.altbn128.ArkworksSerializationInfo.getCoordinate;
 import static com.hedera.cryptography.altbn128.ArkworksSerializationInfo.removeFlags;
-import static com.hedera.cryptography.utils.ByteArrayUtils.reverseByteOrder;
 import static com.hedera.cryptography.utils.ValidationUtils.expectOrThrow;
 
 import com.hedera.cryptography.altbn128.facade.GroupFacade;
@@ -156,7 +155,7 @@ public class AltBn128GroupElement implements GroupElement {
     @Override
     public byte[] getXCoordinate() {
         final byte[] x = getCoordinate(representation, true);
-        //return reverseByteOrder(x);
+        // return reverseByteOrder(x);
         ArkworksSerializationInfo.reverseCoordinateBytes(x);
         return x;
     }
@@ -165,22 +164,18 @@ public class AltBn128GroupElement implements GroupElement {
     public byte[] getYCoordinate() {
         final byte[] y = getCoordinate(representation, false);
         removeFlags(y);
-        //return reverseByteOrder(y);
+        // return reverseByteOrder(y);
         ArkworksSerializationInfo.reverseCoordinateBytes(y);
         return y;
     }
 
     @Override
     public boolean isZero() {
-        return ArkworksSerializationInfo
-                .fromGroup(group.getGroup())
-                .isZeroElement(representation);
+        return ArkworksSerializationInfo.fromGroup(group.getGroup()).isZeroElement(representation);
     }
 
     @Override
     public boolean isYSmaller() {
-        return ArkworksSerializationInfo
-                .fromGroup(group.getGroup())
-                .isYSmaller(representation);
+        return ArkworksSerializationInfo.fromGroup(group.getGroup()).isYSmaller(representation);
     }
 }

@@ -97,7 +97,10 @@ public interface GroupElement {
     byte[] toBytes();
 
     byte[] getXCoordinate();
+
     byte[] getYCoordinate();
+
     boolean isZero();
+
     boolean isYSmaller();
 }

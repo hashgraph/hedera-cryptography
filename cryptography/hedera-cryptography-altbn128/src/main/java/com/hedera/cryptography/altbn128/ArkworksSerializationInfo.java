@@ -46,6 +46,7 @@ public enum ArkworksSerializationInfo {
     private static final int BIT_FLAG_Y_COORDINATE_POSITION = 0;
     /** The index of the zero element flag starting from the last bit */
     private static final int BIT_FLAG_ZERO_POSITION = 1;
+
     private static final byte MASK_Y_COORDINATE = (byte) 0b10000000;
     private static final byte MASK_ZERO = 0b01000000;
 
@@ -174,8 +175,8 @@ public enum ArkworksSerializationInfo {
     }
 
     public static byte[] reverseCoordinateBytes(final byte[] bytes) {
-        for (int i = 0; i < bytes.length; i+=NUMBER_SIZE_BYTES) {
-            ByteArrayUtils.reverseByteOrder(bytes, i, i+NUMBER_SIZE_BYTES);
+        for (int i = 0; i < bytes.length; i += NUMBER_SIZE_BYTES) {
+            ByteArrayUtils.reverseByteOrder(bytes, i, i + NUMBER_SIZE_BYTES);
         }
         return bytes;
     }
