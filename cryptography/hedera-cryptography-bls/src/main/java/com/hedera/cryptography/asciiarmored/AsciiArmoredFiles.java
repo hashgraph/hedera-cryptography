@@ -20,7 +20,6 @@ import static com.hedera.cryptography.asciiarmored.AsciiArmoredType.PRIVATE_KEY;
 import static com.hedera.cryptography.asciiarmored.AsciiArmoredType.PUBLIC_KEY;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
-import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.utils.serialization.Deserializer;
 import com.hedera.cryptography.utils.serialization.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -59,7 +58,8 @@ public class AsciiArmoredFiles {
         if (fileRead.asciiArmoredType() != PRIVATE_KEY) {
             throw new IllegalArgumentException("File does not contain a private key");
         }
-        return Objects.requireNonNull(deserializer).deserialize(Base64.getDecoder().decode(fileRead.contents()));
+        return Objects.requireNonNull(deserializer)
+                .deserialize(Base64.getDecoder().decode(fileRead.contents()));
     }
 
     /**
@@ -99,10 +99,18 @@ public class AsciiArmoredFiles {
      * @param <T> target type
      * @throws IOException In case of file writing error
      */
-    public static<T> void write(@NonNull final Path path, final Serializer<T> serializer, @NonNull final T key, @NonNull final AsciiArmoredType type) throws IOException {
-        write(path, Base64.getEncoder().encodeToString(serializer.serialize(Objects.requireNonNull(key, "key must not be null") )), type);
+    public static <T> void write(
+            @NonNull final Path path,
+            final Serializer<T> serializer,
+            @NonNull final T key,
+            @NonNull final AsciiArmoredType type)
+            throws IOException {
+        write(
+                path,
+                Base64.getEncoder()
+                        .encodeToString(serializer.serialize(Objects.requireNonNull(key, "key must not be null"))),
+                type);
     }
-
 
     /**
      * Writes the content in an ASCII armored file.
@@ -118,15 +126,11 @@ public class AsciiArmoredFiles {
         Objects.requireNonNull(path, "path must not be null");
         Objects.requireNonNull(content, "content must not be null");
         Objects.requireNonNull(asciiArmoredType, "pemType must not be null");
-        final String asciiArmoredContent = asciiArmoredType.getHeader()
-                + formatContent(content)
-                + asciiArmoredType.getFooter();
+        final String asciiArmoredContent =
+                asciiArmoredType.getHeader() + formatContent(content) + asciiArmoredType.getFooter();
 
         Files.write(
-                path,
-                asciiArmoredContent.getBytes(),
-                StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING);
+                path, asciiArmoredContent.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     /**

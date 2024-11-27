@@ -35,7 +35,7 @@ public final class DefaultBlsPublicKeySerialization {
      * Constructor
      */
     private DefaultBlsPublicKeySerialization() {
-        //static access
+        // static access
     }
 
     /**

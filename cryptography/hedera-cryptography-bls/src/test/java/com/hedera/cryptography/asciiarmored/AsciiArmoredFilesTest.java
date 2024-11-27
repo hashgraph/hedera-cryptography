@@ -49,7 +49,8 @@ public class AsciiArmoredFilesTest {
                 deserializer.deserialize(Base64.getDecoder().decode(BASE_64_KEY));
         String expectedContent = "-----BEGIN PRIVATE KEY-----\n" + BASE_64_KEY + "\n" + "-----END PRIVATE KEY-----";
 
-        AsciiArmoredFiles.write(keyPath, DefaultBlsPrivateKeySerialization.getSerializer(), originalKey, AsciiArmoredType.PRIVATE_KEY);
+        AsciiArmoredFiles.write(
+                keyPath, DefaultBlsPrivateKeySerialization.getSerializer(), originalKey, AsciiArmoredType.PRIVATE_KEY);
         assertTrue(keyPath.toFile().exists(), "Key should have been written to file");
         final String fileContents = Files.readString(keyPath);
         assertEquals(expectedContent, fileContents, "File contents should match expected");
@@ -69,9 +70,10 @@ public class AsciiArmoredFilesTest {
         Exception exception = assertThrows(
                 NullPointerException.class,
                 () -> AsciiArmoredFiles.write(
-                        null, DefaultBlsPrivateKeySerialization.getSerializer(),
-                        DefaultBlsPrivateKeySerialization
-                                .getDeserializer(SIGNATURE_SCHEMA).deserialize(Base64.getDecoder().decode(BASE_64_KEY)),
+                        null,
+                        DefaultBlsPrivateKeySerialization.getSerializer(),
+                        DefaultBlsPrivateKeySerialization.getDeserializer(SIGNATURE_SCHEMA)
+                                .deserialize(Base64.getDecoder().decode(BASE_64_KEY)),
                         AsciiArmoredType.PUBLIC_KEY));
         assertEquals("path must not be null", exception.getMessage());
     }
@@ -80,8 +82,11 @@ public class AsciiArmoredFilesTest {
     public void testPemWriteWithNullBase64Key() {
         Exception exception = assertThrows(
                 NullPointerException.class,
-                () -> AsciiArmoredFiles.write(Path.of("test.pem"), DefaultBlsPrivateKeySerialization.getSerializer(),
-                        (BlsPrivateKey) null, AsciiArmoredType.PUBLIC_KEY));
+                () -> AsciiArmoredFiles.write(
+                        Path.of("test.pem"),
+                        DefaultBlsPrivateKeySerialization.getSerializer(),
+                        (BlsPrivateKey) null,
+                        AsciiArmoredType.PUBLIC_KEY));
         assertEquals("key must not be null", exception.getMessage());
     }
 }

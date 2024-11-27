@@ -70,7 +70,7 @@ public class DefaultTssMessageSerialization {
      * Constructor
      */
     private DefaultTssMessageSerialization() {
-        //Nothing
+        // Nothing
     }
 
     /**

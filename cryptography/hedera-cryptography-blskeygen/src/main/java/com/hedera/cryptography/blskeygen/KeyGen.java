@@ -89,8 +89,16 @@ public class KeyGen {
                             cliArguments.publicKeyPath());
                 }
                 final BlsKeyPair keyPair = BlsKeyPair.generate(SIGNATURE_SCHEMA);
-                AsciiArmoredFiles.write(cliArguments.privateKeyPath(),  DefaultBlsPrivateKeySerialization.getSerializer(), keyPair.privateKey(), AsciiArmoredType.PRIVATE_KEY);
-                AsciiArmoredFiles.write(cliArguments.publicKeyPath(),  DefaultBlsPublicKeySerialization.getSerializer(),  keyPair.publicKey(), AsciiArmoredType.PUBLIC_KEY);
+                AsciiArmoredFiles.write(
+                        cliArguments.privateKeyPath(),
+                        DefaultBlsPrivateKeySerialization.getSerializer(),
+                        keyPair.privateKey(),
+                        AsciiArmoredType.PRIVATE_KEY);
+                AsciiArmoredFiles.write(
+                        cliArguments.publicKeyPath(),
+                        DefaultBlsPublicKeySerialization.getSerializer(),
+                        keyPair.publicKey(),
+                        AsciiArmoredType.PUBLIC_KEY);
                 System.out.printf(
                         "Saved private and public key files into: %s and %s %n",
                         cliArguments.privateKeyPath(), cliArguments.publicKeyPath());
@@ -108,7 +116,11 @@ public class KeyGen {
                         cliArguments.privateKeyPath(),
                         DefaultBlsPrivateKeySerialization.getDeserializer(SIGNATURE_SCHEMA));
                 final BlsPublicKey publicKey = privateKey.createPublicKey();
-                AsciiArmoredFiles.write(cliArguments.publicKeyPath(),DefaultBlsPublicKeySerialization.getSerializer(), publicKey, AsciiArmoredType.PUBLIC_KEY);
+                AsciiArmoredFiles.write(
+                        cliArguments.publicKeyPath(),
+                        DefaultBlsPublicKeySerialization.getSerializer(),
+                        publicKey,
+                        AsciiArmoredType.PUBLIC_KEY);
                 System.out.printf("Saved public key file into: %s %n", cliArguments.publicKeyPath());
             }
         }

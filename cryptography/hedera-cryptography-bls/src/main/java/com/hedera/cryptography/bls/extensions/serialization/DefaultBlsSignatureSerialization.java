@@ -35,7 +35,7 @@ public final class DefaultBlsSignatureSerialization {
      * Constructor
      */
     private DefaultBlsSignatureSerialization() {
-        //static access
+        // static access
     }
     /**
      * Returns a deserializer.

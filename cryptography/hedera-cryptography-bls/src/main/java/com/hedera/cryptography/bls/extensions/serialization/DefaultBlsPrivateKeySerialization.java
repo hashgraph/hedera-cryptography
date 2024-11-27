@@ -34,7 +34,7 @@ public final class DefaultBlsPrivateKeySerialization {
      * Constructor
      */
     private DefaultBlsPrivateKeySerialization() {
-        //static access
+        // static access
     }
 
     /**
@@ -102,9 +102,9 @@ public final class DefaultBlsPrivateKeySerialization {
          */
         @Override
         public byte[] serialize(final BlsPrivateKey element) {
-            try{
+            try {
                 return elementSerializer.serialize(element.element());
-            }catch (Exception e){
+            } catch (Exception e) {
                 throw new IllegalStateException("Unable to serialize bls private key", e);
             }
         }
