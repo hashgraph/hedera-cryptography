@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.pairings.test.api;
+package com.hedera.cryptography.altbn128;
 
-import com.hedera.cryptography.pairings.api.Curve;
+import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * List of Curves supported for this test
- */
-public enum TestCurves implements Curve {
-    NON_EXISTENT_CURVE,
-    FAIL_CURVE;
+import org.junit.jupiter.api.Test;
 
-    @Override
-    public byte getId() {
-        return -1;
+class ElementInfoTest {
+
+    @Test
+    void unusedBitsCount() {
+        assertEquals(2, ElementInfo.FIELD_ELEMENT.getUnusedBits().size(), "Field element should have 2 unused bits");
+        assertEquals(2, ElementInfo.GROUP1_ELEMENT.getUnusedBits().size(), "Group1 element should have 2 unused bits");
+        assertEquals(6, ElementInfo.GROUP2_ELEMENT.getUnusedBits().size(), "Group2 element should have 6 unused bits");
     }
 }

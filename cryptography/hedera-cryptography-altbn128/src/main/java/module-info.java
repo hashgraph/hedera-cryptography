@@ -8,6 +8,6 @@ module com.hedera.cryptography.altbn128 {
     requires org.bouncycastle.provider;
     requires static transitive com.github.spotbugs.annotations;
 
-    provides com.hedera.cryptography.pairings.spi.PairingFriendlyCurveProvider with
-            com.hedera.cryptography.altbn128.spi.AltBn128Provider;
+    provides com.hedera.cryptography.pairings.api.PairingFriendlyCurve with
+            com.hedera.cryptography.altbn128.AltBn128;
 }

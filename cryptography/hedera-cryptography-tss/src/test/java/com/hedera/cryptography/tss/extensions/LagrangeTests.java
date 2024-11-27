@@ -78,7 +78,7 @@ public class LagrangeTests {
     void testLagrangeWithKnownFieldElementValues() {
         // Calculated using
         // https://www.wolframalpha.com/input?i=interpolating+polynomial+calculator
-        var curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve();
+        var curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
         final Field field = curve.field();
         var inputs = inputs(field, 10, 20, 40, 50);
         assertEquals(field.fromLong(10), Lagrange.recoverFieldElement(inputs.xs(), inputs.ys()));
@@ -94,7 +94,7 @@ public class LagrangeTests {
     void testLagrangeWithKnownGroupElementValues() {
         // Calculated using
         // https://www.wolframalpha.com/input?i=interpolating+polynomial+calculator
-        var curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128).pairingFriendlyCurve();
+        var curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
         final Field field = curve.field();
         var inputs = inputs(field, 10, 20, 40, 50);
         assertEquals(

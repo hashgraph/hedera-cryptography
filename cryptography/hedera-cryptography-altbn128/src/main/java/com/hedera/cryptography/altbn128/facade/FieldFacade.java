@@ -28,7 +28,7 @@ import java.util.Objects;
  *  It abstracts the complexities of dealing with return codes and input and output parameters
  *  providing a higher-level interface easier to interact with from Java.
  **/
-public final class FieldFacade {
+public final class FieldFacade implements ElementFacade {
 
     /** the underlying library adapter  */
     private final FieldElementsLibraryAdapter adapter;
@@ -55,6 +55,7 @@ public final class FieldFacade {
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the input
      * @throws AltBn128Exception in case of error
      */
+    @NonNull
     public byte[] fromLong(final long inputLong) {
         if (inputLong < 0) {
             throw new IllegalArgumentException("input long must not be negative");
@@ -75,6 +76,8 @@ public final class FieldFacade {
      * @throws IllegalArgumentException if the seed is of invalid size
      * @throws AltBn128Exception in case of error
      */
+    @Override
+    @NonNull
     public byte[] fromRandomSeed(@NonNull final byte[] seed) {
         if (Objects.requireNonNull(seed, "Seed must not be null").length != randomSeedSize) {
             throw new IllegalArgumentException("Invalid random seed");
@@ -96,6 +99,8 @@ public final class FieldFacade {
      * @throws IllegalArgumentException if the representation is invalid
      * @throws AltBn128Exception in case of error
      */
+    @Override
+    @NonNull
     public byte[] fromBytes(@NonNull final byte[] representation) {
         if (Objects.requireNonNull(representation, "representation must not be null").length != size) {
             throw new IllegalArgumentException("Invalid byte[] representation");
@@ -113,6 +118,8 @@ public final class FieldFacade {
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the element 0
      * @throws AltBn128Exception in case of error
      */
+    @Override
+    @NonNull
     public byte[] zero() {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsZero(output);
@@ -127,6 +134,7 @@ public final class FieldFacade {
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the element 1
      * @throws AltBn128Exception in case of error
      */
+    @NonNull
     public byte[] one() {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsOne(output);
@@ -143,7 +151,8 @@ public final class FieldFacade {
      * @return {@code true} if {@code value} and {@code other} are equals. {@code false} otherwise
      * @throws AltBn128Exception in case of error
      */
-    public boolean equals(byte[] value, byte[] other) {
+    @Override
+    public boolean equals(@NonNull byte[] value, @NonNull byte[] other) {
         final int result = adapter.fieldElementsEquals(value, other);
         if (result < SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsEquals");
@@ -159,10 +168,7 @@ public final class FieldFacade {
         return this.size;
     }
 
-    /**
-     * Return the occupied size in bytes of the random seed.
-     * @return the size in bytes for the random seed.
-     */
+    @Override
     public int randomSeedSize() {
         return this.randomSeedSize;
     }
@@ -174,6 +180,7 @@ public final class FieldFacade {
      * @return {@code true} if {@code value} and {@code other} are equals. {@code false} otherwise
      * @throws AltBn128Exception in case of error
      */
+    @NonNull
     public byte[] add(@NonNull final byte[] value, @NonNull final byte[] other) {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsAdd(value, other, output);
@@ -190,6 +197,7 @@ public final class FieldFacade {
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
      * @throws AltBn128Exception in case of error
      */
+    @NonNull
     public byte[] multiply(@NonNull final byte[] value, @NonNull final byte[] other) {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsMultiply(value, other, output);
@@ -205,6 +213,7 @@ public final class FieldFacade {
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
      * @throws AltBn128Exception in case of error
      */
+    @NonNull
     public byte[] subtracts(@NonNull final byte[] value, @NonNull final byte[] other) {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsSubtract(value, other, output);
@@ -220,6 +229,7 @@ public final class FieldFacade {
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
      * @throws AltBn128Exception in case of error
      */
+    @NonNull
     public byte[] inverse(@NonNull final byte[] value) {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsInverse(value, output);
@@ -239,6 +249,7 @@ public final class FieldFacade {
      * @return a byte array of size {@link FieldFacade#size()} with the representation of the result of the operation
      * @throws AltBn128Exception in case of error
      */
+    @NonNull
     public byte[] pow(@NonNull final byte[] value, final long exponent) {
         if (exponent < 0) throw new IllegalArgumentException("exponent must not be negative");
         final byte[] output = new byte[size];

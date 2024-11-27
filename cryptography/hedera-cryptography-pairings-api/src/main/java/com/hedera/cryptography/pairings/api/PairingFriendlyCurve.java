@@ -17,6 +17,7 @@
 package com.hedera.cryptography.pairings.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * <p>This class provides access to each of the groups (G₁, G₂) for a specific pairing friendly curve and the FiniteField associated
@@ -25,15 +26,42 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * @see Group
  * @see Field
  */
-public interface PairingFriendlyCurve {
+public abstract class PairingFriendlyCurve {
+    /**
+     * Implementations should include here all the steps necessary to load the library, e.g.,
+     * perform native library loads.
+     * This method will be called only once per instance and thread-safe guaranteed invocation.
+     */
+    protected abstract void doInit();
+    /**
+     * Atomic boolean to avoid repeated attempts to reload the resource.
+     */
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
 
+    /**
+     * Performs any initialization steps.
+     * Implementations should consider that the Init method will be every time the instance is requested.
+     * @return the same instance that received the call but after being initialized if applicable.
+     */
+    public PairingFriendlyCurve init() {
+        if (!initialized.get()) {
+            synchronized (this) {
+                if (initialized.get()) {
+                    return this;
+                }
+                this.doInit();
+                initialized.set(true);
+            }
+        }
+        return this;
+    }
     /**
      * Returns the curve type/ Name
      *
      * @return the field
      */
     @NonNull
-    Curve curve();
+    public abstract Curve curve();
 
     /**
      * Returns the finite field “Fq” associated with the curves of G₁ and G₂.
@@ -41,7 +69,7 @@ public interface PairingFriendlyCurve {
      * @return the field
      */
     @NonNull
-    Field field();
+    public abstract Field field();
 
     /**
      * Returns the G₁ group associated with the pairing.
@@ -49,7 +77,7 @@ public interface PairingFriendlyCurve {
      * @return the G₁ group
      */
     @NonNull
-    Group group1();
+    public abstract Group group1();
 
     /**
      * Returns the G₂ group associated with the pairing.
@@ -57,7 +85,7 @@ public interface PairingFriendlyCurve {
      * @return the G₂ group
      */
     @NonNull
-    Group group2();
+    public abstract Group group2();
 
     /**
      * Returns G₁ if input is G₂, and vice versa.
@@ -66,7 +94,7 @@ public interface PairingFriendlyCurve {
      * @return the other group
      */
     @NonNull
-    Group getOtherGroup(@NonNull Group group);
+    public abstract Group getOtherGroup(@NonNull Group group);
 
     /**
      * Returns a pairing between elements from G₁ and G₂
@@ -78,5 +106,5 @@ public interface PairingFriendlyCurve {
      * @return the PairingResult
      */
     @NonNull
-    BilinearPairing pairingBetween(@NonNull GroupElement element1, @NonNull GroupElement element2);
+    public abstract BilinearPairing pairingBetween(@NonNull GroupElement element1, @NonNull GroupElement element2);
 }

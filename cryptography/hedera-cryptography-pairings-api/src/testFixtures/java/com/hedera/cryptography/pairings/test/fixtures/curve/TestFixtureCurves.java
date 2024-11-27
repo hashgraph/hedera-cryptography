@@ -14,22 +14,27 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.altbn128.spi;
-
-import static org.junit.jupiter.api.Assertions.*;
+package com.hedera.cryptography.pairings.test.fixtures.curve;
 
 import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
-import com.hedera.cryptography.pairings.api.curves.KnownCurves;
-import org.junit.jupiter.api.Test;
 
-class AltBn128ProviderTest {
+public enum TestFixtureCurves implements Curve {
+    NO_PAIRING_CURVE((byte) 0),
+    NON_EXISTENT_CURVE((byte) 1),
+    FAIL_CURVE((byte) 2),
+    TEST((byte) 3);
 
-    @Test
-    void testFindAltBn128Provider() {
-        assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(KnownCurves.ALT_BN128));
-        assertEquals(
-                KnownCurves.ALT_BN128,
-                PairingFriendlyCurves.findInstance(Curve.ALT_BN128).curve());
+    /**
+     * An internal unique id per curve.
+     */
+    final byte id;
+
+    TestFixtureCurves(byte id) {
+        this.id = id;
+    }
+
+    @Override
+    public byte getId() {
+        return id;
     }
 }

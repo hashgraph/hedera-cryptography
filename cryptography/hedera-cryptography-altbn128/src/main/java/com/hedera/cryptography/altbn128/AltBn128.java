@@ -18,6 +18,7 @@ package com.hedera.cryptography.altbn128;
 
 import static com.hedera.cryptography.utils.ValidationUtils.expectOrThrow;
 
+import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.Field;
@@ -31,7 +32,25 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * Represents a bilinear pairing friendly curve alt-bn-128 and its component
  *  {@code G₁}, {@code G₂} and {@code Fq} (Finite Field).
  */
-public class AltBn128 implements PairingFriendlyCurve {
+public class AltBn128 extends PairingFriendlyCurve {
+
+    /**
+     * Constructor
+     */
+    public AltBn128() {
+        // Empty constructor
+    }
+
+    /**
+     * Initializes the library.
+     * @implNote This method is only called once.
+     */
+    @Override
+    protected void doInit() {
+        // We force the library loading in the init method
+        ArkBn254Adapter.getInstance();
+    }
+
     /**
      * The finite field
      */
