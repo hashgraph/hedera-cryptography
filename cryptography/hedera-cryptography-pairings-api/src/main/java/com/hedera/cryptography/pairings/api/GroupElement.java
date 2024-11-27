@@ -96,11 +96,33 @@ public interface GroupElement {
     @Deprecated(forRemoval = true)
     byte[] toBytes();
 
+    /**
+     * Returns the x-coordinate of the group element as a unsigned big-endian byte array
+     *
+     * @return the x-coordinate
+     */
+    @NonNull
     byte[] getXCoordinate();
 
+    /**
+     * Returns the y-coordinate of the group element as a unsigned big-endian byte array
+     *
+     * @return the y-coordinate
+     */
+    @NonNull
     byte[] getYCoordinate();
 
+    /**
+     * Checks if the group element is the zero element
+     * @return true if the group element is the zero element, false otherwise
+     */
     boolean isZero();
 
+    /**
+     * The x coordinate has two corresponding y coordinates in the curve. This method returns true if the y coordinate
+     * is the smaller of the two.
+     *
+     * @return true if the y coordinate is the smaller one, false otherwise
+     */
     boolean isYSmaller();
 }

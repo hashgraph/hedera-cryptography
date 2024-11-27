@@ -153,18 +153,18 @@ public class AltBn128GroupElement implements GroupElement {
     }
 
     @Override
+    @NonNull
     public byte[] getXCoordinate() {
         final byte[] x = getCoordinate(representation, true);
-        // return reverseByteOrder(x);
         ArkworksSerializationInfo.reverseCoordinateBytes(x);
         return x;
     }
 
     @Override
+    @NonNull
     public byte[] getYCoordinate() {
         final byte[] y = getCoordinate(representation, false);
         removeFlags(y);
-        // return reverseByteOrder(y);
         ArkworksSerializationInfo.reverseCoordinateBytes(y);
         return y;
     }

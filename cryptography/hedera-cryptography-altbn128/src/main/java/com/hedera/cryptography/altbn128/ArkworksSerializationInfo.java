@@ -46,8 +46,9 @@ public enum ArkworksSerializationInfo {
     private static final int BIT_FLAG_Y_COORDINATE_POSITION = 0;
     /** The index of the zero element flag starting from the last bit */
     private static final int BIT_FLAG_ZERO_POSITION = 1;
-
+    /** The bit mask for the Y coordinate flag */
     private static final byte MASK_Y_COORDINATE = (byte) 0b10000000;
+    /** The bit mask for the zero element flag */
     private static final byte MASK_ZERO = 0b01000000;
 
     /** The number of 254-bit numbers contained in this element */
@@ -84,7 +85,14 @@ public enum ArkworksSerializationInfo {
         this.unusedBits = Collections.unmodifiableSet(unusedBits);
     }
 
-    public static ArkworksSerializationInfo fromGroup(final AltBN128CurveGroup group) {
+    /**
+     * Get the serialization information for a group
+     *
+     * @param group The group
+     * @return The serialization information
+     */
+    @NonNull
+    public static ArkworksSerializationInfo fromGroup(@NonNull final AltBN128CurveGroup group) {
         return switch (group) {
             case GROUP1 -> GROUP1_ELEMENT;
             case GROUP2 -> GROUP2_ELEMENT;
@@ -124,7 +132,7 @@ public enum ArkworksSerializationInfo {
      *
      * @return The set of bits that are unused in the serialization of this element
      */
-    public Set<Integer> getUnusedBits() {
+    public @NonNull Set<Integer> getUnusedBits() {
         return unusedBits;
     }
 
@@ -155,26 +163,44 @@ public enum ArkworksSerializationInfo {
         return NUMBER_SIZE_BYTES * Byte.SIZE * numberCount - 1 - BIT_FLAG_ZERO_POSITION;
     }
 
-    public boolean isZeroElement(final byte[] bytes) {
-        return (bytes[bytes.length - 1] & MASK_ZERO) == MASK_ZERO;
+    /**
+     * Checks if this element is a zero element
+     *
+     * @param bytes the Arkworks serialized bytes
+     * @return true if the element is a zero element, false otherwise
+     */
+    public boolean isZeroElement(@NonNull final byte[] bytes) {
+        return switch (this) {
+            case FIELD_ELEMENT -> {
+                for (final byte b : bytes) {
+                    if (b != 0) {
+                        yield false;
+                    }
+                }
+                yield true;
+            }
+            case GROUP1_ELEMENT, GROUP2_ELEMENT -> (bytes[bytes.length - 1] & MASK_ZERO) == MASK_ZERO;
+        };
     }
 
-    public boolean isYSmaller(final byte[] bytes) {
+    public boolean isYSmaller(@NonNull final byte[] bytes) {
         return (bytes[bytes.length - 1] & MASK_Y_COORDINATE) == MASK_Y_COORDINATE;
     }
 
-    public static void removeFlags(final byte[] bytes) {
+    public static void removeFlags(@NonNull final byte[] bytes) {
         bytes[bytes.length - 1] = (byte) (bytes[bytes.length - 1] & 0b00111111);
     }
 
-    public static byte[] getCoordinate(final byte[] bytes, final boolean isX) {
+    @NonNull
+    public static byte[] getCoordinate(@NonNull final byte[] bytes, final boolean isX) {
         if (isX) {
             return Arrays.copyOfRange(bytes, 0, bytes.length / 2);
         }
         return Arrays.copyOfRange(bytes, bytes.length / 2, bytes.length);
     }
 
-    public static byte[] reverseCoordinateBytes(final byte[] bytes) {
+    @NonNull
+    public static byte[] reverseCoordinateBytes(@NonNull final byte[] bytes) {
         for (int i = 0; i < bytes.length; i += NUMBER_SIZE_BYTES) {
             ByteArrayUtils.reverseByteOrder(bytes, i, i + NUMBER_SIZE_BYTES);
         }

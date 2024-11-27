@@ -120,6 +120,13 @@ public interface Group {
     @Deprecated(forRemoval = true)
     GroupElement fromBytes(@NonNull byte[] bytes);
 
+    /**
+     * Creates a group element from its x and y coordinates
+     *
+     * @param x the x coordinate
+     * @param y the y coordinate
+     * @return the new group element
+     */
     @NonNull
     GroupElement fromCoordinates(@NonNull final byte[] x, @NonNull final byte[] y);
 
