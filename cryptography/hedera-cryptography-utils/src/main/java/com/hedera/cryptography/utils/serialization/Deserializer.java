@@ -31,6 +31,9 @@ public interface Deserializer<T> extends Transformer<byte[], T> {
      */
     T deserialize(byte[] s);
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     default T transform(byte[] s) {
         return deserialize(s);

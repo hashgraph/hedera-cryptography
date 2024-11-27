@@ -32,6 +32,9 @@ public interface Serializer<S> extends Transformer<S, byte[]> {
      */
     byte[] serialize(S s);
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     default byte[] transform(S s) {
         return serialize(s);
