@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.tss.api;
 
+import com.hedera.cryptography.utils.serialization.Transformer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
@@ -61,14 +62,27 @@ public interface TssService {
     TssServiceRekeyStage rekeyStage();
 
     /**
-     * Creates a {@link TssMessage} from a byte array representation.
-     * @see TssMessage#toBytes() for the specification that message needs to follow.
+     * Deserializes a {@link TssMessage} from a byte array representation using the provided deserializer.
      * @param tssParticipantDirectory the candidate tss directory
-     * @param message the byte representation of the opaque underlying structure used by the library
+     * @param message the message being transformed
+     * @throws TssMessageParsingException in case of error while parsing the TssMessage from its byte array format
+     * @return a TssMessage instance
+     * @deprecated use an instance of {@link com.hedera.cryptography.utils.serialization.Deserializer}
+     */
+    @NonNull
+    @Deprecated
+    TssMessage messageFromBytes(@NonNull TssParticipantDirectory tssParticipantDirectory, @NonNull byte[] message)
+            throws TssMessageParsingException;
+
+    /**
+     * Gets a {@link TssMessage} from a source object using the provided transformer.
+     * @param <S> source type
+     * @param tssMessageTransformer a transformer instance to use.
+     * @param message the message being transformed
      * @return a TssMessage instance
      * @throws TssMessageParsingException in case of error while parsing the TssMessage from its byte array format
      */
     @NonNull
-    TssMessage messageFromBytes(@NonNull TssParticipantDirectory tssParticipantDirectory, @NonNull byte[] message)
+    <S> TssMessage messageFrom(@NonNull Transformer<S, TssMessage> tssMessageTransformer, @NonNull S message)
             throws TssMessageParsingException;
 }

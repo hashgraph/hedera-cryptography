@@ -17,11 +17,14 @@
 package com.hedera.cryptography.blskeygen;
 
 import com.hedera.cryptography.asciiarmored.AsciiArmoredFiles;
+import com.hedera.cryptography.asciiarmored.AsciiArmoredType;
 import com.hedera.cryptography.bls.BlsKeyPair;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPrivateKeySerialization;
+import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPublicKeySerialization;
 import com.hedera.cryptography.pairings.api.Curve;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.nio.file.Files;
@@ -86,8 +89,8 @@ public class KeyGen {
                             cliArguments.publicKeyPath());
                 }
                 final BlsKeyPair keyPair = BlsKeyPair.generate(SIGNATURE_SCHEMA);
-                AsciiArmoredFiles.writeKey(cliArguments.privateKeyPath(), keyPair.privateKey());
-                AsciiArmoredFiles.writeKey(cliArguments.publicKeyPath(), keyPair.publicKey());
+                AsciiArmoredFiles.write(cliArguments.privateKeyPath(),  DefaultBlsPrivateKeySerialization.getSerializer(), keyPair.privateKey(), AsciiArmoredType.PRIVATE_KEY);
+                AsciiArmoredFiles.write(cliArguments.publicKeyPath(),  DefaultBlsPublicKeySerialization.getSerializer(),  keyPair.publicKey(), AsciiArmoredType.PUBLIC_KEY);
                 System.out.printf(
                         "Saved private and public key files into: %s and %s %n",
                         cliArguments.privateKeyPath(), cliArguments.publicKeyPath());
@@ -101,9 +104,11 @@ public class KeyGen {
                             "The public key file already exists. Won't overwrite. Please delete %s %n",
                             cliArguments.publicKeyPath());
                 }
-                final BlsPrivateKey privateKey = AsciiArmoredFiles.readPrivateKey(cliArguments.privateKeyPath());
+                final BlsPrivateKey privateKey = AsciiArmoredFiles.readPrivateKey(
+                        cliArguments.privateKeyPath(),
+                        DefaultBlsPrivateKeySerialization.getDeserializer(SIGNATURE_SCHEMA));
                 final BlsPublicKey publicKey = privateKey.createPublicKey();
-                AsciiArmoredFiles.writeKey(cliArguments.publicKeyPath(), publicKey);
+                AsciiArmoredFiles.write(cliArguments.publicKeyPath(),DefaultBlsPublicKeySerialization.getSerializer(), publicKey, AsciiArmoredType.PUBLIC_KEY);
                 System.out.printf("Saved public key file into: %s %n", cliArguments.publicKeyPath());
             }
         }

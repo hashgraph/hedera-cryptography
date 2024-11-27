@@ -47,8 +47,11 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
      * Serializes this {@link BlsPrivateKey} into a byte array.
      *
      * @return the serialized form of this object
+     * @deprecated use a {@link com.hedera.cryptography.utils.serialization.Serializer} instance
+     * e.g.: {@link com.hedera.cryptography.bls.extensions.serialization.DefaultBlsSignatureSerialization}
      */
     @NonNull
+    @Deprecated
     public byte[] toBytes() {
         return new Serializer()
                 .put(this.signatureSchema().toByte())
@@ -61,8 +64,11 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
      * @param bytes the serialized form of this object
      * @return a {@link BlsSignature} instance
      * @throws IllegalArgumentException if the key representation is invalid
+     * @deprecated use a {@link com.hedera.cryptography.utils.serialization.Deserializer} instance
+     * e.g.: {@link com.hedera.cryptography.bls.extensions.serialization.DefaultBlsSignatureSerialization}
      */
     @NonNull
+    @Deprecated
     public static BlsSignature fromBytes(@NonNull final byte[] bytes) {
         try {
             final Deserializer deserializer = new Deserializer(bytes);

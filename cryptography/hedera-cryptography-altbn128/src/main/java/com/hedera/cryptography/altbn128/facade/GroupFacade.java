@@ -199,12 +199,10 @@ public final class GroupFacade implements ElementFacade {
     }
 
     /**
-     * Converts an affine serialized point back into its internal representation.
-     * This method takes a byte array representing the affine serialization of a point
-     * and converts it back to its internal representation.
+     * If the byte array is a valid representation of a point, returns a copy of the representation or fails otherwise.
      *
-     * @param bytes a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} to validate if is a right point
-     * @return if valid the same {@code bytes} array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} containing the internal representation of the point
+     * @param bytes an array representing a point to validate
+     * @return a copy of bytes if the representation is valid
      * @throws NullPointerException if the bytes is null
      * @throws IllegalArgumentException if the bytes is of invalid size or the point does not belong to the curve
      * @throws AltBn128Exception in case of error.
@@ -221,7 +219,9 @@ public final class GroupFacade implements ElementFacade {
             throw new AltBn128Exception(result, "groupElementsBytes in" + this.group);
         }
 
-        return bytes;
+        byte[] ret = new byte[bytes.length];
+        System.arraycopy(bytes, 0, ret, 0, bytes.length);
+        return ret;
     }
 
     /**
