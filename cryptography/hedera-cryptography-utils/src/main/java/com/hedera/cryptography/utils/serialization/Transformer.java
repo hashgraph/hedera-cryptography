@@ -27,8 +27,18 @@ import java.util.function.Function;
  */
 public interface Transformer<S, T> extends Function<S, T> {
 
+    /**
+     * Transforms <S> into <T>
+     * @param s source object
+     * @return target object
+     */
     T transform(S s);
 
+    /**
+     * Transforms <S> into <T>
+     * @param s source object
+     * @return target object
+     */
     default T apply(S s) {
         return transform(s);
     }
