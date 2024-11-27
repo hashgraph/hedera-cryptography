@@ -105,10 +105,12 @@ class AltBn128GroupElementTest {
 
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
-    void toBytesAndPointAgain(AltBN128CurveGroup gr) {
-        var group = new AltBn128Group(gr);
-        assertEquals(group.zero(), group.fromBytes(group.zero().toBytes()));
-        assertEquals(group.generator(), group.fromBytes(group.generator().toBytes()));
+    void toCoordinatesAndBack(final AltBN128CurveGroup gr) {
+        final var group = new AltBn128Group(gr);
+        final GroupElement element = group.generator();
+        assertEquals(element, group.fromCoordinates(
+                element.getXCoordinate(),
+                element.getYCoordinate()));
     }
 
     @Test
@@ -213,12 +215,11 @@ class AltBn128GroupElementTest {
         assertThrows(IllegalArgumentException.class, () -> group.zero().multiply(mock(FieldElement.class)));
     }
 
-    @Test
-    void testSizes() {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP1);
-        var group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testSizes(final AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
         assertEquals(group.elementSize(), group.zero().size());
-        assertEquals(group2.elementSize(), group2.zero().size());
     }
 
     @SuppressWarnings("deprecation")
