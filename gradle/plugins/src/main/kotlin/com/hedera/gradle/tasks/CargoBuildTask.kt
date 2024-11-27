@@ -71,7 +71,10 @@ abstract class CargoBuildTask : DefaultTask() {
 
         val profile = if (release.get()) "release" else "debug"
         val cargoOutputDir =
-            File(cargoToml.get().asFile.parent, "target/${toolchain.get().target}/${profile}")
+            File(
+                cargoToml.get().asFile.parent,
+                "target/${stripTargetVersion(toolchain.get())}/${profile}"
+            )
 
         files.copy {
             from(cargoOutputDir)
@@ -81,6 +84,17 @@ abstract class CargoBuildTask : DefaultTask() {
             include("lib${libname.get()}.dylib")
             include("${libname.get()}.dll")
         }
+    }
+
+    private fun stripTargetVersion(toolchain: CargoToolchain): String {
+        val re = Regex(pattern = "^([a-zA-Z0-9_\\-]+)(?:\\.[0-9.]+)?$")
+        val mr = re.find(toolchain.target)
+
+        if (mr != null && mr.groupValues.size > 1) {
+            return mr.groupValues[1]
+        }
+
+        return toolchain.target
     }
 
     private fun installCargoCrossCompiler(buildsForWindows: Boolean) {
