@@ -188,7 +188,6 @@ public final class GroupFacade implements ElementFacade {
      * @return the byte array representation of the resulting point.
      * @throws AltBn128Exception in case of error.
      */
-    @Deprecated
     public byte[] scalarMul(@NonNull final byte[] point, final long scalar) {
         validateSize(point, size, "Invalid point size");
         final byte[] output = new byte[size];

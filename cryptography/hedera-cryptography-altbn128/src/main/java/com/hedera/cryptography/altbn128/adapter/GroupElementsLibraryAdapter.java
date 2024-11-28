@@ -120,7 +120,6 @@ public interface GroupElementsLibraryAdapter extends RandomElementsAdapter {
      * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal representation of the point
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
-    @Deprecated
     int groupElementsLongMul(final int group, final byte[] point, final long scalar, final byte[] output);
 
     /**

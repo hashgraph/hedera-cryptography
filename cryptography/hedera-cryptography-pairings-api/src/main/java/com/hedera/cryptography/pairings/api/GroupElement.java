@@ -91,7 +91,6 @@ public interface GroupElement {
      * @return a copy of the group element
      */
     @NonNull
-    @Deprecated
     GroupElement copy();
 
     /**
