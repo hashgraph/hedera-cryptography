@@ -88,11 +88,11 @@ public class KeyGen {
                             cliArguments.publicKeyPath());
                 }
                 final BlsKeyPair keyPair = BlsKeyPair.generate(SIGNATURE_SCHEMA);
-                AsciiArmoredFiles.write(
+                AsciiArmoredFiles.writeKey(
                         cliArguments.privateKeyPath(),
                         DefaultBlsPrivateKeySerialization.getSerializer(),
                         keyPair.privateKey());
-                AsciiArmoredFiles.write(
+                AsciiArmoredFiles.writeKey(
                         cliArguments.publicKeyPath(),
                         DefaultBlsPublicKeySerialization.getSerializer(),
                         keyPair.publicKey());
@@ -113,7 +113,7 @@ public class KeyGen {
                         cliArguments.privateKeyPath(),
                         DefaultBlsPrivateKeySerialization.getDeserializer(SIGNATURE_SCHEMA));
                 final BlsPublicKey publicKey = privateKey.createPublicKey();
-                AsciiArmoredFiles.write(
+                AsciiArmoredFiles.writeKey(
                         cliArguments.publicKeyPath(), DefaultBlsPublicKeySerialization.getSerializer(), publicKey);
                 System.out.printf("Saved public key file into: %s %n", cliArguments.publicKeyPath());
             }

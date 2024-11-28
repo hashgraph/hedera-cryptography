@@ -118,10 +118,10 @@ public class AsciiArmoredFiles {
      * @param key The key to write
      * @throws IOException In case of file writing error
      */
-    public static void write(
+    public static void writeKey(
             @NonNull final Path path, final Serializer<BlsPublicKey> serializer, @NonNull final BlsPublicKey key)
             throws IOException {
-        write(
+        writeKey(
                 path,
                 Base64.getEncoder()
                         .encodeToString(serializer.serialize(Objects.requireNonNull(key, "key must not be null"))),
@@ -134,10 +134,10 @@ public class AsciiArmoredFiles {
      * @param key The key to write
      * @throws IOException In case of file writing error
      */
-    public static void write(
+    public static void writeKey(
             @NonNull final Path path, final Serializer<BlsPrivateKey> serializer, @NonNull final BlsPrivateKey key)
             throws IOException {
-        write(
+        writeKey(
                 path,
                 Base64.getEncoder()
                         .encodeToString(serializer.serialize(Objects.requireNonNull(key, "key must not be null"))),
@@ -151,7 +151,7 @@ public class AsciiArmoredFiles {
      * @param asciiArmoredType eiter "PUBLIC KEY" or "PRIVATE KEY" string
      * @throws IOException In case of file reading error
      */
-    private static void write(
+    private static void writeKey(
             @NonNull final Path path, @NonNull final String content, @NonNull final AsciiArmoredType asciiArmoredType)
             throws IOException {
         Objects.requireNonNull(path, "path must not be null");
