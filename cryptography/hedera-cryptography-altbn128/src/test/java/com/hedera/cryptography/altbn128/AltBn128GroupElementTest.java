@@ -16,7 +16,12 @@
 
 package com.hedera.cryptography.altbn128;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
@@ -101,11 +106,10 @@ class AltBn128GroupElementTest {
                 ByteArrayUtils.toBigIntegers(group.generator().toBytes(), 32),
                 List.of(
                         new BigInteger("10857046999023057135944570762232829481370756359578518086990519993285655852781"),
-                                new BigInteger(
-                                        "11559732032986387107991004021392285783925812861821192530917403151452391805634"),
+                        new BigInteger("11559732032986387107991004021392285783925812861821192530917403151452391805634"),
                         new BigInteger("8495653923123431417604973247489272438418190587263600148770280649306958101930"),
-                                new BigInteger(
-                                        "4082367875863433681332203403145435568316851327593401208105741076214120093531")));
+                        new BigInteger(
+                                "4082367875863433681332203403145435568316851327593401208105741076214120093531")));
     }
 
     @Test
@@ -142,6 +146,97 @@ class AltBn128GroupElementTest {
                         group.generator().multiply(field.fromLong(index)),
                         results.get(index),
                         "result " + index + " is not correct"));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void groupElementAdditionAssociativity(final AltBN128CurveGroup gr, final Random random) {
+        var group = new AltBn128Group(gr);
+        var G1 = group.generator();
+        var G2 = group.generator().multiply(new AltBn128Field().fromLong(random.nextLong(Long.MAX_VALUE)));
+        var G3 = group.generator().multiply(new AltBn128Field().fromLong(random.nextLong(Long.MAX_VALUE)));
+        assertEquals(G1.add(G2).add(G3), G1.add(G2.add(G3)));
+    }
+
+    @Test
+    void fieldElementAdditionCommutativity(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        var b = field.random(rng);
+        assertEquals(a.add(b), b.add(a));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testAdditiveIdentity(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var element = group.generator();
+        var identity = group.zero();
+
+        // Check G + 0 = G
+        assertEquals(element, element.add(identity));
+        assertEquals(element, identity.add(element));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testScalarMultiplicationWithOneAndZero(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var element = group.generator();
+
+        // Check that 1 * G = G
+        assertEquals(element, element.multiply(field.fromLong(1)));
+
+        // Check that 0 * G = 0
+        assertEquals(group.zero(), element.multiply(field.fromLong(0)));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testAdditionCommutativity(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var G1 = group.generator();
+        var G2 = group.generator().multiply(new AltBn128Field().fromLong(2));
+
+        // Check G1 + G2 = G2 + G1
+        assertEquals(G1.add(G2), G2.add(G1));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testAdditionAssociativity(final AltBN128CurveGroup gr, final Random random) {
+        var group = new AltBn128Group(gr);
+        var G1 = group.generator();
+        var G2 = group.generator().multiply(new AltBn128Field().fromLong(random.nextLong(Long.MAX_VALUE)));
+        var G3 = group.generator().multiply(new AltBn128Field().fromLong(random.nextLong(Long.MAX_VALUE)));
+
+        // Check (G1 + G2) + G3 = G1 + (G2 + G3)
+        assertEquals(G1.add(G2).add(G3), G1.add(G2.add(G3)));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testPointDoubling(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var G = group.generator();
+
+        // Check that 2 * G = G + G
+        assertEquals(G.multiply(field.fromLong(2)), G.add(G));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testRandomPointsWithinBounds(final AltBN128CurveGroup gr, final Random rng) {
+        final var group = new AltBn128Group(gr);
+        final byte[] seed = new byte[group.seedSize()];
+        rng.nextBytes(seed);
+
+        final var randomPoint = group.random(seed);
+
+        // Ensure the point is not null
+        assertNotNull(randomPoint, "Random point should not be null");
     }
 
     @Test
