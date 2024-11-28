@@ -47,13 +47,7 @@ public class DefaultFieldElementSerialization {
     /**
      * Deserializer
      */
-    private static final class DefaultDeserializer implements Deserializer<FieldElement> {
-        private final Field field;
-
-        public DefaultDeserializer(@NonNull Field field) {
-            this.field = field;
-        }
-
+    private record DefaultDeserializer(Field field) implements Deserializer<FieldElement> {
         @Override
         public FieldElement deserialize(final byte[] element) {
             try {

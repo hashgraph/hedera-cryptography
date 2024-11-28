@@ -41,16 +41,18 @@ import java.util.List;
 
 /**
  * Use this class to construct a deserializer to get a {@link TssMessage} from an array, or to get a serializer to build the byte[] representation from an instance.
- *
- *  Specification of the format:<p>
- *  Given
+ * <br>
+ * Specification of the format:
+ * <p>
+ * Given:
  *  <ul>
  *      <li>{@code e}: {@link FieldElement#size()}</li>
  *      <li>{@code g}: {@link GroupElement#size()} of {@link SignatureSchema#getPublicKeyGroup()}</li>
  *      <li>{@code t}: threshold value</li>
  *      <li>{@code s}: total-shares (Participants*Shares)</li>
  *  </ul>
- * A {@link TssMessage} byte representation will consist of:<br>
+ *<p>
+ * A {@link TssMessage} byte representation produced with this class will consist of:
  * <ul>
  *     <li>4 bytes (big-endian) representing the version of the message. Must be {@code MESSAGE_CURRENT_VERSION} constant value</li>
  *     <li>4 bytes for {@link SignatureSchema} that originated the message.</li>

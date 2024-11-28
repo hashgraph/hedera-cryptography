@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.tss.extensions;
+package com.hedera.cryptography.tss.impl;
 
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.tss.api.TssMessage;

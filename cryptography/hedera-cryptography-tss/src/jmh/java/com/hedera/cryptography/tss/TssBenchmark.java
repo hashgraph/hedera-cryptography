@@ -21,7 +21,7 @@ import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.tss.api.TssParticipantPrivateInfo;
 import com.hedera.cryptography.tss.api.TssShareExtractor;
-import com.hedera.cryptography.tss.extensions.Groth21Service;
+import com.hedera.cryptography.tss.impl.Groth21Service;
 import com.hedera.cryptography.tss.test.fixtures.TssTestCommittee;
 import com.hedera.cryptography.tss.test.fixtures.TssTestUtils;
 import java.util.List;

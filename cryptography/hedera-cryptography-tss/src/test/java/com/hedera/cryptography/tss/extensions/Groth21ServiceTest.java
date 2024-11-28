@@ -23,11 +23,11 @@ import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.tss.api.TssMessageParsingException;
 import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.api.TssShareSignature;
 import com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization;
+import com.hedera.cryptography.tss.impl.Groth21Service;
 import com.hedera.cryptography.tss.test.fixtures.TssTestCommittee;
 import com.hedera.cryptography.tss.test.fixtures.TssTestUtils;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
@@ -69,7 +69,7 @@ class Groth21ServiceTest {
     }
 
     @Test
-    void testToBytesAndBackAgain() throws TssMessageParsingException {
+    void testToBytesAndBackAgain() {
         var genesisCommittee = new TssTestCommittee(1, 2, keys);
         var participantDirectory = genesisCommittee.participantDirectory();
         var myMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
@@ -84,7 +84,7 @@ class Groth21ServiceTest {
     }
 
     @Test
-    void testGenesis() throws TssMessageParsingException {
+    void testGenesis() {
         final var genesisCommittee = new TssTestCommittee(GENESIS_SIZE, GENESIS_SHARES, keys);
         final var participantDirectory = genesisCommittee.participantDirectory();
         final var myMessage = tssService.genesisStage().generateTssMessage(participantDirectory);

@@ -16,8 +16,13 @@
 
 package com.hedera.cryptography.tss.api;
 
+import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.tss.impl.Groth21Service;
+import com.hedera.cryptography.tss.impl.groth21.Groth21GenesisStage;
+import com.hedera.cryptography.tss.impl.groth21.Groth21RekeyStage;
 import com.hedera.cryptography.utils.serialization.Transformer;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Random;
 
 /**
  * A Threshold Signature Scheme Service.
@@ -85,4 +90,16 @@ public interface TssService {
     @NonNull
     <S> TssMessage messageFrom(@NonNull Transformer<S, TssMessage> tssMessageTransformer, @NonNull S message)
             throws TssMessageParsingException;
+
+    /**
+     * Gets a Threshold Signature Scheme (TSS) Service Instance.
+     * Use the service to:
+     *   <ul>
+     *       <li>Get a {@link Groth21GenesisStage}</li>
+     *       <li>Get a {@link Groth21RekeyStage}</li>
+     *   </ul>
+     */
+    static TssService createDefaultService(SignatureSchema signatureSchema, Random random) {
+        return new Groth21Service(signatureSchema, random);
+    }
 }

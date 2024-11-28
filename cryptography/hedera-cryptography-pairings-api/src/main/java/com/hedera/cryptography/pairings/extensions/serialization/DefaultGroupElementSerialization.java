@@ -42,12 +42,7 @@ public class DefaultGroupElementSerialization {
     /**
      * Default deserializer
      */
-    private static class DefaultDeserializer implements Deserializer<GroupElement> {
-        private final Group group;
-
-        public DefaultDeserializer(Group group) {
-            this.group = group;
-        }
+    private record DefaultDeserializer(Group group) implements Deserializer<GroupElement> {
 
         @NonNull
         @Override
