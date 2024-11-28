@@ -59,15 +59,14 @@ public class RngExtension implements InvocationInterceptor, ParameterResolver, T
     private static final String SEED_KEY = "seed";
 
     /**
-     * Creates a new {@link Random} instance with a random seed which gets stored in the extension context.
+     * Creates a new {@link SeededRandom} instance with a random seed which gets stored in the extension context.
      *
      * @param extensionContext the extension context of the test
-     *
-     * @return a new {@link Random} instance
+     * @return a new {@link SeededRandom} instance
      */
-    private Random createRandomWithSeed(final ExtensionContext extensionContext) {
+    private SeededRandom createRandomWithSeed(final ExtensionContext extensionContext) {
         final long seed = new Random().nextLong();
-        final Random random = new Random(seed);
+        final SeededRandom random = new SeededRandom(seed);
 
         extensionContext.getStore(EXTENSION_NAMESPACE).put(SEED_KEY, seed);
 
@@ -75,14 +74,13 @@ public class RngExtension implements InvocationInterceptor, ParameterResolver, T
     }
 
     /**
-     * Intercepts a test method invocation and injects a {@link Random} instance into the test instance. The {@link Random}
-     * instance is injected into any field of the test instance that is annotated with {@link Inject} and is of type
-     * {@link Random}.
+     * Intercepts a test method invocation and injects a {@link SeededRandom} instance into the test instance. The
+     * {@link SeededRandom} instance is injected into any field of the test instance that is annotated with
+     * {@link Inject} and is of type {@link SeededRandom}.
      *
-     * @param invocation the invocation which allows to proceed with the test method execution
-     * @param ignored the reflective invocation context of the test method (ignored)
+     * @param invocation       the invocation which allows to proceed with the test method execution
+     * @param ignored          the reflective invocation context of the test method (ignored)
      * @param extensionContext the extension context of the test
-     *
      * @throws Throwable if an error occurs during the interception
      */
     @Override
@@ -115,10 +113,8 @@ public class RngExtension implements InvocationInterceptor, ParameterResolver, T
      * Checks if this extension supports parameter resolution for the given parameter context.
      *
      * @param parameterContext the context of the parameter to be resolved
-     * @param ignored the extension context of the test (ignored)
-     *
+     * @param ignored          the extension context of the test (ignored)
      * @return true if parameter resolution is supported, false otherwise
-     *
      * @throws ParameterResolutionException if an error occurs during parameter resolution
      */
     @Override
@@ -135,13 +131,11 @@ public class RngExtension implements InvocationInterceptor, ParameterResolver, T
     }
 
     /**
-     * Resolves the parameter of a test method, providing a {@link Random} instance when needed.
+     * Resolves the parameter of a test method, providing a {@link SeededRandom} instance when needed.
      *
      * @param parameterContext the context of the parameter to be resolved
      * @param extensionContext the extension context of the test
-     *
      * @return the resolved parameter value
-     *
      * @throws ParameterResolutionException if an error occurs during parameter resolution
      */
     @Override
@@ -154,7 +148,7 @@ public class RngExtension implements InvocationInterceptor, ParameterResolver, T
         return Optional.of(parameterContext)
                 .map(ParameterContext::getParameter)
                 .map(Parameter::getType)
-                .filter(t -> t.equals(Random.class))
+                .filter(t -> t.equals(Random.class) || t.equals(SeededRandom.class))
                 .map(t -> createRandomWithSeed(extensionContext))
                 .orElseThrow(() -> new ParameterResolutionException("Could not resolve parameter"));
     }
@@ -163,7 +157,7 @@ public class RngExtension implements InvocationInterceptor, ParameterResolver, T
      * Invoked after a test has been executed and failed.
      *
      * @param extensionContext the current extension context; never {@code null}
-     * @param cause the throwable that caused test failure; may be {@code null}
+     * @param cause            the throwable that caused test failure; may be {@code null}
      */
     @Override
     public void testFailed(@NonNull final ExtensionContext extensionContext, @Nullable final Throwable cause) {

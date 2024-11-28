@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
+import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -138,5 +139,41 @@ class AltBn128FieldTest {
             assertEquals(elements.get(i), element);
             assertEquals(elements.get(i).hashCode(), element.hashCode());
         }
+    }
+
+    @Test
+    void fieldElementAdditionIdentity(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        assertEquals(a, a.add(field.zero())); // a + 0 = a
+    }
+
+    @Test
+    void fieldElementAdditionInverse(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        var inverseA = field.fromLong(0).subtract(a); // Assuming this would give -a
+        assertEquals(field.zero(), a.add(inverseA)); // a + (-a) = 0
+    }
+
+    @Test
+    void fieldElementMultiplicationIdentity(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        assertEquals(a, a.multiply(field.one())); // a * 1 = a
+    }
+
+    @Test
+    void fieldElementMultiplicationZero(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        assertEquals(field.zero(), a.multiply(field.zero())); // a * 0 = 0
+    }
+
+    @Test
+    void createFieldElementFromLargeBigInteger(final Random rng) {
+        var field = new AltBn128Field();
+        var largeValue = BigInteger.valueOf(2).pow(254).subtract(BigInteger.ONE);
+        assertNotNull(field.fromBigInteger(largeValue)); // Should reduce it within the field
     }
 }

@@ -16,7 +16,11 @@
 
 package com.hedera.cryptography.altbn128;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
@@ -120,5 +124,58 @@ class AltBn128GroupTest {
                 IllegalArgumentException.class,
                 () -> group.batchMultiply(List.of(field.zero(), mock(FieldElement.class))));
         assertThrows(IllegalArgumentException.class, () -> group.add(List.of(group.zero(), mock(GroupElement.class))));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testIdentityProperty(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var generator = group.generator();
+        var zero = group.zero();
+
+        // Check if G + 0 = G
+        assertEquals(generator, generator.add(zero));
+        assertEquals(generator, zero.add(generator));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testAdditionAssociativity(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var G1 = group.generator();
+        var G2 = G1.add(G1); // e.g., 2 * G
+        var G3 = G1.add(G2); // e.g., 3 * G
+
+        // Check (G1 + G2) + G3 = G1 + (G2 + G3)
+        assertEquals(G1.add(G2).add(G3), G1.add(G2.add(G3)));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testAdditionCommutativity(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var G1 = group.generator();
+        var G2 = G1.add(G1); // e.g., 2 * G
+
+        // Check G1 + G2 = G2 + G1
+        assertEquals(G1.add(G2), G2.add(G1));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    void testSerializationConsistency(AltBN128CurveGroup gr) {
+        var group = new AltBn128Group(gr);
+        var element = group.generator();
+        byte[] bytes = element.toBytes();
+        var deserializedElement = group.fromBytes(bytes);
+
+        assertEquals(element, deserializedElement); // Ensures consistency after serialization
+    }
+
+    @Test
+    void invalidFromBytesInput() {
+        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+        assertThrows(IllegalArgumentException.class, () -> group.fromBytes(new byte[0]));
+        assertThrows(IllegalArgumentException.class, () -> group.fromBytes(new byte[group.elementSize() + 1]));
     }
 }
