@@ -102,7 +102,7 @@ public final class DefaultBlsPublicKeySerialization {
          */
         @Override
         public byte[] serialize(final BlsPublicKey element) {
-            return element.toBytes();
+            return elementSerializer.serialize(element.element());
         }
     }
 }

@@ -17,7 +17,6 @@
 package com.hedera.cryptography.blskeygen;
 
 import com.hedera.cryptography.asciiarmored.AsciiArmoredFiles;
-import com.hedera.cryptography.asciiarmored.AsciiArmoredType;
 import com.hedera.cryptography.bls.BlsKeyPair;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
@@ -92,13 +91,11 @@ public class KeyGen {
                 AsciiArmoredFiles.write(
                         cliArguments.privateKeyPath(),
                         DefaultBlsPrivateKeySerialization.getSerializer(),
-                        keyPair.privateKey(),
-                        AsciiArmoredType.PRIVATE_KEY);
+                        keyPair.privateKey());
                 AsciiArmoredFiles.write(
                         cliArguments.publicKeyPath(),
                         DefaultBlsPublicKeySerialization.getSerializer(),
-                        keyPair.publicKey(),
-                        AsciiArmoredType.PUBLIC_KEY);
+                        keyPair.publicKey());
                 System.out.printf(
                         "Saved private and public key files into: %s and %s %n",
                         cliArguments.privateKeyPath(), cliArguments.publicKeyPath());
@@ -117,10 +114,7 @@ public class KeyGen {
                         DefaultBlsPrivateKeySerialization.getDeserializer(SIGNATURE_SCHEMA));
                 final BlsPublicKey publicKey = privateKey.createPublicKey();
                 AsciiArmoredFiles.write(
-                        cliArguments.publicKeyPath(),
-                        DefaultBlsPublicKeySerialization.getSerializer(),
-                        publicKey,
-                        AsciiArmoredType.PUBLIC_KEY);
+                        cliArguments.publicKeyPath(), DefaultBlsPublicKeySerialization.getSerializer(), publicKey);
                 System.out.printf("Saved public key file into: %s %n", cliArguments.publicKeyPath());
             }
         }

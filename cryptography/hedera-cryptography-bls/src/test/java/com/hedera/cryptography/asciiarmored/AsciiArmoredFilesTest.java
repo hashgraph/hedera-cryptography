@@ -34,11 +34,28 @@ import org.junit.jupiter.api.io.TempDir;
 
 public class AsciiArmoredFilesTest {
     private static final String BASE_64_KEY = "/NpGlCEh4AMwkgBHmpqfJrvYbVf0ss3LspM14kNJVyI=";
+    private static final String BASE_64_KEY_OLD = "AWUoGGXtbZQ8SSfe1LxzvTSmVCuom+DxxXnYx3riBRYl";
     private static final SignatureSchema SIGNATURE_SCHEMA =
             SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
 
     @TempDir
     Path tempDir;
+
+    @Test
+    @Deprecated
+    public void testPemWriteReadOldFormat() throws IOException {
+        final Path keyPath = tempDir.resolve("test.pem");
+        final BlsPrivateKey originalKey =
+                BlsPrivateKey.fromBytes(Base64.getDecoder().decode(BASE_64_KEY_OLD));
+        String expectedContent = "-----BEGIN PRIVATE KEY-----\n" + BASE_64_KEY_OLD + "\n" + "-----END PRIVATE KEY-----";
+
+        AsciiArmoredFiles.write(keyPath, BlsPrivateKey::toBytes, originalKey);
+        assertTrue(keyPath.toFile().exists(), "Key should have been written to file");
+        final String fileContents = Files.readString(keyPath);
+        assertEquals(expectedContent, fileContents, "File contents should match expected");
+        final BlsPrivateKey readKey = AsciiArmoredFiles.readPrivateKey(keyPath);
+        assertEquals(BASE_64_KEY_OLD, Base64.getEncoder().encodeToString(readKey.toBytes()));
+    }
 
     @Test
     public void testPemWriteRead() throws IOException {
@@ -49,8 +66,7 @@ public class AsciiArmoredFilesTest {
                 deserializer.deserialize(Base64.getDecoder().decode(BASE_64_KEY));
         String expectedContent = "-----BEGIN PRIVATE KEY-----\n" + BASE_64_KEY + "\n" + "-----END PRIVATE KEY-----";
 
-        AsciiArmoredFiles.write(
-                keyPath, DefaultBlsPrivateKeySerialization.getSerializer(), originalKey, AsciiArmoredType.PRIVATE_KEY);
+        AsciiArmoredFiles.write(keyPath, DefaultBlsPrivateKeySerialization.getSerializer(), originalKey);
         assertTrue(keyPath.toFile().exists(), "Key should have been written to file");
         final String fileContents = Files.readString(keyPath);
         assertEquals(expectedContent, fileContents, "File contents should match expected");
@@ -73,8 +89,7 @@ public class AsciiArmoredFilesTest {
                         null,
                         DefaultBlsPrivateKeySerialization.getSerializer(),
                         DefaultBlsPrivateKeySerialization.getDeserializer(SIGNATURE_SCHEMA)
-                                .deserialize(Base64.getDecoder().decode(BASE_64_KEY)),
-                        AsciiArmoredType.PUBLIC_KEY));
+                                .deserialize(Base64.getDecoder().decode(BASE_64_KEY))));
         assertEquals("path must not be null", exception.getMessage());
     }
 
@@ -83,10 +98,7 @@ public class AsciiArmoredFilesTest {
         Exception exception = assertThrows(
                 NullPointerException.class,
                 () -> AsciiArmoredFiles.write(
-                        Path.of("test.pem"),
-                        DefaultBlsPrivateKeySerialization.getSerializer(),
-                        (BlsPrivateKey) null,
-                        AsciiArmoredType.PUBLIC_KEY));
+                        Path.of("test.pem"), DefaultBlsPrivateKeySerialization.getSerializer(), null));
         assertEquals("key must not be null", exception.getMessage());
     }
 }

@@ -219,7 +219,7 @@ public final class GroupFacade implements ElementFacade {
             throw new AltBn128Exception(result, "groupElementsBytes in" + this.group);
         }
 
-        byte[] ret = new byte[bytes.length];
+        final byte[] ret = new byte[bytes.length];
         System.arraycopy(bytes, 0, ret, 0, bytes.length);
         return ret;
     }
