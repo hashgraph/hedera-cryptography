@@ -135,7 +135,7 @@ class AltBn128BilinearPairingTest {
     void testPairingWithMultiples() {
         final AltBn128Field fq = new AltBn128Field();
         final AltBn128Group g1 = new AltBn128Group(AltBN128CurveGroup.GROUP1, fq);
-        final AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2,fq);
+        final AltBn128Group g2 = new AltBn128Group(AltBN128CurveGroup.GROUP2, fq);
 
         // Precomputed values from the Python output
         final BigInteger a1 =

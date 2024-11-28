@@ -141,7 +141,8 @@ class AltBn128GroupTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void testIdentityProperty(AltBN128CurveGroup gr) {
-        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
         var generator = group.generator();
         var zero = group.zero();
 
@@ -153,7 +154,8 @@ class AltBn128GroupTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void testAdditionAssociativity(AltBN128CurveGroup gr) {
-        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
         var G1 = group.generator();
         var G2 = G1.add(G1); // e.g., 2 * G
         var G3 = G1.add(G2); // e.g., 3 * G
@@ -165,7 +167,8 @@ class AltBn128GroupTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void testAdditionCommutativity(AltBN128CurveGroup gr) {
-        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
         var G1 = group.generator();
         var G2 = G1.add(G1); // e.g., 2 * G
 
@@ -176,7 +179,8 @@ class AltBn128GroupTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void testSerializationConsistency(AltBN128CurveGroup gr) {
-        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
         var element = group.generator();
         byte[] bytes = element.toBytes();
         var deserializedElement = group.fromBytes(bytes);
@@ -186,7 +190,8 @@ class AltBn128GroupTest {
 
     @Test
     void invalidFromBytesInput() {
-        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2, field);
         assertThrows(IllegalArgumentException.class, () -> group.fromBytes(new byte[0]));
         assertThrows(IllegalArgumentException.class, () -> group.fromBytes(new byte[group.elementSize() + 1]));
     }

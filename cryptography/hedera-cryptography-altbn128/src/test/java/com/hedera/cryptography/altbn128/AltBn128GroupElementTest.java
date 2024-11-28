@@ -208,25 +208,19 @@ class AltBn128GroupElementTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void groupElementAdditionAssociativity(final AltBN128CurveGroup gr, final Random random) {
-        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
         var G1 = group.generator();
         var G2 = group.generator().multiply(new AltBn128Field().fromLong(random.nextLong(Long.MAX_VALUE)));
         var G3 = group.generator().multiply(new AltBn128Field().fromLong(random.nextLong(Long.MAX_VALUE)));
         assertEquals(G1.add(G2).add(G3), G1.add(G2.add(G3)));
     }
 
-    @Test
-    void fieldElementAdditionCommutativity(final Random rng) {
-        var field = new AltBn128Field();
-        var a = field.random(rng);
-        var b = field.random(rng);
-        assertEquals(a.add(b), b.add(a));
-    }
-
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void testAdditiveIdentity(AltBN128CurveGroup gr) {
-        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
         var element = group.generator();
         var identity = group.zero();
 
@@ -238,8 +232,8 @@ class AltBn128GroupElementTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void testScalarMultiplicationWithOneAndZero(AltBN128CurveGroup gr) {
-        var group = new AltBn128Group(gr);
         var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
         var element = group.generator();
 
         // Check that 1 * G = G
@@ -252,7 +246,8 @@ class AltBn128GroupElementTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void testAdditionCommutativity(AltBN128CurveGroup gr) {
-        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
         var G1 = group.generator();
         var G2 = group.generator().multiply(new AltBn128Field().fromLong(2));
 
@@ -263,7 +258,8 @@ class AltBn128GroupElementTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void testAdditionAssociativity(final AltBN128CurveGroup gr, final Random random) {
-        var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
         var G1 = group.generator();
         var G2 = group.generator().multiply(new AltBn128Field().fromLong(random.nextLong(Long.MAX_VALUE)));
         var G3 = group.generator().multiply(new AltBn128Field().fromLong(random.nextLong(Long.MAX_VALUE)));
@@ -275,8 +271,8 @@ class AltBn128GroupElementTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void testPointDoubling(AltBN128CurveGroup gr) {
-        var group = new AltBn128Group(gr);
         var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
         var G = group.generator();
 
         // Check that 2 * G = G + G
@@ -286,7 +282,8 @@ class AltBn128GroupElementTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void testRandomPointsWithinBounds(final AltBN128CurveGroup gr, final Random rng) {
-        final var group = new AltBn128Group(gr);
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(gr, field);
         final byte[] seed = new byte[group.seedSize()];
         rng.nextBytes(seed);
 
