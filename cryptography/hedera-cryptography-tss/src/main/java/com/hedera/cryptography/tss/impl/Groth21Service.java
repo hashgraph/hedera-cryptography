@@ -74,8 +74,6 @@ public class Groth21Service implements TssService {
 
     /**
      * {@inheritDoc}
-     * @throws TssMessageParsingException if the message cannot be correctly parsed
-     * @deprecated use {@link TssService#messageFrom(Transformer, Object)}
      */
     @NonNull
     @Deprecated
@@ -89,7 +87,6 @@ public class Groth21Service implements TssService {
 
     /**
      * {@inheritDoc}
-     * @throws TssMessageParsingException if the message cannot be correctly parsed
      */
     @NonNull
     @Override

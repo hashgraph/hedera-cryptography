@@ -73,6 +73,7 @@ public interface TssService {
      * @throws TssMessageParsingException in case of error while parsing the TssMessage from its byte array format
      * @return a TssMessage instance
      * @deprecated use an instance of {@link com.hedera.cryptography.utils.serialization.Deserializer}
+     *  or {@link TssService#messageFrom(Transformer, Object)}
      */
     @NonNull
     @Deprecated
@@ -98,8 +99,11 @@ public interface TssService {
      *       <li>Get a {@link Groth21GenesisStage}</li>
      *       <li>Get a {@link Groth21RekeyStage}</li>
      *   </ul>
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
+     * @param random a source of randomness
+     * @return the default provided implementation of a TssService
      */
-    static TssService createDefaultService(SignatureSchema signatureSchema, Random random) {
+    static TssService createDefaultService(@NonNull final SignatureSchema signatureSchema,@NonNull final Random random) {
         return new Groth21Service(signatureSchema, random);
     }
 }
