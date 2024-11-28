@@ -103,6 +103,7 @@ public interface TssService {
      * @param random a source of randomness
      * @return the default provided implementation of a TssService
      */
+    @NonNull
     static TssService createDefaultService(@NonNull final SignatureSchema signatureSchema,@NonNull final Random random) {
         return new Groth21Service(signatureSchema, random);
     }
