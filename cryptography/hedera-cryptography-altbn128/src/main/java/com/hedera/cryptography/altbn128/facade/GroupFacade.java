@@ -219,7 +219,7 @@ public final class GroupFacade implements ElementFacade {
             throw new AltBn128Exception(result, "groupElementsBytes in" + this.group);
         }
 
-        final byte[] ret = new byte[bytes.length];
+        final byte[] ret = new byte[bytes.length]; // TODO get this representation from arkworks
         System.arraycopy(bytes, 0, ret, 0, bytes.length);
         return ret;
     }
