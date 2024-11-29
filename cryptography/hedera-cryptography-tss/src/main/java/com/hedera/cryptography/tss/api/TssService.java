@@ -104,7 +104,8 @@ public interface TssService {
      * @return the default provided implementation of a TssService
      */
     @NonNull
-    static TssService createDefaultService(@NonNull final SignatureSchema signatureSchema,@NonNull final Random random) {
+    static TssService createDefaultService(
+            @NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {
         return new Groth21Service(signatureSchema, random);
     }
 }
