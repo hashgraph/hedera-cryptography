@@ -112,6 +112,17 @@ public interface GroupElementsLibraryAdapter extends RandomElementsAdapter {
     int groupElementsScalarMul(final int group, final byte[] point, final byte[] scalar, final byte[] output);
 
     /**
+     * Returns the scalar multiplication between code {@code point} and {@code scalar}.
+     *
+     * @param group on which of the groups of the curve to perform the operation
+     * @param point a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that will be used as the seed to create the point
+     * @param scalar a long representation of the scalar
+     * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal representation of the point
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    int groupElementsLongMul(final int group, final byte[] point, final long scalar, final byte[] output);
+
+    /**
      * Validates if a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} is a valid representation of a point in the curve
      *
      * @param group on which of the groups of the curve to perform the operation
@@ -122,14 +133,33 @@ public interface GroupElementsLibraryAdapter extends RandomElementsAdapter {
     int groupElementsBytes(final int group, final byte[] point);
 
     /**
-     * Returns the result of the multiplication of the {@link GroupElementsLibraryAdapter#groupElementsGenerator(int, byte[])} for each scalar in the {@code scalars} list
+     * Returns the result of the multiplication of each point in the  {@code points} list with each scalar in the {@code scalars} list.
      *
-     * @param group on which of the groups of the curve to perform the operation
-     * @param scalars a byte matrix representing a list of N byte arrays of {@link FieldElementsLibraryAdapter#fieldElementsSize()}} size each representing a scalar
-     * @param outputs a byte matrix of N byte arrays {@link GroupElementsLibraryAdapter#groupElementsSize(int)}size to hold the internal representation of the generator point times the scalar in {@code scalars}
-     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     * @param group   on which of the groups of the curve to perform the operation
+     * @param scalars a byte matrix representing a list of N byte arrays of
+     *                  {@link FieldElementsLibraryAdapter#fieldElementsSize()} size each representing a scalar
+     * @param points a byte matrix representing a list of N byte arrays of
+     *                {@link GroupElementsLibraryAdapter#groupElementsSize(int)} size each representing a point
+     * @param outputs a byte matrix of N byte arrays {@link GroupElementsLibraryAdapter#groupElementsSize(int)}size to
+     *                hold the internal representation of the generator point times the scalar in {@code scalars}
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an
+     * error
      */
-    int groupElementsBatchScalarMul(final int group, final byte[][] scalars, final byte[][] outputs);
+    int groupElementsMsm(final int group, final byte[][] scalars, final byte[][] points, final byte[] outputs);
+
+    /**
+     * Returns the result of the multiplication of each point in the  {@code points} list with each scalar in the {@code scalars} list.
+     *
+     * @param group   on which of the groups of the curve to perform the operation
+     * @param scalars an int array representing a list of N scalars
+     * @param points a byte matrix representing a list of N byte arrays of
+     *                {@link GroupElementsLibraryAdapter#groupElementsSize(int)} size each representing a point
+     * @param outputs a byte matrix of N byte arrays {@link GroupElementsLibraryAdapter#groupElementsSize(int)}size to
+     *                hold the internal representation of the generator point times the scalar in {@code scalars}
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an
+     * error
+     */
+    int groupElementsMsm(final int group, final long[] scalars, final byte[][] points, final byte[] outputs);
 
     /**
      * Returns the point that is the result of the total sum a collection of points

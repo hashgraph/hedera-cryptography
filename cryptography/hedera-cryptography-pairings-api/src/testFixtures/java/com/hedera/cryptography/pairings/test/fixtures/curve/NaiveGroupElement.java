@@ -61,6 +61,12 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
         return group;
     }
 
+    @NonNull
+    @Override
+    public GroupElement multiply(final long other) {
+        return this.multiply(this.group().field().fromLong(other));
+    }
+
     /**
      * {@inheritDoc}
      */

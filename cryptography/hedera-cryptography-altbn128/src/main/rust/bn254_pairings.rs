@@ -15,12 +15,12 @@
 //
 
 use crate::jni_helpers;
+use crate::jni_helpers::{G1, G2};
 use crate::pairings_utils::pairings_is_equal;
 use ark_ec::CurveGroup;
 use jni::objects::{JByteArray, JObject};
 use jni::sys::jint;
 use jni::JNIEnv;
-use crate::jni_helpers::{G1, G2};
 
 /// returns if the paring between the first two points is equals to the pairings of the second group of two points
 /// # Arguments

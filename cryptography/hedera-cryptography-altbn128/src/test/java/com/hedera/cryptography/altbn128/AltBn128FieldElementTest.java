@@ -212,4 +212,62 @@ class AltBn128FieldElementTest {
         var field = new AltBn128Field();
         assertEquals(field, field.zero().field());
     }
+
+    @Test
+    void fieldElementAdditiveInverse(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        var negativeA = field.zero().subtract(a);
+        assertEquals(field.zero(), a.add(negativeA)); // a + (-a) should equal 0
+    }
+
+    @Test
+    void fieldElementLargeValueMultiplicativeInverse() {
+        var field = new AltBn128Field();
+        var largeValue = field.fromBigInteger(R.subtract(BigInteger.ONE)); // max valid value
+        assertEquals(field.one(), largeValue.multiply(largeValue.inverse())); // largeValue * largeValue.inverse() = 1
+    }
+
+    @Test
+    void fieldElementMultiplicationDistributivity(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        var b = field.random(rng);
+        var c = field.random(rng);
+        assertEquals(a.multiply(b.add(c)), a.multiply(b).add(a.multiply(c))); // a * (b + c) = a * b + a * c
+    }
+
+    @Test
+    void fieldElementAdditionAssociativity(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        var b = field.random(rng);
+        var c = field.random(rng);
+        assertEquals(a.add(b).add(c), a.add(b.add(c))); // (a + b) + c = a + (b + c)
+    }
+
+    @Test
+    void fieldElementMultiplicationAssociativity(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        var b = field.random(rng);
+        var c = field.random(rng);
+        assertEquals(a.multiply(b).multiply(c), a.multiply(b.multiply(c))); // (a * b) * c = a * (b * c)
+    }
+
+    @Test
+    void fieldElementMultiplicationCommutativity(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        var b = field.random(rng);
+        assertEquals(a.multiply(b), b.multiply(a)); // a * b = b * a
+    }
+
+    @Test
+    void fieldElementAdditionCommutativity(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        var b = field.random(rng);
+        assertEquals(a.add(b), b.add(a));
+    }
 }

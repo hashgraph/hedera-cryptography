@@ -125,11 +125,23 @@ public interface Field {
      * @param fieldElements a list of fieldElements
      * @return a field element that is the addition of all the field elements in the list
      */
-    // FUTURE implement this with rust in task #16096
     default FieldElement add(@NonNull final List<FieldElement> fieldElements) {
         FieldElement accum = this.fromLong(0);
         for (FieldElement fieldElement : fieldElements) {
             accum = accum.add(fieldElement);
+        }
+        return accum;
+    }
+
+    /**
+     * Resolves the multiplication of multiple integers
+     * @param elements a list of integers
+     * @return a field element that is the addition of all the field elements in the list
+     */
+    default FieldElement multiply(@NonNull final List<Integer> elements) {
+        FieldElement accum = this.fromLong(1);
+        for (Integer value : elements) {
+            accum = accum.multiply(fromLong(value));
         }
         return accum;
     }

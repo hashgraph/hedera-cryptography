@@ -18,6 +18,7 @@ package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.facade.GroupFacade;
+import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
@@ -28,7 +29,6 @@ import com.hedera.cryptography.utils.HashUtils.HashCalculator;
 import com.hedera.cryptography.utils.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.security.Security;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -43,6 +43,7 @@ public class AltBn128Group implements Group {
     /** The number of times to rehash in {@link #hashToCurve(byte[])} */
     private static final int HASH_RETRIES = 255;
 
+    private final Field field;
     private final GroupFacade facade;
     private final AltBN128CurveGroup group;
 
@@ -55,10 +56,12 @@ public class AltBn128Group implements Group {
 
     /**
      * Creates an instance of a {@link GroupFacade} for this implementation.
-     * @param group  the actual group represented by this instance
+     * @param group the actual group represented by this instance
+     * @param field the scalar field
      */
-    public AltBn128Group(final @NonNull AltBN128CurveGroup group) {
+    public AltBn128Group(final @NonNull AltBN128CurveGroup group, final @NonNull AltBn128Field field) {
         this.group = Objects.requireNonNull(group, "group must not be null");
+        this.field = Objects.requireNonNull(field, "field must not be null");
         this.facade = new GroupFacade(
                 group.getId(),
                 ArkBn254Adapter.getInstance(),
@@ -72,6 +75,12 @@ public class AltBn128Group implements Group {
     @Override
     public PairingFriendlyCurve getPairingFriendlyCurve() {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @NonNull
+    @Override
+    public Field field() {
+        return field;
     }
 
     /**
@@ -130,45 +139,55 @@ public class AltBn128Group implements Group {
     @Override
     public GroupElement add(@NonNull final Collection<GroupElement> elements) {
         Objects.requireNonNull(elements, "elements must not be null");
-        List<AltBn128GroupElement> elems = elements.stream()
+        final byte[][] allElements = elements.stream()
                 .map(e -> AltBn128GroupElement.isSameAltBn128GroupElement(this, e))
-                .toList();
-        final byte[][] all = new byte[elems.size()][];
-        for (int i = 0; i < elems.size(); i++) {
-            all[i] = elems.get(i).getRepresentation();
-        }
-        return new AltBn128GroupElement(this, facade.batchAdd(all));
+                .map(AltBn128GroupElement::getRepresentation)
+                .toArray(byte[][]::new);
+        return new AltBn128GroupElement(this, facade.batchAdd(allElements));
     }
 
     /**
-     * Multiplies a list of scalar values for the generator point of the group
-     *
-     *
-     * @param elements the scalar elements to multiply the generator
-     * @return same size list of points that are the generator point of this curve times the scalar in the same index
-     * @throws NullPointerException if the elements is null
-     * @throws IllegalArgumentException if the bytes are n
-     * @throws AltBn128Exception in case of error.
-     *
+     * {@inheritDoc}
      */
-    public List<GroupElement> batchMultiply(@NonNull final Collection<FieldElement> elements) {
+    @NonNull
+    @Override
+    public GroupElement msm(final @NonNull List<GroupElement> elements, final @NonNull List<FieldElement> scalars) {
         Objects.requireNonNull(elements, "elements must not be null");
-        List<AltBn128FieldElement> elems;
-        try {
-            elems = elements.stream().map(AltBn128FieldElement.class::cast).toList();
-        } catch (ClassCastException e) {
-            throw new IllegalArgumentException("elements must implement AltBn128FieldElement");
+        Objects.requireNonNull(scalars, "scalars must not be null");
+        if (scalars.size() != elements.size()) {
+            throw new IllegalArgumentException("Number of scalars and elements do not match");
         }
+        final byte[][] allElements = elements.stream()
+                .map(e -> AltBn128GroupElement.isSameAltBn128GroupElement(this, e))
+                .map(AltBn128GroupElement::getRepresentation)
+                .toArray(byte[][]::new);
 
-        final byte[][] all = new byte[elems.size()][];
-        for (int i = 0; i < elems.size(); i++) {
-            all[i] = elems.get(i).getRepresentation();
+        final byte[][] allScalars = scalars.stream()
+                .map(e -> ValidationUtils.expectOrThrow(AltBn128FieldElement.class, e))
+                .map(AltBn128FieldElement::getRepresentation)
+                .toArray(byte[][]::new);
+        final byte[] groupElements = facade.msm(allScalars, allElements);
+        return new AltBn128GroupElement(this, groupElements);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public GroupElement msm(final @NonNull List<GroupElement> elements, final @NonNull long... scalars) {
+        Objects.requireNonNull(elements, "elements must not be null");
+        Objects.requireNonNull(scalars, "scalars must not be null");
+        if (scalars.length != elements.size()) {
+            throw new IllegalArgumentException("Number of scalars and elements do not match");
         }
-        final byte[][] groupElements = facade.batchMultiply(all);
+        final byte[][] allElements = elements.stream()
+                .map(e -> AltBn128GroupElement.isSameAltBn128GroupElement(this, e))
+                .map(AltBn128GroupElement::getRepresentation)
+                .toArray(byte[][]::new);
 
-        return Arrays.stream(groupElements)
-                .map(rep -> (GroupElement) new AltBn128GroupElement(this, rep))
-                .toList();
+        final byte[] groupElements = facade.msm(scalars, allElements);
+        return new AltBn128GroupElement(this, groupElements);
     }
 
     @Override

@@ -62,10 +62,8 @@ public class AggregationTest {
         final var dealerIds =
                 IntStream.rangeClosed(1, numberOfParticipants).boxed().toList();
 
-        final var dealersFieldElementsIds = IntStream.rangeClosed(1, numberOfParticipants)
-                .boxed()
-                .map(schema.getPairingFriendlyCurve().field()::fromLong)
-                .toList();
+        final var dealersFieldElementsIds =
+                IntStream.rangeClosed(1, numberOfParticipants).boxed().toList();
         final var receiverIds = dealerIds;
         final var signatures = dealerSecrets.stream()
                 .map(p -> p.privateKey().sign(msg))
@@ -104,9 +102,7 @@ public class AggregationTest {
         final int threshold = 12;
         final var dealersIds =
                 IntStream.rangeClosed(1, numberOfParticipants).boxed().toList();
-        final var dealersFieldElementsIds = dealersIds.stream()
-                .map(id -> schema.getPairingFriendlyCurve().field().fromLong(id))
-                .toList();
+        final var dealersFieldElementsIds = dealersIds.stream().toList();
         final var receiverIds =
                 IntStream.rangeClosed(1, numberOfParticipants * 2).boxed().toList();
 
@@ -132,10 +128,7 @@ public class AggregationTest {
             final List<Integer> receiverIds,
             final List<Integer> dealersIds) {
 
-        final var selectedDealers = dealersIds.stream()
-                .limit(previousThreshold)
-                .map(d -> schema.getPairingFriendlyCurve().field().fromLong(d))
-                .toList();
+        final var selectedDealers = dealersIds.stream().limit(previousThreshold).toList();
         final var privateKeys = dealerSecrets.stream()
                 .limit(previousThreshold)
                 .map(BlsKeyPair::privateKey)
@@ -176,9 +169,7 @@ public class AggregationTest {
                 .forEach(entry -> assertEquals(
                         entry.getValue().getGroup().generator().multiply(entry.getKey()), entry.getValue()));
 
-        final var receiversTssIds = receiverIds.stream()
-                .map(d -> schema.getPairingFriendlyCurve().field().fromLong(d))
-                .toList();
+        final var receiversTssIds = receiverIds.stream().toList();
 
         return Lagrange.recoverGroupElement(receiversTssIds, rekeyPublicShares);
     }
