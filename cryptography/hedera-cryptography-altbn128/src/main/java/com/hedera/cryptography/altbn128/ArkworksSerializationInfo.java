@@ -203,7 +203,6 @@ public enum ArkworksSerializationInfo {
         bytes[bytes.length - 1] = (byte) (bytes[bytes.length - 1] & 0b00111111);
     }
 
-
     /**
      * Get the X or Y coordinate from the serialized bytes
      *

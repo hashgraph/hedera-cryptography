@@ -365,7 +365,7 @@ class AltBn128GroupElementTest {
         assertThrows(IllegalArgumentException.class, () -> group2.zero().multiply(mock(FieldElement.class)));
         assertThrows(IllegalArgumentException.class, () -> group.zero().multiply(mock(FieldElement.class)));
     }
-    
+
     @Test
     void testSizes() {
         var field = new AltBn128Field();

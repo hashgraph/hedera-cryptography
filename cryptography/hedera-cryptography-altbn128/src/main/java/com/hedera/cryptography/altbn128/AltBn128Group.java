@@ -227,14 +227,12 @@ public class AltBn128Group implements Group {
         ValidationUtils.validateSize(y, coordinateSize, "The y coordinate must be %d bytes".formatted(coordinateSize));
 
         final byte[] arkworksBytes = ArkworksSerializationInfo.reverseCoordinateBytes(ByteArrayUtils.concat(x, y));
-        if (ArkworksSerializationInfo.isZeroFlagSet(arkworksBytes) || ArkworksSerializationInfo.isYNegativeFlagSet(
-                arkworksBytes)) {
+        if (ArkworksSerializationInfo.isZeroFlagSet(arkworksBytes)
+                || ArkworksSerializationInfo.isYNegativeFlagSet(arkworksBytes)) {
             throw new IllegalArgumentException("The point is not on the curve");
         }
 
-        return new AltBn128GroupElement(
-                this,
-                facade.fromBytes(arkworksBytes));
+        return new AltBn128GroupElement(this, facade.fromBytes(arkworksBytes));
     }
 
     /**
