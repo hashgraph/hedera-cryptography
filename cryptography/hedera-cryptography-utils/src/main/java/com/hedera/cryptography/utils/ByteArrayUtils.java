@@ -23,6 +23,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,6 +55,38 @@ public class ByteArrayUtils {
                 Objects.requireNonNull(value, "value must not be null").toByteArray();
 
         return reverseByteOrder(bigEndianBytes);
+    }
+
+    /**
+     * Converts a variable number of BigInteger arguments to their byte array representations,
+     * reverses each byte array, and concatenates them into a single byte array.
+     *
+     * @param size the desired final length of the resulting byte array
+     * @param args a variable number of BigInteger arguments
+     * @return a concatenated byte array containing the reversed byte array representations of each BigInteger
+     */
+    @NonNull
+    public static byte[] toLittleEndianBytes(final int size, @NonNull final BigInteger... args) {
+        int totalSize = 0;
+        ByteBuffer buffer = ByteBuffer.allocate(size);
+
+        for (BigInteger arg : args) {
+            final byte[] bigInt = arg.toByteArray();
+            totalSize += bigInt.length;
+
+            if (totalSize > size) {
+                break;
+            }
+
+            final byte[] padded = Arrays.copyOf(bigInt, size / args.length);
+
+            buffer.put(reverseByteOrder(padded));
+        }
+        if (totalSize > size) {
+            throw new IllegalArgumentException("BigInteger cannot be represented in " + size + " bytes.");
+        }
+
+        return buffer.array();
     }
 
     /**
