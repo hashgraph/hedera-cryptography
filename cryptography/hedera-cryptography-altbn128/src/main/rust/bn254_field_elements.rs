@@ -15,8 +15,9 @@
 //
 
 use crate::jni_helpers;
+use crate::jni_helpers::{batch_add_scalars, batch_multiply_scalars};
 use crate::scalars_utils::*;
-use jni::objects::{JByteArray, JObject};
+use jni::objects::{JByteArray, JLongArray, JObject, JObjectArray};
 use jni::sys::{jint, jlong};
 use jni::JNIEnv;
 use rand_chacha::rand_core::SeedableRng;
@@ -70,7 +71,7 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     input_long: jlong,
     output: JByteArray,
 ) -> jint {
-    let scalar = scalars_from_u64(input_long as u64);
+    let scalar = scalars_from_i64(input_long as i64);
     jni_helpers::write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
 }
 
@@ -324,4 +325,44 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     };
     let scalar = scalars_pow(scalar1, exponent as u64);
     jni_helpers::write_return_scalar(env, output, scalar).unwrap_or_else(|value| value)
+}
+
+/// JNI function to return the batch multiplication of the group generator with N scalars
+/// # Arguments
+/// * `env` _ The JNI environment.
+/// * `_instance` _ The Java instance calling this function.
+/// * `group_id`  in which group to perform the operation
+/// * `scalars`   the long array that represents the collection of scalars
+/// * `values`   the byte matrix that represents the collection of group elements
+/// * `output`   the byte array that will be filled with the new point representing the result of the operation
+/// # Returns
+/// *   0    Success
+/// * A less than 0 error code in case of error
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_fieldElementsBatchMul(
+    env: JNIEnv,
+    _instance: JObject,
+    scalars: JLongArray,
+    output: JByteArray,
+) -> jint {
+    batch_multiply_scalars(env, scalars, output)
+}
+
+/// JNI function to return the batch addition of a list of N scalars
+/// # Arguments
+/// * `env` _ The JNI environment.
+/// * `_instance` _ The Java instance calling this function.
+/// * `values`   the byte matrix that represents the collection of scalar values
+/// * `output`   the byte array that will be filled with the result of the operation
+/// # Returns
+/// *   0    Success
+/// * A less than 0 error code in case of error
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_fieldElementsBatchAdd(
+    env: JNIEnv,
+    _instance: JObject,
+    values: JObjectArray,
+    output: JByteArray,
+) -> jint {
+    batch_add_scalars(env, values, output)
 }

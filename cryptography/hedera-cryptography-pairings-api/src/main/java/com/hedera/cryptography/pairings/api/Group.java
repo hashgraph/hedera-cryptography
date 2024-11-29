@@ -17,7 +17,10 @@
 package com.hedera.cryptography.pairings.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 /**
@@ -52,6 +55,14 @@ public interface Group {
     PairingFriendlyCurve getPairingFriendlyCurve();
 
     /**
+     * Returns the finite field “Fq” associated with the curves of G₁ and G₂.
+     *
+     * @return the field
+     */
+    @NonNull
+    Field field();
+
+    /**
      * Returns the group's generator.
      * A generator is a point that when multiplied to every different scalar value, it can produce all other elements of the group.
      *
@@ -67,6 +78,63 @@ public interface Group {
      */
     @NonNull
     GroupElement zero();
+
+    /**
+     * Performs multi-scalar multiplication of a list of {@link GroupElement}s and {@link FieldElement}.
+     * <p>
+     * Computes the result of the operation:
+     * <pre>
+     *     Result = k1 * P1 + k2 * P2 + ... + kn * Pn
+     * </pre>
+     * where:
+     * <ul>
+     *   <li><code>k<sub>i</sub></code> are scalar values (FieldElement)</li>
+     *   <li><code>P<sub>i</sub></code> are points on the elliptic curve, (GroupElements)</li>
+     *   <li><code>+</code> denotes point addition on the elliptic curve</li>
+     *   <li><code>*</code> denotes scalar multiplication on the elliptic curve</li>
+     * </ul>
+     *
+     * @param elements  a list of curve points
+     * @param scalars a list of scalar values corresponding to each point
+     * @return the resulting {@link GroupElement} after performing the multi-scalar multiplication
+     * @throws IllegalArgumentException if the lengths of {@code scalars} and {@code points} do not match
+     * @throws NullPointerException if {@code scalars} or {@code points} is null, or contains null elements
+     */
+    @NonNull
+    GroupElement msm(@NonNull List<GroupElement> elements, @NonNull List<FieldElement> scalars);
+
+    /**
+     * Performs multi-scalar multiplication of a list of {@link GroupElement}s and a {@code long} array.
+     * <p>
+     * Computes the result of the operation:
+     * <pre>
+     *     Result = k1 * P1 + k2 * P2 + ... + kn * Pn
+     * </pre>
+     * where:
+     * <ul>
+     *   <li><code>k<sub>i</sub></code> are scalar values (long)</li>
+     *   <li><code>P<sub>i</sub></code> are points on the elliptic curve, (GroupElements)</li>
+     *   <li><code>+</code> denotes point addition on the elliptic curve</li>
+     *   <li><code>*</code> denotes scalar multiplication on the elliptic curve</li>
+     * </ul>
+     *
+     * @param elements  a list of curve points
+     * @param scalars an array of scalar values corresponding to each point
+     * @return the resulting {@link GroupElement} after performing the multi-scalar multiplication
+     * @throws IllegalArgumentException if the lengths of {@code scalars} and {@code points} do not match
+     * @throws NullPointerException if {@code scalars} or {@code points} is null, or contains null elements
+     */
+    @NonNull
+    default GroupElement msm(@NonNull List<GroupElement> elements, @NonNull long... scalars) {
+        Objects.requireNonNull(elements, "elements must not be null");
+        Objects.requireNonNull(scalars, "scalars must not be null");
+        if (scalars.length != elements.size()) {
+            throw new IllegalArgumentException("Number of scalars and elements do not match");
+        }
+        return this.msm(
+                elements,
+                Arrays.stream(scalars).mapToObj(this.field()::fromLong).toList());
+    }
 
     /**
      * Creates a group element from a rng
@@ -115,6 +183,9 @@ public interface Group {
      * @return the new group element
      * @throws IllegalArgumentException if the byte representation is not a valid point on the curve
      */
+    // TODO: (?)Maybe add:
+    //  + List<GroupElement> allFromBytes(List<byte[]> collection)
+    //  + fromBytes(byte[] bytes, Mode.NO_VALIDATE)
     @NonNull
     GroupElement fromBytes(@NonNull byte[] bytes);
 

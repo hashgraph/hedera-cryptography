@@ -125,8 +125,7 @@ public abstract class Groth21Stage {
                 ElGamalUtils.ciphertextTable(signatureSchema, elGamalRandomness, participantDirectory, secrets);
 
         // Zk proof: Create a collapsed representation of the cipherTable that can be used for a zk proof.
-        final CombinedCiphertext elGamalCombinedCipherText = ciphertextTable.combine(
-                signatureSchema.getPairingFriendlyCurve().field().fromLong(ElGamalUtils.TOTAL_NUMBER_OF_ELEMENTS));
+        final CombinedCiphertext elGamalCombinedCipherText = ciphertextTable.combine();
         // Zk proof: Create a Feldman polynomial commitment. This allows to validate that the points belong to the
         // polynomial without revealing the polynomial.
         final EcPolynomial commitment =
@@ -179,11 +178,7 @@ public abstract class Groth21Stage {
             }
         }
 
-        final CombinedCiphertext combinedCipher = message.cipherTable()
-                .combine(signatureSchema
-                        .getPairingFriendlyCurve()
-                        .field()
-                        .fromLong(ElGamalUtils.TOTAL_NUMBER_OF_ELEMENTS));
+        final CombinedCiphertext combinedCipher = message.cipherTable().combine();
         // Zk proof: Creating the public statement
         final NizkStatement nizkStatement = new NizkStatement(
                 tssTargetParticipantDirectory.getShareIds(),

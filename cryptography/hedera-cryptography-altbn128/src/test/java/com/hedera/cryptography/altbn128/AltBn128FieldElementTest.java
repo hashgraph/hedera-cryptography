@@ -252,4 +252,12 @@ class AltBn128FieldElementTest {
         var b = field.random(rng);
         assertEquals(a.multiply(b), b.multiply(a)); // a * b = b * a
     }
+
+    @Test
+    void fieldElementAdditionCommutativity(final Random rng) {
+        var field = new AltBn128Field();
+        var a = field.random(rng);
+        var b = field.random(rng);
+        assertEquals(a.add(b), b.add(a));
+    }
 }

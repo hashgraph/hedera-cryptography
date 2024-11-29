@@ -58,6 +58,16 @@ public interface GroupElement {
     Group getGroup();
 
     /**
+     * Multiplies the group element with a scalar.
+     * The long is first converted to a field element.
+     *
+     * @param other the scalar
+     * @return a new group element which is this group element multiplied by the field element
+     */
+    @NonNull
+    GroupElement multiply(long other);
+
+    /**
      * Multiplies the group element with a field element
      *
      * @param other the field element
@@ -81,7 +91,6 @@ public interface GroupElement {
      * @return a copy of the group element
      */
     @NonNull
-    @Deprecated
     GroupElement copy();
 
     /**

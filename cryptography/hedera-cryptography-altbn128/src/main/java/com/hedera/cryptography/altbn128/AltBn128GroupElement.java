@@ -54,6 +54,12 @@ public class AltBn128GroupElement implements GroupElement {
         return group;
     }
 
+    @NonNull
+    @Override
+    public GroupElement multiply(final long other) {
+        return new AltBn128GroupElement(group, facade.scalarMul(this.representation, other));
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -96,9 +102,7 @@ public class AltBn128GroupElement implements GroupElement {
 
     /**
      * {@inheritDoc}
-     * @deprecated
      */
-    @Deprecated
     @NonNull
     @Override
     public GroupElement copy() {
