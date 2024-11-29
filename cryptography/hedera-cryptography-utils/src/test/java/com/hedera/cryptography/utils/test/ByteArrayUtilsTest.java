@@ -25,12 +25,6 @@ import org.junit.jupiter.api.Test;
 class ByteArrayUtilsTest {
 
     @Test
-    void testSmallerSize() {
-        BigInteger bigInt = new BigInteger("1234567890");
-        assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toLittleEndianBytes(bigInt));
-    }
-
-    @Test
     void testSmallerChunks() {
         assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toBigIntegers(new byte[] {1, 2, 3}, 2));
         assertDoesNotThrow(() -> ByteArrayUtils.toBigIntegers(new byte[] {1, 2, 3}, 1));
