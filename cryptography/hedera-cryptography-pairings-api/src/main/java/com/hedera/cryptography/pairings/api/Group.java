@@ -109,15 +109,14 @@ public interface Group {
     GroupElement add(@NonNull Collection<GroupElement> elements);
 
     /**
-     * Creates a group element from its serialized encoding
+     * Creates a group element from its serialized encoding. The serialization is implementation specific and should not
+     * be relied upon to be consistent across different versions of the library.
      *
      * @param bytes serialized form
      * @return the new group element
      * @throws IllegalArgumentException if the byte representation is not a valid point on the curve
-     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
-    @Deprecated(forRemoval = true)
     GroupElement fromBytes(@NonNull byte[] bytes);
 
     /**
@@ -138,11 +137,9 @@ public interface Group {
     int seedSize();
 
     /**
-     * Gets the size in bytes of a group element
+     * Gets the size in bytes of a group element returned by {@link GroupElement#toBytes()}
      *
-     * @return the size in bytes of a group element
-     * @deprecated the size will depend on the serialization, which will be externalized
+     * @return the size in bytes
      */
-    @Deprecated(forRemoval = true)
     int elementSize();
 }

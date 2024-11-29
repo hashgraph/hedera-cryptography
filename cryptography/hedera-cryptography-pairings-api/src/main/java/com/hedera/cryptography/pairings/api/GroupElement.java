@@ -43,12 +43,10 @@ public interface GroupElement {
     }
 
     /**
-     * Returns the size of the group element in bytes
+     * Gets the size in bytes of a group element returned by {@link GroupElement#toBytes()}
      *
-     * @return the size of the group element in bytes
-     * @deprecated the size will depend on the serialization, which will be externalized
+     * @return the size in bytes
      */
-    @Deprecated(forRemoval = true)
     int size();
 
     /**
@@ -87,13 +85,12 @@ public interface GroupElement {
     GroupElement copy();
 
     /**
-     * Returns the external byte array representation of the group element
+     * Returns the external byte array representation of the group element. The serialization is implementation specific
+     * and should not be relied upon to be consistent across different versions of the library.
      *
      * @return the external byte array representation of the group element
-     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
-    @Deprecated(forRemoval = true)
     byte[] toBytes();
 
     /**
