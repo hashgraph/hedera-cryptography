@@ -171,11 +171,11 @@ public class AltBn128GroupElement implements GroupElement {
 
     @Override
     public boolean isZero() {
-        return ArkworksSerializationInfo.fromGroup(group.getGroup()).isZeroElement(representation);
+        return ArkworksSerializationInfo.isZeroFlagSet(representation);
     }
 
     @Override
     public boolean isYNegative() {
-        return ArkworksSerializationInfo.fromGroup(group.getGroup()).isYNegative(representation);
+        return ArkworksSerializationInfo.isYNegativeFlagSet(representation);
     }
 }

@@ -147,6 +147,10 @@ public enum ArkworksSerializationInfo {
         return NUMBER_SIZE_BYTES * Byte.SIZE * numberCount;
     }
 
+    public int getCoordinateSize() {
+        return NUMBER_SIZE_BYTES * numberCount / 2;
+    }
+
     /**
      * Get the bit index of the Y coordinate flag
      *
@@ -171,21 +175,11 @@ public enum ArkworksSerializationInfo {
      * @param bytes the Arkworks serialized bytes
      * @return true if the element is a zero element, false otherwise
      */
-    public boolean isZeroElement(@NonNull final byte[] bytes) {
-        return switch (this) {
-            case FIELD_ELEMENT -> {
-                for (final byte b : bytes) {
-                    if (b != 0) {
-                        yield false;
-                    }
-                }
-                yield true;
-            }
-            case GROUP1_ELEMENT, GROUP2_ELEMENT -> (bytes[bytes.length - 1] & MASK_ZERO) == MASK_ZERO;
-        };
+    public static boolean isZeroFlagSet(@NonNull final byte[] bytes) {
+        return (bytes[bytes.length - 1] & MASK_ZERO) == MASK_ZERO;
     }
 
-    public boolean isYNegative(@NonNull final byte[] bytes) {
+    public static boolean isYNegativeFlagSet(@NonNull final byte[] bytes) {
         return (bytes[bytes.length - 1] & MASK_Y_COORDINATE) == MASK_Y_COORDINATE;
     }
 

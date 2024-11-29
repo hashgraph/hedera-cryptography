@@ -25,6 +25,7 @@ import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.utils.ByteArrayUtils;
 import com.hedera.cryptography.utils.HashUtils;
 import com.hedera.cryptography.utils.HashUtils.HashCalculator;
+import com.hedera.cryptography.utils.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.security.Security;
 import java.util.Arrays;
@@ -202,11 +203,19 @@ public class AltBn128Group implements Group {
     @NonNull
     @Override
     public GroupElement fromCoordinates(@NonNull final byte[] x, @NonNull final byte[] y) {
+        final int coordinateSize = ArkworksSerializationInfo.fromGroup(group).getCoordinateSize();
+        ValidationUtils.validateSize(x, coordinateSize, "The x coordinate must be %d bytes".formatted(coordinateSize));
+        ValidationUtils.validateSize(y, coordinateSize, "The y coordinate must be %d bytes".formatted(coordinateSize));
+
+        final byte[] arkworksBytes = ArkworksSerializationInfo.reverseCoordinateBytes(ByteArrayUtils.concat(x, y));
+        if (ArkworksSerializationInfo.isZeroFlagSet(arkworksBytes) || ArkworksSerializationInfo.isYNegativeFlagSet(
+                arkworksBytes)) {
+            throw new IllegalArgumentException("The point is not on the curve");
+        }
+
         return new AltBn128GroupElement(
                 this,
-                facade.fromBytes(ByteArrayUtils.concat(
-                        ArkworksSerializationInfo.reverseCoordinateBytes(x.clone()),
-                        ArkworksSerializationInfo.reverseCoordinateBytes(y.clone()))));
+                facade.fromBytes(arkworksBytes));
     }
 
     /**
