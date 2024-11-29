@@ -88,6 +88,12 @@ public class NaiveField implements Field {
         return new NaiveFieldElement(this, new BigInteger(bytes));
     }
 
+    @NonNull
+    @Override
+    public FieldElement fromByteArray(@NonNull final byte[] bytes) {
+        return new NaiveFieldElement(this, new BigInteger(bytes));
+    }
+
     /**
      * Creates a field element from a BigInteger.
      * The value is reduced modulo the prime modulus.

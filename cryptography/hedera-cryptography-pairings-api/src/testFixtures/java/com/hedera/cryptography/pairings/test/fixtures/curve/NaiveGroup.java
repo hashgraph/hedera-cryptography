@@ -22,6 +22,7 @@ import static com.hedera.cryptography.pairings.test.fixtures.curve.NaiveFieldEle
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import com.hedera.cryptography.utils.HashUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
@@ -122,6 +123,12 @@ public class NaiveGroup implements Group {
     public GroupElement fromBytes(@NonNull final byte[] bytes) {
         final BigInteger value = new BigInteger(bytes).mod(PRIME_MODULUS);
         return new NaiveGroupElement(this, value);
+    }
+
+    @NonNull
+    @Override
+    public GroupElement fromCoordinates(@NonNull final byte[] x, @NonNull final byte[] y) {
+        return fromBytes(ByteArrayUtils.concat(x, y));
     }
 
     /**

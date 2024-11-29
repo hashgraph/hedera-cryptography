@@ -104,6 +104,28 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
         }
     }
 
+    @NonNull
+    @Override
+    public byte[] getXCoordinate() {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @NonNull
+    @Override
+    public byte[] getYCoordinate() {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
+    public boolean isZero() {
+        return false;
+    }
+
+    @Override
+    public boolean isYSmaller() {
+        return false;
+    }
+
     /**
      * {@inheritDoc}
      */

@@ -139,6 +139,12 @@ public class NaiveFieldElement implements FieldElement {
         return value.toByteArray();
     }
 
+    @NonNull
+    @Override
+    public byte[] toByteArray() {
+        return value.toByteArray();
+    }
+
     /**
      * {@inheritDoc}
      */
