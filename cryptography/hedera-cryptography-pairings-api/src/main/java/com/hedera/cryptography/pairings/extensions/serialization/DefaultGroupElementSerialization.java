@@ -26,6 +26,14 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * Use this class to construct a {@link GroupElement} from an array, or to get the byte[] representation from an instance.
  */
 public class DefaultGroupElementSerialization {
+
+    /**
+     * Constructor
+     */
+    private DefaultGroupElementSerialization() {
+        // private constructor for static access
+    }
+
     /**
      * Default deserializer
      */

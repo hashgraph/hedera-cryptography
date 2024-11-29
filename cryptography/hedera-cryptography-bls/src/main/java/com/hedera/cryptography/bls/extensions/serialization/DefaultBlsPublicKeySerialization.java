@@ -16,7 +16,6 @@
 
 package com.hedera.cryptography.bls.extensions.serialization;
 
-import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.GroupElement;
@@ -44,7 +43,9 @@ public final class DefaultBlsPublicKeySerialization {
      * @return a deserializer
      */
     public static Deserializer<BlsPublicKey> getDeserializer(@NonNull final SignatureSchema signatureSchema) {
-        return new DefaultBlsPublicKeySerialization.DefaultDeserializer(signatureSchema);
+        Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
+        return new DefaultBlsPublicKeySerialization.DefaultDeserializer(
+                signatureSchema, DefaultGroupElementSerialization.getDeserializer(signatureSchema.getPublicKeyGroup()));
     }
 
     /**
@@ -52,29 +53,19 @@ public final class DefaultBlsPublicKeySerialization {
      * @return a serializer
      */
     public static Serializer<BlsPublicKey> getSerializer() {
-        return new DefaultBlsPublicKeySerialization.DefaultSerializer();
+        return new DefaultBlsPublicKeySerialization.DefaultSerializer(DefaultGroupElementSerialization.getSerializer());
     }
 
     /**
-     * Default deserializer
+     * Deserializer
      */
-    private static class DefaultDeserializer implements Deserializer<BlsPublicKey> {
-        private final SignatureSchema signatureSchema;
-        private final Deserializer<GroupElement> elementDeserializer;
-        /**
-         * Constructor.
-         * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
-         */
-        public DefaultDeserializer(@NonNull final SignatureSchema signatureSchema) {
-            this.signatureSchema = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
-            this.elementDeserializer =
-                    DefaultGroupElementSerialization.getDeserializer(signatureSchema.getPublicKeyGroup());
-        }
+    private record DefaultDeserializer(SignatureSchema signatureSchema, Deserializer<GroupElement> elementDeserializer)
+            implements Deserializer<BlsPublicKey> {
 
         /**
          * Returns a key from a byte array representation.
          * @param element the byte array representing the key
-         * @return The instance of the {@link BlsPrivateKey} represented by this element
+         * @return The instance of the {@link BlsPublicKey} represented by this element
          */
         @Override
         public BlsPublicKey deserialize(final @NonNull byte[] element) {
@@ -83,26 +74,22 @@ public final class DefaultBlsPublicKeySerialization {
     }
 
     /**
-     * Default serializer
+     * Serializer
      */
-    private static class DefaultSerializer implements Serializer<BlsPublicKey> {
-        private final Serializer<GroupElement> elementSerializer;
-
-        /**
-         * Constructor.
-         */
-        DefaultSerializer() {
-            this.elementSerializer = DefaultGroupElementSerialization.getSerializer();
-        }
-
+    private record DefaultSerializer(Serializer<GroupElement> elementSerializer) implements Serializer<BlsPublicKey> {
         /**
          * Returns byte array representation from a key instance.
          * @param element the key
          * @return a byte array representation of element
+         * @throws IllegalStateException if the key cannot be read
          */
         @Override
         public byte[] serialize(final BlsPublicKey element) {
-            return elementSerializer.serialize(element.element());
+            try {
+                return elementSerializer.serialize(element.element());
+            } catch (Exception e) {
+                throw new IllegalStateException("Unable to serialize BlsPublicKey", e);
+            }
         }
     }
 }

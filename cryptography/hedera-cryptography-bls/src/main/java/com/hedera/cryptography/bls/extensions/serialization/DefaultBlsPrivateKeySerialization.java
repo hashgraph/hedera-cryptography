@@ -43,7 +43,11 @@ public final class DefaultBlsPrivateKeySerialization {
      * @return a deserializer
      */
     public static Deserializer<BlsPrivateKey> getDeserializer(@NonNull final SignatureSchema signatureSchema) {
-        return new DefaultDeserializer(signatureSchema);
+        Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
+        return new DefaultDeserializer(
+                signatureSchema,
+                DefaultFieldElementSerialization.getDeserializer(
+                        signatureSchema.getPairingFriendlyCurve().field()));
     }
 
     /**
@@ -51,24 +55,14 @@ public final class DefaultBlsPrivateKeySerialization {
      * @return a serializer
      */
     public static Serializer<BlsPrivateKey> getSerializer() {
-        return new DefaultSerializer();
+        return new DefaultSerializer(DefaultFieldElementSerialization.getSerializer());
     }
 
     /**
      * Deserializer
      */
-    private static class DefaultDeserializer implements Deserializer<BlsPrivateKey> {
-        private final SignatureSchema signatureSchema;
-        private final Deserializer<FieldElement> elementDeserializer;
-        /**
-         * Constructor.
-         * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
-         */
-        public DefaultDeserializer(@NonNull final SignatureSchema signatureSchema) {
-            this.signatureSchema = Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
-            this.elementDeserializer = DefaultFieldElementSerialization.getDeserializer(
-                    signatureSchema.getPairingFriendlyCurve().field());
-        }
+    private record DefaultDeserializer(SignatureSchema signatureSchema, Deserializer<FieldElement> elementDeserializer)
+            implements Deserializer<BlsPrivateKey> {
 
         /**
          * Returns a key from a byte array representation.
@@ -84,16 +78,7 @@ public final class DefaultBlsPrivateKeySerialization {
     /**
      * Serializer
      */
-    private static class DefaultSerializer implements Serializer<BlsPrivateKey> {
-        private final Serializer<FieldElement> elementSerializer;
-
-        /**
-         * Constructor.
-         */
-        DefaultSerializer() {
-            this.elementSerializer = DefaultFieldElementSerialization.getSerializer();
-        }
-
+    private record DefaultSerializer(Serializer<FieldElement> elementSerializer) implements Serializer<BlsPrivateKey> {
         /**
          * Returns byte array representation from a key instance.
          * @param element the key
@@ -105,7 +90,7 @@ public final class DefaultBlsPrivateKeySerialization {
             try {
                 return elementSerializer.serialize(element.element());
             } catch (Exception e) {
-                throw new IllegalStateException("Unable to serialize bls private key", e);
+                throw new IllegalStateException("Unable to serialize BlsPrivateKey", e);
             }
         }
     }
