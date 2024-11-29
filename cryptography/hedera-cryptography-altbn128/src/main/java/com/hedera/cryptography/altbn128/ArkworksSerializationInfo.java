@@ -147,6 +147,11 @@ public enum ArkworksSerializationInfo {
         return NUMBER_SIZE_BYTES * Byte.SIZE * numberCount;
     }
 
+    /**
+     * Get the size in bytes of a coordinate
+     *
+     * @return the size of a coordinate
+     */
     public int getCoordinateSize() {
         return NUMBER_SIZE_BYTES * numberCount / 2;
     }
@@ -179,14 +184,33 @@ public enum ArkworksSerializationInfo {
         return (bytes[bytes.length - 1] & MASK_ZERO) == MASK_ZERO;
     }
 
+    /**
+     * Checks if the Y coordinate is negative flag is set
+     *
+     * @param bytes the Arkworks serialized bytes
+     * @return true if the Y coordinate flag is set, false otherwise
+     */
     public static boolean isYNegativeFlagSet(@NonNull final byte[] bytes) {
         return (bytes[bytes.length - 1] & MASK_Y_COORDINATE) == MASK_Y_COORDINATE;
     }
 
+    /**
+     * Removes the flags from this serialized element
+     *
+     * @param bytes the Arkworks serialized bytes
+     */
     public static void removeFlags(@NonNull final byte[] bytes) {
         bytes[bytes.length - 1] = (byte) (bytes[bytes.length - 1] & 0b00111111);
     }
 
+
+    /**
+     * Get the X or Y coordinate from the serialized bytes
+     *
+     * @param bytes the Arkworks serialized bytes
+     * @param isX   true if the X coordinate is requested, false if the Y coordinate is requested
+     * @return the X or Y coordinate
+     */
     @NonNull
     public static byte[] getCoordinate(@NonNull final byte[] bytes, final boolean isX) {
         if (isX) {
@@ -195,6 +219,12 @@ public enum ArkworksSerializationInfo {
         return Arrays.copyOfRange(bytes, bytes.length / 2, bytes.length);
     }
 
+    /**
+     * Reverse the byte order of the coordinates in the serialized bytes
+     *
+     * @param bytes the Arkworks serialized bytes
+     * @return the bytes with the coordinates reversed
+     */
     @NonNull
     public static byte[] reverseCoordinateBytes(@NonNull final byte[] bytes) {
         for (int i = 0; i < bytes.length; i += NUMBER_SIZE_BYTES) {
