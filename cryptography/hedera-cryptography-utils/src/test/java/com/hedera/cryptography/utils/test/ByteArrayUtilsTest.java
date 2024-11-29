@@ -19,7 +19,6 @@ package com.hedera.cryptography.utils.test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.cryptography.utils.ByteArrayUtils;
-import java.math.BigInteger;
 import org.junit.jupiter.api.Test;
 
 class ByteArrayUtilsTest {
