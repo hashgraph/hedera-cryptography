@@ -49,6 +49,7 @@ public class AltBn128 extends PairingFriendlyCurve {
     protected void doInit() {
         // We force the library loading in the init method
         ArkBn254Adapter.getInstance();
+        final Class<AltBn128Group> altBn128GroupClass = AltBn128Group.class; // if it was not loaded
     }
 
     /**
@@ -58,11 +59,11 @@ public class AltBn128 extends PairingFriendlyCurve {
     /**
      * First group of the curve
      */
-    private final AltBn128Group group1 = new AltBn128Group(AltBN128CurveGroup.GROUP1);
+    private final AltBn128Group group1 = new AltBn128Group(AltBN128CurveGroup.GROUP1, field);
     /**
      * Second group of the curve
      */
-    private final AltBn128Group group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2);
+    private final AltBn128Group group2 = new AltBn128Group(AltBN128CurveGroup.GROUP2, field);
 
     /**
      * {@inheritDoc}

@@ -137,4 +137,23 @@ public interface FieldElementsLibraryAdapter extends RandomElementsAdapter {
      * @return {@link FieldElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
      */
     int fieldElementsInverse(final byte[] input, final byte[] output);
+
+    /**
+     * Returns the result of the multiplication of each scalar in the {@code scalars} list
+     *
+     * @param scalars a long array representing a list of N scalars
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link FieldElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an
+     * error
+     */
+    int fieldElementsBatchMul(final long[] scalars, final byte[] output);
+
+    /**
+     * Returns the result of the total sum a collection of scalars
+     *
+     * @param scalars a byte matrix representing a list of N scalars
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link FieldElementsLibraryAdapter#SUCCESS} for success, or a less than zero error code if there was an error
+     */
+    int fieldElementsBatchAdd(final byte[][] scalars, final byte[] output);
 }

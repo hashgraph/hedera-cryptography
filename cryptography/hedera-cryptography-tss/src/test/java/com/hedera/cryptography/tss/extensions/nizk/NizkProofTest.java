@@ -63,7 +63,7 @@ public class NizkProofTest {
 
         final var entropy = ElGamalUtils.generateEntropy(random, field.elementSize(), schema);
         final var cipherTable = ElGamalUtils.ciphertextTable(schema, entropy, elGamalEncryptionKeys, secrets);
-        final var combinedCipher = cipherTable.combine(field.fromLong(ElGamalUtils.TOTAL_NUMBER_OF_ELEMENTS));
+        final var combinedCipher = cipherTable.combine();
         final var polyCommitment = ShamirUtils.feldmanCommitment(group, polynomial);
         final var statement = new NizkStatement(ids, elGamalEncryptionKeys, polyCommitment, combinedCipher);
         final var witness = NizkWitness.create(entropy, secrets);
@@ -91,7 +91,7 @@ public class NizkProofTest {
         // Try wrong combinedCipher
         final var wrongCipherTable =
                 ElGamalUtils.ciphertextTable(schema, entropy, wrongTssEncryptionKeyResolver, secrets);
-        final var wrongCombinedCipher = wrongCipherTable.combine(field.fromLong(ElGamalUtils.TOTAL_NUMBER_OF_ELEMENTS));
+        final var wrongCombinedCipher = wrongCipherTable.combine();
         assertFalse(proof.verify(
                 schema, new NizkStatement(ids, elGamalEncryptionKeys, wrongCommitment, wrongCombinedCipher)));
     }

@@ -16,6 +16,8 @@
 
 package com.hedera.cryptography.altbn128;
 
+import static com.hedera.cryptography.utils.ValidationUtils.expectOrThrow;
+
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.facade.FieldFacade;
 import com.hedera.cryptography.pairings.api.Field;
@@ -24,6 +26,7 @@ import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.utils.ByteArrayUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -116,6 +119,30 @@ public class AltBn128Field implements Field {
     @Override
     public int seedSize() {
         return facade.randomSeedSize();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public FieldElement add(@NonNull final List<FieldElement> scalars) {
+        byte[][] params = Objects.requireNonNull(scalars, "scalars must not be null").stream()
+                .map(thizz -> expectOrThrow(AltBn128FieldElement.class, thizz))
+                .map(AltBn128FieldElement::getRepresentation)
+                .toArray(byte[][]::new);
+
+        return new AltBn128FieldElement(facade.batchAdd(params), this);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public FieldElement multiply(@NonNull final List<Integer> scalars) {
+        return new AltBn128FieldElement(
+                facade.batchMultiply(scalars.stream().mapToLong(Long::valueOf).toArray()), this);
     }
 
     @NonNull
