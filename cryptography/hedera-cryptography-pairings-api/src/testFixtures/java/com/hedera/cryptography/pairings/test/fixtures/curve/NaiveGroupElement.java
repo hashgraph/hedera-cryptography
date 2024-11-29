@@ -122,7 +122,7 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
     }
 
     @Override
-    public boolean isYSmaller() {
+    public boolean isYNegative() {
         return false;
     }
 

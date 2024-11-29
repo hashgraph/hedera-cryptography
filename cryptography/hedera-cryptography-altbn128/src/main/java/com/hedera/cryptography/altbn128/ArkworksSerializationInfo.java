@@ -123,7 +123,8 @@ public enum ArkworksSerializationInfo {
      *
      * @return The group of the element, if it is a group element
      */
-    public @NonNull AltBN128CurveGroup getGroup() {
+    @NonNull
+    public AltBN128CurveGroup getGroup() {
         return Optional.of(group).orElseThrow();
     }
 
@@ -132,7 +133,8 @@ public enum ArkworksSerializationInfo {
      *
      * @return The set of bits that are unused in the serialization of this element
      */
-    public @NonNull Set<Integer> getUnusedBits() {
+    @NonNull
+    public Set<Integer> getUnusedBits() {
         return unusedBits;
     }
 
@@ -183,7 +185,7 @@ public enum ArkworksSerializationInfo {
         };
     }
 
-    public boolean isYSmaller(@NonNull final byte[] bytes) {
+    public boolean isYNegative(@NonNull final byte[] bytes) {
         return (bytes[bytes.length - 1] & MASK_Y_COORDINATE) == MASK_Y_COORDINATE;
     }
 

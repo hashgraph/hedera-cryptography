@@ -120,9 +120,9 @@ public interface GroupElement {
 
     /**
      * The x coordinate has two corresponding y coordinates in the curve. This method returns true if the y coordinate
-     * is the smaller of the two.
+     * is the negative one of the two.
      *
-     * @return true if the y coordinate is the smaller one, false otherwise
+     * @return true if the y coordinate is the negative one, false otherwise
      */
-    boolean isYSmaller();
+    boolean isYNegative();
 }

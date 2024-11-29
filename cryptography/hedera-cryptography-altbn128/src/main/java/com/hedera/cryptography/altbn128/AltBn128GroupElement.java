@@ -175,7 +175,7 @@ public class AltBn128GroupElement implements GroupElement {
     }
 
     @Override
-    public boolean isYSmaller() {
-        return ArkworksSerializationInfo.fromGroup(group.getGroup()).isYSmaller(representation);
+    public boolean isYNegative() {
+        return ArkworksSerializationInfo.fromGroup(group.getGroup()).isYNegative(representation);
     }
 }
