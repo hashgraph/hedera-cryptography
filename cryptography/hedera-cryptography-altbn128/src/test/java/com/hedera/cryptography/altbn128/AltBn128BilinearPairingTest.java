@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.utils.ByteArrayUtils;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 
@@ -146,13 +146,13 @@ class AltBn128BilinearPairingTest {
                 new BigInteger("21508930868448350162258892668132814424284302804699005394342512102884055673846");
         final BigInteger a4 =
                 new BigInteger("11631839690097995216017572651900167465857396346217730511548857041925508482915");
-        final GroupElement A = new AltBn128GroupElement(g2, ByteArrayUtils.toLittleEndianBytes(128, a1, a2, a3, a4));
+        final GroupElement A = g2.fromCoordinates(List.of(a1, a2), List.of(a3, a4));
 
         final BigInteger b1 =
                 new BigInteger("4503322228978077916651710446042370109107355802721800704639343137502100212473");
         final BigInteger b2 =
                 new BigInteger("6132642251294427119375180147349983541569387941788025780665104001559216576968");
-        final GroupElement B = new AltBn128GroupElement(g1, ByteArrayUtils.toLittleEndianBytes(64, b1, b2));
+        final GroupElement B = g1.fromCoordinates(List.of(b1), List.of(b2));
 
         final AltBn128BilinearPairing p1 = new AltBn128BilinearPairing(A, B);
         final AltBn128BilinearPairing p2 = new AltBn128BilinearPairing(

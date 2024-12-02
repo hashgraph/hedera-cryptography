@@ -24,6 +24,7 @@ import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -112,14 +113,14 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
 
     @NonNull
     @Override
-    public byte[] getXCoordinate() {
-        throw new IllegalStateException("Not implemented");
+    public List<BigInteger> getXCoordinate() {
+        return List.of(value);
     }
 
     @NonNull
     @Override
-    public byte[] getYCoordinate() {
-        throw new IllegalStateException("Not implemented");
+    public List<BigInteger> getYCoordinate() {
+        return List.of(value);
     }
 
     @Override

@@ -237,7 +237,7 @@ public final class FieldFacade implements ElementFacade {
         final int result = adapter.fieldElementsInverse(value, output);
         if (result == FieldElementsLibraryAdapter.CANNOT_INVERT) {
             throw new IllegalArgumentException(
-                    "The scalar cannot be inverted " + new BigInteger(ByteArrayUtils.reverseByteOrder(value.clone())));
+                    "The scalar cannot be inverted " + new BigInteger(ByteArrayUtils.reverseBytesInPlace(value.clone())));
         }
         if (result < SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsMultiply");

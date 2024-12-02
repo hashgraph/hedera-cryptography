@@ -17,6 +17,7 @@
 package com.hedera.cryptography.pairings.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -198,7 +199,7 @@ public interface Group {
      * @return the new group element
      */
     @NonNull
-    GroupElement fromCoordinates(@NonNull final byte[] x, @NonNull final byte[] y);
+    GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y);
 
     /**
      * Gets the size in bytes of the seed necessary to generate a new element

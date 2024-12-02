@@ -16,7 +16,6 @@
 
 package com.hedera.cryptography.altbn128;
 
-import static com.hedera.cryptography.utils.ByteArrayUtils.toBigIntegers;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -37,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -56,10 +56,13 @@ class AltBn128GroupElementTest {
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void zero(final AltBN128CurveGroup gr) {
+        final BigInteger zeroInt = new BigInteger("0");
+
         final GroupElement zero = new AltBn128Group(gr, new AltBn128Field()).zero();
         assertTrue(zero.isZero());
-        assertEquals(new BigInteger("0"), new BigInteger(zero.getXCoordinate()));
-        assertEquals(new BigInteger("0"), new BigInteger(zero.getYCoordinate()));
+
+        Stream.concat(zero.getXCoordinate().stream(), zero.getYCoordinate().stream())
+                .forEach(bi -> assertEquals(zeroInt, bi));
     }
 
     @ParameterizedTest
@@ -108,9 +111,9 @@ class AltBn128GroupElementTest {
 
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
-    void toCoordinatesAndBack(final AltBN128CurveGroup gr) {
+    void toCoordinatesAndBack(final AltBN128CurveGroup gr, final Random r) {
         final var group = new AltBn128Group(gr, new AltBn128Field());
-        final GroupElement element = group.generator();
+        final GroupElement element = group.random(r);
         assertEquals(element, group.fromCoordinates(element.getXCoordinate(), element.getYCoordinate()));
     }
 
@@ -127,13 +130,13 @@ class AltBn128GroupElementTest {
     void g2GeneratorIsWellKnown() {
         final GroupElement generator = new AltBn128Group(AltBN128CurveGroup.GROUP2, new AltBn128Field()).generator();
         assertEquals(
-                toBigIntegers(generator.getXCoordinate(), 32),
+                generator.getXCoordinate(),
                 List.of(
                         new BigInteger("10857046999023057135944570762232829481370756359578518086990519993285655852781"),
                         new BigInteger(
                                 "11559732032986387107991004021392285783925812861821192530917403151452391805634")));
         assertEquals(
-                toBigIntegers(generator.getYCoordinate(), 32),
+                generator.getYCoordinate(),
                 List.of(
                         new BigInteger("8495653923123431417604973247489272438418190587263600148770280649306958101930"),
                         new BigInteger(
@@ -165,8 +168,10 @@ class AltBn128GroupElementTest {
         var group = new AltBn128Group(AltBN128CurveGroup.GROUP1, field);
         final GroupElement generator = group.generator();
 
-        assertEquals(new BigInteger("1"), new BigInteger(generator.getXCoordinate()));
-        assertEquals(new BigInteger("2"), new BigInteger(generator.getYCoordinate()));
+        assertEquals(1, generator.getXCoordinate().size());
+        assertEquals(1, generator.getYCoordinate().size());
+        assertEquals(new BigInteger("1"), generator.getXCoordinate().getFirst());
+        assertEquals(new BigInteger("2"), generator.getYCoordinate().getFirst());
     }
 
     @ParameterizedTest
@@ -177,8 +182,9 @@ class AltBn128GroupElementTest {
         var group = new AltBn128Group(gr, field);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> group.fromBytes(ByteArrayUtils.toLittleEndianBytes(
-                        group.elementSize(), BigInteger.ONE, new BigInteger("10"), BigInteger.ONE, BigInteger.ONE)));
+                () -> group.fromCoordinates(
+                        List.of(BigInteger.ONE, new BigInteger("10")),
+                        List.of(BigInteger.ONE, BigInteger.ONE)));
     }
 
     @ParameterizedTest

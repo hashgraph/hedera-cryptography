@@ -16,8 +16,6 @@
 
 package com.hedera.cryptography.altbn128;
 
-import static com.hedera.cryptography.altbn128.ArkworksSerializationInfo.getCoordinate;
-import static com.hedera.cryptography.altbn128.ArkworksSerializationInfo.removeFlags;
 import static com.hedera.cryptography.utils.ValidationUtils.expectOrThrow;
 
 import com.hedera.cryptography.altbn128.facade.GroupFacade;
@@ -25,7 +23,9 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -156,30 +156,25 @@ public class AltBn128GroupElement implements GroupElement {
         return this.representation.length;
     }
 
-    @Override
     @NonNull
-    public byte[] getXCoordinate() {
-        final byte[] x = getCoordinate(representation, true);
-        ArkworksSerializationInfo.reverseCoordinateBytes(x);
-        return x;
+    @Override
+    public List<BigInteger> getXCoordinate() {
+        return ArkworksSerialization.getCoordinate(representation, true);
     }
 
-    @Override
     @NonNull
-    public byte[] getYCoordinate() {
-        final byte[] y = getCoordinate(representation, false);
-        removeFlags(y);
-        ArkworksSerializationInfo.reverseCoordinateBytes(y);
-        return y;
+    @Override
+    public List<BigInteger> getYCoordinate() {
+        return ArkworksSerialization.getCoordinate(representation, false);
     }
 
     @Override
     public boolean isZero() {
-        return ArkworksSerializationInfo.isZeroFlagSet(representation);
+        return ArkworksSerialization.isZeroFlagSet(representation);
     }
 
     @Override
     public boolean isYNegative() {
-        return ArkworksSerializationInfo.isYNegativeFlagSet(representation);
+        return ArkworksSerialization.isYNegativeFlagSet(representation);
     }
 }

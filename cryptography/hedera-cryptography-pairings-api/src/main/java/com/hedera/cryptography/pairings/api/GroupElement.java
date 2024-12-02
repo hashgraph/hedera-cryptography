@@ -17,6 +17,8 @@
 package com.hedera.cryptography.pairings.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.math.BigInteger;
+import java.util.List;
 
 /**
  * Interface representing a {@link Group} element
@@ -108,7 +110,7 @@ public interface GroupElement {
      * @return the x-coordinate
      */
     @NonNull
-    byte[] getXCoordinate();
+    List<BigInteger> getXCoordinate();
 
     /**
      * Returns the y-coordinate of the group element as a unsigned big-endian byte array
@@ -116,7 +118,7 @@ public interface GroupElement {
      * @return the y-coordinate
      */
     @NonNull
-    byte[] getYCoordinate();
+    List<BigInteger> getYCoordinate();
 
     /**
      * Checks if the group element is the zero element

@@ -54,7 +54,15 @@ public class ByteArrayUtils {
         final byte[] bigEndianBytes =
                 Objects.requireNonNull(value, "value must not be null").toByteArray();
 
-        return reverseByteOrder(bigEndianBytes);
+        return reverseBytesInPlace(bigEndianBytes);
+    }
+
+    public static byte[] toPaddedByteArray(@NonNull final BigInteger value, final int size) {
+        final byte[] bigInt = Objects.requireNonNull(value, "value must not be null").toByteArray();
+        if (bigInt.length > size) {
+            throw new IllegalArgumentException("BigInteger cannot be represented in " + size + " bytes.");
+        }
+        return Arrays.copyOf(bigInt, size);
     }
 
     /**
@@ -80,7 +88,7 @@ public class ByteArrayUtils {
 
             final byte[] padded = Arrays.copyOf(bigInt, size / args.length);
 
-            buffer.put(reverseByteOrder(padded));
+            buffer.put(reverseBytesInPlace(padded));
         }
         if (totalSize > size) {
             throw new IllegalArgumentException("BigInteger cannot be represented in " + size + " bytes.");
@@ -122,12 +130,12 @@ public class ByteArrayUtils {
      * @return the reversed byte array
      */
     @NonNull
-    public static byte[] reverseByteOrder(@NonNull final byte[] array) {
-        return reverseByteOrder(array, 0, array.length);
+    public static byte[] reverseBytesInPlace(@NonNull final byte[] array) {
+        return reverseBytesInPlace(array, 0, array.length);
     }
 
     @NonNull
-    public static byte[] reverseByteOrder(@NonNull final byte[] array, final int start, final int end) {
+    public static byte[] reverseBytesInPlace(@NonNull final byte[] array, final int start, final int end) {
         final int iLimit = start + (end - start) / 2;
         for (int i = start; i < iLimit; i++) {
             final int j = end - (i - start) - 1;
@@ -138,9 +146,36 @@ public class ByteArrayUtils {
         return array;
     }
 
-    public static byte[] concat(final byte[] first, final byte[] second) {
-        final byte[] result = Arrays.copyOf(first, first.length + second.length);
-        System.arraycopy(second, 0, result, first.length, second.length);
+    public static void copyAndReverse(
+            final byte[] source,
+            final int srcPos,
+            final byte[] dest,
+            final int destPos,
+            final int length) {
+        if (srcPos < 0 || srcPos+length > source.length) {
+            throw new IllegalArgumentException("Invalid source range");
+        }
+        if (destPos < 0 || destPos+length > dest.length) {
+            throw new IllegalArgumentException("Invalid destination range");
+        }
+        for (int i = 0; i < length; i++) {
+            dest[destPos + i] = source[srcPos + length - 1 - i];
+        }
+    }
+
+    public static byte[] concat(final List<byte[]> arrays) {
+        int totalLength = 0;
+        for (final byte[] array : arrays) {
+            totalLength += array.length;
+        }
+
+        final byte[] result = new byte[totalLength];
+        int currentPos = 0;
+        for (final byte[] array : arrays) {
+            System.arraycopy(array, 0, result, currentPos, array.length);
+            currentPos += array.length;
+        }
+
         return result;
     }
 

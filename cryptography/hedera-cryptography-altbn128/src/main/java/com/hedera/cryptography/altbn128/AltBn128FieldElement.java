@@ -148,7 +148,7 @@ public class AltBn128FieldElement implements FieldElement {
     @NonNull
     @Override
     public byte[] toByteArray() {
-        return ByteArrayUtils.reverseByteOrder(representation.clone());
+        return ByteArrayUtils.reverseBytesInPlace(representation.clone());
     }
 
     /**
