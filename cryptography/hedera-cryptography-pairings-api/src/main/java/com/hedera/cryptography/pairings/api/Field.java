@@ -67,17 +67,6 @@ public interface Field {
     FieldElement random(@NonNull byte[] seed);
 
     /**
-     * Creates a field element from its serialized encoding
-     *
-     * @param bytes serialized form
-     * @return the new field element
-     * @deprecated will be replaced by a similar method that does not rely on Arkworks serilization
-     */
-    @NonNull
-    @Deprecated(forRemoval = true)
-    FieldElement fromBytes(@NonNull byte[] bytes);
-
-    /**
      * Creates a field element from a non-negative number represented by an unsigned big-endian byte array. If the
      * number is larger than the modulus p of this Field, this method performs the appropriate reduction.
      *
@@ -85,7 +74,7 @@ public interface Field {
      * @return the new field element
      */
     @NonNull
-    FieldElement fromByteArray(@NonNull byte[] bytes);
+    FieldElement fromBytes(@NonNull byte[] bytes);
 
     /**
      * Creates a field element from a non-negative {@link BigInteger} value.

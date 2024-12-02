@@ -72,12 +72,6 @@ public class AltBn128Field implements Field {
         return new AltBn128FieldElement(facade.fromBytes(representation), this);
     }
 
-    @NonNull
-    @Override
-    public FieldElement fromByteArray(@NonNull final byte[] bytes) {
-        return new AltBn128FieldElement(facade.fromByteArray(ByteArrayUtils.reverseByteOrder(bytes.clone())), this);
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -88,7 +82,7 @@ public class AltBn128Field implements Field {
             throw new IllegalArgumentException("bigInteger cannot be negative");
         }
         return new AltBn128FieldElement(
-                facade.fromByteArray(ByteArrayUtils.reverseByteOrder(bigInteger.toByteArray())), this);
+                facade.fromBytes(ByteArrayUtils.reverseByteOrder(bigInteger.toByteArray())), this);
     }
 
     /**
