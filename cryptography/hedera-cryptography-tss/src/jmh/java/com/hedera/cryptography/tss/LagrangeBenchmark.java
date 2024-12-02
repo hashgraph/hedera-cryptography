@@ -20,7 +20,7 @@ import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.tss.extensions.Lagrange;
+import com.hedera.cryptography.tss.impl.Lagrange;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;

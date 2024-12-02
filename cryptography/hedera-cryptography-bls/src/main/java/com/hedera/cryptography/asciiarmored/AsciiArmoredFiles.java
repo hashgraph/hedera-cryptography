@@ -21,6 +21,8 @@ import static com.hedera.cryptography.asciiarmored.AsciiArmoredType.PUBLIC_KEY;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
+import com.hedera.cryptography.utils.serialization.Deserializer;
+import com.hedera.cryptography.utils.serialization.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -48,14 +50,37 @@ public class AsciiArmoredFiles {
      * @param path The location of the file in the fileSystem
      * @return the private key contained in the file
      * @throws IOException In case of file reading error
+     * @deprecated this method uses an old serialization format and will be removed.
+     *   Use {@link AsciiArmoredFiles#readPrivateKey(Path, Deserializer)} instead
      */
     @NonNull
+    @Deprecated
     public static BlsPrivateKey readPrivateKey(@NonNull final Path path) throws IOException {
         final AsciiArmoredFile fileRead = asciiArmoredRead(Objects.requireNonNull(path, "path must not be null"));
         if (fileRead.asciiArmoredType() != PRIVATE_KEY) {
             throw new IllegalArgumentException("File does not contain a private key");
         }
-        return BlsPrivateKey.fromBytes(Base64.getDecoder().decode(fileRead.contents()));
+        final var buffer = Base64.getDecoder().decode(fileRead.contents());
+        return BlsPrivateKey.fromBytes(buffer);
+    }
+
+    /**
+     * Reads a private key from a PEM file.
+     *
+     * @param path The location of the file in the fileSystem
+     * @param deserializer the deserializer to use
+     * @return the private key contained in the file
+     * @throws IOException In case of file reading error
+     */
+    @NonNull
+    public static BlsPrivateKey readPrivateKey(
+            @NonNull final Path path, @NonNull final Deserializer<BlsPrivateKey> deserializer) throws IOException {
+        final AsciiArmoredFile fileRead = asciiArmoredRead(Objects.requireNonNull(path, "path must not be null"));
+        if (fileRead.asciiArmoredType() != PRIVATE_KEY) {
+            throw new IllegalArgumentException("File does not contain a private key");
+        }
+        return Objects.requireNonNull(deserializer)
+                .deserialize(Base64.getDecoder().decode(fileRead.contents()));
     }
 
     /**
@@ -87,37 +112,37 @@ public class AsciiArmoredFiles {
     }
 
     /**
-     * Writes a private key to a Ascii file.
-     *
+     * Writes a public key to an Ascii file.
      * @param path       The location of the file to write to
-     * @param privateKey The private key to write
+     * @param serializer the serializer
+     * @param key The key to write
      * @throws IOException In case of file writing error
      */
-    public static void writeKey(@NonNull final Path path, @NonNull final BlsPrivateKey privateKey) throws IOException {
+    public static void writeKey(
+            @NonNull final Path path, final Serializer<BlsPublicKey> serializer, @NonNull final BlsPublicKey key)
+            throws IOException {
         writeKey(
                 path,
                 Base64.getEncoder()
-                        .encodeToString(Objects.requireNonNull(privateKey, "key must not be null")
-                                .toBytes()),
+                        .encodeToString(serializer.serialize(Objects.requireNonNull(key, "key must not be null"))),
+                PUBLIC_KEY);
+    }
+    /**
+     * Writes a private key to an Ascii file.
+     * @param path       The location of the file to write to
+     * @param serializer the serializer
+     * @param key The key to write
+     * @throws IOException In case of file writing error
+     */
+    public static void writeKey(
+            @NonNull final Path path, final Serializer<BlsPrivateKey> serializer, @NonNull final BlsPrivateKey key)
+            throws IOException {
+        writeKey(
+                path,
+                Base64.getEncoder()
+                        .encodeToString(serializer.serialize(Objects.requireNonNull(key, "key must not be null"))),
                 PRIVATE_KEY);
     }
-
-    /**
-     * Writes a public key to a Ascii armored file.
-     *
-     * @param path      The location of the file to write to
-     * @param publicKey The public key to write
-     * @throws IOException In case of file writing error
-     */
-    public static void writeKey(@NonNull final Path path, @NonNull final BlsPublicKey publicKey) throws IOException {
-        writeKey(
-                path,
-                Base64.getEncoder()
-                        .encodeToString(Objects.requireNonNull(publicKey, "key must not be null")
-                                .toBytes()),
-                AsciiArmoredType.PUBLIC_KEY);
-    }
-
     /**
      * Writes the content in an ASCII armored file.
      *
@@ -129,16 +154,14 @@ public class AsciiArmoredFiles {
     private static void writeKey(
             @NonNull final Path path, @NonNull final String content, @NonNull final AsciiArmoredType asciiArmoredType)
             throws IOException {
+        Objects.requireNonNull(path, "path must not be null");
+        Objects.requireNonNull(content, "content must not be null");
         Objects.requireNonNull(asciiArmoredType, "pemType must not be null");
-        final String asciiArmoredContent = asciiArmoredType.getHeader()
-                + formatContent(Objects.requireNonNull(content, "content must not be null"))
-                + asciiArmoredType.getFooter();
+        final String asciiArmoredContent =
+                asciiArmoredType.getHeader() + formatContent(content) + asciiArmoredType.getFooter();
 
         Files.write(
-                Objects.requireNonNull(path, "path must not be null"),
-                asciiArmoredContent.getBytes(),
-                StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING);
+                path, asciiArmoredContent.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     /**

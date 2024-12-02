@@ -23,9 +23,10 @@ import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.api.TssServiceGenesisStage;
 import com.hedera.cryptography.tss.api.TssServiceRekeyStage;
-import com.hedera.cryptography.tss.groth21.Groth21GenesisStage;
-import com.hedera.cryptography.tss.groth21.Groth21Message;
-import com.hedera.cryptography.tss.groth21.Groth21RekeyStage;
+import com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization;
+import com.hedera.cryptography.tss.impl.groth21.Groth21GenesisStage;
+import com.hedera.cryptography.tss.impl.groth21.Groth21RekeyStage;
+import com.hedera.cryptography.utils.serialization.Transformer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Random;
 
@@ -73,17 +74,29 @@ public class Groth21Service implements TssService {
 
     /**
      * {@inheritDoc}
-     * @throws TssMessageParsingException if the message cannot be correctly parsed
      */
     @NonNull
+    @Deprecated
     @Override
     public TssMessage messageFromBytes(
             @NonNull final TssParticipantDirectory tssParticipantDirectory, @NonNull final byte[] message)
             throws TssMessageParsingException {
+        return this.messageFrom(
+                DefaultTssMessageSerialization.getDeserializer(signatureSchema, tssParticipantDirectory), message);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public <S> TssMessage messageFrom(
+            @NonNull final Transformer<S, TssMessage> tssMessageTransformer, @NonNull final S message)
+            throws TssMessageParsingException {
         try {
-            return Groth21Message.fromBytes(message, tssParticipantDirectory, signatureSchema);
+            return tssMessageTransformer.transform(message);
         } catch (Exception e) {
-            throw new TssMessageParsingException("Could not read tss message", e);
+            throw new TssMessageParsingException("There was an error interpreting the TssMessage", e);
         }
     }
 }

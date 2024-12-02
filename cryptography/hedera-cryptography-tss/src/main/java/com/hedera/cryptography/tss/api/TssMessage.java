@@ -16,9 +16,10 @@
 
 package com.hedera.cryptography.tss.api;
 
-import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.List;
 
 /**
  * A message sent as part of either genesis keying, or rekeying.
@@ -32,32 +33,73 @@ public interface TssMessage {
     int MESSAGE_CURRENT_VERSION = 0;
 
     /**
-     * Specification of the format:<p>
-     *  Given
-     *  <ul>
-     *      <li>{@code e}: {@link FieldElement#size()}</li>
-     *      <li>{@code g}: {@link GroupElement#size()} of {@link SignatureSchema#getPublicKeyGroup()}</li>
-     *      <li>{@code t}: threshold value</li>
-     *      <li>{@code s}: total-shares (Participants*Shares)</li>
-     *  </ul>
-     * A {@link TssMessage} byte representation will consist of:<br>
-     * <ul>
-     *     <li>4 bytes (big-endian) representing the version of the message. Must be {@code MESSAGE_CURRENT_VERSION} constant value</li>
-     *     <li>1 byte for {@link SignatureSchema} that originated the message.</li>
-     *     <li>4 bytes (big-endian) representing the shareId that originated the message.</li>
-     *     <li>A list of {@code e} elements, each of size {@code g} bytes, representing the shared randomness (total of {@code e * g} bytes).</li>
-     *     <li>{@code s} lists of {@code e} elements, each of size {@code g} bytes, representing the encrypted shares (total of {@code s * e * g} bytes).</li>
-     *     <li>A list of {@code t} elements, each of size {@code g} bytes, representing the polynomial commitment (total of {@code t * g} bytes).</li>
-     *     <li>{@code g} bytes representing the proof element {@code f}.</li>
-     *     <li>{@code g} bytes representing the proof element {@code a}.</li>
-     *     <li>{@code g} bytes representing the proof element {@code y}.</li>
-     *     <li>{@code e} bytes representing the proof scalar {@code zr}.</li>
-     *     <li>{@code e} bytes representing the proof scalar {@code za}.</li>
-     * </ul>
-     * @return the byte representation of a TssMessage
-     * @see SignatureSchema#toByte()
-     * @see GroupElement#toBytes()
-     * @see FieldElement#toBytes()
+     * Do not use.
+     * @return a byte array representing this instance.
+     * @deprecated Use {@link com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization}
      */
+    @Deprecated
     byte[] toBytes();
+
+    /**
+     * Return the share id that generated this message
+     * @return the share id that generated this message
+     */
+    @NonNull
+    Integer generatingShare();
+
+    /**
+     * Returns the ElGamal shared randomness.
+     * @return the ElGamal shared randomness list
+     */
+    @NonNull
+    List<GroupElement> sharedRandomness();
+
+    /**
+     * Returns the ElGamal cipher-texts
+     * @return the ElGamal cipher-texts
+     */
+    @NonNull
+    List<List<GroupElement>> shareCiphertexts();
+
+    /**
+     * Returns the feldman commitments.
+     * @return the Feldman's commitments
+     */
+    @NonNull
+    List<GroupElement> polynomialCommitments();
+
+    /**
+     * Returns the f component of the proof.
+     * @return the f component of the proof.
+     */
+    @NonNull
+    GroupElement f();
+
+    /**
+     * Returns the a component of the proof.
+     * @return the a component of the proof.
+     */
+    @NonNull
+    GroupElement a();
+
+    /**
+     * Returns the y component of the proof.
+     * @return the y component of the proof.
+     */
+    @NonNull
+    GroupElement y();
+
+    /**
+     * Return the zr component of the proof.
+     * @return the zr component of the proof.
+     */
+    @NonNull
+    FieldElement zR();
+
+    /**
+     * Return the zA component of the proof.
+     * @return the zA component of the proof.
+     */
+    @NonNull
+    FieldElement zA();
 }

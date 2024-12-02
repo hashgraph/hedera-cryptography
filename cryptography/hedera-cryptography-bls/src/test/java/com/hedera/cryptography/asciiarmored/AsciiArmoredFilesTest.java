@@ -21,6 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
+import com.hedera.cryptography.bls.GroupAssignment;
+import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPrivateKeySerialization;
+import com.hedera.cryptography.pairings.api.Curve;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,47 +33,72 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 public class AsciiArmoredFilesTest {
-    private static final String BASE_64_KEY = "AWUoGGXtbZQ8SSfe1LxzvTSmVCuom+DxxXnYx3riBRYl";
+    private static final String BASE_64_KEY = "/NpGlCEh4AMwkgBHmpqfJrvYbVf0ss3LspM14kNJVyI=";
+    private static final String BASE_64_KEY_OLD = "AWUoGGXtbZQ8SSfe1LxzvTSmVCuom+DxxXnYx3riBRYl";
+    private static final SignatureSchema SIGNATURE_SCHEMA =
+            SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
 
     @TempDir
     Path tempDir;
 
     @Test
-    public void testPemWriteRead() throws IOException {
-
-        final Path keyPath = tempDir.resolve("test.pem");
+    @Deprecated
+    public void testAsciiArmoredWriteKeyReadOldFormat() throws IOException {
+        final Path keyPath = tempDir.resolve("test.tss");
         final BlsPrivateKey originalKey =
-                BlsPrivateKey.fromBytes(Base64.getDecoder().decode(BASE_64_KEY));
-        String expectedContent = "-----BEGIN PRIVATE KEY-----\n" + BASE_64_KEY + "\n" + "-----END PRIVATE KEY-----";
+                BlsPrivateKey.fromBytes(Base64.getDecoder().decode(BASE_64_KEY_OLD));
+        String expectedContent = "-----BEGIN PRIVATE KEY-----\n" + BASE_64_KEY_OLD + "\n" + "-----END PRIVATE KEY-----";
 
-        AsciiArmoredFiles.writeKey(keyPath, originalKey);
+        AsciiArmoredFiles.writeKey(keyPath, BlsPrivateKey::toBytes, originalKey);
         assertTrue(keyPath.toFile().exists(), "Key should have been written to file");
         final String fileContents = Files.readString(keyPath);
         assertEquals(expectedContent, fileContents, "File contents should match expected");
         final BlsPrivateKey readKey = AsciiArmoredFiles.readPrivateKey(keyPath);
-        assertEquals(BASE_64_KEY, Base64.getEncoder().encodeToString(readKey.toBytes()));
+        assertEquals(BASE_64_KEY_OLD, Base64.getEncoder().encodeToString(readKey.toBytes()));
+    }
+
+    @Test
+    public void testAsciiArmoredWriteKeyRead() throws IOException {
+        final Path keyPath = tempDir.resolve("test.tss");
+        var deserializer = DefaultBlsPrivateKeySerialization.getDeserializer(SIGNATURE_SCHEMA);
+        var serializer = DefaultBlsPrivateKeySerialization.getSerializer();
+        final BlsPrivateKey originalKey =
+                deserializer.deserialize(Base64.getDecoder().decode(BASE_64_KEY));
+        String expectedContent = "-----BEGIN PRIVATE KEY-----\n" + BASE_64_KEY + "\n" + "-----END PRIVATE KEY-----";
+
+        AsciiArmoredFiles.writeKey(keyPath, DefaultBlsPrivateKeySerialization.getSerializer(), originalKey);
+        assertTrue(keyPath.toFile().exists(), "Key should have been written to file");
+        final String fileContents = Files.readString(keyPath);
+        assertEquals(expectedContent, fileContents, "File contents should match expected");
+        final BlsPrivateKey readKey = AsciiArmoredFiles.readPrivateKey(keyPath, deserializer);
+        assertEquals(BASE_64_KEY, Base64.getEncoder().encodeToString(serializer.serialize(readKey)));
     }
 
     @Test
     public void testAsciiArmoredReadWithNullPath() {
-        Exception exception = assertThrows(NullPointerException.class, () -> AsciiArmoredFiles.readPrivateKey(null));
+        Exception exception =
+                assertThrows(NullPointerException.class, () -> AsciiArmoredFiles.readPrivateKey(null, null));
         assertEquals("path must not be null", exception.getMessage());
     }
 
     @Test
-    public void testPemWriteWithNullPath() {
+    public void testAsciiArmoredWriteKeyWithNullPath() {
         Exception exception = assertThrows(
                 NullPointerException.class,
                 () -> AsciiArmoredFiles.writeKey(
-                        null, BlsPrivateKey.fromBytes(Base64.getDecoder().decode(BASE_64_KEY))));
+                        null,
+                        DefaultBlsPrivateKeySerialization.getSerializer(),
+                        DefaultBlsPrivateKeySerialization.getDeserializer(SIGNATURE_SCHEMA)
+                                .deserialize(Base64.getDecoder().decode(BASE_64_KEY))));
         assertEquals("path must not be null", exception.getMessage());
     }
 
     @Test
-    public void testPemWriteWithNullBase64Key() {
+    public void testAsciiArmoredWriteKeyWithNullBase64Key() {
         Exception exception = assertThrows(
                 NullPointerException.class,
-                () -> AsciiArmoredFiles.writeKey(Path.of("test.pem"), (BlsPrivateKey) null));
+                () -> AsciiArmoredFiles.writeKey(
+                        Path.of("test.tss"), DefaultBlsPrivateKeySerialization.getSerializer(), null));
         assertEquals("key must not be null", exception.getMessage());
     }
 }

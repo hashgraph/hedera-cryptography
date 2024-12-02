@@ -32,6 +32,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class PairingFriendlyCurves {
 
     /**
+     * Constructor
+     */
+    private PairingFriendlyCurves() {
+        // private constructor for static access
+    }
+
+    /**
      * Cache so that every time findInstance is called returns the already created instance
      */
     private static final Map<Curve, PairingFriendlyCurve> CACHE = new ConcurrentHashMap<>();

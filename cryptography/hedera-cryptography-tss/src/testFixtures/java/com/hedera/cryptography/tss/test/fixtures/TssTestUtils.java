@@ -18,6 +18,7 @@ package com.hedera.cryptography.tss.test.fixtures;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssPrivateShare;
@@ -99,7 +100,7 @@ public class TssTestUtils {
 
         final var serializer = new Serializer()
                 .put(TssMessage.MESSAGE_CURRENT_VERSION)
-                .put(signatureSchema.toByte())
+                .put((int) signatureSchema.toByte())
                 .put(generatingShare)
                 .putListSameSize(zeros, GroupElement::toBytes);
         for (int i = 0; i < totalShares; i++) {
@@ -113,7 +114,66 @@ public class TssTestUtils {
                 .put(zero::toBytes)
                 .put(zero::toBytes);
 
-        return new OpaqueTssMessage(serializer.toBytes());
+        return new TssMessage() {
+            @Override
+            public byte[] toBytes() {
+                return serializer.toBytes();
+            }
+
+            @NonNull
+            @Override
+            public Integer generatingShare() {
+                return generatingShare;
+            }
+
+            @NonNull
+            @Override
+            public List<GroupElement> sharedRandomness() {
+                return zeros;
+            }
+
+            @NonNull
+            @Override
+            public List<List<GroupElement>> shareCiphertexts() {
+                return Collections.nCopies(totalShares, zeros);
+            }
+
+            @NonNull
+            @Override
+            public List<GroupElement> polynomialCommitments() {
+                return commitmentCoefficients;
+            }
+
+            @NonNull
+            @Override
+            public GroupElement f() {
+                return zeroElement;
+            }
+
+            @NonNull
+            @Override
+            public GroupElement a() {
+                return zeroElement;
+            }
+
+            @NonNull
+            @Override
+            public GroupElement y() {
+                return zeroElement;
+            }
+
+            @NonNull
+            @Override
+            public FieldElement zR() {
+                return zero;
+            }
+
+            @NonNull
+            @Override
+            public FieldElement zA() {
+                return zero;
+            }
+        };
     }
 
     /**

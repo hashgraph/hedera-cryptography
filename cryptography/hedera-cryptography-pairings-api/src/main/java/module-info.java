@@ -7,6 +7,8 @@ module com.hedera.cryptography.pairings.api {
     exports com.hedera.cryptography.pairings.api;
     exports com.hedera.cryptography.pairings.extensions;
     exports com.hedera.cryptography.pairings.api.curves;
+    exports com.hedera.cryptography.pairings.extensions.serialization;
 
+    requires transitive com.hedera.cryptography.utils;
     requires static transitive com.github.spotbugs.annotations;
 }
