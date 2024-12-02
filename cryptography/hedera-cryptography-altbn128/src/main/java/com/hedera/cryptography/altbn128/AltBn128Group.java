@@ -30,6 +30,7 @@ import com.hedera.cryptography.utils.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 import java.security.Security;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -224,7 +225,8 @@ public class AltBn128Group implements Group {
     @NonNull
     @Override
     public GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
-        return new AltBn128GroupElement(this, facade.fromBytes(ArkworksSerialization.toArkworksBytes(x, y)));
+        final byte[] bytes = ArkworksSerialization.toArkworksBytes(x, y);
+        return fromBytes(bytes);
     }
 
     /**
