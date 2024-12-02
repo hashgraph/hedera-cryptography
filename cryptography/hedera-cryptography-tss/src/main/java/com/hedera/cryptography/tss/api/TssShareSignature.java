@@ -21,7 +21,7 @@ import static java.util.Objects.requireNonNull;
 import com.hedera.cryptography.bls.BlsSignature;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.tss.extensions.Lagrange;
+import com.hedera.cryptography.tss.impl.Lagrange;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
 import java.util.List;

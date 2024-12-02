@@ -6,8 +6,9 @@
 module com.hedera.cryptography.tss {
     requires transitive com.hedera.cryptography.bls;
     requires transitive com.hedera.cryptography.utils;
+    requires com.hedera.cryptography.pairings.api;
     requires static transitive com.github.spotbugs.annotations;
 
     exports com.hedera.cryptography.tss.api;
-    exports com.hedera.cryptography.tss.impl;
+    exports com.hedera.cryptography.tss.extensions.serialization;
 }
