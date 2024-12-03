@@ -126,7 +126,6 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
      */
     @Deprecated
     @NonNull
-    @Deprecated(forRemoval = true)
     public byte[] toBytes() {
         return new Serializer()
                 .put(this.signatureSchema().toByte())
@@ -143,7 +142,6 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
      */
     @Deprecated
     @NonNull
-    @Deprecated(forRemoval = true)
     public static BlsPrivateKey fromBytes(@NonNull final byte[] bytes) {
         try {
             final Deserializer deserializer = new Deserializer(bytes);
