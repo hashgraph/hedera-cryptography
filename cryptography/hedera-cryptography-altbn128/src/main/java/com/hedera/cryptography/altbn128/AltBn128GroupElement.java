@@ -187,7 +187,7 @@ public class AltBn128GroupElement implements GroupElement {
      */
     @Override
     public boolean isYNegative() {
-        //TODO: this does not work if the element is constructed from coordinates
+        // TODO: this does not work if the element is constructed from coordinates
         return ArkworksSerialization.isYNegativeFlagSet(representation);
     }
 }
