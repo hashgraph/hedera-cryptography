@@ -82,7 +82,7 @@ public class AltBn128Field implements Field {
             throw new IllegalArgumentException("bigInteger cannot be negative");
         }
         return new AltBn128FieldElement(
-                facade.fromBytes(ByteArrayUtils.toLittleEndianBytes(bigInteger, facade.size())), this);
+                facade.fromBytes(ByteArrayUtils.reverseBytesInPlace(bigInteger.toByteArray())), this);
     }
 
     /**
@@ -145,6 +145,9 @@ public class AltBn128Field implements Field {
                 facade.batchMultiply(scalars.stream().mapToLong(Long::valueOf).toArray()), this);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public PairingFriendlyCurve getPairingFriendlyCurve() {

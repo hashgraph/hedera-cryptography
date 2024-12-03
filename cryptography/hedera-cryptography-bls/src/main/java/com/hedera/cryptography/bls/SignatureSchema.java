@@ -90,8 +90,10 @@ public final class SignatureSchema {
      *
      * @param bytes the array containing the representation in the first element
      * @return the SignatureSchema instance
+     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
+    @Deprecated(forRemoval = true)
     public static SignatureSchema create(final @Nullable byte[] bytes) {
         if (Objects.requireNonNull(bytes, "bytes must not be null").length == 0)
             throw new IllegalArgumentException("bytes must not be empty");
@@ -115,8 +117,10 @@ public final class SignatureSchema {
      *
      * @param idByte the group assignment
      * @return the SignatureSchema instance
+     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
+    @Deprecated(forRemoval = true)
     public static SignatureSchema create(final byte idByte) {
         byte curveId = BytePacker.unpackCurveType(idByte);
         final Curve curve = PairingFriendlyCurves.allSupportedCurves().stream()
@@ -160,7 +164,9 @@ public final class SignatureSchema {
      *
      * @see GroupAssignment#getId()
      * @return the byte representation.
+     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
+    @Deprecated(forRemoval = true)
     public byte toByte() {
         return BytePacker.pack(groupAssignment, curve.getId());
     }

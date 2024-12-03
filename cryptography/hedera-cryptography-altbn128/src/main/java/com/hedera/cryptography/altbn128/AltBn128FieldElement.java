@@ -131,7 +131,9 @@ public class AltBn128FieldElement implements FieldElement {
     @NonNull
     @Override
     public BigInteger toBigInteger() {
-        return ByteArrayUtils.fromLittleEndianBytes(representation);
+        // note: the BigInteger constructor will interpret the MSB in the first byte as the sign bit, but this will
+        // always be 0 in the representation since it is always a 254-bit number
+        return new BigInteger(ByteArrayUtils.reverseBytesInPlace(representation.clone()));
     }
 
     /**

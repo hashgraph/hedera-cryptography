@@ -17,6 +17,8 @@
 package com.hedera.cryptography.pairings.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.math.BigInteger;
+import java.util.List;
 
 /**
  * Interface representing a {@link Group} element
@@ -43,9 +45,9 @@ public interface GroupElement {
     }
 
     /**
-     * Returns the size of the group element in bytes
+     * Gets the size in bytes of a group element returned by {@link GroupElement#toBytes()}
      *
-     * @return the size of the group element in bytes
+     * @return the size in bytes
      */
     int size();
 
@@ -94,10 +96,41 @@ public interface GroupElement {
     GroupElement copy();
 
     /**
-     * Returns the external byte array representation of the group element
+     * Returns the external byte array representation of the group element. The serialization is implementation specific
+     * and should not be relied upon to be consistent across different versions of the library.
      *
      * @return the external byte array representation of the group element
      */
     @NonNull
     byte[] toBytes();
+
+    /**
+     * Returns the x-coordinate of the group element as a unsigned big-endian byte array
+     *
+     * @return the x-coordinate
+     */
+    @NonNull
+    List<BigInteger> getXCoordinate();
+
+    /**
+     * Returns the y-coordinate of the group element as a unsigned big-endian byte array
+     *
+     * @return the y-coordinate
+     */
+    @NonNull
+    List<BigInteger> getYCoordinate();
+
+    /**
+     * Checks if the group element is the zero element
+     * @return true if the group element is the zero element, false otherwise
+     */
+    boolean isZero();
+
+    /**
+     * The x coordinate has two corresponding y coordinates in the curve. This method returns true if the y coordinate
+     * is the negative one of the two.
+     *
+     * @return true if the y coordinate is the negative one, false otherwise
+     */
+    boolean isYNegative();
 }

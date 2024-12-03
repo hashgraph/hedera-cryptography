@@ -87,8 +87,10 @@ public interface TssService {
      * @param message the message being transformed
      * @return a TssMessage instance
      * @throws TssMessageParsingException in case of error while parsing the TssMessage from its byte array format
+     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
+    @Deprecated
     <S> TssMessage messageFrom(@NonNull Transformer<S, TssMessage> tssMessageTransformer, @NonNull S message)
             throws TssMessageParsingException;
 

@@ -16,10 +16,15 @@
 
 package com.hedera.cryptography.altbn128;
 
+import static com.hedera.cryptography.utils.ByteArrayUtils.copyAndReverse;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -27,7 +32,7 @@ import java.util.Set;
  * This enum contains Arkworks serialization information about the different types of elements that can be used in the
  * AltBN128 curve. Each element has a number of 254-bit numbers, and optionally flags in the last number.
  */
-public enum ElementInfo {
+public enum ArkworksSerialization {
     /** {@link AltBn128FieldElement} */
     FIELD_ELEMENT(1, false, null),
     /** {@link AltBn128GroupElement} with group {@link AltBN128CurveGroup#GROUP1} */
@@ -44,6 +49,10 @@ public enum ElementInfo {
     private static final int BIT_FLAG_Y_COORDINATE_POSITION = 0;
     /** The index of the zero element flag starting from the last bit */
     private static final int BIT_FLAG_ZERO_POSITION = 1;
+    /** The bit mask for the Y coordinate flag */
+    private static final byte MASK_Y_COORDINATE = (byte) 0b10000000;
+    /** The bit mask for the zero element flag */
+    private static final byte MASK_ZERO = 0b01000000;
 
     /** The number of 254-bit numbers contained in this element */
     private final int numberCount;
@@ -61,7 +70,7 @@ public enum ElementInfo {
      * @param hasFlags    Whether this element contains flags in the last number
      * @param group       The group of the element, if it is a group element
      */
-    ElementInfo(final int numberCount, final boolean hasFlags, @Nullable final AltBN128CurveGroup group) {
+    ArkworksSerialization(final int numberCount, final boolean hasFlags, @Nullable final AltBN128CurveGroup group) {
         this.numberCount = numberCount;
         this.hasFlags = hasFlags;
         this.group = group;
@@ -77,6 +86,21 @@ public enum ElementInfo {
             unusedBits.add(NUMBER_SIZE_BYTES * Byte.SIZE * i - 2);
         }
         this.unusedBits = Collections.unmodifiableSet(unusedBits);
+    }
+
+    /**
+     * Get the serialization information for a group
+     *
+     * @param group The group
+     * @return The serialization information
+     */
+    @NonNull
+    @SuppressWarnings("unused")
+    public static ArkworksSerialization fromGroup(@NonNull final AltBN128CurveGroup group) {
+        return switch (group) {
+            case GROUP1 -> GROUP1_ELEMENT;
+            case GROUP2 -> GROUP2_ELEMENT;
+        };
     }
 
     /**
@@ -103,7 +127,8 @@ public enum ElementInfo {
      *
      * @return The group of the element, if it is a group element
      */
-    public @NonNull AltBN128CurveGroup getGroup() {
+    @NonNull
+    public AltBN128CurveGroup getGroup() {
         return Optional.of(group).orElseThrow();
     }
 
@@ -112,6 +137,7 @@ public enum ElementInfo {
      *
      * @return The set of bits that are unused in the serialization of this element
      */
+    @NonNull
     public Set<Integer> getUnusedBits() {
         return unusedBits;
     }
@@ -141,5 +167,78 @@ public enum ElementInfo {
      */
     public int getZeroFlagBitIndex() {
         return NUMBER_SIZE_BYTES * Byte.SIZE * numberCount - 1 - BIT_FLAG_ZERO_POSITION;
+    }
+
+    /**
+     * Checks if this element is a zero element
+     *
+     * @param bytes the Arkworks serialized bytes
+     * @return true if the element is a zero element, false otherwise
+     */
+    public static boolean isZeroFlagSet(@NonNull final byte[] bytes) {
+        return (bytes[bytes.length - 1] & MASK_ZERO) == MASK_ZERO;
+    }
+
+    /**
+     * Checks if the Y coordinate is negative flag is set
+     *
+     * @param bytes the Arkworks serialized bytes
+     * @return true if the Y coordinate flag is set, false otherwise
+     */
+    public static boolean isYNegativeFlagSet(@NonNull final byte[] bytes) {
+        return (bytes[bytes.length - 1] & MASK_Y_COORDINATE) == MASK_Y_COORDINATE;
+    }
+
+    /**
+     * Removes the flags from this serialized element
+     *
+     * @param bytes the Arkworks serialized bytes
+     */
+    public static void removeFlags(@NonNull final byte[] bytes, final int flagsIndex) {
+        bytes[flagsIndex] = (byte) (bytes[flagsIndex] & 0b00111111);
+    }
+
+    /**
+     * Get the X or Y coordinate from the serialized bytes
+     *
+     * @param bytes the Arkworks serialized bytes
+     * @param isX   true if the X coordinate is requested, false if the Y coordinate is requested
+     * @return the X or Y coordinate
+     */
+    @NonNull
+    public static List<BigInteger> getCoordinate(@NonNull final byte[] bytes, final boolean isX) {
+        final int from = isX ? 0 : bytes.length / 2;
+        final int to = isX ? bytes.length / 2 : bytes.length;
+        final List<BigInteger> list = new ArrayList<>();
+        for (int i = from; i < to; i += NUMBER_SIZE_BYTES) {
+            final byte[] copy = new byte[NUMBER_SIZE_BYTES];
+            copyAndReverse(bytes, i, copy, 0, NUMBER_SIZE_BYTES);
+            removeFlags(copy, 0);
+            list.add(new BigInteger(copy));
+        }
+        return list;
+    }
+
+    /**
+     * Serialize the coordinates into a byte array
+     *
+     * @param x the X coordinate
+     * @param y the Y coordinate
+     * @return the serialized bytes
+     */
+    @NonNull
+    public static byte[] coordinatesToBytes(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
+        final int numCount = x.size() + y.size();
+        final byte[] bytes = new byte[NUMBER_SIZE_BYTES * numCount];
+        for (int i = 0; i < numCount; i++) {
+            final BigInteger bi = i < x.size() ? x.get(i) : y.get(i - x.size());
+            final byte[] biArray = bi.toByteArray();
+            if (biArray.length > NUMBER_SIZE_BYTES) {
+                throw new IllegalArgumentException("BigInteger is too large to fit in a 254-bit number");
+            }
+            copyAndReverse(biArray, 0, bytes, i * NUMBER_SIZE_BYTES, biArray.length);
+        }
+
+        return bytes;
     }
 }

@@ -30,6 +30,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * A naive implementation of the Group interface for testing purposes.
@@ -150,6 +151,16 @@ public class NaiveGroup implements Group {
     public GroupElement fromBytes(@NonNull final byte[] bytes) {
         final BigInteger value = new BigInteger(bytes).mod(PRIME_MODULUS);
         return new NaiveGroupElement(this, value);
+    }
+
+    @NonNull
+    @Override
+    public GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
+        return new NaiveGroupElement(
+                this,
+                Stream.concat(x.stream(), y.stream())
+                        .reduce(BigInteger.ZERO, BigInteger::add)
+                        .mod(PRIME_MODULUS));
     }
 
     /**

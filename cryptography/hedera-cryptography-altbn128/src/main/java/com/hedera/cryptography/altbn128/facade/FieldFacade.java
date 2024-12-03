@@ -23,6 +23,7 @@ import com.hedera.cryptography.altbn128.adapter.FieldElementsLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.GroupElementsLibraryAdapter;
 import com.hedera.cryptography.utils.ByteArrayUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.math.BigInteger;
 import java.util.Objects;
 
 /**
@@ -104,9 +105,8 @@ public final class FieldFacade implements ElementFacade {
     @Override
     @NonNull
     public byte[] fromBytes(@NonNull final byte[] representation) {
-        if (Objects.requireNonNull(representation, "representation must not be null").length != size) {
-            throw new IllegalArgumentException("Invalid byte[] representation");
-        }
+        Objects.requireNonNull(representation, "representation must not be null");
+
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsFromBytes(representation, output);
         if (result != SUCCESS) {
@@ -236,8 +236,8 @@ public final class FieldFacade implements ElementFacade {
         final byte[] output = new byte[size];
         final int result = adapter.fieldElementsInverse(value, output);
         if (result == FieldElementsLibraryAdapter.CANNOT_INVERT) {
-            throw new IllegalArgumentException(
-                    "The scalar cannot be inverted " + ByteArrayUtils.fromLittleEndianBytes(value));
+            throw new IllegalArgumentException("The scalar cannot be inverted "
+                    + new BigInteger(ByteArrayUtils.reverseBytesInPlace(value.clone())));
         }
         if (result < SUCCESS) {
             throw new AltBn128Exception(result, "fieldElementsMultiply");

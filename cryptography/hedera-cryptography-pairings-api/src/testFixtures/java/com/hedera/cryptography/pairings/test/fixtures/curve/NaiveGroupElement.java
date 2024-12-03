@@ -24,6 +24,7 @@ import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -108,6 +109,28 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
         } else {
             return Arrays.copyOfRange(bytes, bytes.length - EXAMPLE_SIZE, bytes.length);
         }
+    }
+
+    @NonNull
+    @Override
+    public List<BigInteger> getXCoordinate() {
+        return List.of(value);
+    }
+
+    @NonNull
+    @Override
+    public List<BigInteger> getYCoordinate() {
+        return List.of(value);
+    }
+
+    @Override
+    public boolean isZero() {
+        return false;
+    }
+
+    @Override
+    public boolean isYNegative() {
+        return false;
     }
 
     /**

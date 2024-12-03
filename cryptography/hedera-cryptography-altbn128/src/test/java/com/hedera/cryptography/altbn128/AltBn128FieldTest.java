@@ -112,17 +112,6 @@ class AltBn128FieldTest {
     }
 
     @Test
-    void createFieldElementFromInvalidBytesThrowsException(final Random rng) {
-        var field = new AltBn128Field();
-        final byte[] value = new byte[field.elementSize() - 1];
-        rng.nextBytes(value);
-        assertThrows(IllegalArgumentException.class, () -> field.fromBytes(value));
-        final byte[] value2 = new byte[field.elementSize() + 1];
-        rng.nextBytes(value2);
-        assertThrows(IllegalArgumentException.class, () -> field.fromBytes(value2));
-    }
-
-    @Test
     void equalityAndHashCode(final Random rng) {
         var field = new AltBn128Field();
 
