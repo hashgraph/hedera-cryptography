@@ -107,6 +107,7 @@ jobs:
           cache-read-only: false
 
       - name: Gradle Unit Test
+        # We do -PskipInstallRustToolchains=true, because all cargoBuild task results are taken FROM-CACHE
         run: ./gradlew test -PskipInstallRustToolchains=true --scan --continue
 
   analyze:
