@@ -16,7 +16,6 @@
 
 from sagelib.utils import *
 from sagelib.svdw import generic_svdw
-from sagelib.small_subgroup import attack_risk
 import json
 
 # Generate random points
@@ -40,7 +39,6 @@ for _ in range(num_points):
     P_non_G2 = generate_non_r_torsion_point()
     points["E2_non_G2"].append(point_to_json(P_non_G2))
  
-cofactor_g1, cofactor_g2 = attack_risk(E1, E2, r)
 
 ###
 # now we generate the SVDW vectors for the comparison with the solidity implementation
