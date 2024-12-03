@@ -17,12 +17,16 @@
 package com.hedera.gradle.extensions
 
 import com.hedera.gradle.tasks.CargoBuildTask
+import com.hedera.gradle.tasks.RustToolchainInstallTask
+import java.util.Properties
 import javax.inject.Inject
 import org.gradle.api.Project
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskContainer
+import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 
 @Suppress("LeakingThis")
@@ -37,12 +41,49 @@ abstract class CargoExtension {
 
     @get:Inject protected abstract val tasks: TaskContainer
 
+    @get:Inject protected abstract val providers: ProviderFactory
+
     @get:Inject protected abstract val sourceSets: SourceSetContainer
 
     init {
         cargoBin.convention(System.getProperty("user.home") + "/.cargo/bin")
         libname.convention(project.name)
         release.convention(true)
+
+
+        @Suppress("UnstableApiUsage")
+        val versionsFile =
+            project.isolated.rootProject.projectDirectory.file(
+                "gradle/toolchain-versions.properties"
+            )
+        val versions = Properties()
+        versions.load(
+            providers
+                .fileContents(versionsFile)
+                .asText
+                .orElse(
+                    providers.provider {
+                        throw RuntimeException("${versionsFile.asFile} does not exist")
+                    }
+                )
+                .get()
+                .reader()
+        )
+
+        // Rust toolchain installation
+        tasks.register<RustToolchainInstallTask>("installRustToolchain") {
+            // Track host system as input as the task output differs between operating systems
+            hostOperatingSystem.set(readHostOperatingSystem())
+            hostArchitecture.set(System.getProperty("os.arch"))
+
+            rustVersion.convention(versions.getValue("rust") as String)
+            cargoZigbuildVersion.convention(versions.getValue("cargo-zigbuild") as String)
+            zigVersion.convention(versions.getValue("zig") as String)
+            xwinVersion.convention(versions.getValue("xwin") as String)
+
+            toolchains.convention(CargoToolchain.values().asList())
+            destinationDirectory.convention(layout.buildDirectory.dir("rust-toolchains"))
+        }
 
         // Lifecycle task to only do all carg build tasks (mainly for testing)
         project.tasks.register("cargoBuild") {
@@ -51,7 +92,19 @@ abstract class CargoExtension {
         }
     }
 
+    private fun readHostOperatingSystem() =
+        System.getProperty("os.name").lowercase().let {
+            if (it.contains("windows")) {
+                "windows"
+            } else if (it.contains("mac")) {
+                "macos"
+            } else {
+                "linux"
+            }
+        }
+
     fun targets(vararg targets: CargoToolchain) {
+        val installTask = tasks.named<RustToolchainInstallTask>("installRustToolchain")
         targets.forEach { target ->
             val targetBuildTask =
                 tasks.register<CargoBuildTask>(
@@ -68,13 +121,8 @@ abstract class CargoExtension {
                     this.cargoToml.convention(layout.projectDirectory.file("Cargo.toml"))
                     this.libname.convention(this@CargoExtension.libname)
                     this.release.convention(this@CargoExtension.release)
-                    this.cargoBin.convention(this@CargoExtension.cargoBin)
-                    @Suppress("UnstableApiUsage")
-                    this.xwinFolder.convention(
-                        project.isolated.rootProject.projectDirectory
-                            .dir(".gradle/xwin")
-                            .asFile
-                            .absolutePath
+                    this.rustInstallFolder.convention(
+                        installTask.flatMap { it.destinationDirectory }
                     )
                 }
 

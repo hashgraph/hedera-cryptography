@@ -15,9 +15,10 @@
  */
 
 import com.hedera.gradle.extensions.CargoExtension
-import com.hedera.gradle.extensions.CargoToolchain.*
-import com.hedera.gradle.services.TaskLockService
-import com.hedera.gradle.tasks.CargoBuildTask
+import com.hedera.gradle.extensions.CargoToolchain
+import com.hedera.gradle.extensions.CargoToolchain.aarch64Linux
+import com.hedera.gradle.extensions.CargoToolchain.x86Linux
+import com.hedera.gradle.extensions.CargoToolchain.x86Windows
 import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins { id("java") }
@@ -28,16 +29,7 @@ val cargo = project.extensions.create<CargoExtension>("cargo")
 // Remove the conditional compilation once the ticket is addressed.
 // It seems to be a problem with llc liker when zig is executed in the github runners
 if (Os.isFamily(Os.FAMILY_MAC)) {
-    cargo.targets(aarch64Darwin, aarch64Linux, x86Darwin, x86Linux, x86Windows)
+    cargo.targets(*CargoToolchain.values())
 } else {
     cargo.targets(aarch64Linux, x86Linux, x86Windows)
-}
-
-// Cargo might do installation work, do not run in parallel:
-tasks.withType<CargoBuildTask>().configureEach {
-    usesService(
-        gradle.sharedServices.registerIfAbsent("lock", TaskLockService::class) {
-            maxParallelUsages = 1
-        }
-    )
 }
