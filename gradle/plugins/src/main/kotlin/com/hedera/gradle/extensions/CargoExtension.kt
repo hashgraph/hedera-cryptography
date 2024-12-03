@@ -71,6 +71,9 @@ abstract class CargoExtension {
 
         // Rust toolchain installation
         tasks.register<RustToolchainInstallTask>("installRustToolchain") {
+            group = "rust"
+            description = "Installs Rust and toolchain components required for cross-compilation"
+
             // Track host system as input as the task output differs between operating systems
             hostOperatingSystem.set(readHostOperatingSystem())
             hostArchitecture.set(System.getProperty("os.arch"))

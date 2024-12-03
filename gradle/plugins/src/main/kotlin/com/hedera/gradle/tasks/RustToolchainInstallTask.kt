@@ -61,8 +61,9 @@ abstract class RustToolchainInstallTask : DefaultTask() {
 
     private fun installZig() {
         val isWindows = hostOperatingSystem.get() == "windows"
+        val arch = hostArchitecture.get().let { if (it == "amd64") "x86_64" else it }
         val zigArchiveName =
-            "zig-${hostOperatingSystem.get()}-${hostArchitecture.get()}-${zigVersion.get()}"
+            "zig-${hostOperatingSystem.get()}-$arch-${zigVersion.get()}"
         val fileExtension = if (isWindows) "zip" else "tar.xz"
 
         val url =
