@@ -16,7 +16,13 @@
 
 package com.hedera.cryptography.tss.api;
 
+import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.tss.impl.Groth21Service;
+import com.hedera.cryptography.tss.impl.groth21.Groth21GenesisStage;
+import com.hedera.cryptography.tss.impl.groth21.Groth21RekeyStage;
+import com.hedera.cryptography.utils.serialization.Transformer;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Random;
 
 /**
  * A Threshold Signature Scheme Service.
@@ -61,16 +67,46 @@ public interface TssService {
     TssServiceRekeyStage rekeyStage();
 
     /**
-     * Creates a {@link TssMessage} from a byte array representation.
-     * @see TssMessage#toBytes() for the specification that message needs to follow.
+     * Deserializes a {@link TssMessage} from a byte array representation using the provided deserializer.
      * @param tssParticipantDirectory the candidate tss directory
-     * @param message the byte representation of the opaque underlying structure used by the library
+     * @param message the message being transformed
+     * @throws TssMessageParsingException in case of error while parsing the TssMessage from its byte array format
+     * @return a TssMessage instance
+     * @deprecated use an instance of {@link com.hedera.cryptography.utils.serialization.Deserializer}
+     *  or {@link TssService#messageFrom(Transformer, Object)}
+     */
+    @NonNull
+    @Deprecated
+    TssMessage messageFromBytes(@NonNull TssParticipantDirectory tssParticipantDirectory, @NonNull byte[] message)
+            throws TssMessageParsingException;
+
+    /**
+     * Gets a {@link TssMessage} from a source object using the provided transformer.
+     * @param <S> source type
+     * @param tssMessageTransformer a transformer instance to use.
+     * @param message the message being transformed
      * @return a TssMessage instance
      * @throws TssMessageParsingException in case of error while parsing the TssMessage from its byte array format
      * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
-    @Deprecated(forRemoval = true)
-    TssMessage messageFromBytes(@NonNull TssParticipantDirectory tssParticipantDirectory, @NonNull byte[] message)
+    <S> TssMessage messageFrom(@NonNull Transformer<S, TssMessage> tssMessageTransformer, @NonNull S message)
             throws TssMessageParsingException;
+
+    /**
+     * Gets a Threshold Signature Scheme (TSS) Service Instance.
+     * Use the service to:
+     *   <ul>
+     *       <li>Get a {@link Groth21GenesisStage}</li>
+     *       <li>Get a {@link Groth21RekeyStage}</li>
+     *   </ul>
+     * @param signatureSchema defines which elliptic curve is used in the protocol, and how it's used
+     * @param random a source of randomness
+     * @return the default provided implementation of a TssService
+     */
+    @NonNull
+    static TssService createDefaultService(
+            @NonNull final SignatureSchema signatureSchema, @NonNull final Random random) {
+        return new Groth21Service(signatureSchema, random);
+    }
 }

@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.bls;
 
+import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPrivateKeySerialization;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
@@ -121,8 +122,9 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
      * Serializes this {@link BlsPrivateKey} into a byte array.
      *
      * @return the serialized form of this object
-     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
+     * @deprecated use an instance of {@link com.hedera.cryptography.utils.serialization.Serializer} e.g: {@link DefaultBlsPrivateKeySerialization}
      */
+    @Deprecated
     @NonNull
     @Deprecated(forRemoval = true)
     public byte[] toBytes() {
@@ -137,8 +139,9 @@ public record BlsPrivateKey(@NonNull FieldElement element, @NonNull SignatureSch
      * @param bytes the serialized form of this object
      * @return a {@link BlsPrivateKey} instance
      * @throws IllegalArgumentException if the key representation is invalid
-     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
+     * @deprecated use an instance of {@link DefaultBlsPrivateKeySerialization}
      */
+    @Deprecated
     @NonNull
     @Deprecated(forRemoval = true)
     public static BlsPrivateKey fromBytes(@NonNull final byte[] bytes) {

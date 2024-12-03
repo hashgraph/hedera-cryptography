@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.bls;
 
+import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPrivateKeySerialization;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.utils.ByteArrayUtils.Deserializer;
 import com.hedera.cryptography.utils.ByteArrayUtils.Serializer;
@@ -44,10 +45,11 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
      * Serializes this {@link BlsPublicKey} into a byte array.
      *
      * @return the serialized form of this object
-     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
+     * @deprecated use a {@link com.hedera.cryptography.utils.serialization.Serializer} instance instead
+     * e.g.: {@link com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPublicKeySerialization}
      */
     @NonNull
-    @Deprecated(forRemoval = true)
+    @Deprecated
     public byte[] toBytes() {
         return new Serializer()
                 .put(this.signatureSchema().toByte())
@@ -60,10 +62,11 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
      * @param bytes the serialized form of this object
      * @return a {@link BlsPublicKey} instance
      * @throws IllegalArgumentException if the key representation is invalid
-     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
+     * @deprecated use a {@link com.hedera.cryptography.utils.serialization.Deserializer}
+     * instance e.g {@link DefaultBlsPrivateKeySerialization}
      */
     @NonNull
-    @Deprecated(forRemoval = true)
+    @Deprecated
     public static BlsPublicKey fromBytes(@NonNull final byte[] bytes) {
         try {
 

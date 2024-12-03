@@ -17,8 +17,8 @@
 package com.hedera.cryptography.tss.api;
 
 import com.hedera.cryptography.bls.BlsPublicKey;
-import com.hedera.cryptography.tss.extensions.TssParticipantAssigmentMapping;
-import com.hedera.cryptography.tss.extensions.TssParticipantAssigmentMapping.ParticipantMappingEntry;
+import com.hedera.cryptography.tss.impl.TssParticipantAssigmentMapping;
+import com.hedera.cryptography.tss.impl.TssParticipantAssigmentMapping.ParticipantMappingEntry;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.HashMap;
 import java.util.List;
