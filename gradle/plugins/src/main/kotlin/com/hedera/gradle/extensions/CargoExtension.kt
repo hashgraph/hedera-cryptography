@@ -28,10 +28,10 @@ import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.withType
 
 @Suppress("LeakingThis")
 abstract class CargoExtension {
-    abstract val cargoBin: Property<String>
     abstract val libname: Property<String>
     abstract val release: Property<Boolean>
 
@@ -46,10 +46,6 @@ abstract class CargoExtension {
     @get:Inject protected abstract val sourceSets: SourceSetContainer
 
     init {
-        cargoBin.convention(System.getProperty("user.home") + "/.cargo/bin")
-        libname.convention(project.name)
-        release.convention(true)
-
         @Suppress("UnstableApiUsage")
         val versionsFile =
             project.isolated.rootProject.projectDirectory.file(
@@ -69,8 +65,18 @@ abstract class CargoExtension {
                 .reader()
         )
 
+        tasks.withType<CargoVersions>().configureEach {
+            rustVersion.convention(versions.getValue("rust") as String)
+            cargoZigbuildVersion.convention(versions.getValue("cargo-zigbuild") as String)
+            zigVersion.convention(versions.getValue("zig") as String)
+            xwinVersion.convention(versions.getValue("xwin") as String)
+        }
+
+        libname.convention(project.name)
+        release.convention(true)
+
         // Rust toolchain installation
-        tasks.register<RustToolchainInstallTask>("installRustToolchain") {
+        tasks.register<RustToolchainInstallTask>("installRustToolchains") {
             group = "rust"
             description = "Installs Rust and toolchain components required for cross-compilation"
 
@@ -106,7 +112,10 @@ abstract class CargoExtension {
         }
 
     fun targets(vararg targets: CargoToolchain) {
-        val installTask = tasks.named<RustToolchainInstallTask>("installRustToolchain")
+        val installTask = tasks.named<RustToolchainInstallTask>("installRustToolchains")
+        val skipInstall =
+            providers.gradleProperty("skipInstallRustToolchains").getOrElse("false").toBoolean()
+
         targets.forEach { target ->
             val targetBuildTask =
                 tasks.register<CargoBuildTask>(
@@ -114,18 +123,21 @@ abstract class CargoExtension {
                 ) {
                     group = "rust"
                     description = "Build library ($target)"
+
+                    if (!skipInstall) {
+                        dependsOn(installTask)
+                    }
+
                     toolchain.convention(target)
                     sourcesDirectory.convention(layout.projectDirectory.dir("src/main/rust"))
                     destinationDirectory.convention(
                         layout.buildDirectory.dir("rustJniLibs/${target.platform}")
                     )
 
-                    this.cargoToml.convention(layout.projectDirectory.file("Cargo.toml"))
-                    this.libname.convention(this@CargoExtension.libname)
-                    this.release.convention(this@CargoExtension.release)
-                    this.rustInstallFolder.convention(
-                        installTask.flatMap { it.destinationDirectory }
-                    )
+                    cargoToml.convention(layout.projectDirectory.file("Cargo.toml"))
+                    libname.convention(this@CargoExtension.libname)
+                    release.convention(this@CargoExtension.release)
+                    rustInstallFolder.convention(installTask.flatMap { it.destinationDirectory })
                 }
 
             tasks.named("cargoBuild") { dependsOn(targetBuildTask) }

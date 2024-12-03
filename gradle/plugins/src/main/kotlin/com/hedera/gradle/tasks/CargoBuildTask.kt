@@ -17,6 +17,7 @@
 package com.hedera.gradle.tasks
 
 import com.hedera.gradle.extensions.CargoToolchain
+import com.hedera.gradle.extensions.CargoVersions
 import java.io.File
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
@@ -29,6 +30,7 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -36,15 +38,15 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 
 @CacheableTask
-abstract class CargoBuildTask : DefaultTask() {
+abstract class CargoBuildTask : CargoVersions, DefaultTask() {
+
     @get:Input abstract val libname: Property<String>
 
     @get:Input abstract val release: Property<Boolean>
 
     @get:Input abstract val toolchain: Property<CargoToolchain>
 
-    @get:InputDirectory
-    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Internal // the toolchain versions are tracked as input
     abstract val rustInstallFolder: DirectoryProperty
 
     @get:InputFile
@@ -74,7 +76,7 @@ abstract class CargoBuildTask : DefaultTask() {
                 "target/${stripTargetVersion(toolchain.get())}/${profile}"
             )
 
-        files.copy {
+        files.sync {
             from(cargoOutputDir)
             into(destinationDirectory.dir(toolchain.get().folder))
 
@@ -85,29 +87,29 @@ abstract class CargoBuildTask : DefaultTask() {
     }
 
     private fun stripTargetVersion(toolchain: CargoToolchain): String {
-        val re = Regex(pattern = "^([a-zA-Z0-9_\\-]+)(?:\\.[0-9.]+)?$")
-        val mr = re.find(toolchain.target)
-
-        if (mr != null && mr.groupValues.size > 1) {
-            return mr.groupValues[1]
-        }
-
-        return toolchain.target
+        return toolchain.target.replaceAfter(".", "").replace(".", "")
     }
 
     private fun buildForTarget(buildsForWindows: Boolean) {
         exec.exec {
+            val rustupHome = rustInstallFolder.dir("rustup").get().asFile.absolutePath
             val cargoHome = rustInstallFolder.dir("cargo").get().asFile.absolutePath
             val zigPath = rustInstallFolder.file("zig/zig").get().asFile.absolutePath
             val buildCommand = if (buildsForWindows) "build" else "zigbuild"
 
             workingDir = cargoToml.get().asFile.parentFile
 
+            environment("RUSTUP_HOME", rustupHome)
             environment("CARGO_HOME", cargoHome)
             environment("CARGO_ZIGBUILD_ZIG_PATH", zigPath)
 
             commandLine =
-                listOf("$cargoHome/bin/cargo", buildCommand, "--target=${toolchain.get().target}")
+                listOf(
+                    "$cargoHome/bin/cargo",
+                    "+${rustVersion.get()}",
+                    buildCommand,
+                    "--target=${toolchain.get().target}"
+                )
 
             if (buildsForWindows) {
                 // See https://github.com/Jake-Shadle/xwin/blob/main/xwin.dockerfile

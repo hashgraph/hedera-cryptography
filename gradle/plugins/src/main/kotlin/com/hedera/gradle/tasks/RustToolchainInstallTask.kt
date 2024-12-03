@@ -17,6 +17,7 @@
 package com.hedera.gradle.tasks
 
 import com.hedera.gradle.extensions.CargoToolchain
+import com.hedera.gradle.extensions.CargoVersions
 import java.net.URI
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
@@ -32,13 +33,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 
 @CacheableTask
-abstract class RustToolchainInstallTask : DefaultTask() {
-
-    @get:Input abstract val rustVersion: Property<String>
-    @get:Input abstract val cargoZigbuildVersion: Property<String>
-    @get:Input abstract val zigVersion: Property<String>
-    @get:Input abstract val xwinVersion: Property<String>
-
+abstract class RustToolchainInstallTask : CargoVersions, DefaultTask() {
     @get:Input abstract val hostOperatingSystem: Property<String>
     @get:Input abstract val hostArchitecture: Property<String>
 
@@ -62,8 +57,7 @@ abstract class RustToolchainInstallTask : DefaultTask() {
     private fun installZig() {
         val isWindows = hostOperatingSystem.get() == "windows"
         val arch = hostArchitecture.get().let { if (it == "amd64") "x86_64" else it }
-        val zigArchiveName =
-            "zig-${hostOperatingSystem.get()}-$arch-${zigVersion.get()}"
+        val zigArchiveName = "zig-${hostOperatingSystem.get()}-$arch-${zigVersion.get()}"
         val fileExtension = if (isWindows) "zip" else "tar.xz"
 
         val url =
