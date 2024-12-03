@@ -19,37 +19,38 @@ package com.hedera.cryptography.utils.test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.cryptography.utils.ByteArrayUtils;
-import java.math.BigInteger;
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 class ByteArrayUtilsTest {
 
     @Test
-    void testValidConversion() {
-        BigInteger bigInt = new BigInteger("1234567890");
-        int size = 32;
-        byte[] result = ByteArrayUtils.toLittleEndianBytes(bigInt, size);
-        BigInteger convertedBack = ByteArrayUtils.fromLittleEndianBytes(result);
-        assertEquals(bigInt, convertedBack);
+    void byteReversalTest() {
+        assertArrayEquals(
+                new byte[] {8, 7, 6, 5, 4, 3, 2, 1},
+                ByteArrayUtils.reverseBytesInPlace(new byte[] {1, 2, 3, 4, 5, 6, 7, 8}));
+        assertArrayEquals(
+                new byte[] {0, 1, 5, 4, 3, 2, 6, 7},
+                ByteArrayUtils.reverseBytesInPlace(new byte[] {0, 1, 2, 3, 4, 5, 6, 7}, 2, 6));
+        assertArrayEquals(
+                new byte[] {4, 3, 2, 1, 0, 5, 6, 7},
+                ByteArrayUtils.reverseBytesInPlace(new byte[] {0, 1, 2, 3, 4, 5, 6, 7}, 0, 5));
+        assertArrayEquals(
+                new byte[] {0, 1, 2, 7, 6, 5, 4, 3},
+                ByteArrayUtils.reverseBytesInPlace(new byte[] {0, 1, 2, 3, 4, 5, 6, 7}, 3, 8));
     }
 
     @Test
-    void testSmallerSize() {
-        BigInteger bigInt = new BigInteger("1234567890");
-        assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toLittleEndianBytes(bigInt, 1));
-    }
+    void copyReverseTest() {
+        final byte[] src = new byte[] {0, 1, 2, 3, 4, 5, 6, 7};
+        final byte[] dest = new byte[8];
 
-    @Test
-    void testSmallerSizeMultipleBigInts() {
-        BigInteger bigInt = new BigInteger("1");
-        BigInteger bigInt2 = new BigInteger("2");
-        assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toLittleEndianBytes(1, bigInt, bigInt2));
-        assertDoesNotThrow(() -> ByteArrayUtils.toLittleEndianBytes(2, bigInt, bigInt2));
-    }
+        ByteArrayUtils.copyAndReverse(src, 0, dest, 0, 8);
+        assertArrayEquals(new byte[] {7, 6, 5, 4, 3, 2, 1, 0}, dest);
 
-    @Test
-    void testSmallerChunks() {
-        assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toBigIntegers(new byte[] {1, 2, 3}, 2));
-        assertDoesNotThrow(() -> ByteArrayUtils.toBigIntegers(new byte[] {1, 2, 3}, 1));
+        Arrays.fill(dest, (byte) 0);
+
+        ByteArrayUtils.copyAndReverse(src, 2, dest, 2, 2);
+        assertArrayEquals(new byte[] {0, 0, 3, 2, 0, 0, 0, 0}, dest);
     }
 }

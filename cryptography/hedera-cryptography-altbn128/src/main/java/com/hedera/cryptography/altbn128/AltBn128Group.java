@@ -27,6 +27,7 @@ import com.hedera.cryptography.utils.HashUtils;
 import com.hedera.cryptography.utils.HashUtils.HashCalculator;
 import com.hedera.cryptography.utils.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.math.BigInteger;
 import java.security.Security;
 import java.util.Collection;
 import java.util.List;
@@ -115,7 +116,7 @@ public class AltBn128Group implements Group {
     @NonNull
     @Override
     public GroupElement hashToCurve(@NonNull final byte[] input) {
-        HashCalculator calculator = HashUtils.getHashCalculator(KECCAK_256);
+        final HashCalculator calculator = HashUtils.getHashCalculator(KECCAK_256);
         // hash the input and try to find a valid group element
         // hash the hash until we find a valid group element
         byte[] candidate = input;
@@ -216,6 +217,16 @@ public class AltBn128Group implements Group {
     @Override
     public GroupElement fromBytes(@NonNull final byte[] bytes) {
         return new AltBn128GroupElement(this, facade.fromBytes(bytes));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
+        final byte[] bytes = ArkworksSerialization.coordinatesToBytes(x, y);
+        return fromBytes(bytes);
     }
 
     /**

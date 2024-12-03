@@ -103,9 +103,9 @@ public interface FieldElement {
     BigInteger toBigInteger();
 
     /**
-     * Returns the byte array representation of the field element
+     * Returns this field element as an unsigned big-endian number in a byte array
      *
-     * @return the byte array representation of the field element
+     * @return the field element as a byte array
      */
     @NonNull
     byte[] toBytes();

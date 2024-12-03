@@ -42,27 +42,23 @@ public class ByteArrayUtils {
     }
 
     /**
-     * Converts a BigInteger into a byte array of the given size in little-endian order.
+     * Converts a BigInteger into a byte array in little-endian order.
      *
      * @param value the BigInteger to convert
-     * @param size  the size of the output byte array
-     * @return a byte array of the specified size representing the BigInteger in little-endian order
+     * @return a byte array of the representing the BigInteger in little-endian order
      * @throws NullPointerException if the BigInteger is null
-     * @throws IllegalArgumentException if the BigInteger cannot be represented in the specified size
      */
     @NonNull
-    public static byte[] toLittleEndianBytes(@NonNull final BigInteger value, final int size) {
-        byte[] bigEndianBytes =
+    public static byte[] toLittleEndianBytes(@NonNull final BigInteger value) {
+        final byte[] bigEndianBytes =
                 Objects.requireNonNull(value, "value must not be null").toByteArray();
-        if (bigEndianBytes.length > size) {
-            throw new IllegalArgumentException("BigInteger cannot be represented in " + size + " bytes.");
-        }
 
-        return reverseBytes(bigEndianBytes, size);
+        return reverseBytesInPlace(bigEndianBytes);
     }
+
     /**
-     * Converts a variable number of BigInteger arguments to their byte array representations,
-     * reverses each byte array, and concatenates them into a single byte array.
+     * Converts a variable number of BigInteger arguments to their byte array representations, reverses each byte array,
+     * and concatenates them into a single byte array.
      *
      * @param size the desired final length of the resulting byte array
      * @param args a variable number of BigInteger arguments
@@ -71,17 +67,19 @@ public class ByteArrayUtils {
     @NonNull
     public static byte[] toLittleEndianBytes(final int size, @NonNull final BigInteger... args) {
         int totalSize = 0;
-        ByteBuffer buffer = ByteBuffer.allocate(size);
+        final ByteBuffer buffer = ByteBuffer.allocate(size);
 
-        for (BigInteger arg : args) {
-            final byte[] argByteArrays = arg.toByteArray();
-            totalSize += argByteArrays.length;
+        for (final BigInteger arg : args) {
+            final byte[] bigInt = arg.toByteArray();
+            totalSize += bigInt.length;
 
             if (totalSize > size) {
                 break;
             }
 
-            buffer.put(reverseBytes(argByteArrays, argByteArrays.length));
+            final byte[] padded = Arrays.copyOf(bigInt, size / args.length);
+
+            buffer.put(reverseBytesInPlace(padded));
         }
         if (totalSize > size) {
             throw new IllegalArgumentException("BigInteger cannot be represented in " + size + " bytes.");
@@ -91,65 +89,66 @@ public class ByteArrayUtils {
     }
 
     /**
-     * Splits a byte array into chunks of a given size, reverses each chunk, and converts each reversed chunk to a BigInteger.
+     * Reverses the order of bytes in the array. Note: this method modifies the input array in place.
      *
-     * @param byteArray the byte array to be split and processed
-     * @param chunkSize the size of each chunk
-     * @return a list of BigIntegers created from the reversed chunks of the byte array
-     * @throws IllegalArgumentException if the byte array length is not divisible by the chunk size
-     */
-    @NonNull
-    public static List<BigInteger> toBigIntegers(final @NonNull byte[] byteArray, int chunkSize) {
-        if (byteArray.length % chunkSize != 0) {
-            throw new IllegalArgumentException("Byte array length must be divisible by the chunk size.");
-        }
-
-        List<BigInteger> bigIntegers = new ArrayList<>();
-
-        for (int i = 0; i < byteArray.length; i += chunkSize) {
-            byte[] chunk = Arrays.copyOfRange(byteArray, i, i + chunkSize);
-            BigInteger bigInteger = new BigInteger(reverseBytes(chunk, chunkSize));
-            bigIntegers.add(bigInteger);
-        }
-
-        return bigIntegers;
-    }
-    /**
-     * Converts a little-endian byte array into a BigInteger.
-     *
-     * @param littleEndianBytes the byte array in little-endian order
-     * @return the corresponding BigInteger
-     */
-    @NonNull
-    public static BigInteger fromLittleEndianBytes(@NonNull final byte[] littleEndianBytes) {
-        Objects.requireNonNull(littleEndianBytes, "littleEndianBytes must not be null");
-        return new BigInteger(reverseBytes(littleEndianBytes, littleEndianBytes.length));
-    }
-
-    /**
-     * Reverses the order of bytes in the array.
-     *
-     * @param input the byte array to reverse
-     * @param size the end size of the array
+     * @param array the byte array to reverse
      * @return the reversed byte array
      */
     @NonNull
-    private static byte[] reverseBytes(@NonNull byte[] input, final int size) {
-        ByteBuffer buffer = ByteBuffer.allocate(size);
-        buffer.put(input);
-        buffer.flip();
+    public static byte[] reverseBytesInPlace(@NonNull final byte[] array) {
+        return reverseBytesInPlace(array, 0, array.length);
+    }
 
-        final byte[] output = new byte[size];
-
-        for (int i = 0; i < input.length; i++) {
-            output[input.length - i - 1] = input[i];
+    /**
+     * Reverses the order of bytes in the array. Note: this method modifies the input array in place.
+     *
+     * @param array the byte array to reverse
+     * @param start the index from which to start reversing
+     * @param end   the index at which to stop reversing
+     * @return the reversed byte array
+     */
+    @NonNull
+    public static byte[] reverseBytesInPlace(@NonNull final byte[] array, final int start, final int end) {
+        final int iLimit = start + (end - start) / 2;
+        for (int i = start; i < iLimit; i++) {
+            final int j = end - (i - start) - 1;
+            final byte tmp = array[i];
+            array[i] = array[j];
+            array[j] = tmp;
         }
-        return output;
+        return array;
+    }
+
+    /**
+     * Copies a range of bytes from the source array to the destination array in reverse order.
+     *
+     * @param source  the source array
+     * @param srcPos  the starting position in the source array
+     * @param dest    the destination array
+     * @param destPos the starting position in the destination array
+     * @param length  the number of bytes to copy
+     */
+    public static void copyAndReverse(
+            @NonNull final byte[] source,
+            final int srcPos,
+            @NonNull final byte[] dest,
+            final int destPos,
+            final int length) {
+        if (srcPos < 0 || srcPos + length > source.length) {
+            throw new IllegalArgumentException("Invalid source range");
+        }
+        if (destPos < 0 || destPos + length > dest.length) {
+            throw new IllegalArgumentException("Invalid destination range");
+        }
+        for (int i = 0; i < length; i++) {
+            dest[destPos + i] = source[srcPos + length - 1 - i];
+        }
     }
 
     /**
      * Transforms an integer value into a byte array
-     * @param value  the integer to transform
+     *
+     * @param value the integer to transform
      * @return the resulting byte array
      */
     @NonNull
@@ -180,22 +179,22 @@ public class ByteArrayUtils {
          */
         @NonNull
         public Serializer put(@NonNull final Supplier<byte[]> byteProvider) {
-            var z = byteProvider.get();
+            final var z = byteProvider.get();
 
             try {
                 os.write(z);
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new IllegalStateException("Could not write", e);
             }
             return this;
         }
 
         /**
-         * Serializes a list of elements using the provided serializer function for each element.
-         *It assumes that the serialized version of each element in the list have the same size.
+         * Serializes a list of elements using the provided serializer function for each element. It assumes that the
+         * serialized version of each element in the list have the same size.
          *
-         * @param <T> The type of elements in the list.
-         * @param list The list of elements to serialize.
+         * @param <T>        The type of elements in the list.
+         * @param list       The list of elements to serialize.
          * @param serializer A function that serializes each element into a byte array.
          * @return The Serializer instance for method chaining.
          */
@@ -203,10 +202,10 @@ public class ByteArrayUtils {
         public <T> Serializer putListSameSize(
                 @NonNull final List<T> list, @NonNull final Function<T, byte[]> serializer) {
             Objects.requireNonNull(serializer);
-            for (var entry : list) {
+            for (final var entry : list) {
                 try {
                     os.write(serializer.apply(entry));
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     throw new IllegalStateException("Could not write", e);
                 }
             }
@@ -223,7 +222,7 @@ public class ByteArrayUtils {
         public Serializer put(final byte value) {
             try {
                 os.write(value);
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new IllegalStateException("Could not write", e);
             }
             return this;
@@ -239,7 +238,7 @@ public class ByteArrayUtils {
         public Serializer put(final int value) {
             try {
                 os.write(toByteArray(value));
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new IllegalStateException("Could not write", e);
             }
             return this;
@@ -267,30 +266,31 @@ public class ByteArrayUtils {
          *
          * @param message The byte array containing serialized data.
          */
-        public Deserializer(@NonNull byte[] message) {
+        public Deserializer(@NonNull final byte[] message) {
             Objects.requireNonNull(message, "message must not be null");
             final ByteArrayInputStream buffer = new ByteArrayInputStream(message);
             this.is = new DataInputStream(buffer);
         }
 
         /**
-         * Deserializes the specified size in the byte array using the provided function if there is enough information in the buffer.
+         * Deserializes the specified size in the byte array using the provided function if there is enough information
+         * in the buffer.
          *
-         * @param <T> The type of the deserialized object.
-         * @param f The function to convert a byte array into an object of type T.
+         * @param <T>  The type of the deserialized object.
+         * @param f    The function to convert a byte array into an object of type T.
          * @param size The number of bytes to read.
          * @return The deserialized object.
          * @throws IllegalStateException if there are not enough bytes remaining to read.
          */
         @NonNull
-        public <T> T read(@NonNull final Function<byte[], T> f, int size) {
-            var bytes = new byte[size];
+        public <T> T read(@NonNull final Function<byte[], T> f, final int size) {
+            final var bytes = new byte[size];
             try {
                 if (is.read(bytes) != size) {
                     throw new IllegalStateException("Not enough bytes to read");
                 }
                 return Objects.requireNonNull(f).apply(bytes);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 throw new IllegalStateException("Cannot read", e);
             }
         }
@@ -304,7 +304,7 @@ public class ByteArrayUtils {
         public byte readByte() {
             try {
                 return is.readByte();
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new IllegalStateException("Cannot read", e);
             }
         }
@@ -318,7 +318,7 @@ public class ByteArrayUtils {
         public int readInt() {
             try {
                 return is.readInt();
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new IllegalStateException("Cannot Read", e);
             }
         }
@@ -326,9 +326,9 @@ public class ByteArrayUtils {
         /**
          * Deserializes a list of elements using the provided function and specified elementSize for each element.
          *
-         * @param <T> The type of elements in the list.
-         * @param f The function that converts a byte array into an object of type T.
-         * @param listSize The number of elements in the list.
+         * @param <T>         The type of elements in the list.
+         * @param f           The function that converts a byte array into an object of type T.
+         * @param listSize    The number of elements in the list.
          * @param elementSize The size in bytes of each element.
          * @return The list of deserialized objects.
          * @throws IllegalStateException if there are not enough bytes to read.
@@ -337,7 +337,7 @@ public class ByteArrayUtils {
         public <T> List<T> readListSameSize(
                 @NonNull final Function<byte[], T> f, final int listSize, final int elementSize) {
             var elems = listSize;
-            var list = new ArrayList<T>(elems);
+            final var list = new ArrayList<T>(elems);
             while (elems > 0) {
                 list.add(read(f, elementSize));
                 elems--;

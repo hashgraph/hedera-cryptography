@@ -17,6 +17,7 @@
 package com.hedera.cryptography.pairings.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -177,7 +178,8 @@ public interface Group {
     GroupElement add(@NonNull Collection<GroupElement> elements);
 
     /**
-     * Creates a group element from its serialized encoding
+     * Creates a group element from its serialized encoding. The serialization is implementation specific and should not
+     * be relied upon to be consistent across different versions of the library.
      *
      * @param bytes serialized form
      * @return the new group element
@@ -190,6 +192,16 @@ public interface Group {
     GroupElement fromBytes(@NonNull byte[] bytes);
 
     /**
+     * Creates a group element from its x and y coordinates
+     *
+     * @param x the x coordinate
+     * @param y the y coordinate
+     * @return the new group element
+     */
+    @NonNull
+    GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y);
+
+    /**
      * Gets the size in bytes of the seed necessary to generate a new element
      *
      * @return the size of a seed needed to generate a new element
@@ -197,9 +209,9 @@ public interface Group {
     int seedSize();
 
     /**
-     * Gets the size in bytes of a group element
+     * Gets the size in bytes of a group element returned by {@link GroupElement#toBytes()}
      *
-     * @return the size in bytes of a group element
+     * @return the size in bytes
      */
     int elementSize();
 }

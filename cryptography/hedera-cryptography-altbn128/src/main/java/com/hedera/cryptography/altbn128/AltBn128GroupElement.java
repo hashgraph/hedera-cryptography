@@ -23,7 +23,9 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -152,5 +154,40 @@ public class AltBn128GroupElement implements GroupElement {
     @Override
     public int size() {
         return this.representation.length;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public List<BigInteger> getXCoordinate() {
+        return ArkworksSerialization.getCoordinate(representation, true);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public List<BigInteger> getYCoordinate() {
+        return ArkworksSerialization.getCoordinate(representation, false);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isZero() {
+        return ArkworksSerialization.isZeroFlagSet(representation);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isYNegative() {
+        // TODO: this does not work if the element is constructed from coordinates
+        return ArkworksSerialization.isYNegativeFlagSet(representation);
     }
 }
