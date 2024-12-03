@@ -77,9 +77,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        # os: [windows-2022, macos-13, macos-14]
-        # temporarily disable mac compilation because it's failing on GitHub actions
-        os: [windows-2022]
+        os: [windows-2022, macos-13, macos-14]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Harden Runner
@@ -109,7 +107,7 @@ jobs:
           cache-read-only: false
 
       - name: Gradle Unit Test
-        run: ./gradlew test --scan --continue
+        run: ./gradlew test -PskipInstallRustToolchains=true --scan --continue
 
   analyze:
     name: Analyze
