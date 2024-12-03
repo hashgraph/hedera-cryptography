@@ -115,7 +115,7 @@ public class NaiveFieldElement implements FieldElement {
     @NonNull
     public FieldElement multiply(@NonNull final FieldElement other) {
         var val = ValidationUtils.expectOrThrow(NaiveFieldElement.class, other).value;
-        return new NaiveFieldElement(field, this.value * val);
+        return new NaiveFieldElement(field, (long) this.value * val);
     }
 
     /**

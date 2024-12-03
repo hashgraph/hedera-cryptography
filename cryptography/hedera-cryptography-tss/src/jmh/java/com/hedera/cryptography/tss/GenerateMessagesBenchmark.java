@@ -142,7 +142,7 @@ public class GenerateMessagesBenchmark {
     @Threads(2)
     @Fork(1)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
-    public Object readMessages(ReadMessageState state) throws TssMessageParsingException {
+    public Object readMessages(ReadMessageState state) {
         return com.hedera.cryptography.tss.impl.groth21.Groth21Message.fromBytes(
                 state.messages[0], state.directory, signatureSchema);
     }

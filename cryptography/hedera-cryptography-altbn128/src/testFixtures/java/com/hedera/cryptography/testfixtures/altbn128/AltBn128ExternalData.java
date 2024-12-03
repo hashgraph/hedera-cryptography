@@ -20,7 +20,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
@@ -39,9 +38,12 @@ public class AltBn128ExternalData {
      * Constructor
      */
     public AltBn128ExternalData() {
-        var data = AltBn128ExternalData.class.getClassLoader().getResourceAsStream("altbn128_ext_data.json");
-        var gson = new Gson();
-        Type mapType = new TypeToken<Map<String, Object>>() {}.getType();
+        final var data = AltBn128ExternalData.class.getClassLoader().getResourceAsStream("altbn128_ext_data.json");
+        if (data == null) {
+            throw new IllegalStateException("Could not find data json file");
+        }
+        final var gson = new Gson();
+        final var mapType = new TypeToken<Map<String, Object>>() {}.getType();
         this.data = gson.fromJson(new InputStreamReader(data), mapType);
     }
 
@@ -49,6 +51,7 @@ public class AltBn128ExternalData {
      * Returns a list fo scalars generated with an external library.
      * @return a list of scalars of altbn128
      */
+    @SuppressWarnings("unchecked")
     public List<BigInteger> getScalars() {
         var sksValues = (List<String>) data.get("SCALARS");
         return sksValues.stream().map(BigInteger::new).toList();
@@ -70,6 +73,7 @@ public class AltBn128ExternalData {
         return groups("GROUP2");
     }
 
+    @SuppressWarnings("unchecked")
     private List<List<BigInteger[]>> groups(final @NonNull String group) {
         var pksValues = (List<List<String>>) data.get(group);
         return pksValues.stream()

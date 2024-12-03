@@ -54,6 +54,7 @@ class BlsLibraryTest {
 
     private static final double DEVIATION = 0.05;
     private static final int POPULATION_SIZE = 256;
+    public static final String MESSAGE = "Flipped bytes should be an invalid or different key";
 
     @ParameterizedTest
     @MethodSource("combinedParameters")
@@ -259,32 +260,28 @@ class BlsLibraryTest {
     }
 
     @Test
-    @DisplayName("Modify a valid privateKey slightly (i.e., change a single byte) and check that it is rejected or is not the same key.")
+    @DisplayName(
+            "Modify a valid privateKey slightly (i.e., change a single byte) and check that it is rejected or is not the same key.")
     void privateKeyFlipTest(final Random rng) {
         final var schema = SignatureSchema.create(
                 Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES); // we dont care about the assignament for filds
         final var serializer = DefaultBlsPrivateKeySerialization.getSerializer();
         final var deserializer = DefaultBlsPrivateKeySerialization.getDeserializer(schema);
         final var sk = BlsPrivateKey.create(schema, rng);
-        flipEachBitAndConsume(
-                serializer.serialize(sk),
-                exceptionOrDifferentExpected(
-                        sk, deserializer, "Flipped bytes should be an invalid or different key"));
+        flipEachBitAndConsume(serializer.serialize(sk), exceptionOrDifferentExpected(sk, deserializer));
     }
+
     @ParameterizedTest
     @MethodSource("combinedParameters")
-    @DisplayName("Modify a valid publicKey slightly (i.e., change a single byte) and check that it is rejected or is not the same key.")
+    @DisplayName(
+            "Modify a valid publicKey slightly (i.e., change a single byte) and check that it is rejected or is not the same key.")
     void publicKeyFlipTest(SignatureSchema schema, final Random rng) {
         final var sk = BlsPrivateKey.create(schema, rng);
         final var pk = sk.createPublicKey();
         final var serializer = DefaultBlsPublicKeySerialization.getSerializer();
         final var deserializer = DefaultBlsPublicKeySerialization.getDeserializer(schema);
 
-        flipEachBitAndConsume(
-                serializer.serialize(pk),
-                exceptionOrDifferentExpected(
-                        pk, deserializer, "Flipped bytes should be an invalid or different key"));
-
+        flipEachBitAndConsume(serializer.serialize(pk), exceptionOrDifferentExpected(pk, deserializer));
     }
 
     @ParameterizedTest
@@ -297,12 +294,9 @@ class BlsLibraryTest {
         final var serializer = DefaultBlsSignatureSerialization.getSerializer();
         final var deserializer = DefaultBlsSignatureSerialization.getDeserializer(schema);
 
-        flipEachBitAndConsume(
-                serializer.serialize(signature),
-                exceptionOrDifferentExpected(
-                        signature, deserializer, "Flipped bytes should be an invalid or different key"));
+        flipEachBitAndConsume(serializer.serialize(signature), exceptionOrDifferentExpected(signature, deserializer));
 
-        flipEachBitAndConsume( serializer.serialize(signature), signatureFlippedBytes -> {
+        flipEachBitAndConsume(serializer.serialize(signature), signatureFlippedBytes -> {
             try {
                 // If we did not get an exception, the value should be at least not verifiable against the public key
                 assertFalse(
@@ -370,18 +364,17 @@ class BlsLibraryTest {
      *
      * @param originalValue expected value to be different from this one
      * @param creator the function that creates the elements from an array
-     * @param message the message to show in case validation fails
      * @param <T> the type of the comparison object
      * @return a consumer that performs the check when requested
      */
     private <T> Consumer<byte[]> exceptionOrDifferentExpected(
-            final T originalValue, final Function<byte[], T> creator, final String message) {
+            final T originalValue, final Function<byte[], T> creator) {
         return bytes -> {
             try {
                 // If we did not get an exception, the value should be at least different than the original
-                assertNotEquals(originalValue, creator.apply(bytes), message);
+                assertNotEquals(originalValue, creator.apply(bytes), MESSAGE);
             } catch (Exception e) {
-                assertEquals(IllegalStateException.class, e.getClass(), message);
+                assertEquals(IllegalStateException.class, e.getClass(), MESSAGE);
             }
         };
     }

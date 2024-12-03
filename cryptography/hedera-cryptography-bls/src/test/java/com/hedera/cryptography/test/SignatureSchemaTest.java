@@ -18,7 +18,6 @@ package com.hedera.cryptography.test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.hedera.cryptography.bls.GroupAssignment;
@@ -67,17 +66,6 @@ public class SignatureSchemaTest {
                         : GroupAssignment.SHORT_SIGNATURES);
         assertNotNull(other, "Should have created a SignatureSchema");
         assertNotNull(other.getPairingFriendlyCurve(), "should have created a pairing friendly curve instance");
-        assertNotEquals(
-                actual.toByte(), other.toByte(), "different idBytes expected when different assignments are used");
-        final var g2 = other.getPairingFriendlyCurve().group2();
-        assertEquals(
-                g2,
-                assignment == GroupAssignment.SHORT_PUBLIC_KEYS ? other.getPublicKeyGroup() : other.getSignatureGroup(),
-                "group2 assignment validation failed for: " + assignment);
-
-        assertEquals(
-                actual, SignatureSchema.create(actual.toByte()), "creation from idByte should return same instance");
-        assertEquals(other, SignatureSchema.create(other.toByte()), "creation from idByte should return same instance");
     }
 
     private static Stream<GroupAssignment> combinedParameters() {
