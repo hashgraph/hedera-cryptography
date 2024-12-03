@@ -50,7 +50,6 @@ abstract class CargoExtension {
         libname.convention(project.name)
         release.convention(true)
 
-
         @Suppress("UnstableApiUsage")
         val versionsFile =
             project.isolated.rootProject.projectDirectory.file(

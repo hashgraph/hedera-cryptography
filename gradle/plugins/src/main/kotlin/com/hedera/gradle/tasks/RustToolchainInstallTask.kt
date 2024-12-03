@@ -144,10 +144,9 @@ abstract class RustToolchainInstallTask : DefaultTask() {
                 "xwin@${xwinVersion.get()}"
             )
         )
-        // execute(listOf(xwinCmd, "--accept-license", "splat", "--output", xwinFolder))
+        execute(listOf(xwinCmd, "--accept-license", "splat", "--output", xwinFolder))
 
         files.delete(rustupInstall)
-        files.delete(destinationDirectory.dir("rustup"))
     }
 
     private fun execute(cmd: List<String>) {

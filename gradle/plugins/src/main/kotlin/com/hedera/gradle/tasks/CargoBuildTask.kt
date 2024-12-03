@@ -112,6 +112,9 @@ abstract class CargoBuildTask : DefaultTask() {
             if (buildsForWindows) {
                 // See https://github.com/Jake-Shadle/xwin/blob/main/xwin.dockerfile
                 val xwinFolder = rustInstallFolder.dir("xwin").get().asFile.absolutePath
+                val rustupToolchains = rustInstallFolder.dir("rustup/toolchains").get().asFile
+                val rustLld = rustupToolchains.walk().filter { it.name == "rust-lld" }.single()
+
                 val clFlags =
                     "-Wno-unused-command-line-argument -fuse-ld=lld-link /vctoolsdir $xwinFolder/crt /winsdkdir $xwinFolder/sdk"
                 environment("CC_x86_64_pc_windows_msvc", "clang-cl")
@@ -122,7 +125,7 @@ abstract class CargoBuildTask : DefaultTask() {
                 environment("CL_FLAGS", clFlags)
                 environment("CFLAGS_x86_64_pc_windows_msvc", clFlags)
                 environment("CXXFLAGS_x86_64_pc_windows_msvc", clFlags)
-                environment("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER", "lld-link")
+                environment("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER", rustLld.absolutePath)
                 environment(
                     "RUSTFLAGS",
                     "-Lnative=$xwinFolder/crt/lib/x86_64 -Lnative=$xwinFolder/sdk/lib/um/x86_64 -Lnative=$xwinFolder/sdk/lib/ucrt/x86_64"
