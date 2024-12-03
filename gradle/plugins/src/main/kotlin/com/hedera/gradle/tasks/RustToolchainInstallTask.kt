@@ -151,8 +151,6 @@ abstract class RustToolchainInstallTask : CargoVersions, DefaultTask() {
         exec.exec {
             environment("RUSTUP_HOME", rustupFolder)
             environment("CARGO_HOME", cargoFolder)
-            // https://github.com/Jake-Shadle/xwin/issues/141#issuecomment-2416864318
-            environment("RAYON_NUM_THREADS", "1")
             commandLine = cmd
         }
     }
