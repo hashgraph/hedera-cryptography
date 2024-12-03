@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.test.bls;
+package com.hedera.cryptography.bls;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.hedera.cryptography.bls.BlsKeyPair;
-import com.hedera.cryptography.bls.BlsPrivateKey;
-import com.hedera.cryptography.bls.BlsPublicKey;
-import com.hedera.cryptography.bls.BlsSignature;
-import com.hedera.cryptography.bls.GroupAssignment;
-import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.altbn128.test.fixtures.AltBn128ExternalData;
 import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPrivateKeySerialization;
 import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPublicKeySerialization;
 import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsSignatureSerialization;
 import com.hedera.cryptography.bls.test.fixtures.BlsTestUtils;
 import com.hedera.cryptography.pairings.api.Curve;
-import com.hedera.cryptography.testfixtures.altbn128.AltBn128ExternalData;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import com.hedera.cryptography.utils.test.fixtures.stream.StreamUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;

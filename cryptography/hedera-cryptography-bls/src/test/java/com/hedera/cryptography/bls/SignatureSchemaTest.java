@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.test.bls;
+package com.hedera.cryptography.bls;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.hedera.cryptography.bls.GroupAssignment;
-import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import com.hedera.cryptography.pairings.api.curves.KnownCurves;

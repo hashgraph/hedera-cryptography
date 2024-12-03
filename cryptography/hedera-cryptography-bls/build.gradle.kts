@@ -21,17 +21,13 @@ plugins {
     id("com.hedera.gradle.java-test-fixtures")
 }
 
-mainModuleInfo {
-    runtimeOnly("com.hedera.cryptography.altbn128")
-    // requires("org.assertj.core")
-}
+mainModuleInfo { runtimeOnly("com.hedera.cryptography.altbn128") }
 
 testModuleInfo {
     requires("org.junit.jupiter.api")
     requires("org.mockito")
     requires("com.hedera.cryptography.utils.test.fixtures")
-    requires("com.hedera.cryptography.pairings.test.fixtures")
-    requires("com.hedera.cryptography.testfixtures.altbn128")
+    requires("com.hedera.cryptography.altbn128.test.fixtures")
 }
 
 jmhModuleInfo {

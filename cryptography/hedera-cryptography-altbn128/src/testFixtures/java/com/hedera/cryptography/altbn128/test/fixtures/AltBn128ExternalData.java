@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.testfixtures.altbn128;
+package com.hedera.cryptography.altbn128.test.fixtures;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
