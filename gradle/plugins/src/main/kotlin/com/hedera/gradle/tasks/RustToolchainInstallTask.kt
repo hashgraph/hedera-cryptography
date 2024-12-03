@@ -68,7 +68,7 @@ abstract class RustToolchainInstallTask : CargoVersions, DefaultTask() {
 
         if (isWindows) {
             files.copy {
-                from(archives.tarTree(zigArchive))
+                from(archives.zipTree(zigArchive))
                 into(destinationDirectory)
             }
         } else {
