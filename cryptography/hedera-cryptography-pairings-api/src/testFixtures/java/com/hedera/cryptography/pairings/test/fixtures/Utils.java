@@ -143,4 +143,24 @@ public class Utils {
         }
         return elements;
     }
+
+    /**
+     * Calculates the positive exponentiation of an integer
+     * @param value the value to exponenciate
+     * @param exponent the exponent
+     * @return the potentiated value
+     */
+    public static long intPow(final int value, final long exponent) {
+        if (exponent < 0) {
+            throw new IllegalArgumentException("negative exponents not supported");
+        }
+        if (exponent == 0) {
+            return 1;
+        }
+        long result = value;
+        for (int i = 0; i < exponent; i++) {
+            result *= value;
+        }
+        return result;
+    }
 }

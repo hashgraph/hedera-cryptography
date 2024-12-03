@@ -16,20 +16,21 @@
 
 package com.hedera.cryptography.pairings.test.fixtures.curve;
 
-import static com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve.EXAMPLE_SIZE;
-import static com.hedera.cryptography.pairings.test.fixtures.curve.NaiveFieldElement.PRIME_MODULUS;
-
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.utils.HashUtils;
+import com.hedera.cryptography.utils.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 import java.util.stream.Stream;
 
 /**
@@ -74,7 +75,7 @@ public class NaiveGroup implements Group {
     @Override
     @NonNull
     public GroupElement generator() {
-        return new NaiveGroupElement(this, BigInteger.valueOf(2));
+        return new NaiveGroupElement(this, curve.field(), 1);
     }
 
     /**
@@ -85,7 +86,7 @@ public class NaiveGroup implements Group {
     @Override
     @NonNull
     public GroupElement zero() {
-        return new NaiveGroupElement(this, BigInteger.ZERO);
+        return new NaiveGroupElement(this, curve.field(), 0);
     }
 
     /**
@@ -110,8 +111,9 @@ public class NaiveGroup implements Group {
     @Override
     @NonNull
     public GroupElement random(@NonNull final byte[] seed) {
-        final BigInteger value = new BigInteger(seed).mod(PRIME_MODULUS);
-        return new NaiveGroupElement(this, value);
+        var rng = new Random();
+        rng.setSeed(Arrays.hashCode(seed));
+        return new NaiveGroupElement(this, curve.field(), rng.nextInt());
     }
 
     /**
@@ -125,9 +127,7 @@ public class NaiveGroup implements Group {
     @NonNull
     public GroupElement hashToCurve(@NonNull final byte[] input) {
         final byte[] hash = HashUtils.computeHash(HashUtils.SHA256, input);
-        final BigInteger value = new BigInteger(1, hash).mod(PRIME_MODULUS);
-
-        return new NaiveGroupElement(this, value);
+        return new NaiveGroupElement(this, curve.field(), Arrays.hashCode(hash));
     }
 
     /**
@@ -136,11 +136,10 @@ public class NaiveGroup implements Group {
     @NonNull
     @Override
     public GroupElement add(@NonNull final Collection<GroupElement> elements) {
-        BigInteger sum = BigInteger.ZERO;
-        for (final GroupElement element : elements) {
-            sum = sum.add(((NaiveGroupElement) element).value()).mod(PRIME_MODULUS);
-        }
-        return new NaiveGroupElement(this, sum);
+        return elements.stream()
+                .map(e -> ValidationUtils.expectOrThrow(NaiveGroupElement.class, e))
+                .map(GroupElement.class::cast)
+                .reduce(this.zero(), GroupElement::add);
     }
 
     /**
@@ -149,8 +148,7 @@ public class NaiveGroup implements Group {
     @Override
     @NonNull
     public GroupElement fromBytes(@NonNull final byte[] bytes) {
-        final BigInteger value = new BigInteger(bytes).mod(PRIME_MODULUS);
-        return new NaiveGroupElement(this, value);
+        return new NaiveGroupElement(this, curve.field(), ByteBuffer.wrap(bytes).getInt());
     }
 
     @NonNull
@@ -158,9 +156,10 @@ public class NaiveGroup implements Group {
     public GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
         return new NaiveGroupElement(
                 this,
+                curve.field(),
                 Stream.concat(x.stream(), y.stream())
                         .reduce(BigInteger.ZERO, BigInteger::add)
-                        .mod(PRIME_MODULUS));
+                        .intValue());
     }
 
     /**
@@ -168,7 +167,7 @@ public class NaiveGroup implements Group {
      */
     @Override
     public int seedSize() {
-        return EXAMPLE_SIZE;
+        return Integer.BYTES;
     }
 
     /**
@@ -176,6 +175,6 @@ public class NaiveGroup implements Group {
      */
     @Override
     public int elementSize() {
-        return EXAMPLE_SIZE;
+        return Integer.BYTES;
     }
 }

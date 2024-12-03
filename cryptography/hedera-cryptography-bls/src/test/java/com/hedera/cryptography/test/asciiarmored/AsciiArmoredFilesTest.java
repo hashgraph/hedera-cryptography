@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.asciiarmored;
+package com.hedera.cryptography.test.asciiarmored;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.hedera.cryptography.asciiarmored.AsciiArmoredFiles;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;

@@ -24,9 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
-import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve.FailingCurveException;
-import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve.TestBn;
 import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves;
+import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves.FailingCurveException;
+import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves.TestBn;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -41,14 +41,14 @@ class PairingsFriendlyCurvesTest {
 
     @Test
     void implementedCurveIsFound() {
-        assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE));
+        assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(TestFixtureCurves.FAKE_CURVE));
     }
 
     @Test
     void multipleCallsReturnSameInstance() {
-        PairingFriendlyCurve expected = PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE);
-        assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE));
-        assertSame(expected, PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE));
+        PairingFriendlyCurve expected = PairingFriendlyCurves.findInstance(TestFixtureCurves.FAKE_CURVE);
+        assertDoesNotThrow(() -> PairingFriendlyCurves.findInstance(TestFixtureCurves.FAKE_CURVE));
+        assertSame(expected, PairingFriendlyCurves.findInstance(TestFixtureCurves.FAKE_CURVE));
     }
 
     @Test
@@ -76,13 +76,13 @@ class PairingsFriendlyCurvesTest {
         final int taskCount = 100;
         try (ExecutorService executorService = Executors.newFixedThreadPool(threadCount)) {
             final List<Callable<PairingFriendlyCurve>> callables = Collections.nCopies(
-                    taskCount, () -> PairingFriendlyCurves.findInstance(TestFixtureCurves.NO_PAIRING_CURVE));
+                    taskCount, () -> PairingFriendlyCurves.findInstance(TestFixtureCurves.FAKE_CURVE));
 
             final var results = executorService.invokeAll(callables);
             for (final Future<PairingFriendlyCurve> result : results) {
                 final PairingFriendlyCurve actual = result.get();
                 assertNotNull(actual);
-                assertEquals(TestFixtureCurves.NO_PAIRING_CURVE, actual.curve());
+                assertEquals(TestFixtureCurves.FAKE_CURVE, actual.curve());
             }
             executorService.shutdown();
         }

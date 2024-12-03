@@ -24,24 +24,14 @@ import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A naive implementation of the PairingFriendlyCurve interface for testing purposes.
  * This implementation provides basic methods to interact with the curve, field, and groups.
  */
-public class NaiveCurve extends PairingFriendlyCurve {
+abstract class NaiveCurve extends PairingFriendlyCurve {
 
     private final Curve curve;
-
-    /**
-     * The size of the field elements in bytes. For simplicity, using 256-bit elements.
-     */
-    public static final int EXAMPLE_SIZE = 12;
-
-    public NaiveCurve() {
-        this(TestFixtureCurves.NO_PAIRING_CURVE);
-    }
 
     NaiveCurve(final Curve curve) {
         this.curve = curve;
@@ -113,58 +103,5 @@ public class NaiveCurve extends PairingFriendlyCurve {
         Objects.requireNonNull(element1, "element1 must not be null");
         Objects.requireNonNull(element2, "element2 must not be null");
         return new NaiveBilinearPairing(element1, element2);
-    }
-
-    /**
-     * A Test curve under TestCurves.TEST enum
-     */
-    public static class TestBn extends NaiveCurve {
-
-        private final AtomicInteger initializedCount = new AtomicInteger(0);
-        /** Constructor*/
-        public TestBn() {
-            super(TestFixtureCurves.TEST);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        protected void doInit() {
-            initializedCount.incrementAndGet();
-        }
-
-        /**
-         * Returns the number of times doInit was called.
-         * @return the number of times doInit was called
-         */
-        public Integer getInitializedCount() {
-            return initializedCount.get();
-        }
-    }
-
-    /**
-     * A Test curve that fails in the doInit method
-     */
-    public static class FailingCurve extends NaiveCurve {
-
-        public FailingCurve() {
-            super(TestFixtureCurves.FAIL_CURVE);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        protected void doInit() {
-            throw new FailingCurveException("this is a failing provider");
-        }
-    }
-
-    /**
-     * An exception thrown by FailingCurve
-     */
-    public static class FailingCurveException extends RuntimeException {
-
-        /** {@inheritDoc} */
-        public FailingCurveException(final String message) {
-            super(message);
-        }
     }
 }

@@ -22,6 +22,7 @@ import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssMessageParsingException;
+import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.impl.Groth21Service;
 import com.hedera.cryptography.tss.test.fixtures.TssTestCommittee;
@@ -51,96 +52,77 @@ import org.openjdk.jmh.annotations.Warmup;
 @State(Scope.Benchmark)
 @Timeout(time = 10, timeUnit = TimeUnit.HOURS)
 @Fork(value = 1, jvmArgsAppend = "-Xmx48g")
-@Threads(10)
-@Warmup(iterations = 0)
-@Measurement(iterations = 1)
-@BenchmarkMode(Mode.SingleShotTime)
-@OutputTimeUnit(TimeUnit.SECONDS)
 public class GenerateMessagesBenchmark {
-
-    // ************************************************
-    // COMPRESSED
     // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
     //  Score   Error  Units
-    // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss
-    //  2.391           s/op
     // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             128         2    ss
-    //  6.363           s/op
-    // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss
-    // 72.449           s/op
-    // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             128         2    ss
-    // 198.247           s/op
-
-    //
-    // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
-    //  Score   Error  Units
-    // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             256         2    ss
-    //  4.902           s/op
-    // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             256         2    ss
-    // 12.882           s/op
-    // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             256         2    ss
-    // 287.540           s/op
-    // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             256         2    ss
-    // 792.447           s/op
-
-    // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
-    //   Score   Error  Units
-    // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             512         2    ss
-    //  10.450           s/op
-    // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             512         2    ss
-    //  27.221           s/op
-    // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             512         2    ss
-    // 1151.315           s/op
-    // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             512         2    ss
-    // 3143.904           s/op
-
-    // ************************************************
-    // UN-COMPRESSED
-
-    // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
-    //  Score   Error  Units
+    //  6.364           s/op
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES            1024         2    ss
+    // 55.465           s/op
     // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss
-    //  1.714           s/op
-    // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             128         2    ss
-    //  4.006           s/op
-    // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss
-    // 65.922           s/op
+    //  2.378           s/op
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS            1024         2    ss
+    // 23.811           s/op
     // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             128         2    ss
-    // 175.585           s/op
+    // 197.614           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss
+    // 73.364           s/op
+
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS            1024         2    ss
+    // 23.307           s/op
 
     // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
     //  Score   Error  Units
     // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             256         2    ss
-    //  3.558           s/op
+    //  3.502           s/op
     // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             256         2    ss
-    //  8.243           s/op
+    //  8.131           s/op
     // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             256         2    ss
-    // 262.770           s/op
+    // 261.560           s/op
     // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             256         2    ss
-    // 700.824           s/op
+    // 696.375           s/op
+
+    // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
+    //  Score   Error  Units
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss
+    //  1.702           s/op
+    // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             128         2    ss
+    //  3.986           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             128         2    ss
+    // 65.462           s/op
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             128         2    ss
+    // 174.767           s/op
 
     // Benchmark                                                (groupAssignment)  (participants)  (shares)  Mode  Cnt
     //   Score   Error  Units
     // GenerateMessagesBenchmark.produceSharesNumberOfMessages  SHORT_PUBLIC_KEYS             512         2    ss
-    //   7.643           s/op
+    //   7.593           s/op
     // GenerateMessagesBenchmark.produceSharesNumberOfMessages   SHORT_SIGNATURES             512         2    ss
-    //  16.985           s/op
+    //  16.931           s/op
     // GenerateMessagesBenchmark.readThresholdNumberOfMessages  SHORT_PUBLIC_KEYS             512         2    ss
-    // 1041.317           s/op
+    // 1039.990           s/op
     // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             512         2    ss
-    // 2790.024           s/op
+    // 2774.135           s/op
 
+    // COMPRESSED: Benchmark 130x10                                                (groupAssignment)  (participants)
+    // (shares)  Mode  Cnt     Score   Error  Units
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             130        10    ss
+    // 4191.890           s/op
+    // UN COMPRESED Benchmark 130x10                                               (groupAssignment)  (participants)
+    // (shares)  Mode  Cnt     Score   Error  Units
+    // GenerateMessagesBenchmark.readThresholdNumberOfMessages   SHORT_SIGNATURES             130        10    ss
+    // 4241.999           s/op
     public static final Random TEST_RNG = new Random();
     public static Random rng = new Random(TEST_RNG.nextInt());
     static SignatureSchema signatureSchema;
 
-    @Param({"SHORT_PUBLIC_KEYS", "SHORT_SIGNATURES"})
+    @Param({"SHORT_SIGNATURES"})
     static GroupAssignment groupAssignment;
 
-    @Param({"512"})
+    @Param({"130"})
     static int participants;
 
-    @Param({"2"})
+    @Param({"10"})
     static int shares;
 
     TssService tssService;
@@ -155,24 +137,29 @@ public class GenerateMessagesBenchmark {
     }
 
     @Benchmark
-    public List<?> produceSharesNumberOfMessages() {
-        List<byte[]> messages = new ArrayList<>(participants);
-        for (int i = 0; i < shares; i++) {
-            messages.add(tssService
-                    .genesisStage()
-                    .generateTssMessage(genesisCommittee.participantDirectory())
-                    .toBytes());
-        }
-
-        return messages;
+    @BenchmarkMode(Mode.All)
+    @Warmup(iterations = 1, time = 10, timeUnit = TimeUnit.MILLISECONDS)
+    @Threads(2)
+    @Fork(1)
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    public Object readMessages(ReadMessageState state) throws TssMessageParsingException {
+        return com.hedera.cryptography.tss.impl.groth21.Groth21Message.fromBytes(
+                state.messages[0], state.directory, signatureSchema);
     }
 
     @Benchmark
+    @BenchmarkMode(Mode.SingleShotTime)
+    @Warmup(iterations = 0)
+    @Threads(1)
+    @Measurement(iterations = 1)
+    @OutputTimeUnit(TimeUnit.SECONDS)
     public List<?> readThresholdNumberOfMessages(ReadMessageState state) {
         List<TssMessage> tssMessages = new ArrayList<>(participants);
-        for (byte[] message : state.messages) {
+        final int size = state.messages.length;
+        for (int i = 0; i < size; i++) {
             try {
-                tssMessages.add(tssService.messageFromBytes(genesisCommittee.participantDirectory(), message));
+                tssMessages.add(tssService.messageFromBytes(state.directory, state.messages[i]));
+                state.messages[i] = null;
             } catch (TssMessageParsingException e) {
                 throw new RuntimeException(e);
             }
@@ -182,9 +169,10 @@ public class GenerateMessagesBenchmark {
 
     @State(Scope.Benchmark)
     public static class ReadMessageState {
-        List<byte[]> messages;
+        byte[][] messages;
         TssService tssService;
         TssTestCommittee genesisCommittee;
+        TssParticipantDirectory directory;
 
         @Setup
         public void setup() {
@@ -192,13 +180,16 @@ public class GenerateMessagesBenchmark {
             tssService = new Groth21Service(signatureSchema, rng);
             final BlsPrivateKey[] keys = TssTestUtils.rndSks(signatureSchema, rng, participants);
             genesisCommittee = new TssTestCommittee(participants, shares, keys);
-            var privateSharesPerParticipant = TssTestUtils.randomPrivateShares(genesisCommittee, rng, signatureSchema);
-            this.messages =
-                    TssTestUtils.simulateRekeyMessaging(tssService, genesisCommittee, privateSharesPerParticipant)
-                            .stream()
-                            .parallel()
-                            .map(TssMessage::toBytes)
-                            .toList();
+            directory = genesisCommittee.participantDirectory();
+            var value = tssService
+                    .genesisStage()
+                    .generateTssMessage(genesisCommittee.participantDirectory())
+                    .toBytes();
+            byte[][] matrix = new byte[genesisCommittee.threshold()][];
+            for (int i = 0; i < genesisCommittee.threshold(); i++) {
+                matrix[i] = value;
+            }
+            messages = matrix;
         }
     }
 }

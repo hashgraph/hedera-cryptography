@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.bls;
+package com.hedera.cryptography.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.hedera.cryptography.bls.BlsKeyPair;
+import com.hedera.cryptography.bls.BlsPrivateKey;
+import com.hedera.cryptography.bls.BlsPublicKey;
+import com.hedera.cryptography.bls.GroupAssignment;
+import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
 import java.security.NoSuchAlgorithmException;
 import org.junit.jupiter.api.Test;
