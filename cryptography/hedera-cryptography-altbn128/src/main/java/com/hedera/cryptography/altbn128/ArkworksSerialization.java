@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.altbn128;
 
+import static com.hedera.cryptography.utils.ByteArrayUtils.copyAndReverse;
 import static com.hedera.cryptography.utils.ByteArrayUtils.reverseBytesInPlace;
 import static com.hedera.cryptography.utils.ByteArrayUtils.toPaddedByteArray;
 
@@ -29,7 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
 /**
  * This enum contains Arkworks serialization information about the different types of elements that can be used in the
@@ -223,23 +223,26 @@ public enum ArkworksSerialization {
         final List<BigInteger> list = new ArrayList<>();
         for (int i = from; i < to; i += NUMBER_SIZE_BYTES) {
             final byte[] copy = new byte[NUMBER_SIZE_BYTES];
-            ByteArrayUtils.copyAndReverse(bytes, i, copy, 0, NUMBER_SIZE_BYTES);
+            copyAndReverse(bytes, i, copy, 0, NUMBER_SIZE_BYTES);
             removeFlags(copy, 0);
             list.add(new BigInteger(copy));
         }
         return list;
     }
 
-    public static byte[] toArkworksBytes(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
-        final List<byte[]> numbers = new ArrayList<>();
-        for (final BigInteger bi : x) {
-            numbers.add(reverseBytesInPlace(toPaddedByteArray(bi, NUMBER_SIZE_BYTES)));
-        }
-        for (final BigInteger bi : y) {
-            numbers.add(reverseBytesInPlace(toPaddedByteArray(bi, NUMBER_SIZE_BYTES)));
+    public static byte[] coordinatesToBytes(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
+        final int numCount = x.size() + y.size();
+        final byte[] bytes = new byte[NUMBER_SIZE_BYTES * numCount];
+        for (int i = 0; i < numCount; i++) {
+            final BigInteger bi = i < x.size() ? x.get(i) : y.get(i - x.size());
+            final byte[] biArray = bi.toByteArray();
+            if (biArray.length > NUMBER_SIZE_BYTES) {
+                throw new IllegalArgumentException("BigInteger is too large to fit in a 254-bit number");
+            }
+            copyAndReverse(biArray, 0, bytes, i * NUMBER_SIZE_BYTES, biArray.length);
         }
 
-        return ByteArrayUtils.concat(numbers);
+        return bytes;
     }
 
     /**

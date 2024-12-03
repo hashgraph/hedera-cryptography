@@ -145,6 +145,9 @@ public class AltBn128Field implements Field {
                 facade.batchMultiply(scalars.stream().mapToLong(Long::valueOf).toArray()), this);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public PairingFriendlyCurve getPairingFriendlyCurve() {

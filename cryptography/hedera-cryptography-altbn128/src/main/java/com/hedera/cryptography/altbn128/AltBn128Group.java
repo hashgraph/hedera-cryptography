@@ -23,18 +23,15 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
-import com.hedera.cryptography.utils.ByteArrayUtils;
 import com.hedera.cryptography.utils.HashUtils;
 import com.hedera.cryptography.utils.HashUtils.HashCalculator;
 import com.hedera.cryptography.utils.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 import java.security.Security;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
@@ -225,7 +222,7 @@ public class AltBn128Group implements Group {
     @NonNull
     @Override
     public GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
-        final byte[] bytes = ArkworksSerialization.toArkworksBytes(x, y);
+        final byte[] bytes = ArkworksSerialization.coordinatesToBytes(x, y);
         return fromBytes(bytes);
     }
 
