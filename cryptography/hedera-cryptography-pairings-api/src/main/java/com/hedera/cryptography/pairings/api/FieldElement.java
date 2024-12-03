@@ -103,20 +103,10 @@ public interface FieldElement {
     BigInteger toBigInteger();
 
     /**
-     * Returns the byte array representation of the field element
-     *
-     * @return the byte array representation of the field element
-     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
-     */
-    @NonNull
-    @Deprecated(forRemoval = true)
-    byte[] toBytes();
-
-    /**
      * Returns this field element as an unsigned big-endian number in a byte array
      *
      * @return the field element as a byte array
      */
     @NonNull
-    byte[] toByteArray();
+    byte[] toBytes();
 }

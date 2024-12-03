@@ -25,12 +25,6 @@ import org.junit.jupiter.api.Test;
 class ByteArrayUtilsTest {
 
     @Test
-    void testSmallerChunks() {
-        assertThrows(IllegalArgumentException.class, () -> ByteArrayUtils.toBigIntegers(new byte[] {1, 2, 3}, 2));
-        assertDoesNotThrow(() -> ByteArrayUtils.toBigIntegers(new byte[] {1, 2, 3}, 1));
-    }
-
-    @Test
     void byteReversalTest() {
         assertArrayEquals(
                 new byte[] {8, 7, 6, 5, 4, 3, 2, 1},

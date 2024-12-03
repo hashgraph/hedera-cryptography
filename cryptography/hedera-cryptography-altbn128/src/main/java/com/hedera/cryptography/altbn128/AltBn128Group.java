@@ -116,7 +116,7 @@ public class AltBn128Group implements Group {
     @NonNull
     @Override
     public GroupElement hashToCurve(@NonNull final byte[] input) {
-        HashCalculator calculator = HashUtils.getHashCalculator(KECCAK_256);
+        final HashCalculator calculator = HashUtils.getHashCalculator(KECCAK_256);
         // hash the input and try to find a valid group element
         // hash the hash until we find a valid group element
         byte[] candidate = input;
@@ -219,6 +219,9 @@ public class AltBn128Group implements Group {
         return new AltBn128GroupElement(this, facade.fromBytes(bytes));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @NonNull
     @Override
     public GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {

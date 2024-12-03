@@ -17,7 +17,6 @@
 package com.hedera.cryptography.altbn128;
 
 import static com.hedera.cryptography.utils.ByteArrayUtils.copyAndReverse;
-import static com.hedera.cryptography.utils.ByteArrayUtils.reverseBytesInPlace;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -96,6 +95,7 @@ public enum ArkworksSerialization {
      * @return The serialization information
      */
     @NonNull
+    @SuppressWarnings("unused")
     public static ArkworksSerialization fromGroup(@NonNull final AltBN128CurveGroup group) {
         return switch (group) {
             case GROUP1 -> GROUP1_ELEMENT;
@@ -149,15 +149,6 @@ public enum ArkworksSerialization {
      */
     public int numberOfBits() {
         return NUMBER_SIZE_BYTES * Byte.SIZE * numberCount;
-    }
-
-    /**
-     * Get the size in bytes of a coordinate
-     *
-     * @return the size of a coordinate
-     */
-    public int getCoordinateSize() {
-        return NUMBER_SIZE_BYTES * numberCount / 2;
     }
 
     /**
@@ -228,6 +219,14 @@ public enum ArkworksSerialization {
         return list;
     }
 
+    /**
+     * Serialize the coordinates into a byte array
+     *
+     * @param x the X coordinate
+     * @param y the Y coordinate
+     * @return the serialized bytes
+     */
+    @NonNull
     public static byte[] coordinatesToBytes(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
         final int numCount = x.size() + y.size();
         final byte[] bytes = new byte[NUMBER_SIZE_BYTES * numCount];
@@ -240,20 +239,6 @@ public enum ArkworksSerialization {
             copyAndReverse(biArray, 0, bytes, i * NUMBER_SIZE_BYTES, biArray.length);
         }
 
-        return bytes;
-    }
-
-    /**
-     * Reverse the byte order of the coordinates in the serialized bytes
-     *
-     * @param bytes the Arkworks serialized bytes
-     * @return the bytes with the coordinates reversed
-     */
-    @NonNull
-    public static byte[] reverseCoordinateBytes(@NonNull final byte[] bytes) {
-        for (int i = 0; i < bytes.length; i += NUMBER_SIZE_BYTES) {
-            reverseBytesInPlace(bytes, i, i + NUMBER_SIZE_BYTES);
-        }
         return bytes;
     }
 }
