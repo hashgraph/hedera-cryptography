@@ -58,7 +58,8 @@ public class ByteArrayUtils {
     }
 
     public static byte[] toPaddedByteArray(@NonNull final BigInteger value, final int size) {
-        final byte[] bigInt = Objects.requireNonNull(value, "value must not be null").toByteArray();
+        final byte[] bigInt =
+                Objects.requireNonNull(value, "value must not be null").toByteArray();
         if (bigInt.length > size) {
             throw new IllegalArgumentException("BigInteger cannot be represented in " + size + " bytes.");
         }
@@ -147,15 +148,11 @@ public class ByteArrayUtils {
     }
 
     public static void copyAndReverse(
-            final byte[] source,
-            final int srcPos,
-            final byte[] dest,
-            final int destPos,
-            final int length) {
-        if (srcPos < 0 || srcPos+length > source.length) {
+            final byte[] source, final int srcPos, final byte[] dest, final int destPos, final int length) {
+        if (srcPos < 0 || srcPos + length > source.length) {
             throw new IllegalArgumentException("Invalid source range");
         }
-        if (destPos < 0 || destPos+length > dest.length) {
+        if (destPos < 0 || destPos + length > dest.length) {
             throw new IllegalArgumentException("Invalid destination range");
         }
         for (int i = 0; i < length; i++) {

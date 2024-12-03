@@ -18,9 +18,7 @@ package com.hedera.cryptography.altbn128;
 
 import static com.hedera.cryptography.utils.ByteArrayUtils.copyAndReverse;
 import static com.hedera.cryptography.utils.ByteArrayUtils.reverseBytesInPlace;
-import static com.hedera.cryptography.utils.ByteArrayUtils.toPaddedByteArray;
 
-import com.hedera.cryptography.utils.ByteArrayUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import java.math.BigInteger;

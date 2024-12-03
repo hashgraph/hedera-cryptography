@@ -24,7 +24,6 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
-import com.hedera.cryptography.utils.ByteArrayUtils;
 import com.hedera.cryptography.utils.HashUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
@@ -161,8 +160,7 @@ public class NaiveGroup implements Group {
                 this,
                 Stream.concat(x.stream(), y.stream())
                         .reduce(BigInteger.ZERO, BigInteger::add)
-                        .mod(PRIME_MODULUS)
-        );
+                        .mod(PRIME_MODULUS));
     }
 
     /**

@@ -183,8 +183,7 @@ class AltBn128GroupElementTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> group.fromCoordinates(
-                        List.of(BigInteger.ONE, new BigInteger("10")),
-                        List.of(BigInteger.ONE, BigInteger.ONE)));
+                        List.of(BigInteger.ONE, new BigInteger("10")), List.of(BigInteger.ONE, BigInteger.ONE)));
     }
 
     @ParameterizedTest

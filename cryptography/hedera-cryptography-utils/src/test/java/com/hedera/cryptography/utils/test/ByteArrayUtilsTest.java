@@ -47,8 +47,8 @@ class ByteArrayUtilsTest {
     }
 
     @Test
-    void copyReverseTest(){
-        final byte[] src =  new byte[] {0, 1, 2, 3, 4, 5, 6, 7};
+    void copyReverseTest() {
+        final byte[] src = new byte[] {0, 1, 2, 3, 4, 5, 6, 7};
         final byte[] dest = new byte[8];
 
         ByteArrayUtils.copyAndReverse(src, 0, dest, 0, 8);
