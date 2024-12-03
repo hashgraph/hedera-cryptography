@@ -141,6 +141,7 @@ abstract class RustToolchainInstallTask : CargoVersions, DefaultTask() {
         )
         execute(listOf(xwinCmd, "--accept-license", "splat", "--output", xwinFolder))
 
+        CargoUtil.cleanCache(destinationDirectory.dir("cargo").get().asFile)
         files.delete(rustupInstall)
     }
 

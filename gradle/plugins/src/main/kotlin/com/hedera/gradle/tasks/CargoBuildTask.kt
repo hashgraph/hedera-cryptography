@@ -91,12 +91,12 @@ abstract class CargoBuildTask : CargoVersions, DefaultTask() {
     }
 
     private fun buildForTarget(buildsForWindows: Boolean) {
-        exec.exec {
-            val rustupHome = rustInstallFolder.dir("rustup").get().asFile.absolutePath
-            val cargoHome = rustInstallFolder.dir("cargo").get().asFile.absolutePath
-            val zigPath = rustInstallFolder.file("zig/zig").get().asFile.absolutePath
-            val buildCommand = if (buildsForWindows) "build" else "zigbuild"
+        val rustupHome = rustInstallFolder.dir("rustup").get().asFile.absolutePath
+        val cargoHome = rustInstallFolder.dir("cargo").get().asFile
+        val zigPath = rustInstallFolder.file("zig/zig").get().asFile.absolutePath
+        val buildCommand = if (buildsForWindows) "build" else "zigbuild"
 
+        exec.exec {
             workingDir = cargoToml.get().asFile.parentFile
 
             environment("RUSTUP_HOME", rustupHome)
@@ -105,7 +105,7 @@ abstract class CargoBuildTask : CargoVersions, DefaultTask() {
 
             commandLine =
                 listOf(
-                    "$cargoHome/bin/cargo",
+                    File(cargoHome, "bin/cargo").absolutePath,
                     "+${rustVersion.get()}",
                     buildCommand,
                     "--target=${toolchain.get().target}"
@@ -142,5 +142,7 @@ abstract class CargoBuildTask : CargoVersions, DefaultTask() {
                 args("--verbose")
             }
         }
+
+        CargoUtil.cleanCache(cargoHome)
     }
 }
