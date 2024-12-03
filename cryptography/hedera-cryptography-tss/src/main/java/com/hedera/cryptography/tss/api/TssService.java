@@ -90,6 +90,7 @@ public interface TssService {
      * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
      */
     @NonNull
+    @Deprecated
     <S> TssMessage messageFrom(@NonNull Transformer<S, TssMessage> tssMessageTransformer, @NonNull S message)
             throws TssMessageParsingException;
 
