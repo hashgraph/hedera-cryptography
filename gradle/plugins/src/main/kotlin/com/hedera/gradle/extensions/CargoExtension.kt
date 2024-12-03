@@ -84,11 +84,6 @@ abstract class CargoExtension {
             hostOperatingSystem.set(readHostOperatingSystem())
             hostArchitecture.set(System.getProperty("os.arch"))
 
-            rustVersion.convention(versions.getValue("rust") as String)
-            cargoZigbuildVersion.convention(versions.getValue("cargo-zigbuild") as String)
-            zigVersion.convention(versions.getValue("zig") as String)
-            xwinVersion.convention(versions.getValue("xwin") as String)
-
             toolchains.convention(CargoToolchain.values().asList())
             destinationDirectory.convention(layout.buildDirectory.dir("rust-toolchains"))
         }
