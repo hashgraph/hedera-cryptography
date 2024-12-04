@@ -128,7 +128,7 @@ public class NaiveFieldElement implements FieldElement {
     @Override
     @NonNull
     public FieldElement power(final long exponent) {
-        long result = Utils.intPow(value, exponent);
+        long result = Utils.longPow(value, exponent);
         return new NaiveFieldElement(field, result);
     }
 
@@ -143,6 +143,9 @@ public class NaiveFieldElement implements FieldElement {
     public FieldElement inverse() {
         if (value == 0) throw new PairingsException("Non invertible");
 
+        for (int i = 0; i < PRIME_MODULUS; i++) {
+            if ((value * i) % PRIME_MODULUS == 1) return new NaiveFieldElement(field, i);
+        }
         throw new PairingsException("Non invertible");
     }
 
