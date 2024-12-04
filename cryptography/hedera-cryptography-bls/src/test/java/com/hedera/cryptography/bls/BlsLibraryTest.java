@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPrivateKeySerialization;
 import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPublicKeySerialization;
 import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsSignatureSerialization;
-import com.hedera.cryptography.bls.test.fixtures.AltBn128ExternalData;
 import com.hedera.cryptography.bls.test.fixtures.BlsTestUtils;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
