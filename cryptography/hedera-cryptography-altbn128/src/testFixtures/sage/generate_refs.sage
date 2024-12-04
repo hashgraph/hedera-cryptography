@@ -15,7 +15,6 @@
 #
 
 from sagelib.utils import *
-from sagelib.svdw import generic_svdw
 import json
 
 # Generate random points
@@ -25,7 +24,6 @@ points = {
     "GROUP2": [],
     "E2_non_G2": [],
     "SCALARS": [],
-    "svdw": []
 }
 
 for _ in range(num_points):
@@ -41,17 +39,6 @@ for _ in range(num_points):
  
 
 ###
-# now we generate the SVDW vectors for the comparison with the solidity implementation
-
-svdw = generic_svdw(E1)
-for _ in range(num_points):
-    u = Fp.random_element()
-    if u not in svdw.undefs:
-        x, y = svdw.map_to_point(u)
-        assert E1(x,y), f"point ({x},{y}) is not on the curve for u = {u}"
-        points["svdw"].append({
-            "i" : str(u),
-            **point_to_json(E1(x,y))})
 
 pointsTwo = {'SCALARS': points['SCALARS']}
 for field in list(points.keys()):
@@ -59,7 +46,7 @@ for field in list(points.keys()):
 	print(field)
 	if field == 'SCALARS':
 		continue
-	elif field == 'GROUP1' or field == 'svdw':
+	elif field == 'GROUP1':
 		for entry in points[field]:
 			simplifiedField.append([str(value) for value in list(entry.values())])
 	else:

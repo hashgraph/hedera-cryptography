@@ -23,11 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import com.hedera.cryptography.pairings.api.curves.KnownCurves;
-import java.util.Arrays;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.EnumSource;
 
 public class SignatureSchemaTest {
     @Test
@@ -40,7 +38,7 @@ public class SignatureSchemaTest {
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
+    @EnumSource(GroupAssignment.class)
     void crateSignatureSchema(GroupAssignment assignment) {
         final var actual = SignatureSchema.create(Curve.ALT_BN128, assignment);
         assertNotNull(actual, "Should have created a SignatureSchema");
@@ -64,9 +62,5 @@ public class SignatureSchemaTest {
                         : GroupAssignment.SHORT_SIGNATURES);
         assertNotNull(other, "Should have created a SignatureSchema");
         assertNotNull(other.getPairingFriendlyCurve(), "should have created a pairing friendly curve instance");
-    }
-
-    private static Stream<GroupAssignment> combinedParameters() {
-        return Arrays.stream(GroupAssignment.values());
     }
 }

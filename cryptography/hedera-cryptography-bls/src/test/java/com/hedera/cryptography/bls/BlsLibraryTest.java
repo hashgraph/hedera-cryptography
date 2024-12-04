@@ -31,7 +31,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -51,7 +50,7 @@ class BlsLibraryTest {
     public static final String MESSAGE = "Flipped bytes should be an invalid or different key";
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
+    @MethodSource("allSignatureSchemas")
     @DisplayName(
             "Derive the public key multiple times from the same private key and verify that the results are consistently the same")
     void testKeyConsistency(SignatureSchema schema, final Random rng) {
@@ -63,7 +62,7 @@ class BlsLibraryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
+    @MethodSource("allSignatureSchemas")
     @DisplayName("Generate multiple private keys and ensure that keys are not repeated and appear random")
     void testRandomness(SignatureSchema schema, final Random rng) {
         final var keys = rng.longs(10000)
@@ -74,16 +73,16 @@ class BlsLibraryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
+    @MethodSource("allSignatureSchemas")
     @DisplayName("detect incorrectly used pseudorandom number generators in privateKeys")
     void testRandomnessSinglePrivateKeyByteDistribution(SignatureSchema schema, final Random rng) {
         final var key = BlsPrivateKey.create(schema, rng);
         final var keyBytes = DefaultBlsPrivateKeySerialization.getSerializer().serialize(key);
-        assertDistribution(keyBytes); // Allow a 5% deviation
+        assertDistribution(keyBytes, POPULATION_SIZE, DEVIATION); // Allow a 5% deviation
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
+    @MethodSource("allSignatureSchemas")
     @DisplayName("Generate multiple public keys and ensure that keys are not repeated and appear random")
     void testRandomnessPublicKeys(SignatureSchema schema, final Random rng) {
         final var keys = rng.longs(10000)
@@ -94,16 +93,16 @@ class BlsLibraryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
+    @MethodSource("allSignatureSchemas")
     @DisplayName("detect incorrectly used pseudorandom number generators in privateKeys")
     void testRandomnessSinglePublicKeyByteDistribution(SignatureSchema schema, final Random rng) {
         final var key = BlsPrivateKey.create(schema, rng).createPublicKey();
         final var keyBytes = DefaultBlsPublicKeySerialization.getSerializer().serialize(key);
-        assertDistribution(keyBytes); // Allow a 5% deviation
+        assertDistribution(keyBytes, POPULATION_SIZE, DEVIATION); // Allow a 5% deviation
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
+    @MethodSource("allSignatureSchemas")
     @DisplayName("ensure signatures vary given the same signing keys and different signing messages")
     void testRandomnessSignaturesMessages(SignatureSchema schema, final Random rng) {
 
@@ -120,7 +119,7 @@ class BlsLibraryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
+    @MethodSource("allSignatureSchemas")
     @DisplayName("For known private keys, check that the derived public key matches the expected values.")
     void test(SignatureSchema schema) {
         final var externalData = new AltBn128ExternalData();
@@ -129,21 +128,21 @@ class BlsLibraryTest {
                 .map(element -> new BlsPrivateKey(element, schema))
                 .toList();
 
-        final var derivatedpks =
+        final var derivedPks =
                 sks.stream().map(element -> element.createPublicKey().element()).toList();
         final var pksValues = schema.getGroupAssignment() == GroupAssignment.SHORT_SIGNATURES
                 ? externalData.getG2Points()
                 : externalData.getG1Points();
 
         final var pks = pksValues.stream()
-                .map(l -> schema.getPublicKeyGroup().fromCoordinates(List.of(l.getFirst()), List.of(l.getLast())))
+                .map(c -> schema.getPublicKeyGroup().fromCoordinates(c.x(), c.y()))
                 .toList();
 
-        StreamUtils.zipStream(pks, derivatedpks).forEach(e -> assertEquals(e.getKey(), e.getValue()));
+        StreamUtils.zipStream(pks, derivedPks).forEach(e -> assertEquals(e.getKey(), e.getValue()));
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
+    @MethodSource("allSignatureSchemas")
     @DisplayName("ensure signatures vary given the same input message and different signing keys")
     void testRandomnessSignaturesKeys(SignatureSchema schema, final Random rng) {
 
@@ -158,9 +157,9 @@ class BlsLibraryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
-    @SuppressWarnings("ConstantConditions")
+    @MethodSource("allSignatureSchemas")
     @DisplayName("Attempt to generate private keys with invalid parameters and expect proper error handling")
+    @SuppressWarnings("ConstantConditions")
     void testInvalidGenerationPrivateKeys(SignatureSchema schema, final Random rng) {
         final byte[] invalidKey = new byte[0];
         assertThrows(
@@ -186,9 +185,9 @@ class BlsLibraryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
-    @SuppressWarnings("ConstantConditions")
+    @MethodSource("allSignatureSchemas")
     @DisplayName("Attempt to generate public keys with invalid parameters and expect proper error handling")
+    @SuppressWarnings("ConstantConditions")
     void testInvalidGenerationPublicKeys(SignatureSchema schema, final Random rng) {
         final byte[] invalidKey = new byte[0];
         assertThrows(
@@ -213,9 +212,9 @@ class BlsLibraryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
-    @SuppressWarnings("ConstantConditions")
+    @MethodSource("allSignatureSchemas")
     @DisplayName("Attempt to generate signatures with invalid parameters and expect proper error handling")
+    @SuppressWarnings("ConstantConditions")
     void testInvalidGenerationSignatures(SignatureSchema schema, final Random rng) {
         final byte[] invalidSignature = new byte[0];
         assertThrows(
@@ -266,7 +265,7 @@ class BlsLibraryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
+    @MethodSource("allSignatureSchemas")
     @DisplayName(
             "Modify a valid publicKey slightly (i.e., change a single byte) and check that it is rejected or is not the same key.")
     void publicKeyFlipTest(SignatureSchema schema, final Random rng) {
@@ -279,7 +278,7 @@ class BlsLibraryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
+    @MethodSource("allSignatureSchemas")
     void signatureFlipTest(SignatureSchema schema, final Random rng) {
         final var sk = BlsPrivateKey.create(schema, rng);
         final var pk = sk.createPublicKey();
@@ -302,7 +301,7 @@ class BlsLibraryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("combinedParameters")
+    @MethodSource("allSignatureSchemas")
     void verifySignatureTest(SignatureSchema schema, final Random rng) {
         final var sk = BlsPrivateKey.create(schema, rng);
 
@@ -324,10 +323,10 @@ class BlsLibraryTest {
         });
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("allSignatureSchemas")
     @DisplayName("Keys and signatures can be aggregated, the aggregated key verifies the aggregated signature")
-    void blsAggregationTest(final Random random) {
-        final var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
+    void blsAggregationTest(SignatureSchema schema, final Random random) {
         final var pairs = BlsTestUtils.generateKeyPairs(random, schema, 4);
 
         final var msg =
@@ -351,6 +350,14 @@ class BlsLibraryTest {
         final var aggregatedPk = BlsPublicKey.aggregate(publicKeys);
         final var aggregateSignature = BlsSignature.aggregate(signatures);
         assertTrue(aggregateSignature.verify(aggregatedPk, msg));
+    }
+
+    /**
+     * Returns all the different signatureSchemas that can be created for ALT_BN128
+     * @return all the different signatureSchemas that can be created for ALT_BN128
+     */
+    private static Stream<SignatureSchema> allSignatureSchemas() {
+        return Arrays.stream(GroupAssignment.values()).map(v -> SignatureSchema.create(Curve.ALT_BN128, v));
     }
 
     /**
@@ -378,7 +385,8 @@ class BlsLibraryTest {
      * @param original the original with where the flipping will occur. The original is modified
      * @param consumer the consumer to invoke on each flip
      */
-    public static void flipEachBitAndConsume(@NonNull final byte[] original, final @NonNull Consumer<byte[]> consumer) {
+    private static void flipEachBitAndConsume(
+            @NonNull final byte[] original, final @NonNull Consumer<byte[]> consumer) {
         final BitSet bitSet = BitSet.valueOf(original);
 
         for (int i = 0; i < original.length; i++) {
@@ -390,16 +398,17 @@ class BlsLibraryTest {
         }
     }
 
-    private static Stream<SignatureSchema> combinedParameters() {
-        return Arrays.stream(GroupAssignment.values()).map(v -> SignatureSchema.create(Curve.ALT_BN128, v));
-    }
-
-    private static void assertDistribution(final byte[] keyBytes) {
-        final int[] frequencies = new int[POPULATION_SIZE];
+    /**
+     * @param keyBytes
+     * @param populationSize
+     * @param deviation
+     */
+    private static void assertDistribution(final byte[] keyBytes, final int populationSize, final double deviation) {
+        final int[] frequencies = new int[populationSize];
         for (byte b : keyBytes) {
             frequencies[Byte.toUnsignedInt(b)]++;
         }
-        double tolerance = POPULATION_SIZE * DEVIATION;
+        double tolerance = populationSize * deviation;
         for (byte b : keyBytes) {
             assertTrue(
                     frequencies[Byte.toUnsignedInt(b)] <= tolerance,

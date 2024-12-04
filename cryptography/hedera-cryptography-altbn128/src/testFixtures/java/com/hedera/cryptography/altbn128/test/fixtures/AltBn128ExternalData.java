@@ -23,12 +23,17 @@ import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * A tool to load externally produced altbn128 information from a json file.
  */
 public class AltBn128ExternalData {
+    private static final String SCALARS = "SCALARS";
+    private static final String G1 = "GROUP1";
+    private static final String G2 = "GROUP2";
+    private static final String NONG2 = "E2_non_G2";
+    private static final String FILE_NAME = "altbn128_ext_data.json";
+
     /**
      * The parsed json data stored in memory
      */
@@ -38,7 +43,7 @@ public class AltBn128ExternalData {
      * Constructor
      */
     public AltBn128ExternalData() {
-        final var data = AltBn128ExternalData.class.getClassLoader().getResourceAsStream("altbn128_ext_data.json");
+        final var data = AltBn128ExternalData.class.getClassLoader().getResourceAsStream(FILE_NAME);
         if (data == null) {
             throw new IllegalStateException("Could not find data json file");
         }
@@ -53,7 +58,7 @@ public class AltBn128ExternalData {
      */
     @SuppressWarnings("unchecked")
     public List<BigInteger> getScalars() {
-        var sksValues = (List<String>) data.get("SCALARS");
+        var sksValues = (List<String>) data.get(SCALARS);
         return sksValues.stream().map(BigInteger::new).toList();
     }
 
@@ -61,27 +66,39 @@ public class AltBn128ExternalData {
      * Returns a list of g1 points generated with an external library.
      * @return a list of g1 points generated with an external library.
      */
-    public List<List<BigInteger[]>> getG1Points() {
-        return groups("GROUP1");
+    public List<Coordinate> getG1Points() {
+        return coordinates(G1);
     }
 
     /**
      * Returns a list of g2 points generated with an external library.
      * @return a list of g2 points generated with an external library.
      */
-    public List<List<BigInteger[]>> getG2Points() {
-        return groups("GROUP2");
+    public List<Coordinate> getG2Points() {
+        return coordinates(G2);
+    }
+
+    /**
+     * Returns a list of coordinates not in G2
+     * @return a list of non g2 points.
+     */
+    public List<Coordinate> nonG2Points() {
+        return coordinates(NONG2);
     }
 
     @SuppressWarnings("unchecked")
-    private List<List<BigInteger[]>> groups(final @NonNull String group) {
+    private List<Coordinate> coordinates(final @NonNull String group) {
         var pksValues = (List<List<String>>) data.get(group);
         return pksValues.stream()
                 .map(v -> v.stream().map(BigInteger::new).toList())
-                .map(v -> Stream.of(
-                                v.subList(0, v.size() / 2).toArray(BigInteger[]::new),
-                                v.subList(v.size() / 2, v.size()).toArray(BigInteger[]::new))
-                        .toList())
+                .map(v -> new Coordinate(v.subList(0, v.size() / 2), v.subList(v.size() / 2, v.size())))
                 .toList();
     }
+
+    /**
+     * X and y coordinates as group of bigIntegers
+     * @param x x coordinate
+     * @param y y coordinate
+     */
+    public record Coordinate(@NonNull List<BigInteger> x, @NonNull List<BigInteger> y) {}
 }
