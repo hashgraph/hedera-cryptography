@@ -19,7 +19,6 @@ plugins {
     id("com.hedera.gradle.feature.rust")
     id("com.hedera.gradle.hedera-cryptography-publish")
     id("com.hedera.gradle.benchmark")
-    id("com.hedera.gradle.java-test-fixtures")
     id("com.hedera.gradle.feature.test-multios")
 }
 
