@@ -18,6 +18,7 @@ package com.hedera.cryptography.bls;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.hedera.cryptography.altbn128.test.fixtures.AltBn128ExternalData;
 import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPrivateKeySerialization;
 import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPublicKeySerialization;
 import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsSignatureSerialization;
