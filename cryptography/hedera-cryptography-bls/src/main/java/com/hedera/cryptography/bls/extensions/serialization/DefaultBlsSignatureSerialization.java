@@ -21,6 +21,7 @@ import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.extensions.serialization.DefaultGroupElementSerialization.EIP197Deserializer;
 import com.hedera.cryptography.pairings.extensions.serialization.DefaultGroupElementSerialization.EIP197Serializer;
+import com.hedera.cryptography.pairings.extensions.serialization.DefaultGroupElementSerialization.GroupElementDeserializer;
 import com.hedera.cryptography.utils.serialization.Deserializer;
 import com.hedera.cryptography.utils.serialization.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -60,7 +61,7 @@ public final class DefaultBlsSignatureSerialization {
     /**
      * Deserializer
      */
-    private record DefaultDeserializer(SignatureSchema signatureSchema, Deserializer<GroupElement> elementDeserializer)
+    private record DefaultDeserializer(SignatureSchema signatureSchema, GroupElementDeserializer elementDeserializer)
             implements Deserializer<BlsSignature> {
 
         /**

@@ -113,10 +113,6 @@ public class DefaultGroupElementSerialization {
         return new ErrorWrappingDeserializer(group::elementSize, array -> group.fromBytes(array, false, true));
     }
 
-    public static GroupElementDeserializer getEIP197Serializer(@NonNull final Group group) {
-        return new ErrorWrappingDeserializer(group::elementSize, array -> group.fromBytes(array, false, true));
-    }
-
     /**
      * Default serializer
      */
@@ -140,13 +136,16 @@ public class DefaultGroupElementSerialization {
 
         @Override
         public GroupElement deserialize(final byte[] s) {
+            if (s.length != elementSize()) {
+                throw new IllegalStateException("Invalid group element representation");
+            }
             final List<BigInteger> xs = new ArrayList<>();
             for (int i = 0; i < group.elementSize() / 2; i += 32) {
                 xs.add(new BigInteger(Arrays.copyOfRange(s, i, i + 32)));
             }
             final List<BigInteger> ys = new ArrayList<>();
             for (int i = group.elementSize() / 2; i < group.elementSize(); i += 32) {
-                xs.add(new BigInteger(Arrays.copyOfRange(s, i, i + 32)));
+                ys.add(new BigInteger(Arrays.copyOfRange(s, i, i + 32)));
             }
             try {
                 return group.fromCoordinates(xs, ys);
@@ -154,8 +153,10 @@ public class DefaultGroupElementSerialization {
                 if (new BigInteger(s).equals(BigInteger.ZERO)) {
                     return group.zero();
                 } else {
-                    throw e;
+                    throw new IllegalStateException("Cannot deserialize", e);
                 }
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException("Cannot deserialize", e);
             }
         }
     }
