@@ -9,13 +9,18 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 public record ElementsSerDes(@NonNull Serializer<FieldElement> fieldSerializer,
                              @NonNull Serializer<GroupElement> groupSerializer,
                              @NonNull Deserializer<FieldElement> fieldDeserializer,
-                             @NonNull Deserializer<GroupElement> groupDeserializer) {
+                             @NonNull Deserializer<GroupElement> group1Deserializer,
+                             @NonNull Deserializer<GroupElement> group2Deserializer) {
 
     public FieldElement serializeDeserialize(final FieldElement fieldElement) {
         return fieldDeserializer().deserialize(fieldSerializer().serialize(fieldElement));
     }
 
-    public GroupElement serializeDeserialize(final GroupElement groupElement) {
-        return groupDeserializer().deserialize(groupSerializer().serialize(groupElement));
+    public GroupElement serializeDeserializeGroup1(final GroupElement groupElement) {
+        return group1Deserializer().deserialize(groupSerializer().serialize(groupElement));
+    }
+
+    public GroupElement serializeDeserializeGroup2(final GroupElement groupElement) {
+        return group2Deserializer().deserialize(groupSerializer().serialize(groupElement));
     }
 }
