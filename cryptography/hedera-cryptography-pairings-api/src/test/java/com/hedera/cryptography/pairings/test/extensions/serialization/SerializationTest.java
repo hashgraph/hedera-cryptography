@@ -1,4 +1,4 @@
-package com.hedera.cryptography.utils.serialization;
+package com.hedera.cryptography.pairings.test.extensions.serialization;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -7,11 +7,10 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
+import com.hedera.cryptography.pairings.extensions.serialization.EthereumAltBn128SerDes;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.Random;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;

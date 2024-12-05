@@ -1,10 +1,12 @@
-package com.hedera.cryptography.utils.serialization;
+package com.hedera.cryptography.pairings.extensions.serialization;
 
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
+import com.hedera.cryptography.utils.serialization.Deserializer;
+import com.hedera.cryptography.utils.serialization.Serializer;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;

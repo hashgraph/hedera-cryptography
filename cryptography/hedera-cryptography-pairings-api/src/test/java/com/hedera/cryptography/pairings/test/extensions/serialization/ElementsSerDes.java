@@ -1,7 +1,9 @@
-package com.hedera.cryptography.utils.serialization;
+package com.hedera.cryptography.pairings.test.extensions.serialization;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.serialization.Deserializer;
+import com.hedera.cryptography.utils.serialization.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 public record ElementsSerDes(@NonNull Serializer<FieldElement> fieldSerializer,
