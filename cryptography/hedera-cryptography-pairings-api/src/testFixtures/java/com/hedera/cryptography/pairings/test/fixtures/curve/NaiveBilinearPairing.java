@@ -27,13 +27,15 @@ public record NaiveBilinearPairing(@NonNull GroupElement first, @NonNull GroupEl
         implements BilinearPairing {
 
     /**
-     * This curve is not supporting the bilinear pairing operation.
+     * the fake bilinear pairing operation based on the fact that the two groups are the same.
      *
      * @param other the other bilinear pairing to compare with
      * @return true if both the first and second group elements are equal to the corresponding elements in the other pairing, false otherwise
      */
     @Override
     public boolean compare(@NonNull final BilinearPairing other) {
-        throw new UnsupportedOperationException("Not implemented");
+
+        return ((NaiveGroupElement) this.first).value() * ((NaiveGroupElement) this.second).value() % 23
+                == ((NaiveGroupElement) other.first()).value() * ((NaiveGroupElement) other.second()).value() % 23;
     }
 }

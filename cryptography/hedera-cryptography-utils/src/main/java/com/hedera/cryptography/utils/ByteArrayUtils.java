@@ -157,6 +157,37 @@ public class ByteArrayUtils {
     }
 
     /**
+     * Returns a byte[] as an unsigned int[].
+     * Each element of the origina array is transformed used  {@link Byte#toUnsignedInt(byte)}
+     * @param bytes the original byte array to reinterpret.
+     * @return the reinterpreted array as unsigned values
+     */
+    public static @NonNull int[] unsigned(final @NonNull byte[] bytes) {
+        final int[] result = new int[bytes.length];
+        for (int i = 0; i < bytes.length; i++) {
+            result[i] = Byte.toUnsignedInt(bytes[i]);
+        }
+        return result;
+    }
+
+    /**
+     * Creates a byte array from an unsigned representation of int values
+     * @param bytes the individual values
+     * @return a byte[] array represented
+     * @throws IllegalArgumentException if any of the values is negative or out of range to be represented by a byte
+     */
+    public static @NonNull byte[] fromUnsigned(final @NonNull int... bytes) {
+        final byte[] result = new byte[bytes.length];
+        for (int i = 0; i < bytes.length; i++) {
+            if (bytes[i] < 0 || bytes[i] > 255) {
+                throw new IllegalArgumentException();
+            }
+            result[i] = (byte) (bytes[i] & 0xFF);
+        }
+        return result;
+    }
+
+    /**
      * A utility class for serializing various data types into a byte array.
      */
     public static class Serializer {

@@ -16,22 +16,23 @@
 
 package com.hedera.cryptography.pairings.test.fixtures.curve;
 
-import static com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve.EXAMPLE_SIZE;
-
+import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * A naive implementation of the GroupElement interface for testing purposes.
- * This implementation provides basic arithmetic operations on group elements.
+ * A naive implementation of the GroupElement interface for testing purposes. This implementation provides basic
+ * arithmetic operations on group elements.
  */
-public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value) implements GroupElement {
+public final class NaiveGroupElement implements GroupElement {
+    private final Group group;
+    final NaiveFieldElement value;
 
     /**
      * Constructs a NaiveGroupElement with the specified group and value.
@@ -39,10 +40,20 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
      * @param group the group associated with this group element
      * @param value the value of this group element
      */
-    public NaiveGroupElement(@NonNull final Group group, @NonNull final BigInteger value) {
-        Objects.requireNonNull(value, "value must not be null");
+    public NaiveGroupElement(@NonNull final Group group, NaiveFieldElement value) {
         this.group = Objects.requireNonNull(group, "group must not be null");
-        this.value = value.mod(NaiveFieldElement.PRIME_MODULUS);
+        this.value = value;
+    }
+
+    /**
+     * Constructs a NaiveGroupElement with the specified group and value.
+     *
+     * @param group the group associated with this group element
+     * @param value the value of this group element
+     */
+    public NaiveGroupElement(@NonNull final Group group, @NonNull final Field field, final int value) {
+        this.group = Objects.requireNonNull(group, "group must not be null");
+        this.value = new NaiveFieldElement(field, value);
     }
 
     /**
@@ -74,9 +85,8 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
     @Override
     @NonNull
     public GroupElement multiply(@NonNull final FieldElement other) {
-        Objects.requireNonNull(other, "other must not be null");
-        final BigInteger newValue = value.multiply(other.toBigInteger()).mod(NaiveFieldElement.PRIME_MODULUS);
-        return new NaiveGroupElement(group, newValue);
+        var value = ValidationUtils.expectOrThrow(NaiveFieldElement.class, other);
+        return new NaiveGroupElement(group, (NaiveFieldElement) this.value.multiply(value));
     }
 
     /**
@@ -86,9 +96,8 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
     @NonNull
     public GroupElement add(@NonNull final GroupElement other) {
         Objects.requireNonNull(other, "other must not be null");
-        final BigInteger newValue =
-                value.add(((NaiveGroupElement) other).value()).mod(NaiveFieldElement.PRIME_MODULUS);
-        return new NaiveGroupElement(group, newValue);
+        var value = ValidationUtils.expectOrThrow(NaiveGroupElement.class, other).value;
+        return new NaiveGroupElement(group, (NaiveFieldElement) this.value.add(value));
     }
 
     /**
@@ -97,30 +106,19 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
     @Override
     @NonNull
     public byte[] toBytes() {
-        final byte[] bytes = value.toByteArray();
-
-        // Ensure the byte array is exactly 32 bytes
-        if (bytes.length == EXAMPLE_SIZE) {
-            return bytes;
-        } else if (bytes.length < EXAMPLE_SIZE) {
-            final byte[] paddedBytes = new byte[EXAMPLE_SIZE];
-            System.arraycopy(bytes, 0, paddedBytes, EXAMPLE_SIZE - bytes.length, bytes.length);
-            return paddedBytes;
-        } else {
-            return Arrays.copyOfRange(bytes, bytes.length - EXAMPLE_SIZE, bytes.length);
-        }
+        return value.toBytes();
     }
 
     @NonNull
     @Override
     public List<BigInteger> getXCoordinate() {
-        return List.of(value);
+        return List.of(value.toBigInteger());
     }
 
     @NonNull
     @Override
     public List<BigInteger> getYCoordinate() {
-        return List.of(value);
+        return List.of(value.toBigInteger());
     }
 
     @Override
@@ -147,7 +145,9 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
      */
     @Override
     public boolean isSameGroup(@NonNull final GroupElement otherElement) {
-        return otherElement.getGroup().equals(this.group);
+        return ValidationUtils.expectOrThrow(NaiveGroupElement.class, otherElement)
+                .getGroup()
+                .equals(this.group);
     }
 
     /**
@@ -155,6 +155,40 @@ public record NaiveGroupElement(@NonNull Group group, @NonNull BigInteger value)
      */
     @Override
     public boolean isOppositeGroup(@NonNull final GroupElement otherElement) {
-        return group.getOppositeGroup().equals(otherElement.getGroup());
+        return ValidationUtils.expectOrThrow(NaiveGroupElement.class, otherElement)
+                .group()
+                .getOppositeGroup()
+                .equals(group.getOppositeGroup());
+    }
+
+    @NonNull
+    public Group group() {
+        return group;
+    }
+
+    public int value() {
+        return value.value;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || obj.getClass() != this.getClass()) {
+            return false;
+        }
+        var that = (NaiveGroupElement) obj;
+        return Objects.equals(this.group, that.group) && this.value == that.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(group, value);
+    }
+
+    @Override
+    public String toString() {
+        return "NaiveGroupElement[" + "group=" + group + ", " + "value=" + value + ']';
     }
 }

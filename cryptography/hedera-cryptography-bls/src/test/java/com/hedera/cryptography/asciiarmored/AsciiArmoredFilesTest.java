@@ -58,6 +58,7 @@ public class AsciiArmoredFilesTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void testAsciiArmoredWriteKeyRead() throws IOException {
         final Path keyPath = tempDir.resolve("test.tss");
         var deserializer = DefaultBlsPrivateKeySerialization.getDeserializer(SIGNATURE_SCHEMA);
@@ -75,6 +76,7 @@ public class AsciiArmoredFilesTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void testAsciiArmoredReadWithNullPath() {
         Exception exception =
                 assertThrows(NullPointerException.class, () -> AsciiArmoredFiles.readPrivateKey(null, null));
@@ -82,6 +84,7 @@ public class AsciiArmoredFilesTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void testAsciiArmoredWriteKeyWithNullPath() {
         Exception exception = assertThrows(
                 NullPointerException.class,
@@ -94,6 +97,7 @@ public class AsciiArmoredFilesTest {
     }
 
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void testAsciiArmoredWriteKeyWithNullBase64Key() {
         Exception exception = assertThrows(
                 NullPointerException.class,

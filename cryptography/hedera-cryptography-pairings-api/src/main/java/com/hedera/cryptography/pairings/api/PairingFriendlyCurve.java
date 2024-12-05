@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @see Field
  */
 public abstract class PairingFriendlyCurve {
+
     /**
      * Implementations should include here all the steps necessary to load the library, e.g.,
      * perform native library loads.

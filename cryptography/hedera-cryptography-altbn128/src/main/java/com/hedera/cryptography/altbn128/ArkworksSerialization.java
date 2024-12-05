@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -193,6 +194,7 @@ public enum ArkworksSerialization {
      * Removes the flags from this serialized element
      *
      * @param bytes the Arkworks serialized bytes
+     * @param flagsIndex which flag to clean
      */
     public static void removeFlags(@NonNull final byte[] bytes, final int flagsIndex) {
         bytes[flagsIndex] = (byte) (bytes[flagsIndex] & 0b00111111);
@@ -228,7 +230,8 @@ public enum ArkworksSerialization {
      */
     @NonNull
     public static byte[] coordinatesToBytes(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
-        final int numCount = x.size() + y.size();
+        final int numCount = Objects.requireNonNull(x, "x must not be null").size()
+                + Objects.requireNonNull(y, "y must not be null").size();
         final byte[] bytes = new byte[NUMBER_SIZE_BYTES * numCount];
         for (int i = 0; i < numCount; i++) {
             final BigInteger bi = i < x.size() ? x.get(i) : y.get(i - x.size());

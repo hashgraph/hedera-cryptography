@@ -16,13 +16,12 @@
 
 package com.hedera.cryptography.pairings.test.fixtures.curve;
 
-import static com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve.EXAMPLE_SIZE;
-
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.Random;
 
@@ -63,7 +62,7 @@ public class NaiveField implements Field {
     @Override
     @NonNull
     public FieldElement fromLong(final long inputLong) {
-        return new NaiveFieldElement(this, BigInteger.valueOf(inputLong));
+        return new NaiveFieldElement(this, inputLong);
     }
 
     /**
@@ -72,7 +71,7 @@ public class NaiveField implements Field {
     @Override
     @NonNull
     public FieldElement random(@NonNull final byte[] seed) {
-        return new NaiveFieldElement(this, new BigInteger(seed));
+        return this.fromBytes(seed);
     }
 
     /**
@@ -85,7 +84,7 @@ public class NaiveField implements Field {
     @Override
     @NonNull
     public FieldElement fromBytes(@NonNull final byte[] bytes) {
-        return new NaiveFieldElement(this, new BigInteger(bytes));
+        return new NaiveFieldElement(this, ByteBuffer.wrap(bytes).getInt());
     }
 
     /**
@@ -98,7 +97,7 @@ public class NaiveField implements Field {
     @Override
     @NonNull
     public FieldElement fromBigInteger(@NonNull final BigInteger bigInteger) {
-        return new NaiveFieldElement(this, bigInteger);
+        return fromBytes(bigInteger.toByteArray());
     }
 
     /**
@@ -106,7 +105,7 @@ public class NaiveField implements Field {
      */
     @Override
     public int elementSize() {
-        return EXAMPLE_SIZE;
+        return Integer.BYTES;
     }
 
     /**
@@ -114,7 +113,7 @@ public class NaiveField implements Field {
      */
     @Override
     public int seedSize() {
-        return EXAMPLE_SIZE;
+        return Integer.BYTES;
     }
 
     /**

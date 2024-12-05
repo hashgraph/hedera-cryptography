@@ -1,7 +1,6 @@
-import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
-import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve;
-import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve.FailingCurve;
-import com.hedera.cryptography.pairings.test.fixtures.curve.NaiveCurve.TestBn;
+import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves.FailingCurve;
+import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves.FakeCurve;
+import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves.TestBn;
 
 module com.hedera.cryptography.pairings.test.fixtures {
     requires com.hedera.cryptography.utils;
@@ -10,8 +9,8 @@ module com.hedera.cryptography.pairings.test.fixtures {
 
     exports com.hedera.cryptography.pairings.test.fixtures.curve;
 
-    provides PairingFriendlyCurve with
-            NaiveCurve,
+    provides com.hedera.cryptography.pairings.api.PairingFriendlyCurve with
+            FakeCurve,
             TestBn,
             FailingCurve;
 }

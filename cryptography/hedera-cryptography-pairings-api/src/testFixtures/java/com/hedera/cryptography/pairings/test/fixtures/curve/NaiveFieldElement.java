@@ -18,9 +18,17 @@ package com.hedera.cryptography.pairings.test.fixtures.curve;
 
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.pairings.api.PairingsException;
+import com.hedera.cryptography.pairings.test.fixtures.Utils;
+import com.hedera.cryptography.utils.ByteArrayUtils;
+import com.hedera.cryptography.utils.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 /**
  * A naive implementation of the FieldElement interface for testing purposes.
@@ -30,10 +38,10 @@ public class NaiveFieldElement implements FieldElement {
     /**
      * The prime modulus used for field operations.
      */
-    public static final BigInteger PRIME_MODULUS = BigInteger.valueOf(23);
+    public static final int PRIME_MODULUS = 23;
 
     private final Field field;
-    private final BigInteger value;
+    final int value;
 
     /**
      * Constructs a NaiveFieldElement with the specified field and value.
@@ -42,10 +50,21 @@ public class NaiveFieldElement implements FieldElement {
      * @param field the field associated with this field element
      * @param value the value of this field element
      */
-    public NaiveFieldElement(@NonNull final Field field, @NonNull final BigInteger value) {
-        Objects.requireNonNull(value, "value must not be null");
+    public NaiveFieldElement(@NonNull final Field field, final long value) {
         this.field = Objects.requireNonNull(field, "field must not be null");
-        this.value = value.mod(PRIME_MODULUS);
+        this.value = value < 0 ? PRIME_MODULUS - (int) ((-value) % PRIME_MODULUS) : (int) (value % PRIME_MODULUS);
+
+        var nums = new HashSet<>(IntStream.range(0, PRIME_MODULUS).boxed().toList());
+        Map<Integer, Integer> inverses = new HashMap<>();
+        for (int i = 0; i < PRIME_MODULUS; i++) {
+            for (Integer num : nums) {
+                if ((value * i) % PRIME_MODULUS == 1) {
+                    inverses.put(i, num);
+                    break;
+                }
+            }
+            nums.remove(inverses.get(i));
+        }
     }
 
     /**
@@ -67,7 +86,7 @@ public class NaiveFieldElement implements FieldElement {
     @Override
     @NonNull
     public FieldElement add(@NonNull final FieldElement other) {
-        return new NaiveFieldElement(field, this.value.add(other.toBigInteger()));
+        return new NaiveFieldElement(field, this.value + ((NaiveFieldElement) other).value);
     }
 
     /**
@@ -80,7 +99,9 @@ public class NaiveFieldElement implements FieldElement {
     @Override
     @NonNull
     public FieldElement subtract(@NonNull final FieldElement other) {
-        return new NaiveFieldElement(field, this.value.subtract(other.toBigInteger()));
+
+        var value = ValidationUtils.expectOrThrow(NaiveFieldElement.class, other).value;
+        return new NaiveFieldElement(field, this.value - value);
     }
 
     /**
@@ -93,7 +114,8 @@ public class NaiveFieldElement implements FieldElement {
     @Override
     @NonNull
     public FieldElement multiply(@NonNull final FieldElement other) {
-        return new NaiveFieldElement(field, this.value.multiply(other.toBigInteger()));
+        var val = ValidationUtils.expectOrThrow(NaiveFieldElement.class, other).value;
+        return new NaiveFieldElement(field, (long) this.value * val);
     }
 
     /**
@@ -106,7 +128,8 @@ public class NaiveFieldElement implements FieldElement {
     @Override
     @NonNull
     public FieldElement power(final long exponent) {
-        return new NaiveFieldElement(field, this.value.pow((int) exponent));
+        long result = Utils.longPow(value, exponent);
+        return new NaiveFieldElement(field, result);
     }
 
     /**
@@ -118,7 +141,12 @@ public class NaiveFieldElement implements FieldElement {
     @Override
     @NonNull
     public FieldElement inverse() {
-        return new NaiveFieldElement(field, this.value.modInverse(PRIME_MODULUS));
+        if (value == 0) throw new PairingsException("Non invertible");
+
+        for (int i = 0; i < PRIME_MODULUS; i++) {
+            if ((value * i) % PRIME_MODULUS == 1) return new NaiveFieldElement(field, i);
+        }
+        throw new PairingsException("Non invertible");
     }
 
     /**
@@ -127,7 +155,7 @@ public class NaiveFieldElement implements FieldElement {
     @Override
     @NonNull
     public BigInteger toBigInteger() {
-        return value;
+        return BigInteger.valueOf(value);
     }
 
     /**
@@ -136,7 +164,7 @@ public class NaiveFieldElement implements FieldElement {
     @Override
     @NonNull
     public byte[] toBytes() {
-        return value.toByteArray();
+        return ByteArrayUtils.toByteArray(value);
     }
 
     /**

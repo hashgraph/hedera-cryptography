@@ -38,8 +38,8 @@ import org.junit.jupiter.api.Test;
 @WithRng
 public class AggregationTest {
 
-    @SuppressWarnings("UnnecessaryLocalVariable")
     @Test
+    @SuppressWarnings("UnnecessaryLocalVariable")
     void testTargetGroupIsSameAsOriginal(final Random random) {
         var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
         var dealerSecrets = List.of(
@@ -155,8 +155,8 @@ public class AggregationTest {
                         .toList())
                 .toList();
 
-        final var ssPoints = this.reArrange(currentThreshold, polynomialPrivatesPoints);
-        final var psPoints = this.reArrange(currentThreshold, polynomialCommitmentsValues);
+        final var ssPoints = reArrange(currentThreshold, polynomialPrivatesPoints);
+        final var psPoints = reArrange(currentThreshold, polynomialCommitmentsValues);
 
         final var rekeyPublicShares = psPoints.stream()
                 .map(l -> Lagrange.recoverGroupElement(selectedDealers, l))
@@ -174,7 +174,7 @@ public class AggregationTest {
         return Lagrange.recoverGroupElement(receiversTssIds, rekeyPublicShares);
     }
 
-    private <T> List<List<T>> reArrange(int maxSize, final List<List<T>> polynomialPrivatesPoints) {
+    private static <T> List<List<T>> reArrange(int maxSize, final List<List<T>> polynomialPrivatesPoints) {
         return IntStream.range(0, polynomialPrivatesPoints.getFirst().size())
                 .boxed()
                 .map(i -> polynomialPrivatesPoints.stream()
