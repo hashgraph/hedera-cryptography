@@ -4,6 +4,7 @@
  */
 module com.hedera.cryptography.utils {
     requires transitive static com.github.spotbugs.annotations;
+    requires com.hedera.cryptography.pairings.api;
 
     exports com.hedera.cryptography.utils;
     exports com.hedera.cryptography.utils.serialization;
