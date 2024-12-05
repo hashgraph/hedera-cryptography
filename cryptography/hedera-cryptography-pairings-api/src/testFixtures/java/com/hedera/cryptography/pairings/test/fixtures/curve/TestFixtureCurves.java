@@ -17,9 +17,10 @@
 package com.hedera.cryptography.pairings.test.fixtures.curve;
 
 import com.hedera.cryptography.pairings.api.Curve;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public enum TestFixtureCurves implements Curve {
-    NO_PAIRING_CURVE((byte) 0),
+    FAKE_CURVE((byte) 0),
     NON_EXISTENT_CURVE((byte) 1),
     FAIL_CURVE((byte) 2),
     TEST((byte) 3);
@@ -36,5 +37,67 @@ public enum TestFixtureCurves implements Curve {
     @Override
     public byte getId() {
         return id;
+    }
+
+    /**
+     * A Test curve under TestCurves.FAKE_CURVE enum
+     */
+    public static class FakeCurve extends NaiveCurve {
+        public FakeCurve() {
+            super(FAKE_CURVE);
+        }
+    }
+
+    /**
+     * A Test curve under TestCurves.TEST enum
+     */
+    public static class TestBn extends NaiveCurve {
+
+        private final AtomicInteger initializedCount = new AtomicInteger(0);
+        /** Constructor*/
+        public TestBn() {
+            super(TEST);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        protected void doInit() {
+            initializedCount.incrementAndGet();
+        }
+
+        /**
+         * Returns the number of times doInit was called.
+         * @return the number of times doInit was called
+         */
+        public Integer getInitializedCount() {
+            return initializedCount.get();
+        }
+    }
+
+    /**
+     * A Test curve that fails in the doInit method
+     */
+    public static class FailingCurve extends NaiveCurve {
+
+        public FailingCurve() {
+            super(FAIL_CURVE);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        protected void doInit() {
+            throw new FailingCurveException("this is a failing provider");
+        }
+    }
+
+    /**
+     * An exception thrown by FailingCurve
+     */
+    public static class FailingCurveException extends RuntimeException {
+
+        /** {@inheritDoc} */
+        public FailingCurveException(final String message) {
+            super(message);
+        }
     }
 }

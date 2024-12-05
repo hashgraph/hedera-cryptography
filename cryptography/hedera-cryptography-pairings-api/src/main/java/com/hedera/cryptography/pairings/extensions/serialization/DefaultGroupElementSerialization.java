@@ -36,12 +36,15 @@ public class DefaultGroupElementSerialization {
 
     /**
      * Default deserializer
+     * @param group the group to deserialize to
+     * @return the deserializer
      */
-    public static Deserializer<GroupElement> getDeserializer(Group group) {
+    public static Deserializer<GroupElement> getDeserializer(@NonNull final Group group) {
         return new DefaultGroupElementSerialization.DefaultDeserializer(group);
     }
     /**
      * Default serializer
+     * @return the serializer
      */
     public static Serializer<GroupElement> getSerializer() {
         return new DefaultGroupElementSerialization.DefaultSerializer();

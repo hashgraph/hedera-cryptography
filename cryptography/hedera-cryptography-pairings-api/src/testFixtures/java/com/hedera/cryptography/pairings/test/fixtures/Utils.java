@@ -20,6 +20,7 @@ import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +38,7 @@ public class Utils {
      * @return a string representation of the following FieldElement
      */
     public static @NonNull String toString(final @NonNull FieldElement element) {
-        return Arrays.toString(unsigned(element.toBytes()));
+        return Arrays.toString(ByteArrayUtils.unsigned(element.toBytes()));
     }
 
     /**
@@ -49,7 +50,7 @@ public class Utils {
         // Each coordinate occupies half of the array,
         // we split the array in two to print the individual coordinates
         final var half = element.size() / 2;
-        final var arr = unsigned(element.toBytes());
+        final var arr = ByteArrayUtils.unsigned(element.toBytes());
         return "[" + Arrays.toString(Arrays.copyOf(arr, half))
                 + Arrays.toString(Arrays.copyOfRange(arr, half, arr.length)) + "]";
     }
@@ -61,7 +62,7 @@ public class Utils {
      */
     public static @NonNull String toStringFieldElements(final @NonNull List<FieldElement> element) {
         return element.stream()
-                .map(e -> Arrays.toString(unsigned(e.toBytes())))
+                .map(e -> Arrays.toString(ByteArrayUtils.unsigned(e.toBytes())))
                 .toList()
                 .toString();
     }
@@ -73,40 +74,9 @@ public class Utils {
      */
     public static @NonNull String toStringGroupElements(final @NonNull List<GroupElement> element) {
         return element.stream()
-                .map(e -> Arrays.toString(unsigned(e.toBytes())))
+                .map(e -> Arrays.toString(ByteArrayUtils.unsigned(e.toBytes())))
                 .toList()
                 .toString();
-    }
-
-    /**
-     * Returns a byte[] as an unsigned int[].
-     * Each element of the origina array is transformed used  {@link Byte#toUnsignedInt(byte)}
-     * @param bytes the original byte array to reinterpret.
-     * @return the reinterpreted array as unsigned values
-     */
-    public static @NonNull int[] unsigned(final @NonNull byte[] bytes) {
-        final int[] result = new int[bytes.length];
-        for (int i = 0; i < bytes.length; i++) {
-            result[i] = Byte.toUnsignedInt(bytes[i]);
-        }
-        return result;
-    }
-
-    /**
-     * Creates a byte array from an unsigned representation of int values
-     * @param bytes the individual values
-     * @return a byte[] array represented
-     * @throws IllegalArgumentException if any of the values is negative or out of range to be represented by a byte
-     */
-    public static @NonNull byte[] fromUnsigned(final @NonNull int... bytes) {
-        final byte[] result = new byte[bytes.length];
-        for (int i = 0; i < bytes.length; i++) {
-            if (bytes[i] < 0 || bytes[i] > 255) {
-                throw new IllegalArgumentException();
-            }
-            result[i] = (byte) (bytes[i] & 0xFF);
-        }
-        return result;
     }
 
     /**
@@ -116,7 +86,7 @@ public class Utils {
      * @return a FieldElements value
      */
     public static @NonNull FieldElement fieldElement(final @NonNull Field field, final @NonNull int... uBytes) {
-        return field.fromBytes(fromUnsigned(uBytes));
+        return field.fromBytes(ByteArrayUtils.fromUnsigned(uBytes));
     }
 
     /**
@@ -126,7 +96,7 @@ public class Utils {
      * @return a GroupElement value
      */
     public static @NonNull GroupElement groupElement(Group group, int... uBytes) {
-        return group.fromBytes(fromUnsigned(uBytes));
+        return group.fromBytes(ByteArrayUtils.fromUnsigned(uBytes));
     }
 
     /**
@@ -142,5 +112,28 @@ public class Utils {
             elements.add(fieldElement(field, elementUByte));
         }
         return elements;
+    }
+
+    /**
+     *  IntPow() is used to calculate a int number raise to the power of some other int number.
+     *  This function accepts two parameters and returns the value of first parameter raised to the second parameter.
+     * @param value the value to rise to {@code power}
+     * @param power the exponent
+     * @return the potentiated value
+     */
+    public static long longPow(final long value, long power) {
+        if (power < 0) {
+            throw new IllegalArgumentException("negative exponents not supported");
+        }
+        long res = 1;
+        long sq = value;
+        while (power > 0) {
+            if (power % 2 == 1) {
+                res *= sq;
+            }
+            sq = sq * sq;
+            power /= 2;
+        }
+        return res;
     }
 }

@@ -40,4 +40,7 @@ dependencies.constraints {
     api("org.bouncycastle:bcprov-jdk18on:1.78.1") {
         because("org.bouncycastle.provider")
     }
+    api("com.google.code.gson:gson:2.8.6") {
+        because("com.google.gson")
+    }
 }

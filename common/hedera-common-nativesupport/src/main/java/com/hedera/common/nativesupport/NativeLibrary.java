@@ -75,7 +75,7 @@ public class NativeLibrary {
     /**
      * The path delimiter used in the JAR file.
      */
-    private static final String RESOURCE_PATH_DELIMITER = File.separator;
+    private static final String RESOURCE_PATH_DELIMITER = "/";
 
     /**
      * Default extensions for binary libraries per OS

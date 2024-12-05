@@ -21,11 +21,19 @@ import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.utils.serialization.Deserializer;
 import com.hedera.cryptography.utils.serialization.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Objects;
 
 /**
  * Use this class to construct a {@link FieldElement} from an array, or to get the byte[] representation from an instance.
  */
 public class DefaultFieldElementSerialization {
+
+    /**
+     * Constructor
+     */
+    private DefaultFieldElementSerialization() {
+        // private constructor for static access
+    }
 
     /**
      * Gets a deserializer.
@@ -51,6 +59,9 @@ public class DefaultFieldElementSerialization {
         @Override
         public FieldElement deserialize(final byte[] element) {
             try {
+                if (Objects.requireNonNull(element).length < field.elementSize()) {
+                    throw new IllegalStateException("Cannot deserialize field element");
+                }
                 return field.fromBytes(element);
             } catch (IllegalArgumentException e) {
                 throw new IllegalStateException("Cannot deserialize field element", e);

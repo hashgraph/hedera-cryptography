@@ -52,7 +52,7 @@ public class LagrangeTests {
     private final Point[] INPUT_3 = new Point[] {p(1, 1), p(4, 4), p(9, 9), p(16, 16)};
 
     @Test
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "ConstantConditions"})
     void testInvalidInvocationsGroupElementValues() {
         assertThrows(NullPointerException.class, () -> Lagrange.recoverGroupElement(null, null));
         assertThrows(NullPointerException.class, () -> Lagrange.recoverGroupElement(null, mock(List.class)));
@@ -69,7 +69,7 @@ public class LagrangeTests {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "ConstantConditions"})
     void testInvalidInvocationsFieldElementValues() {
         assertThrows(NullPointerException.class, () -> Lagrange.recoverFieldElement(null, null));
         assertThrows(NullPointerException.class, () -> Lagrange.recoverFieldElement(null, mock(List.class)));
