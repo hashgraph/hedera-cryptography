@@ -45,7 +45,7 @@ class FieldFacadeTest {
     @Test
     void testErrorFromBytes() {
         when(fieldElementsLibraryAdapter.fieldElementsFromBytes(any(), any())).thenReturn(TEST_ERROR_RETURN_CODE);
-        assertThrows(AltBn128Exception.class, () -> fieldFacade.fromBytes(new byte[TEST_SIZE], true));
+        assertThrows(AltBn128Exception.class, () -> fieldFacade.fromBytes(new byte[TEST_SIZE]));
     }
 
     @Test
