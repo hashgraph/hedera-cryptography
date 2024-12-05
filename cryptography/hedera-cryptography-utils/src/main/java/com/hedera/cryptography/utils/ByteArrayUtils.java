@@ -188,6 +188,20 @@ public class ByteArrayUtils {
     }
 
     /**
+     * Creates a byte array from a list of BigInteger values
+     */
+    @SafeVarargs
+    public static byte[] toByteArray(final int size, final List<BigInteger>... values) {
+        ByteBuffer buffer = ByteBuffer.allocate(size);
+        for (final List<BigInteger> value : values) {
+            for (final BigInteger bigInt : value) {
+                buffer.put(bigInt.toByteArray());
+            }
+        }
+        return buffer.array();
+    }
+
+    /**
      * A utility class for serializing various data types into a byte array.
      */
     public static class Serializer {

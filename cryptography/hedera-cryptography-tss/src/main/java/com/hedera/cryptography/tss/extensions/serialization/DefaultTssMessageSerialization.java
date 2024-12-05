@@ -18,10 +18,12 @@ package com.hedera.cryptography.tss.extensions.serialization;
 
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.FieldElement;
+import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.extensions.EcPolynomial;
 import com.hedera.cryptography.pairings.extensions.serialization.DefaultFieldElementSerialization;
 import com.hedera.cryptography.pairings.extensions.serialization.DefaultGroupElementSerialization;
+import com.hedera.cryptography.pairings.extensions.serialization.DefaultGroupElementSerialization.GroupElementDeserializer;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.impl.elgamal.CipherText;
@@ -38,6 +40,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Use this class to construct a deserializer to get a {@link TssMessage} from an array, or to get a serializer to build the byte[] representation from an instance.
@@ -83,7 +86,24 @@ public class DefaultTssMessageSerialization {
      */
     public static Deserializer<TssMessage> getDeserializer(
             final SignatureSchema signatureSchema, final TssParticipantDirectory tssParticipantDirectory) {
-        return new DefaultDeserializer(signatureSchema, tssParticipantDirectory);
+        return new DefaultDeserializer(
+                signatureSchema, tssParticipantDirectory, DefaultGroupElementSerialization::getDeserializer);
+    }
+
+    public static Deserializer<TssMessage> getNonValidatedDeserializer(
+            final SignatureSchema signatureSchema, final TssParticipantDirectory tssParticipantDirectory) {
+        return new DefaultDeserializer(
+                signatureSchema,
+                tssParticipantDirectory,
+                DefaultGroupElementSerialization::getNonValidatedDeserializer);
+    }
+
+    public static Deserializer<TssMessage> getCompressedDeserializer(
+            final SignatureSchema signatureSchema, final TssParticipantDirectory tssParticipantDirectory) {
+        return new DefaultDeserializer(
+                signatureSchema,
+                tssParticipantDirectory,
+                DefaultGroupElementSerialization::getCompressedValidatedDeserializer);
     }
 
     /**
@@ -92,35 +112,47 @@ public class DefaultTssMessageSerialization {
      * @return a serializer
      */
     public static Serializer<TssMessage> getSerializer(final SignatureSchema signatureSchema) {
-        return new DefaultSerializer(signatureSchema);
+        return new DefaultSerializer(
+                signatureSchema,
+                DefaultFieldElementSerialization.getSerializer(),
+                DefaultGroupElementSerialization.getSerializer());
     }
 
+    public static Serializer<TssMessage> getCompressedSerializer(final SignatureSchema signatureSchema) {
+        return new DefaultSerializer(
+                signatureSchema,
+                DefaultFieldElementSerialization.getSerializer(),
+                DefaultGroupElementSerialization.getComrpessSerializer());
+    }
     /**
      * Default deserializer
      */
     private static class DefaultDeserializer implements Deserializer<TssMessage> {
         private final SignatureSchema signatureSchema;
-        private final TssParticipantDirectory tssParticipantDirectory;
         private final Deserializer<FieldElement> fieldElementSerialization;
-        private final Deserializer<GroupElement> groupElementSerialization;
+        private final GroupElementDeserializer groupElementSerialization;
+        private final int fieldElementSize;
+        private final int groupElementSize;
+        private final int totalShares;
+        private final int threshold;
 
         public DefaultDeserializer(
-                final SignatureSchema signatureSchema, final TssParticipantDirectory tssParticipantDirectory) {
+                final SignatureSchema signatureSchema,
+                final TssParticipantDirectory tssParticipantDirectory,
+                final Function<Group, GroupElementDeserializer> groupDeserializer) {
             this.signatureSchema = signatureSchema;
-            this.tssParticipantDirectory = tssParticipantDirectory;
             this.fieldElementSerialization = DefaultFieldElementSerialization.getDeserializer(
                     signatureSchema.getPairingFriendlyCurve().field());
-            this.groupElementSerialization =
-                    DefaultGroupElementSerialization.getDeserializer(signatureSchema.getPublicKeyGroup());
+            this.fieldElementSize =
+                    signatureSchema.getPairingFriendlyCurve().field().elementSize();
+            this.groupElementSerialization = groupDeserializer.apply(signatureSchema.getPublicKeyGroup());
+            this.groupElementSize = groupElementSerialization.elementSize();
+            this.totalShares = tssParticipantDirectory.getTotalShares();
+            this.threshold = tssParticipantDirectory.getThreshold();
         }
 
         @Override
         public TssMessage deserialize(final byte[] message) {
-            final int totalShares = tssParticipantDirectory.getTotalShares();
-            final int threshold = tssParticipantDirectory.getThreshold();
-            var fieldElementSize =
-                    signatureSchema.getPairingFriendlyCurve().field().elementSize();
-            var groupElementSize = signatureSchema.getPublicKeyGroup().elementSize();
 
             final int expectedSize = Integer.BYTES
                     + Integer.BYTES
@@ -205,16 +237,11 @@ public class DefaultTssMessageSerialization {
     /**
      * Default Serializer
      */
-    private static class DefaultSerializer implements Serializer<TssMessage> {
-        private final SignatureSchema signatureSchema;
-        private final Serializer<GroupElement> groupElementSerialization =
-                DefaultGroupElementSerialization.getSerializer();
-        private final Serializer<FieldElement> fieldElementSerialization =
-                DefaultFieldElementSerialization.getSerializer();
-
-        public DefaultSerializer(SignatureSchema signatureSchema) {
-            this.signatureSchema = signatureSchema;
-        }
+    private record DefaultSerializer(
+            SignatureSchema signatureSchema,
+            Serializer<FieldElement> fieldElementSerialization,
+            Serializer<GroupElement> groupElementSerialization)
+            implements Serializer<TssMessage> {
 
         @NonNull
         @Override

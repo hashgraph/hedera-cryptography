@@ -184,14 +184,20 @@ public interface Group {
      * @param bytes serialized form
      * @return the new group element
      * @throws IllegalArgumentException if the byte representation is not a valid point on the curve
+     * @apiNote this is not a general serialization contract, and is meant for internal purposes to be used under specific circumstances.
+     *
      */
     // TODO: (?)Maybe add:
     //  + List<GroupElement> allFromBytes(List<byte[]> collection)
     //  + fromBytes(byte[] bytes, Mode.NO_VALIDATE)
     @NonNull
-    GroupElement fromBytes(@NonNull byte[] bytes);
+    default GroupElement fromBytes(@NonNull byte[] bytes) {
+        return fromBytes(bytes, false, true);
+    }
 
-    GroupElement fromCompressed(@NonNull byte[] bytes);
+    default GroupElement fromBytes(@NonNull byte[] bytes, boolean compressed, boolean validated) {
+        return fromBytes(bytes);
+    }
 
     /**
      * Creates a group element from its x and y coordinates

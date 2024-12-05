@@ -81,11 +81,6 @@ public class GroupElementsBenchmark {
                 "GROUP2",
                 parser.parseHex(
                         "10B2661406630FAF67257CC04AED61D2CB4F0BA6709121FCEB3BF66FFD75E713A6FD2D39369D2B522E21255F26C363709417FED0E32809297776EFE912391A0A6CEC315983B781696C8CD23FD69ADCBB5DAC1F10F2F5F1BFF2592E34D30C8A22558DA61D9705AA8F65B69F8500403AE499B90A9A60399FE1CE99D5B98A9383AA"));
-
-        serializer = DefaultGroupElementSerialization.getSerializer();
-        compressedSerializer = DefaultGroupElementSerialization.getCompressSerializer();
-        deserializer = DefaultGroupElementSerialization.getDeserializer(group);
-        compressedDeserializer = DefaultGroupElementSerialization.getCompressedDeserializer(group);
     }
     // Benchmark                                       (value)  Mode  Cnt   Score    Error  Units
     // GroupElementsBenchmark.compressedDeserialize     GROUP1  avgt    5   0.049 ±  0.001  ms/op
@@ -137,12 +132,17 @@ public class GroupElementsBenchmark {
 
     @Benchmark
     public byte[] serialize() {
-        return serializer.serialize(point);
+        return DefaultGroupElementSerialization.getSerializer().serialize(point);
     }
 
     @Benchmark
-    public byte[] compressedSerialize() {
-        return compressedSerializer.serialize(point);
+    public byte[] arkCompressedSerialize() {
+        return DefaultGroupElementSerialization.getArkComrpessSerializer().serialize(point);
+    }
+
+    @Benchmark
+    public byte[] pairingsCompressedSerialize() {
+        return DefaultGroupElementSerialization.getComrpessSerializer().serialize(point);
     }
 
     @Benchmark
@@ -152,12 +152,19 @@ public class GroupElementsBenchmark {
 
     @Benchmark
     public GroupElement deserialize(UncompressState state) {
-        return deserializer.deserialize(state.uncompressedBytes);
+        return DefaultGroupElementSerialization.getDeserializer(group).deserialize(state.uncompressedBytes);
     }
 
     @Benchmark
     public GroupElement deserializeNotValidated(UncompressState state) {
-        return group.fromBytes(state.uncompressedBytes, false);
+        return DefaultGroupElementSerialization.getNonValidatedDeserializer(group)
+                .deserialize(state.uncompressedBytes);
+    }
+
+    @Benchmark
+    public GroupElement deserializeCompressedNotValidated(UncompressState state) {
+        return DefaultGroupElementSerialization.getCompressedNonValidatedDeserializer(group)
+                .deserialize(state.uncompressedBytes);
     }
 
     @State(Scope.Benchmark)

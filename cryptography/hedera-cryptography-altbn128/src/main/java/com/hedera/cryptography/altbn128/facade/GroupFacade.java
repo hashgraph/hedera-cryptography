@@ -23,7 +23,6 @@ import com.hedera.cryptography.altbn128.adapter.FieldElementsLibraryAdapter;
 import com.hedera.cryptography.altbn128.adapter.GroupElementsLibraryAdapter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -144,6 +143,12 @@ public final class GroupFacade implements ElementFacade {
         return result == 1;
     }
 
+    @NonNull
+    @Override
+    public byte[] fromBytes(@NonNull final byte[] representation) {
+        return fromBytes(representation, false, true);
+    }
+
     /**
      * Adds two Group2 points together.
      * @param point1 the first point.
@@ -204,14 +209,14 @@ public final class GroupFacade implements ElementFacade {
      *
      * @param bytes an array representing a point to validate
      * @param validate
+     * @param compressed
      * @return a copy of bytes if the representation is valid
      * @throws NullPointerException     if the bytes is null
      * @throws IllegalArgumentException if the bytes is of invalid size or the point does not belong to the curve
      * @throws AltBn128Exception        in case of error.
      */
-    @Override
     @NonNull
-    public byte[] fromBytes(@NonNull final byte[] bytes, final boolean validate) {
+    public byte[] fromBytes(@NonNull final byte[] bytes, final boolean compressed, final boolean validate) {
         validateSize(Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
 
         final byte[] ret = new byte[bytes.length];
@@ -225,23 +230,6 @@ public final class GroupFacade implements ElementFacade {
     }
 
     @NonNull
-    @Override
-    public byte[] fromCompressed(@NonNull final byte[] bytes, final boolean validate) {
-        validateSize(
-                Objects.requireNonNull(bytes, "bytes must not be null"), this.size / 2, "Invalid representation size");
-
-        final byte[] ret = new byte[bytes.length * 2];
-        final int result = adapter.groupElementsBytes(group, true, validate, bytes, ret);
-        if (result == GroupElementsLibraryAdapter.NOT_IN_CURVE) {
-            throw new IllegalArgumentException("The point is not in curve " + Arrays.toString(bytes));
-        } else if (result != GroupElementsLibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "groupElementsBytes in " + this.group);
-        }
-        return ret;
-    }
-
-    @NonNull
-    @Override
     public byte[] compress(@NonNull final byte[] bytes) {
         validateSize(Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
 

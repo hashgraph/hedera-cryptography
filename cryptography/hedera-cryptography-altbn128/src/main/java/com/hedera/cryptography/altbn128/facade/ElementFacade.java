@@ -24,21 +24,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 public sealed interface ElementFacade permits FieldFacade, GroupFacade {
 
     /**
-     * @param bytes
-     * @param validate
-     * @return
-     */
-    @NonNull
-    byte[] fromCompressed(@NonNull byte[] bytes, final boolean validate);
-
-    /**
-     * @param bytes
-     * @return
-     */
-    @NonNull
-    byte[] compress(@NonNull byte[] bytes);
-
-    /**
      * Return the occupied size in bytes of the random seed.
      *
      * @return the size in bytes for the random seed.
@@ -76,9 +61,8 @@ public sealed interface ElementFacade permits FieldFacade, GroupFacade {
      * Reads the element representation and checks if it's valid.
      *
      * @param representation the representation of the element
-     * @param validate
      * @return the (possibly modified) representation of the element
      */
     @NonNull
-    byte[] fromBytes(@NonNull final byte[] representation, final boolean validate);
+    byte[] fromBytes(@NonNull final byte[] representation);
 }

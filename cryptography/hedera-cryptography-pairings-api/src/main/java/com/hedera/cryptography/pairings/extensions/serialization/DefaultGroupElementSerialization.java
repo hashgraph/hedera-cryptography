@@ -18,9 +18,13 @@ package com.hedera.cryptography.pairings.extensions.serialization;
 
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.utils.ByteArrayUtils;
 import com.hedera.cryptography.utils.serialization.Deserializer;
 import com.hedera.cryptography.utils.serialization.Serializer;
+import com.hedera.cryptography.utils.serialization.Transformer;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.BitSet;
+import java.util.function.Supplier;
 
 /**
  * Use this class to construct a {@link GroupElement} from an array, or to get the byte[] representation from an instance.
@@ -35,80 +39,106 @@ public class DefaultGroupElementSerialization {
     }
 
     /**
+     * Default serializer
+     * @return the serializer
+     * @apiNote this uses an internal method that is implementation dependant. Use with caution or under know circumstances.
+     */
+    public static Serializer<GroupElement> getSerializer() {
+        return GroupElement::toBytes;
+    }
+
+    /**
+     * Arkworks compression serializer
+     */
+    public static Serializer<GroupElement> getArkComrpessSerializer() {
+        return GroupElement::compress;
+    }
+
+    /**
+     * Pairings api based compressed mechanism
+     */
+    public static Serializer<GroupElement> getComrpessSerializer() {
+        return groupElement -> {
+            if (groupElement.isZero()) {
+                return new byte[groupElement.size()];
+            }
+            var result =
+                    BitSet.valueOf(ByteArrayUtils.toByteArray(groupElement.size() / 2, groupElement.getXCoordinate()));
+            if (groupElement.isYNegative()) {
+                result.flip(result.size() * Byte.BYTES - 1);
+            }
+            return result.toByteArray();
+        };
+    }
+
+    /**
      * Default deserializer
      * @param group the group to deserialize to
      * @return the deserializer
+     * @apiNote this uses an internal method that is implementation dependant. Use with caution or under know circumstances.
      */
-    public static Deserializer<GroupElement> getDeserializer(@NonNull final Group group) {
-        return new DefaultGroupElementSerialization.DefaultDeserializer(group);
-    }
-    /**
-     * Default serializer
-     * @return the serializer
-     */
-    public static Serializer<GroupElement> getSerializer() {
-        return new DefaultGroupElementSerialization.DefaultSerializer();
+    public static GroupElementDeserializer getDeserializer(@NonNull final Group group) {
+        return new ErrorWrappingDeserializer(group::elementSize, group::fromBytes);
     }
 
     /**
      * Default deserializer
      */
-    public static Deserializer<GroupElement> getCompressedDeserializer(Group group) {
-        return new DefaultGroupElementSerialization.CompressedDeserializer(group);
+    public static GroupElementDeserializer getCompressedValidatedDeserializer(@NonNull final Group group) {
+        return new ErrorWrappingDeserializer(
+                () -> group.elementSize() / 2, array -> group.fromBytes(array, true, true));
+    }
+
+    /**
+     * Default deserializer
+     */
+    public static GroupElementDeserializer getCompressedNonValidatedDeserializer(@NonNull final Group group) {
+        return new ErrorWrappingDeserializer(
+                () -> group.elementSize() / 2, array -> group.fromBytes(array, true, false));
+    }
+
+    /**
+     * Default deserializer
+     */
+    public static GroupElementDeserializer getNonValidatedDeserializer(@NonNull final Group group) {
+        return new ErrorWrappingDeserializer(group::elementSize, array -> group.fromBytes(array, false, true));
     }
 
     /**
      * Default serializer
      */
-    public static Serializer<GroupElement> getCompressSerializer() {
-        return new DefaultGroupElementSerialization.CompressedSerializer();
-    }
-
-    /**
-     * Default serializer
-     */
-    private static final class DefaultSerializer implements Serializer<GroupElement> {
+    private static final class EIP197Serializer implements Serializer<GroupElement> {
 
         @Override
         public byte[] serialize(final GroupElement element) {
-            return element.toBytes();
+            return ByteArrayUtils.toByteArray(element.size(), element.getXCoordinate(), element.getYCoordinate());
         }
     }
 
     /**
      * Default deserializer
      */
-    private record DefaultDeserializer(Group group) implements Deserializer<GroupElement> {
+    private record ErrorWrappingDeserializer(Supplier<Integer> size, Transformer<byte[], GroupElement> transformer)
+            implements GroupElementDeserializer {
 
         @NonNull
         @Override
         public GroupElement deserialize(@NonNull final byte[] element) {
             try {
-                return group.fromBytes(element);
+                return transformer.transform(element);
             } catch (IllegalArgumentException e) {
                 throw new IllegalStateException("Cannot deserialize GroupElement", e);
             }
         }
-    }
 
-    private record CompressedDeserializer(Group group) implements Deserializer<GroupElement> {
-
-        @NonNull
         @Override
-        public GroupElement deserialize(@NonNull final byte[] element) {
-            try {
-                return group.fromCompressed(element);
-            } catch (IllegalArgumentException e) {
-                throw new IllegalStateException("Cannot deserialize GroupElement", e);
-            }
+        public int elementSize() {
+            return size.get();
         }
     }
 
-    private static final class CompressedSerializer implements Serializer<GroupElement> {
+    public interface GroupElementDeserializer extends Deserializer<GroupElement> {
 
-        @Override
-        public byte[] serialize(final GroupElement element) {
-            return element.compress();
-        }
+        int elementSize();
     }
 }

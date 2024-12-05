@@ -16,13 +16,13 @@
 
 package com.hedera.cryptography.tss;
 
-import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssMessageParsingException;
 import com.hedera.cryptography.tss.api.TssService;
+import com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization;
 import com.hedera.cryptography.tss.impl.Groth21Service;
 import com.hedera.cryptography.tss.test.fixtures.TssTestCommittee;
 import com.hedera.cryptography.tss.test.fixtures.TssTestUtils;
@@ -47,11 +47,11 @@ import org.openjdk.jmh.annotations.Warmup;
  * A test to showcase the Tss protocol for a specific case
  * More validations can be added once
  */
-@BenchmarkMode(Mode.AverageTime)
 @Warmup(iterations = 1, time = 10, timeUnit = TimeUnit.MILLISECONDS)
 @Threads(2)
 @Fork(1)
 @State(Scope.Benchmark)
+@BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class TssMessageBenchmark {
     public static final Random TEST_RNG = new Random();
@@ -87,8 +87,24 @@ public class TssMessageBenchmark {
     }
 
     @Benchmark
-    public Object readMessageFromBytes(ReadMessageState state) throws TssMessageParsingException {
-        return state.tssService.messageFromBytes(state.genesisCommittee.participantDirectory(), state.message);
+    public Object defaultDeserialize(ReadUncompressedMessageState state) {
+        return DefaultTssMessageSerialization.getDeserializer(
+                        signatureSchema, state.genesisCommittee.participantDirectory())
+                .deserialize(state.message);
+    }
+
+    @Benchmark
+    public Object nonValidatedDeserialize(ReadUncompressedMessageState state) {
+        return DefaultTssMessageSerialization.getNonValidatedDeserializer(
+                        signatureSchema, state.genesisCommittee.participantDirectory())
+                .deserialize(state.message);
+    }
+
+    @Benchmark
+    public Object compressDeserialize(ReadCompressedMessageState state) {
+        return DefaultTssMessageSerialization.getCompressedDeserializer(
+                        signatureSchema, state.genesisCommittee.participantDirectory())
+                .deserialize(state.message);
     }
 
     @BenchmarkMode(Mode.SingleShotTime)
@@ -112,58 +128,60 @@ public class TssMessageBenchmark {
         return tssMessages;
     }
 
-    @State(Scope.Benchmark)
-    public static class GenerateMessagesState {
-        TssService tssService;
-        TssTestCommittee genesisCommittee;
+    public abstract static class GenericAbstractState {
+        protected TssService tssService;
+        protected TssTestCommittee genesisCommittee;
 
-        @Setup
         public void setup() {
             signatureSchema = SignatureSchema.create(Curve.ALT_BN128, groupAssignment);
             tssService = new Groth21Service(signatureSchema, rng);
-            final BlsPrivateKey[] keys = TssTestUtils.rndSks(signatureSchema, rng, participants);
+            final var keys = TssTestUtils.rndSks(signatureSchema, rng, participants);
             genesisCommittee = new TssTestCommittee(participants, shares, keys);
         }
     }
 
     @State(Scope.Benchmark)
-    public static class ReadMessageState {
+    public static class GenerateMessagesState extends GenericAbstractState {
+        @Setup
+        public void setup() {
+            super.setup();
+        }
+    }
+
+    @State(Scope.Benchmark)
+    public static class ReadUncompressedMessageState extends GenericAbstractState {
         byte[] message;
-        TssService tssService;
-        TssTestCommittee genesisCommittee;
 
         @Setup
         public void setup() {
-            signatureSchema = SignatureSchema.create(Curve.ALT_BN128, groupAssignment);
-            tssService = new Groth21Service(signatureSchema, rng);
-            final BlsPrivateKey[] keys = TssTestUtils.rndSks(signatureSchema, rng, participants);
-            genesisCommittee = new TssTestCommittee(participants, shares, keys);
-            this.message = tssService
-                    .genesisStage()
-                    .generateTssMessage(genesisCommittee.participantDirectory())
-                    .toBytes();
+            super.setup();
+            this.message = DefaultTssMessageSerialization.getSerializer(signatureSchema)
+                    .serialize(tssService.genesisStage().generateTssMessage(genesisCommittee.participantDirectory()));
         }
     }
 
     @State(Scope.Benchmark)
-    public static class ReadMessagesState {
-        byte[][] messages;
-        TssService tssService;
-        TssTestCommittee genesisCommittee;
+    public static class ReadCompressedMessageState extends GenericAbstractState {
+        byte[] message;
 
         @Setup
         public void setup() {
-            signatureSchema = SignatureSchema.create(Curve.ALT_BN128, groupAssignment);
-            tssService = new Groth21Service(signatureSchema, rng);
-            final BlsPrivateKey[] keys = TssTestUtils.rndSks(signatureSchema, rng, participants);
-            genesisCommittee = new TssTestCommittee(participants, shares, keys);
-            var value = tssService
-                    .genesisStage()
-                    .generateTssMessage(genesisCommittee.participantDirectory())
-                    .toBytes();
+            super.setup();
+            this.message = DefaultTssMessageSerialization.getCompressedSerializer(signatureSchema)
+                    .serialize(tssService.genesisStage().generateTssMessage(genesisCommittee.participantDirectory()));
+        }
+    }
+
+    @State(Scope.Benchmark)
+    public static class ReadMessagesState extends ReadUncompressedMessageState {
+        byte[][] messages;
+
+        @Setup
+        public void setup() {
+            super.setup();
             byte[][] matrix = new byte[genesisCommittee.threshold()][];
             for (int i = 0; i < genesisCommittee.threshold(); i++) {
-                matrix[i] = value;
+                matrix[i] = message;
             }
             messages = matrix;
         }
