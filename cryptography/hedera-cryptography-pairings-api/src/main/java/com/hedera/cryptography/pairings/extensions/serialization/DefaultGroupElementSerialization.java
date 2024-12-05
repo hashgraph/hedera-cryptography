@@ -18,12 +18,17 @@ package com.hedera.cryptography.pairings.extensions.serialization;
 
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.pairings.api.PairingsException;
 import com.hedera.cryptography.utils.ByteArrayUtils;
 import com.hedera.cryptography.utils.serialization.Deserializer;
 import com.hedera.cryptography.utils.serialization.Serializer;
 import com.hedera.cryptography.utils.serialization.Transformer;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -71,6 +76,10 @@ public class DefaultGroupElementSerialization {
         };
     }
 
+    public static Serializer<GroupElement> getEIP197Serializer() {
+        return new EIP197Serializer();
+    }
+
     /**
      * Default deserializer
      * @param group the group to deserialize to
@@ -104,10 +113,14 @@ public class DefaultGroupElementSerialization {
         return new ErrorWrappingDeserializer(group::elementSize, array -> group.fromBytes(array, false, true));
     }
 
+    public static GroupElementDeserializer getEIP197Serializer(@NonNull final Group group) {
+        return new ErrorWrappingDeserializer(group::elementSize, array -> group.fromBytes(array, false, true));
+    }
+
     /**
      * Default serializer
      */
-    private static final class EIP197Serializer implements Serializer<GroupElement> {
+    public static final class EIP197Serializer implements Serializer<GroupElement> {
 
         @Override
         public byte[] serialize(final GroupElement element) {
@@ -118,6 +131,35 @@ public class DefaultGroupElementSerialization {
     /**
      * Default deserializer
      */
+    public record EIP197Deserializer(Group group) implements GroupElementDeserializer {
+
+        @Override
+        public int elementSize() {
+            return group.elementSize();
+        }
+
+        @Override
+        public GroupElement deserialize(final byte[] s) {
+            final List<BigInteger> xs = new ArrayList<>();
+            for (int i = 0; i < group.elementSize() / 2; i += 32) {
+                xs.add(new BigInteger(Arrays.copyOfRange(s, i, i + 32)));
+            }
+            final List<BigInteger> ys = new ArrayList<>();
+            for (int i = group.elementSize() / 2; i < group.elementSize(); i += 32) {
+                xs.add(new BigInteger(Arrays.copyOfRange(s, i, i + 32)));
+            }
+            try {
+                return group.fromCoordinates(xs, ys);
+            } catch (PairingsException e) {
+                if (new BigInteger(s).equals(BigInteger.ZERO)) {
+                    return group.zero();
+                } else {
+                    throw e;
+                }
+            }
+        }
+    }
+
     private record ErrorWrappingDeserializer(Supplier<Integer> size, Transformer<byte[], GroupElement> transformer)
             implements GroupElementDeserializer {
 

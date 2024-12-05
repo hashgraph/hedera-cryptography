@@ -19,7 +19,8 @@ package com.hedera.cryptography.bls.extensions.serialization;
 import com.hedera.cryptography.bls.BlsPublicKey;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.pairings.extensions.serialization.DefaultGroupElementSerialization;
+import com.hedera.cryptography.pairings.extensions.serialization.DefaultGroupElementSerialization.EIP197Deserializer;
+import com.hedera.cryptography.pairings.extensions.serialization.DefaultGroupElementSerialization.EIP197Serializer;
 import com.hedera.cryptography.utils.serialization.Deserializer;
 import com.hedera.cryptography.utils.serialization.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -44,8 +45,9 @@ public final class DefaultBlsPublicKeySerialization {
      */
     public static Deserializer<BlsPublicKey> getDeserializer(@NonNull final SignatureSchema signatureSchema) {
         Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
+        Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
         return new DefaultBlsPublicKeySerialization.DefaultDeserializer(
-                signatureSchema, DefaultGroupElementSerialization.getDeserializer(signatureSchema.getPublicKeyGroup()));
+                signatureSchema, new EIP197Deserializer(signatureSchema.getPublicKeyGroup()));
     }
 
     /**
@@ -53,7 +55,7 @@ public final class DefaultBlsPublicKeySerialization {
      * @return a serializer
      */
     public static Serializer<BlsPublicKey> getSerializer() {
-        return new DefaultBlsPublicKeySerialization.DefaultSerializer(DefaultGroupElementSerialization.getSerializer());
+        return new DefaultBlsPublicKeySerialization.DefaultSerializer(new EIP197Serializer());
     }
 
     /**
