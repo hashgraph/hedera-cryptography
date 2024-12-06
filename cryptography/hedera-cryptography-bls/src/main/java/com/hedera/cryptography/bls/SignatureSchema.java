@@ -21,7 +21,6 @@ import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Objects;
 
 /**
@@ -86,21 +85,6 @@ public final class SignatureSchema {
     }
 
     /**
-     * Returns the signature scheme encoded in the byte array
-     *
-     * @param bytes the array containing the representation in the first element
-     * @return the SignatureSchema instance
-     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
-     */
-    @NonNull
-    @Deprecated(forRemoval = true)
-    public static SignatureSchema create(final @Nullable byte[] bytes) {
-        if (Objects.requireNonNull(bytes, "bytes must not be null").length == 0)
-            throw new IllegalArgumentException("bytes must not be empty");
-        return create(bytes[0]);
-    }
-
-    /**
      * Returns a {@link SignatureSchema} corresponding to a curve and a groupAssignment
      *
      * @param groupAssignment the group assignment
@@ -109,25 +93,15 @@ public final class SignatureSchema {
      */
     @NonNull
     public static SignatureSchema create(@NonNull final Curve curve, @NonNull final GroupAssignment groupAssignment) {
-        return new SignatureSchema(groupAssignment, curve);
+        return create(curve.getId(), groupAssignment);
     }
 
-    /**
-     * Returns a {@link SignatureSchema} from a byte-packed representation
-     *
-     * @param idByte the group assignment
-     * @return the SignatureSchema instance
-     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
-     */
-    @NonNull
-    @Deprecated(forRemoval = true)
-    public static SignatureSchema create(final byte idByte) {
-        byte curveId = BytePacker.unpackCurveType(idByte);
+    public static SignatureSchema create(final int curveId, @NonNull final GroupAssignment groupAssignment) {
         final Curve curve = PairingFriendlyCurves.allSupportedCurves().stream()
                 .filter(c -> c.getId() == curveId)
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unknown curve id: " + idByte));
-        return new SignatureSchema(BytePacker.unpackGroupAssignment(idByte), curve);
+                .orElseThrow(() -> new IllegalArgumentException("Unknown curve id: " + curveId));
+        return new SignatureSchema(groupAssignment, curve);
     }
 
     @Override
@@ -152,67 +126,5 @@ public final class SignatureSchema {
      */
     public Curve getCurve() {
         return curve;
-    }
-
-    /**
-     * Get the byte representation of this {@link SignatureSchema} instance
-     * Which consist of:
-     * <ul>
-     *     <li>1 bit for GroupAssignment according to {@link GroupAssignment#getId()} value</li>
-     *     <li>7 bits for curve type. Allowing us to support 127 different curves</li>
-     * </ul>
-     *
-     * @see GroupAssignment#getId()
-     * @return the byte representation.
-     * @deprecated will be replaced by a (de)serializer that can be replaced by a custom one
-     */
-    @Deprecated(forRemoval = true)
-    public byte toByte() {
-        return BytePacker.pack(groupAssignment, curve.getId());
-    }
-
-    /**
-     * Packs and unpacks the curve type and group assignment into a single byte
-     */
-    private static class BytePacker {
-        private static final int G_ASSIGNMENT_MASK = 0b10000000; // 1 bit for GroupAssignment
-        private static final int CURVE_MASK = 0b01111111; // 7 bits for curve type
-
-        /**
-         * Packs the group assignment and curve type into a single byte
-         *
-         * @param groupAssignment the group assignment
-         * @param curveType       the curve type
-         * @return the packed byte
-         */
-        public static byte pack(@NonNull final GroupAssignment groupAssignment, final byte curveType) {
-            if (curveType < 0) {
-                throw new IllegalArgumentException("Curve type must be between 0 and 127");
-            }
-
-            final int assignmentValue = groupAssignment.getId() << 7;
-            return (byte) (assignmentValue | (curveType & CURVE_MASK));
-        }
-
-        /**
-         * Unpacks the group assignment from a packed byte
-         *
-         * @param packedByte the packed byte
-         * @return the group assignment
-         */
-        public static GroupAssignment unpackGroupAssignment(final byte packedByte) {
-            final int schemaValue = (packedByte & G_ASSIGNMENT_MASK) >> 7;
-            return GroupAssignment.values()[schemaValue];
-        }
-
-        /**
-         * Unpacks the curve type from a packed byte
-         *
-         * @param packedByte the packed byte
-         * @return the curve type
-         */
-        public static byte unpackCurveType(final byte packedByte) {
-            return (byte) (packedByte & CURVE_MASK);
-        }
     }
 }

@@ -84,7 +84,7 @@ class Groth21MessageTest {
     @Test
     void testCorruptedMessage() {
         final var bytes = tssMessage.toBytes();
-        var headerEnd = 4 + 1 + 4;
+        var headerEnd = 4 + 1 + 4 + 4;
         Arrays.fill(bytes, headerEnd, bytes.length, (byte) -1);
         assertThrows(IllegalStateException.class, () -> Groth21Message.fromBytes(bytes, DIR, SIGNATURE_SCHEMA));
     }
@@ -94,7 +94,7 @@ class Groth21MessageTest {
         final var bytes = tssMessage.toBytes();
 
         // Set an invalid List size
-        var headerEnd = 4 + 1 + 4;
+        var headerEnd = 4 + 1 + 4 + 4;
         var value = SIGNATURE_SCHEMA.getPublicKeyGroup().elementSize()
                 * SIGNATURE_SCHEMA.getPairingFriendlyCurve().field().elementSize();
         Arrays.fill(bytes, headerEnd, value, Byte.MAX_VALUE);
@@ -134,7 +134,7 @@ class Groth21MessageTest {
         assertArrayEquals(m1, m3);
         final var actual = Groth21Message.fromBytes(m3, DIR, SIGNATURE_SCHEMA);
         assertNotNull(actual);
-        assertNotSame(actual, tssMessage);
+        assertNotSame(tssMessage, actual);
         assertEquals(0, actual.generatingShare());
         assertEquals(3, actual.cipherTable().shareCiphertexts().length);
         final NizkStatement statement = validStatement();
