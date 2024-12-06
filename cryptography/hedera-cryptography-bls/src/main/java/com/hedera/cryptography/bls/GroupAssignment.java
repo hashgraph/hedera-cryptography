@@ -47,4 +47,12 @@ public enum GroupAssignment {
     public int getId() {
         return id;
     }
+
+    public static GroupAssignment fromId(final int id) {
+        return switch (id) {
+            case 0 -> SHORT_SIGNATURES;
+            case 1 -> SHORT_PUBLIC_KEYS;
+            default -> throw new IllegalArgumentException("Unknown group assignment id: " + id);
+        };
+    }
 }

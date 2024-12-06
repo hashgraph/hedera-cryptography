@@ -21,6 +21,10 @@ import static com.hedera.cryptography.asciiarmored.AsciiArmoredType.PUBLIC_KEY;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.BlsPublicKey;
+import com.hedera.cryptography.bls.GroupAssignment;
+import com.hedera.cryptography.bls.SignatureSchema;
+import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPrivateKeySerialization;
+import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.utils.serialization.Deserializer;
 import com.hedera.cryptography.utils.serialization.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -28,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Objects;
 
@@ -37,6 +42,7 @@ import java.util.Objects;
  * It is often employed in email encryption, such as PGP, to safely send encrypted messages as text.
  */
 public class AsciiArmoredFiles {
+
     /**
      * Empty constructor for helper static classes
      */
@@ -61,7 +67,9 @@ public class AsciiArmoredFiles {
             throw new IllegalArgumentException("File does not contain a private key");
         }
         final var buffer = Base64.getDecoder().decode(fileRead.contents());
-        return BlsPrivateKey.fromBytes(buffer);
+        final var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
+        final var keyBytes = Arrays.copyOfRange(buffer, 1, buffer.length);
+        return DefaultBlsPrivateKeySerialization.getDeserializer(schema).deserialize(keyBytes);
     }
 
     /**

@@ -16,6 +16,7 @@
 
 package com.hedera.cryptography.tss.extensions.serialization;
 
+import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
@@ -125,6 +126,7 @@ public class DefaultTssMessageSerialization {
             final int expectedSize = Integer.BYTES
                     + Integer.BYTES
                     + Integer.BYTES
+                    + Integer.BYTES
                     + fieldElementSize * groupElementSize
                     + totalShares * fieldElementSize * groupElementSize
                     + threshold * groupElementSize
@@ -144,11 +146,11 @@ public class DefaultTssMessageSerialization {
                 if (version != TssMessage.MESSAGE_CURRENT_VERSION) {
                     throw new IllegalStateException("Invalid message version: " + version);
                 }
-                var receivedSchema = is.readInt();
-                if (receivedSchema > Byte.MAX_VALUE) {
-                    throw new IllegalStateException("Invalid message schema: " + receivedSchema);
-                }
-                if (signatureSchema.toByte() != receivedSchema) {
+                var curveId = is.readInt();
+                var groupAssigment = GroupAssignment.fromId(is.readInt());
+
+                if (signatureSchema.getGroupAssignment() != groupAssigment
+                        || signatureSchema.getCurve().getId() != curveId) {
                     throw new IllegalStateException("Invalid signature schema: " + signatureSchema);
                 }
                 final int generatingShareElement = is.readInt();
@@ -222,7 +224,10 @@ public class DefaultTssMessageSerialization {
             final ByteArrayOutputStream output = new ByteArrayOutputStream();
             try {
                 output.write(ByteArrayUtils.toByteArray(TssMessage.MESSAGE_CURRENT_VERSION));
-                output.write(ByteArrayUtils.toByteArray(signatureSchema.toByte()));
+                output.write(
+                        ByteArrayUtils.toByteArray(signatureSchema.getCurve().getId()));
+                output.write(ByteArrayUtils.toByteArray(
+                        signatureSchema.getGroupAssignment().getId()));
                 output.write(ByteArrayUtils.toByteArray(element.generatingShare()));
 
                 for (GroupElement randomness : element.sharedRandomness()) {
