@@ -46,7 +46,6 @@ import org.junit.jupiter.params.provider.EnumSource;
  * This class contains tests for the Arkworks serialization of the different types of elements in the AltBN128 curve.
  */
 @WithRng
-@Disabled
 public class ArkworksSerializationTests {
 
     /**
@@ -182,7 +181,8 @@ public class ArkworksSerializationTests {
      * @param rng  The random number generator
      * @return The bytes of the generated element
      */
-    private static @NonNull byte[] randomElementBytes(final ArkworksSerialization info, final Random rng) {
+    @NonNull
+    private static byte[] randomElementBytes(final ArkworksSerialization info, final Random rng) {
         final ElementFacade facade = getFacade(info);
         final byte[] seed = new byte[facade.randomSeedSize()];
         rng.nextBytes(seed);
@@ -195,7 +195,8 @@ public class ArkworksSerializationTests {
      * @param info The element info
      * @return The facade
      */
-    private static @NonNull ElementFacade getFacade(final ArkworksSerialization info) {
+    @NonNull
+    private static ElementFacade getFacade(final ArkworksSerialization info) {
         return info == ArkworksSerialization.FIELD_ELEMENT
                 ? new FieldFacade(ArkBn254Adapter.getInstance())
                 : new GroupFacade(
