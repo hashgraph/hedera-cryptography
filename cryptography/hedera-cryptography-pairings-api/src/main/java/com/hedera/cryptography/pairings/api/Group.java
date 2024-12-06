@@ -191,10 +191,12 @@ public interface Group {
     //  + List<GroupElement> allFromBytes(List<byte[]> collection)
     //  + fromBytes(byte[] bytes, Mode.NO_VALIDATE)
     @NonNull
+    @Deprecated
     default GroupElement fromBytes(@NonNull byte[] bytes) {
         return fromBytes(bytes, false, true);
     }
 
+    @Deprecated
     default GroupElement fromBytes(@NonNull byte[] bytes, boolean compressed, boolean validated) {
         return fromBytes(bytes);
     }
@@ -208,6 +210,16 @@ public interface Group {
      */
     @NonNull
     GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y);
+
+    /**
+     * Creates a group element from its x coordinates
+     * It does not support the zero element
+     *
+     * @param x the x coordinate
+     * @return the new group element
+     */
+    @NonNull
+    GroupElement fromX(@NonNull final List<BigInteger> x, boolean isYNegative);
 
     /**
      * Gets the size in bytes of the seed necessary to generate a new element

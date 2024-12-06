@@ -23,7 +23,7 @@ import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.api.TssServiceGenesisStage;
 import com.hedera.cryptography.tss.api.TssServiceRekeyStage;
-import com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization;
+import com.hedera.cryptography.tss.extensions.serialization.TssMessageDeserializers;
 import com.hedera.cryptography.tss.impl.groth21.Groth21GenesisStage;
 import com.hedera.cryptography.tss.impl.groth21.Groth21RekeyStage;
 import com.hedera.cryptography.utils.serialization.Transformer;
@@ -76,13 +76,14 @@ public class Groth21Service implements TssService {
      * {@inheritDoc}
      */
     @NonNull
-    @Deprecated
     @Override
+    @Deprecated
     public TssMessage messageFromBytes(
             @NonNull final TssParticipantDirectory tssParticipantDirectory, @NonNull final byte[] message)
             throws TssMessageParsingException {
         return this.messageFrom(
-                DefaultTssMessageSerialization.getDeserializer(signatureSchema, tssParticipantDirectory), message);
+                TssMessageDeserializers.Internals.internalDeserializer(signatureSchema, tssParticipantDirectory),
+                message);
     }
 
     /**
@@ -90,6 +91,7 @@ public class Groth21Service implements TssService {
      */
     @NonNull
     @Override
+    @Deprecated
     public <S> TssMessage messageFrom(
             @NonNull final Transformer<S, TssMessage> tssMessageTransformer, @NonNull final S message)
             throws TssMessageParsingException {

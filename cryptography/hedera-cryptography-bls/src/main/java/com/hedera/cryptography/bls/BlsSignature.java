@@ -48,7 +48,6 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
      *
      * @return the serialized form of this object
      * @deprecated use a {@link com.hedera.cryptography.utils.serialization.Serializer} instance
-     * e.g.: {@link com.hedera.cryptography.bls.extensions.serialization.DefaultBlsSignatureSerialization}
      */
     @NonNull
     @Deprecated
@@ -65,7 +64,6 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
      * @return a {@link BlsSignature} instance
      * @throws IllegalArgumentException if the key representation is invalid
      * @deprecated use a {@link com.hedera.cryptography.utils.serialization.Deserializer} instance
-     * e.g.: {@link com.hedera.cryptography.bls.extensions.serialization.DefaultBlsSignatureSerialization}
      */
     @NonNull
     @Deprecated

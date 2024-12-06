@@ -18,6 +18,7 @@ package com.hedera.cryptography.tss.api;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
+import com.hedera.cryptography.tss.extensions.serialization.TssMessageSerializers;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public interface TssMessage {
     /**
      * Do not use.
      * @return a byte array representing this instance.
-     * @deprecated Use {@link com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization}
+     * @deprecated Use {@link TssMessageSerializers}
      */
     @Deprecated
     byte[] toBytes();

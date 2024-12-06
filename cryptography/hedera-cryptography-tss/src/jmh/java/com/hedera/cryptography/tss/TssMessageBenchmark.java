@@ -22,7 +22,8 @@ import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssMessageParsingException;
 import com.hedera.cryptography.tss.api.TssService;
-import com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization;
+import com.hedera.cryptography.tss.extensions.serialization.TssMessageDeserializers;
+import com.hedera.cryptography.tss.extensions.serialization.TssMessageSerializers;
 import com.hedera.cryptography.tss.impl.Groth21Service;
 import com.hedera.cryptography.tss.test.fixtures.TssTestCommittee;
 import com.hedera.cryptography.tss.test.fixtures.TssTestUtils;
@@ -61,7 +62,7 @@ public class TssMessageBenchmark {
     @Param({"SHORT_SIGNATURES"})
     static GroupAssignment groupAssignment;
 
-    @Param({"130"})
+    @Param({"13"})
     static int participants;
 
     @Param({"10"})
@@ -88,21 +89,21 @@ public class TssMessageBenchmark {
 
     @Benchmark
     public Object defaultDeserialize(ReadUncompressedMessageState state) {
-        return DefaultTssMessageSerialization.getDeserializer(
+        return TssMessageDeserializers.defaultDeserializer(
                         signatureSchema, state.genesisCommittee.participantDirectory())
                 .deserialize(state.message);
     }
 
     @Benchmark
     public Object nonValidatedDeserialize(ReadUncompressedMessageState state) {
-        return DefaultTssMessageSerialization.getNonValidatedDeserializer(
+        return TssMessageSerializers.Internals.internalNonValidatedDeserializer(
                         signatureSchema, state.genesisCommittee.participantDirectory())
                 .deserialize(state.message);
     }
 
     @Benchmark
     public Object compressDeserialize(ReadCompressedMessageState state) {
-        return DefaultTssMessageSerialization.getCompressedDeserializer(
+        return TssMessageSerializers.Internals.internalCompressedDeserializer(
                         signatureSchema, state.genesisCommittee.participantDirectory())
                 .deserialize(state.message);
     }
@@ -155,7 +156,7 @@ public class TssMessageBenchmark {
         @Setup
         public void setup() {
             super.setup();
-            this.message = DefaultTssMessageSerialization.getSerializer(signatureSchema)
+            this.message = TssMessageSerializers.defaultSerializer(signatureSchema)
                     .serialize(tssService.genesisStage().generateTssMessage(genesisCommittee.participantDirectory()));
         }
     }
@@ -167,7 +168,7 @@ public class TssMessageBenchmark {
         @Setup
         public void setup() {
             super.setup();
-            this.message = DefaultTssMessageSerialization.getCompressedSerializer(signatureSchema)
+            this.message = TssMessageSerializers.compressedSerializer(signatureSchema)
                     .serialize(tssService.genesisStage().generateTssMessage(genesisCommittee.participantDirectory()));
         }
     }

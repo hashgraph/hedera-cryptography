@@ -83,7 +83,9 @@ public final class GroupFacade implements ElementFacade {
      * @return the byte array representation of the point or null if the point is not in the curve.
      * @throws AltBn128Exception in case of error
      */
-    public @Nullable byte[] fromXCoordinate(@NonNull final byte[] xCoordinate) {
+    @Nullable
+    // TODO: RENAME
+    public byte[] fromXCoordinate(@NonNull final byte[] xCoordinate) {
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsFromXCoordinate(group, xCoordinate, output);
         return switch (result) {
@@ -220,7 +222,7 @@ public final class GroupFacade implements ElementFacade {
         validateSize(Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
 
         final byte[] ret = new byte[bytes.length];
-        final int result = adapter.groupElementsBytes(group, false, validate, bytes, ret);
+        final int result = adapter.groupElementsBytes(group, compressed, validate, bytes, ret);
         if (result == GroupElementsLibraryAdapter.NOT_IN_CURVE) {
             throw new IllegalArgumentException("The point is not in curve");
         } else if (result != GroupElementsLibraryAdapter.SUCCESS) {

@@ -23,7 +23,7 @@ import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssPrivateShare;
 import com.hedera.cryptography.tss.api.TssService;
-import com.hedera.cryptography.utils.ByteArrayUtils.Serializer;
+import com.hedera.cryptography.tss.extensions.serialization.TssMessageSerializers;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.List;
@@ -97,27 +97,10 @@ public class TssTestUtils {
         final var zeroElement = signatureSchema.getPublicKeyGroup().zero();
         final var zeros = Collections.nCopies(n, zeroElement);
         final var commitmentCoefficients = Collections.nCopies(threshold, zeroElement);
-
-        final var serializer = new Serializer()
-                .put(TssMessage.MESSAGE_CURRENT_VERSION)
-                .put((int) signatureSchema.toByte())
-                .put(generatingShare)
-                .putListSameSize(zeros, GroupElement::toBytes);
-        for (int i = 0; i < totalShares; i++) {
-            serializer.putListSameSize(zeros, GroupElement::toBytes);
-        }
-        serializer
-                .putListSameSize(commitmentCoefficients, GroupElement::toBytes)
-                .put(zeroElement::toBytes)
-                .put(zeroElement::toBytes)
-                .put(zeroElement::toBytes)
-                .put(zero::toBytes)
-                .put(zero::toBytes);
-
         return new TssMessage() {
             @Override
             public byte[] toBytes() {
-                return serializer.toBytes();
+                return TssMessageSerializers.defaultSerializer(signatureSchema).serialize(this);
             }
 
             @NonNull

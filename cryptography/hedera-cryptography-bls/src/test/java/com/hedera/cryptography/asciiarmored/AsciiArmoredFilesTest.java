@@ -23,7 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
-import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPrivateKeySerialization;
+import com.hedera.cryptography.bls.extensions.serialization.BlsDeserializers;
+import com.hedera.cryptography.bls.extensions.serialization.BlsSerializers;
 import com.hedera.cryptography.pairings.api.Curve;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 public class AsciiArmoredFilesTest {
-    private static final String BASE_64_KEY = "/NpGlCEh4AMwkgBHmpqfJrvYbVf0ss3LspM14kNJVyI=";
+    private static final String BASE_64_KEY = "GpDqPc8HEtomFBh6+USgwcWB1vSx1IMSy2BQXhVWvd0=";
     private static final String BASE_64_KEY_OLD = "AWUoGGXtbZQ8SSfe1LxzvTSmVCuom+DxxXnYx3riBRYl";
     private static final SignatureSchema SIGNATURE_SCHEMA =
             SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
@@ -61,13 +62,13 @@ public class AsciiArmoredFilesTest {
     @SuppressWarnings("ConstantConditions")
     public void testAsciiArmoredWriteKeyRead() throws IOException {
         final Path keyPath = tempDir.resolve("test.tss");
-        var deserializer = DefaultBlsPrivateKeySerialization.getDeserializer(SIGNATURE_SCHEMA);
-        var serializer = DefaultBlsPrivateKeySerialization.getSerializer();
+        var deserializer = BlsDeserializers.privateKeyDeserializer(SIGNATURE_SCHEMA);
+        var serializer = BlsSerializers.privateKeySerializer();
         final BlsPrivateKey originalKey =
                 deserializer.deserialize(Base64.getDecoder().decode(BASE_64_KEY));
         String expectedContent = "-----BEGIN PRIVATE KEY-----\n" + BASE_64_KEY + "\n" + "-----END PRIVATE KEY-----";
 
-        AsciiArmoredFiles.writeKey(keyPath, DefaultBlsPrivateKeySerialization.getSerializer(), originalKey);
+        AsciiArmoredFiles.writeKey(keyPath, serializer, originalKey);
         assertTrue(keyPath.toFile().exists(), "Key should have been written to file");
         final String fileContents = Files.readString(keyPath);
         assertEquals(expectedContent, fileContents, "File contents should match expected");
@@ -90,8 +91,8 @@ public class AsciiArmoredFilesTest {
                 NullPointerException.class,
                 () -> AsciiArmoredFiles.writeKey(
                         null,
-                        DefaultBlsPrivateKeySerialization.getSerializer(),
-                        DefaultBlsPrivateKeySerialization.getDeserializer(SIGNATURE_SCHEMA)
+                        BlsSerializers.privateKeySerializer(),
+                        BlsDeserializers.privateKeyDeserializer(SIGNATURE_SCHEMA)
                                 .deserialize(Base64.getDecoder().decode(BASE_64_KEY))));
         assertEquals("path must not be null", exception.getMessage());
     }
@@ -101,8 +102,7 @@ public class AsciiArmoredFilesTest {
     public void testAsciiArmoredWriteKeyWithNullBase64Key() {
         Exception exception = assertThrows(
                 NullPointerException.class,
-                () -> AsciiArmoredFiles.writeKey(
-                        Path.of("test.tss"), DefaultBlsPrivateKeySerialization.getSerializer(), null));
+                () -> AsciiArmoredFiles.writeKey(Path.of("test.tss"), BlsSerializers.publicKeySerializer(), null));
         assertEquals("key must not be null", exception.getMessage());
     }
 }

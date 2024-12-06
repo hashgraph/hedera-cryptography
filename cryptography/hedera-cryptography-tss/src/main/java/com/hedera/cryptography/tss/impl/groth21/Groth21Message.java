@@ -22,7 +22,8 @@ import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.extensions.EcPolynomial;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
-import com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization;
+import com.hedera.cryptography.tss.extensions.serialization.TssMessageDeserializers;
+import com.hedera.cryptography.tss.extensions.serialization.TssMessageSerializers;
 import com.hedera.cryptography.tss.impl.elgamal.CipherText;
 import com.hedera.cryptography.tss.impl.elgamal.CiphertextTable;
 import com.hedera.cryptography.tss.impl.nizk.NizkProof;
@@ -54,7 +55,7 @@ public record Groth21Message(
     @Override
     @NonNull
     public byte[] toBytes() {
-        return DefaultTssMessageSerialization.getSerializer(signatureSchema).serialize(this);
+        return TssMessageSerializers.defaultSerializer(signatureSchema).serialize(this);
     }
 
     @NonNull
@@ -114,7 +115,8 @@ public record Groth21Message(
     }
 
     /**
-     * Reads a {@link Groth21Message} from its serialized form following the specs in {@link TssMessage#toBytes()}
+     * Reads a {@link Groth21Message} from its serialized form using
+     * {@link TssMessageDeserializers#defaultDeserializer(SignatureSchema, TssParticipantDirectory)}
      *
      * @param message the byte array representation of the message
      * @param tssParticipantDirectory the candidate tss directory
@@ -127,7 +129,7 @@ public record Groth21Message(
             @NonNull final byte[] message,
             @NonNull final TssParticipantDirectory tssParticipantDirectory,
             @NonNull final SignatureSchema expectedSchema) {
-        return (Groth21Message) DefaultTssMessageSerialization.getDeserializer(expectedSchema, tssParticipantDirectory)
+        return (Groth21Message) TssMessageDeserializers.defaultDeserializer(expectedSchema, tssParticipantDirectory)
                 .deserialize(message);
     }
 }

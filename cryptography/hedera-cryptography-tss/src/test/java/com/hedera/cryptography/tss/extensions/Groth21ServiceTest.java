@@ -26,7 +26,8 @@ import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.api.TssShareSignature;
-import com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization;
+import com.hedera.cryptography.tss.extensions.serialization.TssMessageDeserializers;
+import com.hedera.cryptography.tss.extensions.serialization.TssMessageSerializers;
 import com.hedera.cryptography.tss.impl.Groth21Service;
 import com.hedera.cryptography.tss.test.fixtures.TssTestCommittee;
 import com.hedera.cryptography.tss.test.fixtures.TssTestUtils;
@@ -73,10 +74,10 @@ class Groth21ServiceTest {
         var genesisCommittee = new TssTestCommittee(1, 2, keys);
         var participantDirectory = genesisCommittee.participantDirectory();
         var myMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
-        var serializer = DefaultTssMessageSerialization.getSerializer(SIGNATURE_SCHEMA);
+        var serializer = TssMessageSerializers.defaultSerializer(SIGNATURE_SCHEMA);
         var myMessageBytes = serializer.serialize(myMessage);
 
-        var message = DefaultTssMessageSerialization.getDeserializer(SIGNATURE_SCHEMA, participantDirectory)
+        var message = TssMessageDeserializers.defaultDeserializer(SIGNATURE_SCHEMA, participantDirectory)
                 .deserialize(myMessageBytes);
 
         assertArrayEquals(myMessageBytes, serializer.serialize(message));
@@ -90,8 +91,8 @@ class Groth21ServiceTest {
         final var myMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
         final var myInfo = genesisCommittee.privateInfoOf(0);
         assertNotNull(myMessage);
-        var serializer = DefaultTssMessageSerialization.getSerializer(SIGNATURE_SCHEMA);
-        assertNotNull(DefaultTssMessageSerialization.getDeserializer(SIGNATURE_SCHEMA, participantDirectory)
+        var serializer = TssMessageSerializers.defaultSerializer(SIGNATURE_SCHEMA);
+        assertNotNull(TssMessageDeserializers.defaultDeserializer(SIGNATURE_SCHEMA, participantDirectory)
                 .deserialize(serializer.serialize(myMessage)));
         final var otherMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
         final var tssShareExtractor =

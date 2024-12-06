@@ -18,7 +18,8 @@ package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
-import com.hedera.cryptography.pairings.extensions.serialization.DefaultGroupElementSerialization;
+import com.hedera.cryptography.pairings.extensions.serialization.GroupElementDeserializers;
+import com.hedera.cryptography.pairings.extensions.serialization.GroupElementSerializers;
 import com.hedera.cryptography.utils.serialization.Deserializer;
 import com.hedera.cryptography.utils.serialization.Serializer;
 import java.math.BigInteger;
@@ -131,39 +132,39 @@ public class GroupElementsBenchmark {
     }
 
     @Benchmark
-    public byte[] serialize() {
-        return DefaultGroupElementSerialization.getSerializer().serialize(point);
+    public byte[] internalSerialize() {
+        return GroupElementSerializers.Internals.internalSerializer().serialize(point);
     }
 
     @Benchmark
-    public byte[] arkCompressedSerialize() {
-        return DefaultGroupElementSerialization.getArkComrpessSerializer().serialize(point);
+    public byte[] internalCompressedSerialize() {
+        return GroupElementSerializers.Internals.arkComrpessSerializer().serialize(point);
     }
 
     @Benchmark
-    public byte[] pairingsCompressedSerialize() {
-        return DefaultGroupElementSerialization.getComrpessSerializer().serialize(point);
+    public byte[] compressedSerialize() {
+        return GroupElementSerializers.comrpessSerializer().serialize(point);
     }
 
     @Benchmark
     public GroupElement compressedDeserialize(CompressedState state) {
-        return compressedDeserializer.deserialize(state.compressedBytes);
+        return GroupElementDeserializers.compressedDeserializer(group).deserialize(state.compressedBytes);
     }
 
     @Benchmark
     public GroupElement deserialize(UncompressState state) {
-        return DefaultGroupElementSerialization.getDeserializer(group).deserialize(state.uncompressedBytes);
+        return GroupElementDeserializers.defaultDeserializer(group).deserialize(state.uncompressedBytes);
     }
 
     @Benchmark
     public GroupElement deserializeNotValidated(UncompressState state) {
-        return DefaultGroupElementSerialization.getNonValidatedDeserializer(group)
+        return GroupElementDeserializers.Internals.internalNonValidatedDeserializer(group)
                 .deserialize(state.uncompressedBytes);
     }
 
     @Benchmark
     public GroupElement deserializeCompressedNotValidated(UncompressState state) {
-        return DefaultGroupElementSerialization.getCompressedNonValidatedDeserializer(group)
+        return GroupElementDeserializers.Internals.internalCompressedNonValidatedDeserializer(group)
                 .deserialize(state.uncompressedBytes);
     }
 

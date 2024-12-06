@@ -19,64 +19,51 @@ package com.hedera.cryptography.pairings.extensions.serialization;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.utils.serialization.Deserializer;
-import com.hedera.cryptography.utils.serialization.Serializer;
+import com.hedera.cryptography.utils.serialization.Transformer;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Objects;
+import java.math.BigInteger;
 
-/**
- * Use this class to construct a {@link FieldElement} from an array, or to get the byte[] representation from an instance.
- */
-public class DefaultFieldElementSerialization {
+public class FieldElementDeserializers {
 
     /**
-     * Constructor
-     */
-    private DefaultFieldElementSerialization() {
-        // private constructor for static access
-    }
-
-    /**
-     * Gets a deserializer.
+     * Default deserializer
+     *
      * @param field the field.
      * @return a deserializer
      */
-    public static Deserializer<FieldElement> getDeserializer(@NonNull final Field field) {
-        return new DefaultDeserializer(field);
+    public static Deserializer<FieldElement> defautlDeserializer(@NonNull final Field field) {
+        return new DefaultDeserializer(field, element -> field.fromBigInteger(new BigInteger(element)));
     }
 
     /**
-     * Gets a serializer.
-     * @return a serializer
+     * Internal deserializer.
+     * Returns the implementation dependent representation in compressed format
+     * It does not perform the curve equation validation nor the subgroup validation
+     * @param field the field to deserialize to
+     * @return the deserializer
+     * @apiNote this uses an internal method that is implementation dependant. Use with caution or under know
+     * circumstances.
      */
-    public static Serializer<FieldElement> getSerializer() {
-        return new DefaultSerializer();
+    @Deprecated
+    public static Deserializer<FieldElement> internalDeserializer(@NonNull final Field field) {
+        return new DefaultDeserializer(field, field::fromBytes);
     }
 
     /**
      * Deserializer
      */
-    private record DefaultDeserializer(Field field) implements Deserializer<FieldElement> {
+    private record DefaultDeserializer(Field field, Transformer<byte[], FieldElement> transformer)
+            implements Deserializer<FieldElement> {
         @Override
         public FieldElement deserialize(final byte[] element) {
             try {
-                if (Objects.requireNonNull(element).length < field.elementSize()) {
+                if (element == null || element.length < field.elementSize()) {
                     throw new IllegalStateException("Cannot deserialize field element");
                 }
-                return field.fromBytes(element);
+                return transformer.transform(element);
             } catch (IllegalArgumentException e) {
                 throw new IllegalStateException("Cannot deserialize field element", e);
             }
-        }
-    }
-
-    /**
-     * Serializer
-     */
-    private static final class DefaultSerializer implements Serializer<FieldElement> {
-
-        @Override
-        public byte[] serialize(final FieldElement element) {
-            return element.toBytes();
         }
     }
 }

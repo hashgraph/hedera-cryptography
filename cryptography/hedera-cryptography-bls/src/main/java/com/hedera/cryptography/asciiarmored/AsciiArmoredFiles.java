@@ -122,7 +122,7 @@ public class AsciiArmoredFiles {
             @NonNull final Path path, final Serializer<BlsPublicKey> serializer, @NonNull final BlsPublicKey key)
             throws IOException {
         writeKey(
-                path,
+                Objects.requireNonNull(path),
                 Base64.getEncoder()
                         .encodeToString(serializer.serialize(Objects.requireNonNull(key, "key must not be null"))),
                 PUBLIC_KEY);

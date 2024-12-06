@@ -19,9 +19,8 @@ package com.hedera.cryptography.bls;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.hedera.cryptography.altbn128.test.fixtures.AltBn128ExternalData;
-import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPrivateKeySerialization;
-import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPublicKeySerialization;
-import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsSignatureSerialization;
+import com.hedera.cryptography.bls.extensions.serialization.BlsDeserializers;
+import com.hedera.cryptography.bls.extensions.serialization.BlsSerializers;
 import com.hedera.cryptography.bls.test.fixtures.BlsTestUtils;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
@@ -77,7 +76,7 @@ class BlsLibraryTest {
     @DisplayName("detect incorrectly used pseudorandom number generators in privateKeys")
     void testRandomnessSinglePrivateKeyByteDistribution(SignatureSchema schema, final Random rng) {
         final var key = BlsPrivateKey.create(schema, rng);
-        final var keyBytes = DefaultBlsPrivateKeySerialization.getSerializer().serialize(key);
+        final var keyBytes = BlsSerializers.privateKeySerializer().serialize(key);
         assertDistribution(keyBytes, POPULATION_SIZE, DEVIATION); // Allow a 5% deviation
     }
 
@@ -97,7 +96,7 @@ class BlsLibraryTest {
     @DisplayName("detect incorrectly used pseudorandom number generators in privateKeys")
     void testRandomnessSinglePublicKeyByteDistribution(SignatureSchema schema, final Random rng) {
         final var key = BlsPrivateKey.create(schema, rng).createPublicKey();
-        final var keyBytes = DefaultBlsPublicKeySerialization.getSerializer().serialize(key);
+        final var keyBytes = BlsSerializers.publicKeySerializer().serialize(key);
         assertDistribution(keyBytes, POPULATION_SIZE, DEVIATION); // Allow a 5% deviation
     }
 
@@ -172,7 +171,7 @@ class BlsLibraryTest {
                 () -> BlsPrivateKey.create(schema, null),
                 "Invalid key should throw an exception");
 
-        final var deserializer = DefaultBlsPrivateKeySerialization.getDeserializer(schema);
+        final var deserializer = BlsDeserializers.privateKeyDeserializer(schema);
         assertThrows(
                 IllegalStateException.class,
                 () -> deserializer.deserialize(invalidKey),
@@ -202,12 +201,12 @@ class BlsLibraryTest {
 
         assertThrows(
                 IllegalStateException.class,
-                () -> DefaultBlsPublicKeySerialization.getDeserializer(schema).deserialize(invalidKey),
+                () -> BlsDeserializers.publicKeyDeserializer(schema).deserialize(invalidKey),
                 "Invalid key should throw an exception");
         final byte[] invalidKey2 = new byte[] {0, 0, 0, 0};
         assertThrows(
                 IllegalStateException.class,
-                () -> DefaultBlsPublicKeySerialization.getDeserializer(schema).deserialize(invalidKey2),
+                () -> BlsDeserializers.publicKeyDeserializer(schema).deserialize(invalidKey2),
                 "Invalid key should throw an exception");
     }
 
@@ -229,12 +228,12 @@ class BlsLibraryTest {
 
         assertThrows(
                 IllegalStateException.class,
-                () -> DefaultBlsSignatureSerialization.getDeserializer(schema).deserialize(invalidSignature),
+                () -> BlsDeserializers.signatureDeserializer(schema).deserialize(invalidSignature),
                 "Invalid signature should throw an exception");
         final byte[] invalidKey2 = new byte[] {0, 0, 0, 0};
         assertThrows(
                 IllegalStateException.class,
-                () -> DefaultBlsSignatureSerialization.getDeserializer(schema).deserialize(invalidKey2),
+                () -> BlsDeserializers.signatureDeserializer(schema).deserialize(invalidKey2),
                 "Invalid signature should throw an exception");
     }
 
@@ -243,8 +242,8 @@ class BlsLibraryTest {
         final var schema = SignatureSchema.create(
                 Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES); // we dont care about the assignament for filds
         final var sk = BlsPrivateKey.create(schema, rng);
-        final var serializer = DefaultBlsPrivateKeySerialization.getSerializer();
-        final var deserializer = DefaultBlsPrivateKeySerialization.getDeserializer(schema);
+        final var serializer = BlsSerializers.privateKeySerializer();
+        final var deserializer = BlsDeserializers.privateKeyDeserializer(schema);
 
         assertEquals(
                 sk,
@@ -258,8 +257,8 @@ class BlsLibraryTest {
     void privateKeyFlipTest(final Random rng) {
         final var schema = SignatureSchema.create(
                 Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES); // we dont care about the assignament for filds
-        final var serializer = DefaultBlsPrivateKeySerialization.getSerializer();
-        final var deserializer = DefaultBlsPrivateKeySerialization.getDeserializer(schema);
+        final var serializer = BlsSerializers.privateKeySerializer();
+        final var deserializer = BlsDeserializers.privateKeyDeserializer(schema);
         final var sk = BlsPrivateKey.create(schema, rng);
         flipEachBitAndConsume(serializer.serialize(sk), exceptionOrDifferentExpected(sk, deserializer));
     }
@@ -271,8 +270,8 @@ class BlsLibraryTest {
     void publicKeyFlipTest(SignatureSchema schema, final Random rng) {
         final var sk = BlsPrivateKey.create(schema, rng);
         final var pk = sk.createPublicKey();
-        final var serializer = DefaultBlsPublicKeySerialization.getSerializer();
-        final var deserializer = DefaultBlsPublicKeySerialization.getDeserializer(schema);
+        final var serializer = BlsSerializers.publicKeySerializer();
+        final var deserializer = BlsDeserializers.publicKeyDeserializer(schema);
 
         flipEachBitAndConsume(serializer.serialize(pk), exceptionOrDifferentExpected(pk, deserializer));
     }
@@ -284,8 +283,8 @@ class BlsLibraryTest {
         final var pk = sk.createPublicKey();
         final var message = "A signature".getBytes(StandardCharsets.UTF_8);
         final var signature = sk.sign(message);
-        final var serializer = DefaultBlsSignatureSerialization.getSerializer();
-        final var deserializer = DefaultBlsSignatureSerialization.getDeserializer(schema);
+        final var serializer = BlsSerializers.signatureSerializer();
+        final var deserializer = BlsDeserializers.signatureDeserializer(schema);
 
         flipEachBitAndConsume(serializer.serialize(signature), exceptionOrDifferentExpected(signature, deserializer));
 

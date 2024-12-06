@@ -162,6 +162,12 @@ public class NaiveGroup implements Group {
                         .intValue());
     }
 
+    @NonNull
+    @Override
+    public GroupElement fromX(@NonNull final List<BigInteger> x, final boolean isYNegative) {
+        return fromCoordinates(x, List.of());
+    }
+
     /**
      * {@inheritDoc}
      */

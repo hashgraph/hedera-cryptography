@@ -190,15 +190,19 @@ public class ByteArrayUtils {
     /**
      * Creates a byte array from a list of BigInteger values
      */
-    @SafeVarargs
-    public static byte[] toByteArray(final int size, final List<BigInteger>... values) {
-        ByteBuffer buffer = ByteBuffer.allocate(size);
-        for (final List<BigInteger> value : values) {
-            for (final BigInteger bigInt : value) {
-                buffer.put(bigInt.toByteArray());
-            }
+    public static byte[] toByteArray(final int size, final BigInteger[]... values) {
+        final var buffer = new byte[size];
+        final var list = Arrays.stream(values).flatMap(Arrays::stream).toList();
+        final var fixedSize = size / list.size();
+        var i = 0;
+        for (final BigInteger bigInt : list) {
+            var byteArray = bigInt.toByteArray();
+            int paddingLength = fixedSize - byteArray.length;
+            // Prepend zeros
+            System.arraycopy(byteArray, 0, buffer, i + paddingLength, byteArray.length);
+            i += fixedSize;
         }
-        return buffer.array();
+        return buffer;
     }
 
     /**

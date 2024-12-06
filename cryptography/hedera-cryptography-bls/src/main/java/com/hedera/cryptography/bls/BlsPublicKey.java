@@ -16,7 +16,7 @@
 
 package com.hedera.cryptography.bls;
 
-import com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPrivateKeySerialization;
+import com.hedera.cryptography.bls.extensions.serialization.BlsSerializers;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.utils.ByteArrayUtils.Deserializer;
 import com.hedera.cryptography.utils.ByteArrayUtils.Serializer;
@@ -45,8 +45,7 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
      * Serializes this {@link BlsPublicKey} into a byte array.
      *
      * @return the serialized form of this object
-     * @deprecated use a {@link com.hedera.cryptography.utils.serialization.Serializer} instance instead
-     * e.g.: {@link com.hedera.cryptography.bls.extensions.serialization.DefaultBlsPublicKeySerialization}
+     * @deprecated use a {@link com.hedera.cryptography.utils.serialization.Serializer} instance instead/
      */
     @NonNull
     @Deprecated
@@ -63,7 +62,7 @@ public record BlsPublicKey(@NonNull GroupElement element, @NonNull SignatureSche
      * @return a {@link BlsPublicKey} instance
      * @throws IllegalArgumentException if the key representation is invalid
      * @deprecated use a {@link com.hedera.cryptography.utils.serialization.Deserializer}
-     * instance e.g {@link DefaultBlsPrivateKeySerialization}
+     * instance e.g {@link BlsSerializers}
      */
     @NonNull
     @Deprecated

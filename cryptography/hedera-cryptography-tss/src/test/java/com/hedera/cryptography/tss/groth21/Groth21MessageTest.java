@@ -27,6 +27,8 @@ import com.hedera.cryptography.pairings.extensions.EcPolynomial;
 import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssShareTable;
+import com.hedera.cryptography.tss.extensions.serialization.TssMessageDeserializers;
+import com.hedera.cryptography.tss.extensions.serialization.TssMessageSerializers;
 import com.hedera.cryptography.tss.impl.elgamal.CombinedCiphertext;
 import com.hedera.cryptography.tss.impl.groth21.Groth21Message;
 import com.hedera.cryptography.tss.impl.nizk.NizkStatement;
@@ -52,19 +54,23 @@ class Groth21MessageTest {
 
     @Test
     void testInvalidVersion() {
-        final var bytes = tssMessage.toBytes();
+        final var bytes =
+                TssMessageSerializers.defaultSerializer(SIGNATURE_SCHEMA).serialize(tssMessage);
         // Corrupt the version bytes
         bytes[0] = (byte) 0xFF;
         bytes[1] = (byte) 0xFF;
         bytes[2] = (byte) 0xFF;
         bytes[3] = (byte) 0xFF;
 
-        assertThrows(IllegalStateException.class, () -> Groth21Message.fromBytes(bytes, DIR, SIGNATURE_SCHEMA));
+        assertThrows(
+                IllegalStateException.class, () -> TssMessageDeserializers.defaultDeserializer(SIGNATURE_SCHEMA, DIR)
+                        .deserialize(bytes));
     }
 
     @Test
     void testDifferentSignatureSchema() {
-        final var bytes = tssMessage.toBytes();
+        final var bytes =
+                TssMessageSerializers.defaultSerializer(SIGNATURE_SCHEMA).serialize(tssMessage);
 
         assertThrows(
                 IllegalStateException.class,
@@ -74,51 +80,73 @@ class Groth21MessageTest {
 
     @Test
     void testInvalidSignatureSchema() {
-        final var bytes = tssMessage.toBytes();
+        final var bytes =
+                TssMessageSerializers.defaultSerializer(SIGNATURE_SCHEMA).serialize(tssMessage);
         // Set an invalid signature schema byte
         bytes[Integer.BYTES] = (byte) 0xFF;
 
-        assertThrows(IllegalStateException.class, () -> Groth21Message.fromBytes(bytes, DIR, SIGNATURE_SCHEMA));
+        assertThrows(
+                IllegalStateException.class, () -> TssMessageDeserializers.defaultDeserializer(SIGNATURE_SCHEMA, DIR)
+                        .deserialize(bytes));
     }
 
     @Test
     void testCorruptedMessage() {
-        final var bytes = tssMessage.toBytes();
+        final var bytes =
+                TssMessageSerializers.defaultSerializer(SIGNATURE_SCHEMA).serialize(tssMessage);
         var headerEnd = 4 + 1 + 4;
         Arrays.fill(bytes, headerEnd, bytes.length, (byte) -1);
-        assertThrows(IllegalStateException.class, () -> Groth21Message.fromBytes(bytes, DIR, SIGNATURE_SCHEMA));
+        assertThrows(
+                IllegalStateException.class, () -> TssMessageDeserializers.defaultDeserializer(SIGNATURE_SCHEMA, DIR)
+                        .deserialize(bytes));
     }
 
     @Test
     void testInvalidRandomness() {
-        final var bytes = tssMessage.toBytes();
+        final var bytes =
+                TssMessageSerializers.defaultSerializer(SIGNATURE_SCHEMA).serialize(tssMessage);
 
         // Set an invalid List size
         var headerEnd = 4 + 1 + 4;
         var value = SIGNATURE_SCHEMA.getPublicKeyGroup().elementSize()
                 * SIGNATURE_SCHEMA.getPairingFriendlyCurve().field().elementSize();
         Arrays.fill(bytes, headerEnd, value, Byte.MAX_VALUE);
-        assertThrows(IllegalStateException.class, () -> Groth21Message.fromBytes(bytes, DIR, SIGNATURE_SCHEMA));
+        assertThrows(
+                IllegalStateException.class, () -> TssMessageDeserializers.defaultDeserializer(SIGNATURE_SCHEMA, DIR)
+                        .deserialize(bytes));
     }
 
     @Test
     void testInvalidShorterMessageLength(Random rand) {
-        byte[] bytes = new byte[rand.nextInt(0, tssMessage.toBytes().length)];
+        byte[] bytes = new byte
+                [rand.nextInt(
+                        0,
+                        TssMessageSerializers.defaultSerializer(SIGNATURE_SCHEMA)
+                                .serialize(tssMessage)
+                                .length)];
         rand.nextBytes(bytes);
-        assertThrows(IllegalStateException.class, () -> Groth21Message.fromBytes(bytes, DIR, SIGNATURE_SCHEMA));
+        assertThrows(
+                IllegalStateException.class, () -> TssMessageDeserializers.defaultDeserializer(SIGNATURE_SCHEMA, DIR)
+                        .deserialize(bytes));
     }
 
     @Test
     void testInvalidLargerMessageLength(Random rand) {
-        final var validMessageBytes = tssMessage.toBytes();
-        final var bytes = new byte[validMessageBytes.length + rand.nextInt(1, validMessageBytes.length)];
-        System.arraycopy(validMessageBytes, 0, bytes, 0, validMessageBytes.length);
-        assertThrows(IllegalStateException.class, () -> Groth21Message.fromBytes(bytes, DIR, SIGNATURE_SCHEMA));
+        final var messageBytes =
+                TssMessageSerializers.defaultSerializer(SIGNATURE_SCHEMA).serialize(tssMessage);
+        final var bytes = new byte[messageBytes.length + rand.nextInt(1, messageBytes.length)];
+        System.arraycopy(messageBytes, 0, bytes, 0, messageBytes.length);
+        assertThrows(
+                IllegalStateException.class, () -> TssMessageDeserializers.defaultDeserializer(SIGNATURE_SCHEMA, DIR)
+                        .deserialize(bytes));
     }
 
     @Test
     void fromToBytes() {
-        final Groth21Message actual = Groth21Message.fromBytes(tssMessage.toBytes(), DIR, SIGNATURE_SCHEMA);
+        final var messageBytes =
+                TssMessageSerializers.defaultSerializer(SIGNATURE_SCHEMA).serialize(tssMessage);
+        final Groth21Message actual = TssMessageDeserializers.<Groth21Message>defaultDeserializer(SIGNATURE_SCHEMA, DIR)
+                .deserialize(messageBytes);
         assertNotNull(actual);
         assertEquals(0, actual.generatingShare());
         assertEquals(3, actual.cipherTable().shareCiphertexts().length);
@@ -128,13 +156,29 @@ class Groth21MessageTest {
 
     @Test
     void testToToBytes() {
-        byte[] m1 = tssMessage.toBytes();
-        var m2 = Groth21Message.fromBytes(m1, DIR, SIGNATURE_SCHEMA);
-        var m3 = m2.toBytes();
+        final var m1 = TssMessageSerializers.defaultSerializer(SIGNATURE_SCHEMA).serialize(tssMessage);
+        final var m2 = TssMessageDeserializers.<Groth21Message>defaultDeserializer(SIGNATURE_SCHEMA, DIR)
+                .deserialize(m1);
+        var m3 = TssMessageSerializers.defaultSerializer(SIGNATURE_SCHEMA).serialize(m2);
         assertArrayEquals(m1, m3);
-        final var actual = Groth21Message.fromBytes(m3, DIR, SIGNATURE_SCHEMA);
+        final var actual = TssMessageDeserializers.<Groth21Message>defaultDeserializer(SIGNATURE_SCHEMA, DIR)
+                .deserialize(m3);
         assertNotNull(actual);
-        assertNotSame(actual, tssMessage);
+        assertNotSame(tssMessage, actual);
+        assertEquals(0, actual.generatingShare());
+        assertEquals(3, actual.cipherTable().shareCiphertexts().length);
+        final NizkStatement statement = validStatement();
+        assertTrue(actual.proof().verify(SIGNATURE_SCHEMA, statement));
+    }
+
+    @Test
+    void fromToBytesCompressed() {
+        final var messageBytes =
+                TssMessageSerializers.compressedSerializer(SIGNATURE_SCHEMA).serialize(tssMessage);
+        final Groth21Message actual = TssMessageDeserializers.<Groth21Message>compressedDeserializer(
+                        SIGNATURE_SCHEMA, DIR)
+                .deserialize(messageBytes);
+        assertNotNull(actual);
         assertEquals(0, actual.generatingShare());
         assertEquals(3, actual.cipherTable().shareCiphertexts().length);
         final NizkStatement statement = validStatement();
