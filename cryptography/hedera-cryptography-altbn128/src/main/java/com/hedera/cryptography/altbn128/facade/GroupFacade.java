@@ -72,24 +72,25 @@ public final class GroupFacade implements ElementFacade {
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsFromSeed(group, seed, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "groupElementsFromSeed in" + this.group);
+            throw new AltBn128Exception(result, "groupElementsFromSeed in " + this.group);
         }
         return output;
     }
 
     /**
      * Attempts to create a point from an x coordinate
-     * @param xCoordinate the x coordinate array
-     * @return the byte array representation of the point or null if the point is not in the curve.
+     * @param hash the hashed value to convert to a group element representation
+     * @return the byte array representation of the point or null if the hash cannot be represented as a point in the curve.
      * @throws AltBn128Exception in case of error
      */
-    public @Nullable byte[] fromXCoordinate(@NonNull final byte[] xCoordinate) {
+    @Nullable
+    public byte[] hashToGroup(@NonNull final byte[] hash) {
         final byte[] output = new byte[size];
-        final int result = adapter.groupElementsFromXCoordinate(group, xCoordinate, output);
+        final int result = adapter.groupElementsHashToGroup(group, hash, output);
         return switch (result) {
             case GroupElementsLibraryAdapter.SUCCESS -> output;
             case GroupElementsLibraryAdapter.NOT_IN_CURVE -> null;
-            default -> throw new AltBn128Exception(result, "fromXCoordinate in" + this.group);
+            default -> throw new AltBn128Exception(result, "hashToGroup in " + this.group);
         };
     }
 
@@ -104,7 +105,7 @@ public final class GroupFacade implements ElementFacade {
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsZero(group, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "groupElementsZero in" + this.group);
+            throw new AltBn128Exception(result, "groupElementsZero in " + this.group);
         }
         return output;
     }
@@ -119,7 +120,7 @@ public final class GroupFacade implements ElementFacade {
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsGenerator(group, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "groupElementsGenerator in" + this.group);
+            throw new AltBn128Exception(result, "groupElementsGenerator in " + this.group);
         }
         return output;
     }
@@ -138,9 +139,15 @@ public final class GroupFacade implements ElementFacade {
         }
         final int result = adapter.groupElementsEquals(group, point1, point2);
         if (result < GroupElementsLibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "groupElementsEquals in" + this.group);
+            throw new AltBn128Exception(result, "groupElementsEquals in " + this.group);
         }
         return result == 1;
+    }
+
+    @NonNull
+    @Override
+    public byte[] fromBytes(@NonNull final byte[] representation) {
+        return fromBytes(representation, false, true, false);
     }
 
     /**
@@ -157,7 +164,7 @@ public final class GroupFacade implements ElementFacade {
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsAdd(group, point1, point2, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "groupElementsAdd in" + this.group);
+            throw new AltBn128Exception(result, "groupElementsAdd in " + this.group);
         }
         return output;
     }
@@ -176,7 +183,7 @@ public final class GroupFacade implements ElementFacade {
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsScalarMul(group, point, scalar, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "groupElementsScalarMul in" + this.group);
+            throw new AltBn128Exception(result, "groupElementsScalarMul in " + this.group);
         }
         return output;
     }
@@ -193,7 +200,7 @@ public final class GroupFacade implements ElementFacade {
         final byte[] output = new byte[size];
         final int result = adapter.groupElementsLongMul(group, point, scalar, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "groupElementsScalarMul in" + this.group);
+            throw new AltBn128Exception(result, "groupElementsScalarMul in " + this.group);
         }
         return output;
     }
@@ -202,26 +209,27 @@ public final class GroupFacade implements ElementFacade {
      * If the byte array is a valid representation of a point, returns a copy of the representation or fails otherwise.
      *
      * @param bytes an array representing a point to validate
+     * @param validate
+     * @param isCompressed
      * @return a copy of bytes if the representation is valid
-     * @throws NullPointerException if the bytes is null
+     * @throws NullPointerException     if the bytes is null
      * @throws IllegalArgumentException if the bytes is of invalid size or the point does not belong to the curve
-     * @throws AltBn128Exception in case of error.
+     * @throws AltBn128Exception        in case of error.
      */
-    @Override
     @NonNull
-    public byte[] fromBytes(@NonNull final byte[] bytes) {
+    public byte[] fromBytes(
+            @NonNull final byte[] bytes, final boolean isCompressed, final boolean validate, final boolean compress) {
+
         validateSize(Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
 
-        final int result = adapter.groupElementsBytes(group, bytes);
+        final byte[] representation = new byte[bytes.length];
+        final int result = adapter.groupElementsBytes(group, isCompressed, validate, compress, bytes, representation);
         if (result == GroupElementsLibraryAdapter.NOT_IN_CURVE) {
             throw new IllegalArgumentException("The point is not in curve");
         } else if (result != GroupElementsLibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "groupElementsBytes in" + this.group);
+            throw new AltBn128Exception(result, "groupElementsBytes in " + this.group);
         }
-
-        final byte[] ret = new byte[bytes.length]; // TODO get this representation from arkworks
-        System.arraycopy(bytes, 0, ret, 0, bytes.length);
-        return ret;
+        return representation;
     }
 
     /**
@@ -240,7 +248,7 @@ public final class GroupFacade implements ElementFacade {
         final byte[] output = new byte[size];
         int result = adapter.groupElementsBatchAdd(group, points, output);
         if (result != GroupElementsLibraryAdapter.SUCCESS) {
-            throw new AltBn128Exception(result, "groupElementsBatchAdd in" + this.group);
+            throw new AltBn128Exception(result, "groupElementsBatchAdd in " + this.group);
         }
         return output;
     }
@@ -311,4 +319,6 @@ public final class GroupFacade implements ElementFacade {
         }
         return array;
     }
+
+    public enum ToBytesModes {}
 }

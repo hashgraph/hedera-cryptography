@@ -205,7 +205,7 @@ public final class ArkBn254Adapter
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE}
      * if the point is not in the curve, or a less than zero error code if there was an error
      */
-    public native int groupElementsFromXCoordinate(final int group, final byte[] input, final byte[] output);
+    public native int groupElementsHashToGroup(final int group, final byte[] input, final byte[] output);
 
     /**
      * Returns the point at infinity
@@ -267,12 +267,22 @@ public final class ArkBn254Adapter
     /**
      * Validates if a byte array is a valid representation of a point in the curve
      *
-     * @param group on which of the groups of the curve to perform the operation
-     * @param point a byte array that will be used as the seed to create the
-     *              point
-     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE} if the point is invalid or a less than zero error code if there was an error
+     * @param group    on which of the groups of the curve to perform the operation
+     * @param isCompressed if the representation is compressed format
+     * @param validate if the point needs to be validated
+     * @param compress if the compression needs to be returned in compressed format
+     * @param input  a byte array that represents the point
+     * @param output the byte array that will be filled with the result of the operation
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE}
+     * if the point is invalid or a less than zero error code if there was an error
      */
-    public native int groupElementsBytes(final int group, final byte[] point);
+    public native int groupElementsBytes(
+            final int group,
+            final boolean isCompressed,
+            final boolean validate,
+            final boolean compress,
+            final byte[] input,
+            final byte[] output);
 
     /**
      * Returns the scalar multiplication between code {@code point} and {@code scalar}.

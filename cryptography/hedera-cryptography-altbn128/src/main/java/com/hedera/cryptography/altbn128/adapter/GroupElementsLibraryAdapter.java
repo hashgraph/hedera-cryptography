@@ -43,17 +43,17 @@ public interface GroupElementsLibraryAdapter extends RandomElementsAdapter {
     int groupElementsFromSeed(final int group, final byte[] input, final byte[] output);
 
     /**
-     * Attempts to obtain a GroupElement byte internal representation from a given x coordinate
+     * Attempts to obtain a GroupElement byte internal representation from a given hashed value
      *
      * @param group  on which of the groups of the curve to perform the operation
      * @param input  a 256-bit byte array of that represents an x coordinate
      * @param output a {@link GroupElementsLibraryAdapter#groupElementsSize(int)} array to hold the internal
-     *               representation of the point, if the given x coordinate is not in the curve, the output will be
+     *               representation of the point, if the given hash can not be represented as a point in the curve, the output will be
      *               unchanged
      * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE}
      * if the point is not in the curve, or a less than zero error code if there was an error
      */
-    int groupElementsFromXCoordinate(final int group, final byte[] input, final byte[] output);
+    int groupElementsHashToGroup(final int group, final byte[] input, final byte[] output);
 
     /**
      * Returns the GroupElement byte internal representation of the point at infinity
@@ -123,14 +123,23 @@ public interface GroupElementsLibraryAdapter extends RandomElementsAdapter {
     int groupElementsLongMul(final int group, final byte[] point, final long scalar, final byte[] output);
 
     /**
-     * Validates if a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} is a valid representation of a point in the curve
-     *
-     * @param group on which of the groups of the curve to perform the operation
-     * @param point a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that will be used as the seed to create the
-     *              point
-     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE} if the point is invalid or a less than zero error code if there was an error
+     * @param group    on which of the groups of the curve to perform the operation
+     * @param isCompressed
+     * @param validate
+     * @param compress
+     * @param input    a byte array of {@link GroupElementsLibraryAdapter#groupElementsSize(int)} that will be used as
+     *                 the seed to create the point
+     * @param output
+     * @return {@link GroupElementsLibraryAdapter#SUCCESS} for success, {@link GroupElementsLibraryAdapter#NOT_IN_CURVE}
+     * if the point is invalid or a less than zero error code if there was an error
      */
-    int groupElementsBytes(final int group, final byte[] point);
+    int groupElementsBytes(
+            final int group,
+            final boolean isCompressed,
+            final boolean validate,
+            final boolean compress,
+            final byte[] input,
+            final byte[] output);
 
     /**
      * Returns the result of the multiplication of each point in the  {@code points} list with each scalar in the {@code scalars} list.

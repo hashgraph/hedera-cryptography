@@ -29,6 +29,7 @@ import com.hedera.cryptography.utils.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 import java.security.Security;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -111,6 +112,48 @@ public class AltBn128Group implements Group {
     }
 
     /**
+     * Creates a group element from its serialized encoding, validating if the point is in the curve.
+     *
+     * @throws NullPointerException if the bytes is null
+     * @throws IllegalArgumentException if the bytes is of invalid size or the point does not belong to the curve
+     * @throws AltBn128Exception in case of error.
+     * @deprecated Implementation specific
+     */
+    @NonNull
+    @Override
+    @Deprecated
+    public GroupElement fromBytes(@NonNull final byte[] bytes) {
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
+        final byte[] bytes = ArkworksSerialization.coordinatesToBytes(x, y);
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public GroupElement fromXCoordinate(@NonNull final List<BigInteger> x, final boolean isYNegative) {
+        byte[] bytes = ArkworksSerialization.coordinatesToBytes(x);
+        final var bs = BitSet.valueOf(bytes);
+        if (isYNegative) {
+            bs.set(0, true);
+            bytes = bs.toByteArray();
+        } else if (bs.isEmpty()) {
+            return zero();
+        }
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes, true, true, false));
+    }
+
+    /**
      * {@inheritDoc}
      */
     @NonNull
@@ -123,7 +166,7 @@ public class AltBn128Group implements Group {
         for (int i = 0; i < HASH_RETRIES; i++) {
             calculator.append(candidate);
             candidate = calculator.hash();
-            final byte[] element = facade.fromXCoordinate(candidate);
+            final byte[] element = facade.hashToGroup(candidate);
             if (element != null) {
                 return new AltBn128GroupElement(this, element);
             }
@@ -204,29 +247,6 @@ public class AltBn128Group implements Group {
     @Override
     public int hashCode() {
         return Objects.hashCode(group);
-    }
-
-    /**
-     * Creates a group element from its serialized encoding, validating if the point is in the curve.
-     *
-     * @throws NullPointerException if the bytes is null
-     * @throws IllegalArgumentException if the bytes is of invalid size or the point does not belong to the curve
-     * @throws AltBn128Exception in case of error.
-     */
-    @NonNull
-    @Override
-    public GroupElement fromBytes(@NonNull final byte[] bytes) {
-        return new AltBn128GroupElement(this, facade.fromBytes(bytes));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
-        final byte[] bytes = ArkworksSerialization.coordinatesToBytes(x, y);
-        return fromBytes(bytes);
     }
 
     /**

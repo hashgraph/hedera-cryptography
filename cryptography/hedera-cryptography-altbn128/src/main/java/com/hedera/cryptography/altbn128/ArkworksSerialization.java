@@ -226,7 +226,7 @@ public enum ArkworksSerialization {
      *
      * @param x the X coordinate
      * @param y the Y coordinate
-     * @return the serialized bytes
+     * @return the serialized bytes in arkworks format
      */
     @NonNull
     public static byte[] coordinatesToBytes(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
@@ -242,6 +242,25 @@ public enum ArkworksSerialization {
             copyAndReverse(biArray, 0, bytes, i * NUMBER_SIZE_BYTES, biArray.length);
         }
 
+        return bytes;
+    }
+
+    /**
+     * Creates a byte array from a list of BigInteger values
+     * @param x the X coordinate
+     * @return the serialized bytes in arkworks format
+     */
+    public static byte[] coordinatesToBytes(@NonNull final List<BigInteger> x) {
+        final int numCount = Objects.requireNonNull(x, "x must not be null").size() / NUMBER_SIZE_BYTES;
+        final byte[] bytes = new byte[NUMBER_SIZE_BYTES * numCount];
+        for (int i = 0; i < numCount; i++) {
+            final BigInteger bi = x.get(i);
+            final byte[] biArray = bi.toByteArray();
+            if (biArray.length > NUMBER_SIZE_BYTES) {
+                throw new IllegalArgumentException("BigInteger is too large to fit in a 254-bit number");
+            }
+            copyAndReverse(biArray, 0, bytes, i * NUMBER_SIZE_BYTES, biArray.length);
+        }
         return bytes;
     }
 }
