@@ -219,10 +219,12 @@ public final class GroupFacade implements ElementFacade {
     @NonNull
     public byte[] fromBytes(
             @NonNull final byte[] bytes, final boolean isCompressed, final boolean validate, final boolean compress) {
+        final int expectedSize = isCompressed ? this.size / 2 : this.size;
+        validateSize(
+                Objects.requireNonNull(bytes, "bytes must not be null"), expectedSize, "Invalid representation size");
 
-        validateSize(Objects.requireNonNull(bytes, "bytes must not be null"), this.size, "Invalid representation size");
-
-        final byte[] representation = new byte[bytes.length];
+        final int returnSize = compress ? this.size / 2 : this.size;
+        final byte[] representation = new byte[returnSize];
         final int result = adapter.groupElementsBytes(group, isCompressed, validate, compress, bytes, representation);
         if (result == GroupElementsLibraryAdapter.NOT_IN_CURVE) {
             throw new IllegalArgumentException("The point is not in curve");

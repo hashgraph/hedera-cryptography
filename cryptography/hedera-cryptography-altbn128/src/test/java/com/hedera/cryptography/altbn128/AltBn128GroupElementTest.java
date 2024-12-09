@@ -18,6 +18,7 @@ package com.hedera.cryptography.altbn128;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -143,6 +144,79 @@ class AltBn128GroupElementTest {
                                 "4082367875863433681332203403145435568316851327593401208105741076214120093531")));
     }
 
+    @Test
+    void g2FromCoordinatesTest() {
+        final var group = new AltBn128Group(AltBN128CurveGroup.GROUP2, new AltBn128Field());
+
+        var x = List.of(
+                new BigInteger("7031240240644549789964684346421651657413149655254591106755800187295583390686"),
+                new BigInteger("11925796103144459273863446402654145580591864121894287082155917744014974668227"));
+        var negativeY = List.of(
+                new BigInteger("14636893922571631340936704898436226741317401229693847486683496866081642675008"),
+                new BigInteger("14331914237324588013612977362562070301993194762051881872592154596781761039271"));
+        var positiveY = List.of(
+                new BigInteger("7251348949267643881309700846821048347378909927603976176005541028563583533575"),
+                new BigInteger("7556328634514687208633428382695204786703116395245941790096883297863465169312"));
+
+        var negative = group.fromXCoordinate(x, true);
+        var positive = group.fromXCoordinate(x, false);
+
+        assertTrue(negative.isYNegative());
+        assertFalse(positive.isYNegative());
+
+        assertEquals(negative.getYCoordinate(), negativeY);
+        assertEquals(positive.getYCoordinate(), positiveY);
+
+        assertEquals(negative, group.fromCoordinates(x, negativeY));
+        assertEquals(positive, group.fromCoordinates(x, positiveY));
+    }
+
+    @Test
+    void g1FromCoordinatesTest() {
+        final var group = new AltBn128Group(AltBN128CurveGroup.GROUP1, new AltBn128Field());
+
+        var x = List.of(
+                new BigInteger("17370179114844557828620377206794063292054094720673581175635719115816088574235"));
+        var negativeY = List.of(
+                new BigInteger("20990165166396755383220676224378276007672276198953266474736810932327658391856"));
+        var positiveY =
+                List.of(new BigInteger("898077705442519839025729520878999081024034958344557187952226962317567816727"));
+
+        var negative = group.fromXCoordinate(x, true);
+        var positive = group.fromXCoordinate(x, false);
+
+        assertTrue(negative.isYNegative());
+        assertFalse(positive.isYNegative());
+
+        assertEquals(negative.getYCoordinate(), negativeY);
+        assertEquals(positive.getYCoordinate(), positiveY);
+
+        assertEquals(negative, group.fromCoordinates(x, negativeY));
+        assertEquals(positive, group.fromCoordinates(x, positiveY));
+    }
+
+    @ParameterizedTest
+    @EnumSource(AltBN128CurveGroup.class)
+    @Disabled
+    void notATest(AltBN128CurveGroup gr, Random rng) {
+        final var group = new AltBn128Group(gr, new AltBn128Field());
+        while (true) {
+            GroupElement element = group.random(rng);
+            if (element.isYNegative()) {
+                System.out.printf(
+                        "isNegative %s: %s,%s%n",
+                        element.isYNegative(), element.getXCoordinate(), element.getYCoordinate());
+                final GroupElement element1 = group.fromXCoordinate(element.getXCoordinate(), false);
+                System.out.printf(
+                        "isNegative %s: %s,%s%n",
+                        element1.isYNegative(), element1.getXCoordinate(), element1.getYCoordinate());
+                break;
+            } else {
+                System.out.printf("positive: %s,%s%n", element.getXCoordinate(), element.getYCoordinate());
+            }
+        }
+    }
+
     @ParameterizedTest
     @EnumSource(AltBN128CurveGroup.class)
     void zeroIsZero(AltBN128CurveGroup g) {
@@ -152,14 +226,23 @@ class AltBn128GroupElementTest {
         assertEquals(group.zero(), group.fromBytes(group.zero().toBytes()));
     }
 
-    @ParameterizedTest
-    @EnumSource(AltBN128CurveGroup.class)
-    void pointNotInCurve(AltBN128CurveGroup g) {
+    @Test
+    void g1PointNotInCurve() {
         var field = new AltBn128Field();
-        var group = new AltBn128Group(g, field);
-        var nonZero = new byte[group.elementSize()];
-        Arrays.fill(nonZero, (byte) 0);
-        assertThrows(IllegalArgumentException.class, () -> group.fromBytes(nonZero));
+        var group = new AltBn128Group(AltBN128CurveGroup.GROUP1, field);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> group.fromCoordinates(List.of(BigInteger.ZERO), List.of(BigInteger.ZERO)));
+    }
+
+    @Test
+    void g2PointNotInCurve() {
+        var field = new AltBn128Field();
+        var group = new AltBn128Group(AltBN128CurveGroup.GROUP2, field);
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> group.fromCoordinates(
+                        List.of(BigInteger.ZERO, BigInteger.ZERO), List.of(BigInteger.ZERO, BigInteger.ZERO)));
     }
 
     @Test

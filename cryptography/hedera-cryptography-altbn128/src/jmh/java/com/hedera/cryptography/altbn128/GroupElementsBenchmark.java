@@ -129,7 +129,6 @@ public class GroupElementsBenchmark {
         return group.zero();
     }
 
-
     @State(Scope.Benchmark)
     public static class CoordinatesState {
         List<BigInteger> xs;

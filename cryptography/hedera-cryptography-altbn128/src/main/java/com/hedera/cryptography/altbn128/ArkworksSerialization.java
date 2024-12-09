@@ -222,39 +222,21 @@ public enum ArkworksSerialization {
     }
 
     /**
-     * Serialize the coordinates into a byte array
+     * Creates a byte array from a list of BigInteger values
      *
-     * @param x the X coordinate
-     * @param y the Y coordinate
+     * @param size the final size of the produced byte array
+     * @param coordinates all the coordinates elements
      * @return the serialized bytes in arkworks format
      */
     @NonNull
-    public static byte[] coordinatesToBytes(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
-        final int numCount = Objects.requireNonNull(x, "x must not be null").size()
-                + Objects.requireNonNull(y, "y must not be null").size();
-        final byte[] bytes = new byte[NUMBER_SIZE_BYTES * numCount];
-        for (int i = 0; i < numCount; i++) {
-            final BigInteger bi = i < x.size() ? x.get(i) : y.get(i - x.size());
-            final byte[] biArray = bi.toByteArray();
-            if (biArray.length > NUMBER_SIZE_BYTES) {
-                throw new IllegalArgumentException("BigInteger is too large to fit in a 254-bit number");
-            }
-            copyAndReverse(biArray, 0, bytes, i * NUMBER_SIZE_BYTES, biArray.length);
+    public static byte[] coordinatesToBytes(final int size, @NonNull final List<BigInteger> coordinates) {
+        final int numCount = size / NUMBER_SIZE_BYTES;
+        if (Objects.requireNonNull(coordinates, "coordinates must not be null").size() != numCount) {
+            throw new IllegalArgumentException("Invalid number of coordinates");
         }
-
-        return bytes;
-    }
-
-    /**
-     * Creates a byte array from a list of BigInteger values
-     * @param x the X coordinate
-     * @return the serialized bytes in arkworks format
-     */
-    public static byte[] coordinatesToBytes(@NonNull final List<BigInteger> x) {
-        final int numCount = Objects.requireNonNull(x, "x must not be null").size() / NUMBER_SIZE_BYTES;
-        final byte[] bytes = new byte[NUMBER_SIZE_BYTES * numCount];
+        final byte[] bytes = new byte[size];
         for (int i = 0; i < numCount; i++) {
-            final BigInteger bi = x.get(i);
+            final BigInteger bi = coordinates.get(i);
             final byte[] biArray = bi.toByteArray();
             if (biArray.length > NUMBER_SIZE_BYTES) {
                 throw new IllegalArgumentException("BigInteger is too large to fit in a 254-bit number");
