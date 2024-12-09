@@ -18,6 +18,7 @@ package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.facade.GroupFacade;
+import com.hedera.cryptography.altbn128.facade.GroupFacade.ToBytesFlags;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
@@ -29,7 +30,6 @@ import com.hedera.cryptography.utils.ValidationUtils;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.math.BigInteger;
 import java.security.Security;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -138,7 +138,7 @@ public class AltBn128Group implements Group {
                         Objects.requireNonNull(y, "y must not be null").stream())
                 .toList();
         final byte[] bytes = ArkworksSerialization.coordinatesToBytes(this.elementSize(), coordinates);
-        return new AltBn128GroupElement(this, facade.fromBytes(bytes));
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes, ToBytesFlags.DEFAULT));
     }
 
     /**
@@ -148,14 +148,10 @@ public class AltBn128Group implements Group {
     @Override
     public GroupElement fromXCoordinate(@NonNull final List<BigInteger> x, final boolean isYNegative) {
         byte[] bytes = ArkworksSerialization.coordinatesToBytes(this.elementSize() / 2, x);
-        final var bs = BitSet.valueOf(bytes);
         if (isYNegative) {
-            bs.set(8 * bytes.length - 1, true);
-            bytes = bs.toByteArray();
-        } else if (bs.isEmpty()) {
-            return zero();
+            ArkworksSerialization.setYNegativeFlag(bytes, true);
         }
-        return new AltBn128GroupElement(this, facade.fromBytes(bytes, true, true, false));
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes, ToBytesFlags.IS_COMPRESSED));
     }
 
     /**

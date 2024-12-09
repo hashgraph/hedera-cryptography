@@ -191,6 +191,22 @@ public enum ArkworksSerialization {
     }
 
     /**
+     * Sets or clears the Y coordinate negative flag in the Arkworks serialized bytes.
+     *
+     * @param bytes the Arkworks serialized bytes
+     * @param set   true to set the flag, false to clear it
+     */
+    public static void setYNegativeFlag(@NonNull final byte[] bytes, boolean set) {
+        if (set) {
+            // Set the flag using bitwise OR
+            bytes[bytes.length - 1] |= MASK_Y_COORDINATE;
+        } else {
+            // Clear the flag using bitwise AND with the negated mask
+            bytes[bytes.length - 1] &= ~MASK_Y_COORDINATE;
+        }
+    }
+
+    /**
      * Removes the flags from this serialized element
      *
      * @param bytes the Arkworks serialized bytes
