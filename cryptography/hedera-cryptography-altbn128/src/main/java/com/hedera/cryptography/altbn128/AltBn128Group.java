@@ -33,7 +33,6 @@ import java.security.Security;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
@@ -147,11 +146,9 @@ public class AltBn128Group implements Group {
     @NonNull
     @Override
     public GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
-        final var coordinates = Stream.concat(
-                        Objects.requireNonNull(x, "x must not be null").stream(),
-                        Objects.requireNonNull(y, "y must not be null").stream())
-                .toList();
-        final byte[] bytes = ArkworksSerialization.coordinatesToBytes(coordinates);
+        Objects.requireNonNull(x, "x must not be null");
+        Objects.requireNonNull(y, "y must not be null");
+        final byte[] bytes = ArkworksSerialization.coordinatesToBytes(x, y);
         return new AltBn128GroupElement(this, facade.fromBytes(bytes, ToBytesModes.DEFAULT));
     }
 
@@ -161,7 +158,7 @@ public class AltBn128Group implements Group {
     @NonNull
     @Override
     public GroupElement fromXCoordinate(@NonNull final List<BigInteger> x, final boolean isYNegative) {
-        byte[] bytes = ArkworksSerialization.coordinatesToBytes(x);
+        byte[] bytes = ArkworksSerialization.coordinatesToBytes(x, null);
         ArkworksSerialization.setYNegativeFlag(bytes, isYNegative);
         return new AltBn128GroupElement(this, facade.fromBytes(bytes, new ToBytesModes(true, false, false)));
     }

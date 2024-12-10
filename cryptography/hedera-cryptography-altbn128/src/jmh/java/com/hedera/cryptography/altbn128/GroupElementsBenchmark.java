@@ -158,7 +158,7 @@ public class GroupElementsBenchmark {
                         new BigInteger(
                                 "11631839690097995216017572651900167465857396346217730511548857041925508482915"));
             }
-            xsBytes = ArkworksSerialization.coordinatesToBytes(xs);
+            xsBytes = ArkworksSerialization.coordinatesToBytes(xs, null);
         }
     }
 }
