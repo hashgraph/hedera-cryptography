@@ -137,7 +137,6 @@ public class AltBn128Group implements Group {
      * @implNote the use of flag: {@link ToBytesModes#compress()}  would render the internal representation incompatible with arithmetics operations
      *  until we add support for internal group element compression
      */
-    @Deprecated
     public GroupElement fromBytes(@NonNull final byte[] bytes, @NonNull final ToBytesModes flags) {
         return new AltBn128GroupElement(this, facade.fromBytes(bytes, flags));
     }
@@ -163,9 +162,7 @@ public class AltBn128Group implements Group {
     @Override
     public GroupElement fromXCoordinate(@NonNull final List<BigInteger> x, final boolean isYNegative) {
         byte[] bytes = ArkworksSerialization.coordinatesToBytes(x);
-        if (isYNegative) {
-            ArkworksSerialization.setYNegativeFlag(bytes, true);
-        }
+        ArkworksSerialization.setYNegativeFlag(bytes, isYNegative);
         return new AltBn128GroupElement(this, facade.fromBytes(bytes, new ToBytesModes(true, false, false)));
     }
 
