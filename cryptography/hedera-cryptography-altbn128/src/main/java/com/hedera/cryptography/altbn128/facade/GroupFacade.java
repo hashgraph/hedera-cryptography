@@ -147,7 +147,7 @@ public final class GroupFacade implements ElementFacade {
     @NonNull
     @Override
     public byte[] fromBytes(@NonNull final byte[] representation) {
-        return fromBytes(representation, ToBytesFlags.DEFAULT);
+        return fromBytes(representation, ToBytesModes.DEFAULT);
     }
 
     /**
@@ -216,19 +216,16 @@ public final class GroupFacade implements ElementFacade {
      * @throws AltBn128Exception in case of error.
      */
     @NonNull
-    public byte[] fromBytes(@NonNull final byte[] bytes, @Nullable final ToBytesFlags... flags) {
-        final int flagValues = ToBytesFlags.combine(flags);
-        final boolean isCompressed = ToBytesFlags.containsFlag(flagValues, ToBytesFlags.IS_COMPRESSED);
-        final int expectedSize = isCompressed ? this.size / 2 : this.size;
+    public byte[] fromBytes(@NonNull final byte[] bytes, @Nullable final ToBytesModes flags) {
+        Objects.requireNonNull(flags, "bytes cannot be null");
+        final int expectedSize = flags.isCompressed() ? this.size / 2 : this.size;
         validateSize(
                 Objects.requireNonNull(bytes, "bytes must not be null"), expectedSize, "Invalid representation size");
 
-        final boolean compress = ToBytesFlags.containsFlag(flagValues, ToBytesFlags.COMPRESS);
-        final int returnSize = compress ? this.size / 2 : this.size;
+        final int returnSize = flags.compress() ? this.size / 2 : this.size;
         final byte[] representation = new byte[returnSize];
-        final boolean notValidate = ToBytesFlags.containsFlag(flagValues, ToBytesFlags.SKIP_VALIDATE);
-        final int result =
-                adapter.groupElementsBytes(group, isCompressed, !notValidate, compress, bytes, representation);
+        final int result = adapter.groupElementsBytes(
+                group, flags.isCompressed(), !flags.skipValidation(), flags.compress(), bytes, representation);
         if (result == GroupElementsLibraryAdapter.NOT_IN_CURVE) {
             throw new IllegalArgumentException("The point is not in curve");
         } else if (result != GroupElementsLibraryAdapter.SUCCESS) {
@@ -326,57 +323,12 @@ public final class GroupFacade implements ElementFacade {
     }
 
     /**
-     * The different modes to get an element from a byte[]
+     * The different modes to get a groupElement from a byte[]
+     * @param isCompressed indicates that the input array to deserialize should be understood as a compressed representation.
+     * @param compress  indicates that the deserialized output array should be returned in the compressed representation.
+     * @param skipValidation indicates that when deserializing the input, it should not perform the correct point and subgroup validation.
      */
-    public enum ToBytesFlags {
-        /**
-         * Default arkworks deserialization
-         * is-compressed:not compress:not skip-validate:not.
-         */
-        DEFAULT(0),
-        /**
-         * indicates that the input array to deserialize should be understood as a compressed representation.
-         * is-compressed:yes
-         */
-        IS_COMPRESSED(1), // 0001
-        /**
-         * indicates that the deserialized output array should be returned in the compressed representation.
-         * compress:yes
-         */
-        COMPRESS(1 << 1), // 0010
-        /**
-         * indicates that when deserializing the input, it should not perform the correct point and subgroup validation.
-         * skip-validate:yes
-         */
-        SKIP_VALIDATE(1 << 2); // 0100
-
-        private final int value;
-
-        ToBytesFlags(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-
-        /**
-         * Combines multiple flags into a single int.
-         */
-        static int combine(ToBytesFlags... flags) {
-            int combined = 0;
-            if (flags != null) {
-                for (ToBytesFlags flag : flags) {
-                    combined |= flag.getValue();
-                }
-            }
-            return combined;
-        }
-        /**
-         * Checks if a combined value contains this flag.
-         */
-        static boolean containsFlag(int combinedValue, ToBytesFlags flag) {
-            return (combinedValue & flag.getValue()) == flag.getValue();
-        }
+    public record ToBytesModes(boolean isCompressed, boolean compress, boolean skipValidation) {
+        public static final ToBytesModes DEFAULT = new ToBytesModes(false, false, false);
     }
 }

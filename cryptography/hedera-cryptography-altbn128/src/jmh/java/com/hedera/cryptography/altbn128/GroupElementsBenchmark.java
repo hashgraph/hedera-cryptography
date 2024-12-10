@@ -16,7 +16,7 @@
 
 package com.hedera.cryptography.altbn128;
 
-import com.hedera.cryptography.altbn128.facade.GroupFacade.ToBytesFlags;
+import com.hedera.cryptography.altbn128.facade.GroupFacade.ToBytesModes;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.utils.serialization.Deserializer;
@@ -102,12 +102,17 @@ public class GroupElementsBenchmark {
 
     @Benchmark
     public GroupElement fromBytesNonValidated() {
-        return group.fromBytes(point2Array, ToBytesFlags.SKIP_VALIDATE);
+        return group.fromBytes(point2Array, new ToBytesModes(false, false, true));
     }
 
     @Benchmark
     public GroupElement fromBytesCompress() {
-        return group.fromBytes(point2Array, ToBytesFlags.COMPRESS);
+        return group.fromBytes(point2Array, new ToBytesModes(false, true, false));
+    }
+
+    @Benchmark
+    public GroupElement fromBytesUncompress(CoordinatesState state) {
+        return group.fromBytes(state.xsBytes, new ToBytesModes(true, false, false));
     }
 
     @Benchmark
@@ -133,6 +138,7 @@ public class GroupElementsBenchmark {
     @State(Scope.Benchmark)
     public static class CoordinatesState {
         List<BigInteger> xs;
+        byte[] xsBytes;
         List<BigInteger> ys;
 
         @Setup
@@ -142,6 +148,7 @@ public class GroupElementsBenchmark {
                         new BigInteger("4503322228978077916651710446042370109107355802721800704639343137502100212473"));
                 ys = List.of(
                         new BigInteger("6132642251294427119375180147349983541569387941788025780665104001559216576968"));
+
             } else {
                 xs = List.of(
                         new BigInteger("20954117799226682825035885491234530437475518021362091509513177301640194298072"),
@@ -151,6 +158,7 @@ public class GroupElementsBenchmark {
                         new BigInteger(
                                 "11631839690097995216017572651900167465857396346217730511548857041925508482915"));
             }
+            xsBytes = ArkworksSerialization.coordinatesToBytes(xs);
         }
     }
 }

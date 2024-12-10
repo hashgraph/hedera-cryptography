@@ -18,7 +18,7 @@ package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.facade.GroupFacade;
-import com.hedera.cryptography.altbn128.facade.GroupFacade.ToBytesFlags;
+import com.hedera.cryptography.altbn128.facade.GroupFacade.ToBytesModes;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
@@ -131,14 +131,15 @@ public class AltBn128Group implements Group {
      * Internal method to construct a {@link GroupElement} from a byte[] representation using different modes.
      *
      * @param bytes the intended representation
-     * @param flags the modes use: {@link ToBytesFlags#DEFAULT} for standard behaviour
+     * @param flags the modes use: {@link ToBytesModes#DEFAULT} for standard behaviour
      * @return the groupElement object.
      * @apiNote This is an internal method. No external user of the pairings library will be able to access this as it is not part of the api.
-     * @implNote some flags {@link ToBytesFlags#COMPRESS} would render the internal representation incompatible with arithmetics operations
+     * @implNote the use of flag: {@link ToBytesModes#compress()}  would render the internal representation incompatible with arithmetics operations
+     *  until we add support for internal group element compression
      */
     @Deprecated
-    public GroupElement fromBytes(@NonNull final byte[] bytes, @NonNull final ToBytesFlags... flags) {
-        return new AltBn128GroupElement(this, facade.fromBytes(bytes, Objects.requireNonNull(flags)));
+    public GroupElement fromBytes(@NonNull final byte[] bytes, @NonNull final ToBytesModes flags) {
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes, flags));
     }
 
     /**
@@ -151,8 +152,8 @@ public class AltBn128Group implements Group {
                         Objects.requireNonNull(x, "x must not be null").stream(),
                         Objects.requireNonNull(y, "y must not be null").stream())
                 .toList();
-        final byte[] bytes = ArkworksSerialization.coordinatesToBytes(this.elementSize(), coordinates);
-        return new AltBn128GroupElement(this, facade.fromBytes(bytes, ToBytesFlags.DEFAULT));
+        final byte[] bytes = ArkworksSerialization.coordinatesToBytes(coordinates);
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes, ToBytesModes.DEFAULT));
     }
 
     /**
@@ -161,11 +162,11 @@ public class AltBn128Group implements Group {
     @NonNull
     @Override
     public GroupElement fromXCoordinate(@NonNull final List<BigInteger> x, final boolean isYNegative) {
-        byte[] bytes = ArkworksSerialization.coordinatesToBytes(this.elementSize() / 2, x);
+        byte[] bytes = ArkworksSerialization.coordinatesToBytes(x);
         if (isYNegative) {
             ArkworksSerialization.setYNegativeFlag(bytes, true);
         }
-        return new AltBn128GroupElement(this, facade.fromBytes(bytes, ToBytesFlags.IS_COMPRESSED));
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes, new ToBytesModes(true, false, false)));
     }
 
     /**

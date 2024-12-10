@@ -240,18 +240,14 @@ public enum ArkworksSerialization {
     /**
      * Creates a byte array from a list of BigInteger values
      *
-     * @param size the final size of the produced byte array
      * @param coordinates all the coordinates elements
      * @return the serialized bytes in arkworks format
      */
     @NonNull
-    public static byte[] coordinatesToBytes(final int size, @NonNull final List<BigInteger> coordinates) {
-        final int numCount = size / NUMBER_SIZE_BYTES;
-        if (Objects.requireNonNull(coordinates, "coordinates must not be null").size() != numCount) {
-            throw new IllegalArgumentException("Invalid number of coordinates");
-        }
-        final byte[] bytes = new byte[size];
-        for (int i = 0; i < numCount; i++) {
+    public static byte[] coordinatesToBytes(@NonNull final List<BigInteger> coordinates) {
+        Objects.requireNonNull(coordinates, "coordinates must not be null");
+        final byte[] bytes = new byte[NUMBER_SIZE_BYTES * coordinates.size()];
+        for (int i = 0; i < coordinates.size(); i++) {
             final BigInteger bi = coordinates.get(i);
             final byte[] biArray = bi.toByteArray();
             if (biArray.length > NUMBER_SIZE_BYTES) {
