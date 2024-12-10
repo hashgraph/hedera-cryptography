@@ -65,7 +65,6 @@ public class GroupElementEqualityAndHashCodeBenchmark {
     public void init() {
         var seed = new Random().nextLong();
         var field = new AltBn128Field();
-        System.out.println("Random Seed: " + seed);
         var rng = new Random(seed);
         var group = new AltBn128Group(AltBN128CurveGroup.valueOf(value), field);
 
