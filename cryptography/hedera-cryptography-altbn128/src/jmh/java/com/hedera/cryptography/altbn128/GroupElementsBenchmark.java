@@ -84,23 +84,6 @@ public class GroupElementsBenchmark {
         point2Array = point2.toBytes();
         element = field.random(rng);
     }
-    // Benchmark                                       (value)  Mode  Cnt   Score    Error  Units
-    // GroupElementsBenchmark.compressedDeserialize     GROUP1  avgt    5   0.049 ±  0.001  ms/op
-    // GroupElementsBenchmark.compressedDeserialize     GROUP2  avgt    5   0.136 ±  0.002  ms/op
-    // GroupElementsBenchmark.compressedSerialize       GROUP1  avgt    5  ≈ 10⁻³           ms/op
-    // GroupElementsBenchmark.compressedSerialize       GROUP2  avgt    5  ≈ 10⁻³           ms/op
-    // GroupElementsBenchmark.createRandom              GROUP1  avgt    5   0.012 ±  0.001  ms/op
-    // GroupElementsBenchmark.createRandom              GROUP2  avgt    5   0.190 ±  0.009  ms/op
-    // GroupElementsBenchmark.deserialize               GROUP1  avgt    5   0.043 ±  0.001  ms/op
-    // GroupElementsBenchmark.deserialize               GROUP2  avgt    5   0.119 ±  0.005  ms/op
-    // GroupElementsBenchmark.deserializeNotValidated   GROUP1  avgt    5  ≈ 10⁻³           ms/op
-    // GroupElementsBenchmark.deserializeNotValidated   GROUP2  avgt    5  ≈ 10⁻³           ms/op
-    // GroupElementsBenchmark.fromXAndY                 GROUP1  avgt    5   0.044 ±  0.002  ms/op
-    // GroupElementsBenchmark.fromXAndY                 GROUP2  avgt    5   0.117 ±  0.003  ms/op
-    // GroupElementsBenchmark.serialize                 GROUP1  avgt    5  ≈ 10⁻⁶           ms/op
-    // GroupElementsBenchmark.serialize                 GROUP2  avgt    5  ≈ 10⁻⁵           ms/op
-    // GroupElementsBenchmark.zero                      GROUP1  avgt    5  ≈ 10⁻⁴           ms/op
-    // GroupElementsBenchmark.zero                      GROUP2  avgt    5  ≈ 10⁻⁴           ms/op
 
     @Benchmark
     public GroupElement createRandom() {
