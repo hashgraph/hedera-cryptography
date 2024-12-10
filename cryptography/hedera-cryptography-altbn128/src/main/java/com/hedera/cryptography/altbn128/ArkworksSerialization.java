@@ -248,8 +248,7 @@ public enum ArkworksSerialization {
     public static byte[] coordinatesToBytes(@NonNull final List<BigInteger> xs, @Nullable List<BigInteger> ys) {
         Objects.requireNonNull(xs, "xs must not be null");
         final int coordinateSize = xs.size();
-        final int numElements =
-                coordinateSize + Optional.ofNullable(ys).map(List::size).orElse(0);
+        final int numElements = coordinateSize + (ys != null ? ys.size() : 0);
         final byte[] bytes = new byte[NUMBER_SIZE_BYTES * numElements];
         for (int i = 0; i < numElements; i++) {
             final BigInteger bi = i < coordinateSize ? xs.get(i) : ys.get(i - coordinateSize);
