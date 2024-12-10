@@ -128,6 +128,20 @@ public class AltBn128Group implements Group {
     }
 
     /**
+     * Internal method to construct a {@link GroupElement} from a byte[] representation using different modes.
+     *
+     * @param bytes the intended representation
+     * @param flags the modes use: {@link ToBytesFlags#DEFAULT} for standard behaviour
+     * @return the groupElement object.
+     * @apiNote This is an internal method. No external user of the pairings library will be able to access this as it is not part of the api.
+     * @implNote some flags {@link ToBytesFlags#COMPRESS} would render the internal representation incompatible with arithmetics operations
+     */
+    @Deprecated
+    public GroupElement fromBytes(@NonNull final byte[] bytes, @NonNull final ToBytesFlags... flags) {
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes, Objects.requireNonNull(flags)));
+    }
+
+    /**
      * {@inheritDoc}
      */
     @NonNull
