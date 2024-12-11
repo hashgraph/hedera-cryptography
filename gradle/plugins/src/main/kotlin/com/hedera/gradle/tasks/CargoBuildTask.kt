@@ -17,6 +17,7 @@
 package com.hedera.gradle.tasks
 
 import com.hedera.gradle.extensions.CargoToolchain
+import com.hedera.gradle.extensions.CargoVersions
 import java.io.File
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
@@ -37,12 +38,16 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 
 @CacheableTask
-abstract class CargoBuildTask : DefaultTask() {
+abstract class CargoBuildTask : CargoVersions, DefaultTask() {
+
     @get:Input abstract val libname: Property<String>
 
     @get:Input abstract val release: Property<Boolean>
 
     @get:Input abstract val toolchain: Property<CargoToolchain>
+
+    @get:Internal // the toolchain versions are tracked as input
+    abstract val rustInstallFolder: DirectoryProperty
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
@@ -54,10 +59,6 @@ abstract class CargoBuildTask : DefaultTask() {
 
     @get:OutputDirectory abstract val destinationDirectory: DirectoryProperty
 
-    @get:Internal abstract val cargoBin: Property<String>
-
-    @get:Internal abstract val xwinFolder: Property<String>
-
     @get:Inject protected abstract val exec: ExecOperations
 
     @get:Inject protected abstract val files: FileOperations
@@ -66,7 +67,6 @@ abstract class CargoBuildTask : DefaultTask() {
     fun build() {
         val buildsForWindows = toolchain.get() == CargoToolchain.x86Windows
 
-        installCargoCrossCompiler(buildsForWindows)
         buildForTarget(buildsForWindows)
 
         val profile = if (release.get()) "release" else "debug"
@@ -76,7 +76,7 @@ abstract class CargoBuildTask : DefaultTask() {
                 "target/${stripTargetVersion(toolchain.get())}/${profile}"
             )
 
-        files.copy {
+        files.sync {
             from(cargoOutputDir)
             into(destinationDirectory.dir(toolchain.get().folder))
 
@@ -87,58 +87,38 @@ abstract class CargoBuildTask : DefaultTask() {
     }
 
     private fun stripTargetVersion(toolchain: CargoToolchain): String {
-        val re = Regex(pattern = "^([a-zA-Z0-9_\\-]+)(?:\\.[0-9.]+)?$")
-        val mr = re.find(toolchain.target)
-
-        if (mr != null && mr.groupValues.size > 1) {
-            return mr.groupValues[1]
-        }
-
-        return toolchain.target
-    }
-
-    private fun installCargoCrossCompiler(buildsForWindows: Boolean) {
-        exec.exec {
-            // Pin version to latest 0.6.6 RC to due to issue
-            // https://github.com/Jake-Shadle/xwin/issues/141
-            // Version should be removed, once 0.6.6 or newer is officially available
-            val crossCompiler = if (buildsForWindows) "xwin@0.6.6-rc.2" else "cargo-zigbuild"
-            commandLine = listOf(cargoBin.get() + "/cargo", "install", "--locked", crossCompiler)
-        }
-        if (buildsForWindows && !File(xwinFolder.get()).exists()) {
-            exec.exec {
-                // https://github.com/Jake-Shadle/xwin/issues/141#issuecomment-2416864318
-                environment("RAYON_NUM_THREADS", "1")
-                commandLine =
-                    listOf(
-                        cargoBin.get() + "/xwin",
-                        "--accept-license",
-                        "splat",
-                        "--output",
-                        xwinFolder.get()
-                    )
-            }
-        }
+        return toolchain.target.replaceAfter(".", "").replace(".", "")
     }
 
     private fun buildForTarget(buildsForWindows: Boolean) {
-        exec.exec {
-            val buildCommand = if (buildsForWindows) "build" else "zigbuild"
+        val rustupHome = rustInstallFolder.dir("rustup").get().asFile.absolutePath
+        val cargoHome = rustInstallFolder.dir("cargo").get().asFile
+        val zigPath = rustInstallFolder.file("zig/zig").get().asFile.absolutePath
+        val buildCommand = if (buildsForWindows) "build" else "zigbuild"
 
+        exec.exec {
             workingDir = cargoToml.get().asFile.parentFile
+
+            environment("RUSTUP_HOME", rustupHome)
+            environment("CARGO_HOME", cargoHome)
+            environment("CARGO_ZIGBUILD_ZIG_PATH", zigPath)
 
             commandLine =
                 listOf(
-                    cargoBin.get() + "/cargo",
+                    File(cargoHome, "bin/cargo").absolutePath,
+                    "+${rustVersion.get()}",
                     buildCommand,
                     "--target=${toolchain.get().target}"
                 )
 
             if (buildsForWindows) {
                 // See https://github.com/Jake-Shadle/xwin/blob/main/xwin.dockerfile
-                val xwin = xwinFolder.get()
+                val xwinFolder = rustInstallFolder.dir("xwin").get().asFile.absolutePath
+                val rustupToolchains = rustInstallFolder.dir("rustup/toolchains").get().asFile
+                val rustLld = rustupToolchains.walk().filter { it.name == "rust-lld" }.single()
+
                 val clFlags =
-                    "-Wno-unused-command-line-argument -fuse-ld=lld-link /vctoolsdir $xwin/crt /winsdkdir $xwin/sdk"
+                    "-Wno-unused-command-line-argument -fuse-ld=lld-link /vctoolsdir $xwinFolder/crt /winsdkdir $xwinFolder/sdk"
                 environment("CC_x86_64_pc_windows_msvc", "clang-cl")
                 environment("CXX_x86_64_pc_windows_msvc", "clang-cl")
                 environment("AR_x86_64_pc_windows_msvc", "llvm-lib")
@@ -147,10 +127,10 @@ abstract class CargoBuildTask : DefaultTask() {
                 environment("CL_FLAGS", clFlags)
                 environment("CFLAGS_x86_64_pc_windows_msvc", clFlags)
                 environment("CXXFLAGS_x86_64_pc_windows_msvc", clFlags)
-                environment("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER", "lld-link")
+                environment("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER", rustLld.absolutePath)
                 environment(
                     "RUSTFLAGS",
-                    "-Lnative=$xwin/crt/lib/x86_64 -Lnative=$xwin/sdk/lib/um/x86_64 -Lnative=$xwin/sdk/lib/ucrt/x86_64"
+                    "-Lnative=$xwinFolder/crt/lib/x86_64 -Lnative=$xwinFolder/sdk/lib/um/x86_64 -Lnative=$xwinFolder/sdk/lib/ucrt/x86_64"
                 )
             }
 
@@ -162,5 +142,7 @@ abstract class CargoBuildTask : DefaultTask() {
                 args("--verbose")
             }
         }
+
+        CargoUtil.cleanCache(cargoHome)
     }
 }

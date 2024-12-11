@@ -22,15 +22,6 @@ For the proposal that originated the work in this repository see:
 ## Build
 The project is built with Gradle.
 
-### Requirements
-
-For the rust (cross-)compilation, you need to install `rustup`, `zig` and `lld`. On Mac, you can do that via:
-
-```
-brew install rustup zig lld
-rustup target add x86_64-pc-windows-msvc
-```
-
 ### Build the project
 
 ```
