@@ -147,7 +147,7 @@ public final class GroupFacade implements ElementFacade {
     @NonNull
     @Override
     public byte[] fromBytes(@NonNull final byte[] representation) {
-        return fromBytes(representation, ToBytesModes.DEFAULT);
+        return fromBytes(representation, FromBytesFlags.DEFAULT);
     }
 
     /**
@@ -216,7 +216,7 @@ public final class GroupFacade implements ElementFacade {
      * @throws AltBn128Exception in case of error.
      */
     @NonNull
-    public byte[] fromBytes(@NonNull final byte[] bytes, @Nullable final ToBytesModes flags) {
+    public byte[] fromBytes(@NonNull final byte[] bytes, @NonNull final FromBytesFlags flags) {
         Objects.requireNonNull(flags, "bytes cannot be null");
         final int expectedSize = flags.isCompressed() ? this.size / 2 : this.size;
         validateSize(
@@ -328,7 +328,7 @@ public final class GroupFacade implements ElementFacade {
      * @param compress  indicates that the deserialized output array should be returned in the compressed representation.
      * @param skipValidation indicates that when deserializing the input, it should not perform the correct point and subgroup validation.
      */
-    public record ToBytesModes(boolean isCompressed, boolean compress, boolean skipValidation) {
-        public static final ToBytesModes DEFAULT = new ToBytesModes(false, false, false);
+    public record FromBytesFlags(boolean isCompressed, boolean compress, boolean skipValidation) {
+        public static final FromBytesFlags DEFAULT = new FromBytesFlags(false, false, false);
     }
 }

@@ -16,7 +16,7 @@
 
 package com.hedera.cryptography.altbn128;
 
-import com.hedera.cryptography.altbn128.facade.GroupFacade.ToBytesModes;
+import com.hedera.cryptography.altbn128.facade.GroupFacade.FromBytesFlags;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.utils.serialization.Deserializer;
@@ -102,17 +102,17 @@ public class GroupElementsBenchmark {
 
     @Benchmark
     public GroupElement fromBytesNonValidated() {
-        return group.fromBytes(point2Array, new ToBytesModes(false, false, true));
+        return group.fromBytes(point2Array, new FromBytesFlags(false, false, true));
     }
 
     @Benchmark
     public GroupElement fromBytesCompress() {
-        return group.fromBytes(point2Array, new ToBytesModes(false, true, false));
+        return group.fromBytes(point2Array, new FromBytesFlags(false, true, false));
     }
 
     @Benchmark
     public GroupElement fromBytesUncompress(CoordinatesState state) {
-        return group.fromBytes(state.xsBytes, new ToBytesModes(true, false, false));
+        return group.fromBytes(state.xsBytes, new FromBytesFlags(true, false, false));
     }
 
     @Benchmark

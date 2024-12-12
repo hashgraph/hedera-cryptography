@@ -204,6 +204,8 @@ public interface Group {
      * Creates a group element from its x coordinates
      *
      * @param x the x coordinate
+     * @param isYNegative indicates which of the two possible Y coordinates to select.
+     *                    Also referred as odd/even.
      * @return the new group element
      */
     @NonNull
