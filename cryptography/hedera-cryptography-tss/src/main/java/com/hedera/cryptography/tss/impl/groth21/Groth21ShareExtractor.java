@@ -81,12 +81,6 @@ class Groth21ShareExtractor<P, S> implements TssShareExtractor {
         this.keyExtractionHelper = Objects.requireNonNull(keyExtractionHelper, "keyExtractionHelper must not be null");
     }
 
-    @NonNull
-    @Override
-    public TssShareExtractor async(@NonNull final ExecutorService executorService) {
-        return this; // FUTURE-WORK, when the executor is set, extract should behave async
-    }
-
     @Override
     public TssShareExtractionStatus status() {
         return new TssShareExtractionStatus() { // FUTURE-WORK, report the advance of the process while extracting the
