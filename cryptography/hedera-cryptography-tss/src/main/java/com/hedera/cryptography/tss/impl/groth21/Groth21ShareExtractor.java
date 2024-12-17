@@ -34,7 +34,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 
 /**
  *  An implementation of a {@link TssShareExtractor} for the groth21 TSS.
@@ -79,12 +78,6 @@ class Groth21ShareExtractor<P, S> implements TssShareExtractor {
                 .map(signatureSchema.getPairingFriendlyCurve().field()::fromLong)
                 .toList(); // Not crucial to be fast here, we can buy some declarativity.
         this.keyExtractionHelper = Objects.requireNonNull(keyExtractionHelper, "keyExtractionHelper must not be null");
-    }
-
-    @NonNull
-    @Override
-    public TssShareExtractor async(@NonNull final ExecutorService executorService) {
-        return this; // FUTURE-WORK, when the executor is set, extract should behave async
     }
 
     @Override

@@ -18,7 +18,6 @@ package com.hedera.cryptography.tss.api;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 /**
  * This class, from a threshold minimum number of valid {@link TssMessage}s, allows to extract:
@@ -35,16 +34,6 @@ import java.util.concurrent.ExecutorService;
  * The behaviour if those two conditions is not met is not defined.
  */
 public interface TssShareExtractor {
-
-    /**
-     * Sets the mode of execution to async.
-     * The implementation will make best attempt to assign the processing of each share to a different thread.
-     * FUTURE-WORK: set the async mode
-     * @param executorService the executor service that can be used to concurrently extract the shares.
-     * @return this
-     */
-    @NonNull
-    TssShareExtractor async(@NonNull ExecutorService executorService);
 
     /**
      * Returns the progress of the process

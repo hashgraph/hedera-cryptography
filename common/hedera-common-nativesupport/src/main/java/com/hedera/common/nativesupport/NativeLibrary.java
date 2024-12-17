@@ -117,6 +117,7 @@ public class NativeLibrary {
      * Factory method to create a NativeLibrary instance with custom library extensions.
      *
      * @param name The name of the library.
+     * @param libPrefixes Custom library file prefixes for each operating system.
      * @param libExtensions Custom library file extensions for each operating system.
      * @return An instance of NativeLibrary.
      */
@@ -163,6 +164,7 @@ public class NativeLibrary {
      * Static helper to construct the library path in the JAR file for a given library name and extensions map.
      *
      * @param libraryName The name of the library.
+     * @param libPrefixes Library file prefixes for each operating system.
      * @param libExtensions Library file extensions for each operating system.
      * @return The path to the library in the JAR file.
      */
