@@ -40,7 +40,7 @@ public interface TssShareExtractor {
      * @return the progress of the process
      */
     @NonNull
-    TssShareExtractionStatus status();
+    TssShareExtractionStatus status(long participantId);
 
     /**
      * Compute all public shares for all the participants in the scheme and all private shares that belongs to this participant

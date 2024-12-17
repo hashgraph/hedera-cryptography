@@ -53,6 +53,7 @@ class Groth21ShareExtractor<P, S> implements TssShareExtractor {
     private final ElGamalSubstitutionTable<Byte, GroupElement> elGamalTable;
     private final List<FieldElement> shareElements;
     private final KeyExtractionHelper<P, S> keyExtractionHelper;
+    private final StatusTracker tracker;
     private List<TssPrivateShare> privateShares;
     private List<TssPublicShare> publicShares;
 
@@ -78,32 +79,21 @@ class Groth21ShareExtractor<P, S> implements TssShareExtractor {
                 .map(signatureSchema.getPairingFriendlyCurve().field()::fromLong)
                 .toList(); // Not crucial to be fast here, we can buy some declarativity.
         this.keyExtractionHelper = Objects.requireNonNull(keyExtractionHelper, "keyExtractionHelper must not be null");
+        this.tracker = new StatusTracker();
     }
 
     @Override
-    public TssShareExtractionStatus status() {
-        return new TssShareExtractionStatus() { // FUTURE-WORK, report the advance of the process while extracting the
-            // shares
-            @Override
-            public boolean isCompleted() {
-                return false;
-            }
+    @NonNull
+    public TssShareExtractionStatus status(long participantId) {
+        final var totalShares = participantDirectory.getShareIds().size();
+        final var ownedShares = participantDirectory.ownedShares(participantId).size();
+        final var total = totalShares + ownedShares;
+        final var completed = tracker.privateShares + tracker.publicShares;
+        final var percent = completed / total * 100;
+        final var elapsedTime = tracker.elapsedTime();
+        final var remainingTime = total - completed > 0 ? elapsedTime / completed * (total - completed) : 0;
 
-            @Override
-            public byte percentComplete() {
-                return 0;
-            }
-
-            @Override
-            public long elapsedTimeMs() {
-                return 0;
-            }
-
-            @Override
-            public long approximateRemainingTimeMs() {
-                return 0;
-            }
-        };
+        return new Groth21ShareExtractionStatus(total - completed <= 0, (byte) (percent), elapsedTime, remainingTime);
     }
 
     /**
@@ -112,10 +102,11 @@ class Groth21ShareExtractor<P, S> implements TssShareExtractor {
     @NonNull
     @Override
     public TssShareExtractor extract(@NonNull TssParticipantPrivateInfo privateInfo) {
-        if (privateShares == null) { // FUTURE WORK, Concurrency protection on the collections
+        tracker.registerStartTime();
+        if (privateShares == null) {
             privateShares = extractPrivateShares(privateInfo);
         }
-        if (publicShares == null) { // FUTURE WORK, Concurrency protection on the collections
+        if (publicShares == null) {
             publicShares = extractPublicShares();
         }
         return this;
@@ -126,8 +117,9 @@ class Groth21ShareExtractor<P, S> implements TssShareExtractor {
      */
     @NonNull
     @Override
-    public List<TssPrivateShare> ownedPrivateShares(@NonNull TssParticipantPrivateInfo privateInfo) {
+    public synchronized List<TssPrivateShare> ownedPrivateShares(@NonNull TssParticipantPrivateInfo privateInfo) {
         if (privateShares == null) {
+            tracker.registerPrivateSharesExtractionStartTime();
             privateShares = extractPrivateShares(privateInfo);
         }
         return privateShares;
@@ -138,8 +130,9 @@ class Groth21ShareExtractor<P, S> implements TssShareExtractor {
      */
     @NonNull
     @Override
-    public List<TssPublicShare> allPublicShares() {
+    public synchronized List<TssPublicShare> allPublicShares() {
         if (publicShares == null) {
+            tracker.registerPublicSharesExtractionStartTime();
             publicShares = extractPublicShares();
         }
         return publicShares;
@@ -183,6 +176,7 @@ class Groth21ShareExtractor<P, S> implements TssShareExtractor {
             // Now that we collected all S, use the function to produce a BlsPrivateKey from the aggregation of the
             // collection
             privateShares.add(new TssPrivateShare(share, keyExtractionHelper.aggregatePrivateKey(receivedPoints)));
+            tracker.increasePrivateShares();
             // Clean what you use, next loop reuse the list
             receivedPoints.clear();
         }
@@ -222,7 +216,72 @@ class Groth21ShareExtractor<P, S> implements TssShareExtractor {
             // Pay some extra time to clear the list, save some allocations, eventually will be its own
             // list if the work is outsourced to other threads
             receivedPublicKeys.clear(); // Clean what you use, next loop reuse the list
+            tracker.increasePublicShares();
         }
         return publicShares;
     }
+
+    /**
+     * A class to keep track of the process.
+     */
+    private static class StatusTracker {
+        private long startTime = -1;
+        private int privateShares;
+        private int publicShares;
+
+        /**
+         * Sets the startTime
+         */
+        public void registerPrivateSharesExtractionStartTime() {
+            registerStartTime();
+        }
+
+        /**
+         * Sets the startTime
+         */
+        public void registerPublicSharesExtractionStartTime() {
+            registerStartTime();
+        }
+
+        /**
+         * Sets the startTime
+         */
+        public void registerStartTime() {
+            if (startTime > 0) {
+                startTime = System.currentTimeMillis();
+            }
+        }
+
+        /**
+         * increases the number of extracted Private Shares
+         */
+        public void increasePrivateShares() {
+            privateShares++;
+        }
+
+        /**
+         * increases the number of extracted public Shares
+         */
+        public void increasePublicShares() {
+            publicShares++;
+        }
+
+        /**
+         * gets the elapsed time
+         */
+        public long elapsedTime() {
+            return System.currentTimeMillis() - startTime;
+        }
+    }
+
+    /**
+     * Stage Monitoring record
+     * @param isCompleted whether the process is completed or not.
+     * @param percentComplete percent of completion of the share extraction process
+     * @param elapsedTimeMs elapsed time
+     * @param approximateRemainingTimeMs an approximation of the remaining effort.
+     */
+    private record Groth21ShareExtractionStatus(
+            boolean isCompleted, byte percentComplete, long elapsedTimeMs, long approximateRemainingTimeMs)
+            implements TssShareExtractionStatus {}
 }
