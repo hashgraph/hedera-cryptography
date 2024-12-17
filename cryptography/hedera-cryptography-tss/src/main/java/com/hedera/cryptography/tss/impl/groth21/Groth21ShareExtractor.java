@@ -34,7 +34,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 
 /**
  *  An implementation of a {@link TssShareExtractor} for the groth21 TSS.
