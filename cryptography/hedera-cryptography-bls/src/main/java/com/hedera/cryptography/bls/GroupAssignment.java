@@ -16,6 +16,8 @@
 
 package com.hedera.cryptography.bls;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 /**
  * An enum to clarify which group public keys and signatures are in, for a given
  * {@link SignatureSchema SignatureSchema}
@@ -48,6 +50,11 @@ public enum GroupAssignment {
         return id;
     }
 
+    /**
+     * @param id the id of the groupAssigment enum
+     * @return the group assigment given an Id
+     */
+    @NonNull
     public static GroupAssignment fromId(final int id) {
         return switch (id) {
             case 0 -> SHORT_SIGNATURES;
