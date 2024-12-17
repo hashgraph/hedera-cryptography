@@ -31,3 +31,5 @@ testModuleInfo {
     requires("com.hedera.cryptography.utils.test.fixtures")
     requires("com.hedera.cryptography.pairings.test.fixtures")
 }
+
+jmhModuleInfo { requires("com.hedera.cryptography.pairings.test.fixtures") }

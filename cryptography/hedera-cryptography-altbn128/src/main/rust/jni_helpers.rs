@@ -14,10 +14,7 @@
 // limitations under the License.
 //
 
-use crate::group_element_utils::{
-    canonical_serialize, group_elements_add, group_elements_deserialize,
-    group_elements_deserialize_and_validate, group_elements_total_sum,
-};
+use crate::group_element_utils::{canonical_serialize_with_mode, group_elements_add, group_elements_deserialize, group_elements_deserialize_with_modes, group_elements_total_sum};
 use crate::scalars_utils::{
     scalars_batch_add, scalars_batch_multiply, scalars_curve_from_bytes, scalars_curve_from_i64,
     scalars_curve_group_elements_msm, scalars_curve_group_elements_multiply, scalars_from_bytes,
@@ -27,7 +24,7 @@ use ark_bn254::{G1Projective, G2Projective};
 use ark_ec::{CurveConfig, CurveGroup};
 use ark_serialize::CanonicalSerialize;
 use jni::objects::{JByteArray, JLongArray, JObjectArray};
-use jni::sys::{jbyte, jint, jlong, jsize};
+use jni::sys::{jboolean, jbyte, jint, jlong, jsize};
 use jni::JNIEnv;
 
 pub(crate) type G1 = G1Projective;
@@ -39,8 +36,6 @@ const SUCCESS: i32 = 0;
 pub(crate) const SEED_SIZE: usize = 32;
 /// * -1001  Jni Error: Could not convert argument array to vector
 const JNI_ERROR_ARG_TO_VEC: i32 = -1001;
-/// * -1002  Rust error: Could not convert argument vector to an unsigned byte array
-const RUST_ERROR_COULD_NOT_TRANSFORM_ARGUMENT_DATA_TYPE: i32 = -1002;
 /// * -1003   Ark Error: Result cannot be serialized
 const ARK_ERROR_RESULT_SERIALIZATION: i32 = -1003;
 /// * -1004  Jni Error: Could not set the scalar in the output byte array
@@ -99,27 +94,32 @@ pub fn write_return_scalar(env: JNIEnv, output: JByteArray, scalar: F) -> Result
     )
 }
 
-/// Utility function to extract the random seed from a JByteArray
-pub fn extract_random_seed(env: &JNIEnv, input_seed: &JByteArray) -> Result<[u8; 32], jint> {
-    let input_seed_bytes = match env.convert_byte_array(&input_seed) {
-        Ok(val) => val,
-        Err(_) => return Err(JNI_ERROR_ARG_TO_VEC),
-    };
-
-    let seed_array: [u8; SEED_SIZE] = match input_seed_bytes.try_into() {
-        Ok(val) => val,
-        Err(_) => return Err(RUST_ERROR_COULD_NOT_TRANSFORM_ARGUMENT_DATA_TYPE),
-    };
-    Ok(seed_array)
-}
-
 /// Utility function to write the serialized representation in an existing JByteArray
 pub fn serialize_to_jbytearray<G: CanonicalSerialize>(
     env: JNIEnv,
     point: &G,
     output: JByteArray,
 ) -> Result<jint, jint> {
-    let ge_bytes = match canonical_serialize::<G>(&point) {
+    let ge_bytes = match canonical_serialize_with_mode::<G>(&point,false) {
+        Ok(val) => val,
+        Err(_) => return Err(ARK_ERROR_RESULT_SERIALIZATION),
+    };
+
+    let transformed_vec: Vec<jbyte> = ge_bytes.iter().map(|&x| x as jbyte).collect();
+
+    match env.set_byte_array_region(output, 0, &transformed_vec) {
+        Ok(_) => Ok(SUCCESS),
+        Err(_) => Err(JNI_ERROR_COULD_SET_RESULT_DATA_IN_ARRAY),
+    }
+}
+
+/// Utility function to write the serialized representation in an existing JByteArray
+pub fn serialize_to_jbytearray_compress<G: CanonicalSerialize>(
+    env: JNIEnv,
+    point: &G,
+    output: JByteArray,
+) -> Result<jint, jint> {
+    let ge_bytes = match canonical_serialize_with_mode::<G>(&point, true) {
         Ok(val) => val,
         Err(_) => return Err(ARK_ERROR_RESULT_SERIALIZATION),
     };
@@ -133,13 +133,13 @@ pub fn serialize_to_jbytearray<G: CanonicalSerialize>(
 }
 
 /// Utility function read a curve point form a JByteArray, the point is not validated, so this function must be used with trusted source of information.
-pub fn to_point<G: CurveGroup>(env: &JNIEnv, value: &JByteArray) -> Result<G, jint> {
+pub fn to_point<G: CurveGroup>(env: &JNIEnv, value: &JByteArray, compress:bool) -> Result<G, jint> {
     let input_bytes = match env.convert_byte_array(&value) {
         Ok(val) => val,
         Err(_) => return Err(JNI_ERROR_ARG_TO_VEC),
     };
 
-    let point1 = match group_elements_deserialize::<G>(&input_bytes) {
+    let point1 = match group_elements_deserialize::<G>(&input_bytes, compress) {
         Ok(val) => val,
         Err(_) => return Err(ARK_ERROR_ARGUMENT_SERIALIZATION),
     };
@@ -163,7 +163,7 @@ pub fn to_vec_of_points<G: CurveGroup>(
         };
 
         let element_byte_array: JByteArray = unsafe { JByteArray::from_raw(*element) };
-        let point1 = match to_point::<G>(&env, &element_byte_array) {
+        let point1 = match to_point::<G>(&env, &element_byte_array, false) {
             Ok(value) => value,
             Err(value) => return Err(value),
         };
@@ -272,7 +272,7 @@ pub fn from_jlongs_to_vec_of_curve_scalars<G: CurveGroup>(
 }
 
 /// Utility function to extract a vec u8 from a JByteArray
-pub fn from_jbytearray_to_vec(env: JNIEnv, value: &JByteArray) -> Result<Vec<u8>, jint> {
+pub fn from_jbytearray_to_vec(env: &JNIEnv, value: &JByteArray) -> Result<Vec<u8>, jint> {
     let input_bytes = match env.convert_byte_array(&value) {
         Ok(val) => val,
         Err(_) => return Err(JNI_ERROR_ARG_TO_VEC),
@@ -280,30 +280,15 @@ pub fn from_jbytearray_to_vec(env: JNIEnv, value: &JByteArray) -> Result<Vec<u8>
     Ok(input_bytes)
 }
 
-/// Utility function to validate a g1 point
-pub fn validate_g1point(input_bytes: &Vec<u8>) -> i32 {
-    match group_elements_deserialize_and_validate::<G1Projective>(&input_bytes) {
-        Ok(_) => SUCCESS,
-        Err(_) => BUSINESS_ERROR_POINT_NOT_IN_CURVE,
-    }
-}
-
-/// Utility function to validate a g2 point
-pub fn validate_g2point(input_bytes: &Vec<u8>) -> i32 {
-    match group_elements_deserialize_and_validate::<G2Projective>(&input_bytes) {
-        Ok(_) => SUCCESS,
-        Err(_) => BUSINESS_ERROR_POINT_NOT_IN_CURVE,
-    }
-}
 
 /// Utility function to compare two points
 pub fn compare_points<G: CurveGroup>(env: &JNIEnv, value: &JByteArray, value2: &JByteArray) -> i32 {
-    let point1 = match to_point::<G>(&env, &value) {
+    let point1 = match to_point::<G>(&env, &value, false) {
         Ok(value) => value,
         Err(value) => return value,
     };
 
-    let point2 = match to_point::<G>(&env, &value2) {
+    let point2 = match to_point::<G>(&env, &value2, false) {
         Ok(value) => value,
         Err(value) => return value,
     };
@@ -318,12 +303,12 @@ pub fn add_points<G: CurveGroup>(
     value2: &JByteArray,
     output: JByteArray,
 ) -> i32 {
-    let point1 = match to_point::<G>(&env, &value) {
+    let point1 = match to_point::<G>(&env, &value, false) {
         Ok(value) => value,
         Err(value) => return value,
     };
 
-    let point2 = match to_point::<G>(&env, &value2) {
+    let point2 = match to_point::<G>(&env, &value2, false) {
         Ok(value) => value,
         Err(value) => return value,
     };
@@ -339,7 +324,7 @@ pub fn multiply_point_and_scalar<G: CurveGroup>(
     value2: &JByteArray,
     output: JByteArray,
 ) -> i32 {
-    let point1 = match to_point::<G>(&env, &value) {
+    let point1 = match to_point::<G>(&env, &value, false) {
         Ok(value) => value,
         Err(value) => return value,
     };
@@ -444,7 +429,7 @@ pub fn multiply_point_and_scalar_long<G: CurveGroup>(
     value2: jlong,
     output: JByteArray,
 ) -> i32 {
-    let point1 = match to_point::<G>(&env, &value) {
+    let point1 = match to_point::<G>(&env, &value, false) {
         Ok(value) => value,
         Err(value) => return value,
     };
@@ -455,4 +440,22 @@ pub fn multiply_point_and_scalar_long<G: CurveGroup>(
 
     let point = scalars_curve_group_elements_multiply(value, point1);
     serialize_to_jbytearray(env, &point, output).unwrap_or_else(|value| value)
+}
+
+pub fn hadle_group<G: CurveGroup>(env: JNIEnv, is_compressed: jboolean, validate: jboolean, compress: jboolean, output: JByteArray, input_vec: &Vec<u8>) -> Result<jint, jint> {
+    let point = match group_elements_deserialize_with_modes::<G>(
+        &input_vec,
+        is_compressed != 0,
+        validate != 0,
+    ) {
+        Ok(a) => a,
+        Err(_) => return Err(BUSINESS_ERROR_POINT_NOT_IN_CURVE),
+    };
+    Ok(match compress {
+        0 => {
+            serialize_to_jbytearray::<G>(env, &point, output).unwrap_or_else(|value| value)
+        }
+        _ => serialize_to_jbytearray_compress::<G>(env, &point, output)
+            .unwrap_or_else(|value| value),
+    })
 }

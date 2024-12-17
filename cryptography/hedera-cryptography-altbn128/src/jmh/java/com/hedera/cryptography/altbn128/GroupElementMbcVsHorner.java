@@ -19,6 +19,7 @@ package com.hedera.cryptography.altbn128;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.extensions.EcPolynomial;
+import com.hedera.cryptography.pairings.test.fixtures.Utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -195,22 +196,8 @@ public class GroupElementMbcVsHorner {
         long[] a = new long[degree];
         a[0] = 1;
         for (int i = 1; i < degree; i++) {
-            a[i] = power(xInt, i);
+            a[i] = Utils.longPow(xInt, i);
         }
         return group.msm(coeffPoitns, a);
-    }
-
-    public long power(int base, int k) {
-        for (long accum = 1, b = base; ; k >>>= 1)
-            switch (k) {
-                case 0:
-                    return accum;
-                case 1:
-                    return accum * b;
-                default:
-                    if ((k & 1) != 0) // guava uses conditional multiplicand
-                    accum *= b;
-                    b *= b;
-            }
     }
 }

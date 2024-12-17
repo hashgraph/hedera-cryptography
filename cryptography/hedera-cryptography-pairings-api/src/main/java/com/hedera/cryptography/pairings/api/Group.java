@@ -178,17 +178,16 @@ public interface Group {
     GroupElement add(@NonNull Collection<GroupElement> elements);
 
     /**
-     * Creates a group element from its serialized encoding. The serialization is implementation specific and should not
-     * be relied upon to be consistent across different versions of the library.
+     * Creates a group element from its internal encoding.
+     * The serialization is implementation specific and should not be relied upon to be consistent across different versions of the library.
      *
      * @param bytes serialized form
      * @return the new group element
      * @throws IllegalArgumentException if the byte representation is not a valid point on the curve
+     * @deprecated This method is implementation specific and should not be used.
      */
-    // TODO: (?)Maybe add:
-    //  + List<GroupElement> allFromBytes(List<byte[]> collection)
-    //  + fromBytes(byte[] bytes, Mode.NO_VALIDATE)
     @NonNull
+    @Deprecated
     GroupElement fromBytes(@NonNull byte[] bytes);
 
     /**
@@ -200,6 +199,17 @@ public interface Group {
      */
     @NonNull
     GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y);
+
+    /**
+     * Creates a group element from its x coordinates
+     *
+     * @param x the x coordinate
+     * @param isYNegative indicates which of the two possible Y coordinates to select.
+     *                    Also referred as odd/even.
+     * @return the new group element
+     */
+    @NonNull
+    GroupElement fromXCoordinate(@NonNull final List<BigInteger> x, boolean isYNegative);
 
     /**
      * Gets the size in bytes of the seed necessary to generate a new element

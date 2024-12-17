@@ -45,19 +45,19 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     value3: JByteArray,
     value4: JByteArray,
 ) -> jint {
-    let p1: G1 = match jni_helpers::to_point::<G1>(&env, &value) {
+    let p1: G1 = match jni_helpers::to_point::<G1>(&env, &value, false) {
         Ok(val) => val,
         Err(err) => return err,
     };
-    let p2: G2 = match jni_helpers::to_point::<G2>(&env, &value2) {
+    let p2: G2 = match jni_helpers::to_point::<G2>(&env, &value2, false) {
         Ok(val) => val,
         Err(err) => return err,
     };
-    let p3: G1 = match jni_helpers::to_point::<G1>(&env, &value3) {
+    let p3: G1 = match jni_helpers::to_point::<G1>(&env, &value3, false) {
         Ok(val) => val,
         Err(err) => return err,
     };
-    let p4: G2 = match jni_helpers::to_point::<G2>(&env, &value4) {
+    let p4: G2 = match jni_helpers::to_point::<G2>(&env, &value4, false) {
         Ok(val) => val,
         Err(err) => return err,
     };
