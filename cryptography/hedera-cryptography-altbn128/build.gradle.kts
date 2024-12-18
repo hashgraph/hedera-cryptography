@@ -16,4 +16,7 @@ testModuleInfo {
     requires("com.hedera.cryptography.utils.test.fixtures")
 }
 
-jmhModuleInfo { requires("com.hedera.cryptography.pairings.api") }
+jmhModuleInfo {
+    requires("com.hedera.cryptography.pairings.api")
+    requires("com.hedera.cryptography.pairings.test.fixtures")
+}

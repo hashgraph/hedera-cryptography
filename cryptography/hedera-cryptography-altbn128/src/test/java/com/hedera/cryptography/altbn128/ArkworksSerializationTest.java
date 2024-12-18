@@ -46,7 +46,7 @@ class ArkworksSerializationTest {
         final BigInteger x = new BigInteger("703710");
         final BigInteger y = new BigInteger("65535");
 
-        final byte[] bytes = ArkworksSerialization.coordinatesToBytes(List.of(x), List.of(y));
+        final byte[] bytes = ArkworksSerialization.coordinatesToBytes(List.of(x, y), null);
 
         assertEquals(x, ArkworksSerialization.getCoordinate(bytes, true).getFirst());
         assertEquals(y, ArkworksSerialization.getCoordinate(bytes, false).getFirst());
@@ -57,7 +57,7 @@ class ArkworksSerializationTest {
         final String hexExpected =
                 "aabbccddeeff00000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000";
         final byte[] bytes = ArkworksSerialization.coordinatesToBytes(
-                List.of(new BigInteger("281401388481450")), List.of(new BigInteger("1")));
+                List.of(new BigInteger("281401388481450"), new BigInteger("1")), null);
         System.out.println(HexFormat.of().formatHex(bytes));
         assertEquals(
                 hexExpected, HexFormat.of().formatHex(bytes), "Coordinates should be converted to bytes correctly");

@@ -18,7 +18,7 @@ use crate::jni_helpers;
 use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::{Field, PrimeField};
-use ark_serialize::CanonicalSerialize;
+use ark_serialize::{CanonicalSerialize, Compress, Validate};
 use jni::objects::JByteArray;
 use jni::sys::jint;
 use jni::JNIEnv;
@@ -63,25 +63,48 @@ pub fn group_elements_total_sum<G: CurveGroup>(values: Vec<G>) -> G {
 /// (De)/Serialization
 /// ******************
 
-pub fn canonical_serialize<S: CanonicalSerialize>(element: &S) -> Result<Vec<u8>, String> {
+pub fn canonical_serialize_with_mode<S: CanonicalSerialize>(
+    element: &S,
+    compress: bool
+) -> Result<Vec<u8>, String> {
     let mut serialized = Vec::new();
-    match element.serialize_uncompressed(&mut serialized) {
+    let mode: Compress = if compress {
+        Compress::Yes
+    } else {
+        Compress::No
+    };
+    match element.serialize_with_mode(&mut serialized, mode) {
         Ok(_) => Ok(serialized),
         Err(v) => Err(v.to_string()),
     }
 }
 
 /// returns the point from a projective byte representation of a point
-pub fn group_elements_deserialize<G: CurveGroup>(value: &[u8]) -> Result<G, String> {
-    match G::deserialize_uncompressed_unchecked(value) {
+pub fn group_elements_deserialize<G: CurveGroup>(value: &[u8], compress: bool) -> Result<G, String> {
+    let mode: Compress = if compress {
+        Compress::Yes
+    } else {
+        Compress::No
+    };
+    match G::deserialize_with_mode(value, mode, Validate::No) {
         Ok(val) => Ok(val),
         Err(err) => Err(err.to_string()),
     }
 }
 
 /// returns the point from a projective byte representation of a point
-pub fn group_elements_deserialize_and_validate<G: CurveGroup>(value: &[u8]) -> Result<G, String> {
-    match G::deserialize_uncompressed(value) {
+pub fn group_elements_deserialize_with_modes<G: CurveGroup>(value: &[u8], is_compressed: bool, validate: bool) -> Result<G, String> {
+    let compress: Compress = if is_compressed {
+        Compress::Yes
+    } else {
+        Compress::No
+    };
+    let validate: Validate = if validate {
+        Validate::Yes
+    } else {
+        Validate::No
+    };
+    match G::deserialize_with_mode(value, compress, validate) {
         Ok(val) => Ok(val),
         Err(err) => Err(err.to_string()),
     }

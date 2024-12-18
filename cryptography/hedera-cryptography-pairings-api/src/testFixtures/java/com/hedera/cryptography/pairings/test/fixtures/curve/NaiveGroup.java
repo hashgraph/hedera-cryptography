@@ -162,6 +162,15 @@ public class NaiveGroup implements Group {
                         .intValue());
     }
 
+    @NonNull
+    @Override
+    public GroupElement fromXCoordinate(@NonNull final List<BigInteger> x, final boolean isYNegative) {
+        return new NaiveGroupElement(
+                this,
+                curve.field(),
+                x.stream().reduce(BigInteger.ZERO, BigInteger::add).intValue());
+    }
+
     /**
      * {@inheritDoc}
      */

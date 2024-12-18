@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 class ArkBn254AdapterTest {
 
     /**
-     * Tests the {@link ArkBn254Adapter#groupElementsFromXCoordinate(int, byte[], byte[])} method.
+     * Tests the {@link ArkBn254Adapter#groupElementsHashToGroup(int, byte[], byte[])} method.
      */
     @Test
     void groupElementsFromXCoordinateTest() {
@@ -41,7 +41,7 @@ class ArkBn254AdapterTest {
         // success case
         final byte[] xCoordinate =
                 HexFormat.of().parseHex("60b420bb3851d9d47acb933dbe70399bf6c92da33af01d4fb770e98c0325f41d");
-        final int result1 = adapter.groupElementsFromXCoordinate(groupId, xCoordinate, output);
+        final int result1 = adapter.groupElementsHashToGroup(groupId, xCoordinate, output);
         assertEquals(GroupElementsLibraryAdapter.SUCCESS, result1, "we expect the method to return success");
         assertNotEquals(
                 0,
@@ -52,7 +52,7 @@ class ArkBn254AdapterTest {
         Arrays.fill(output, (byte) 0);
 
         // failure case
-        final int result2 = adapter.groupElementsFromXCoordinate(groupId, new byte[32], output);
+        final int result2 = adapter.groupElementsHashToGroup(groupId, new byte[32], output);
         assertNotEquals(
                 GroupElementsLibraryAdapter.SUCCESS,
                 result2,

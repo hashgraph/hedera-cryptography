@@ -15,7 +15,7 @@
 //
 
 use crate::jni_helpers;
-use crate::jni_helpers::{batch_add_scalars, batch_multiply_scalars};
+use crate::jni_helpers::{batch_add_scalars, batch_multiply_scalars, SEED_SIZE};
 use crate::scalars_utils::*;
 use jni::objects::{JByteArray, JLongArray, JObject, JObjectArray};
 use jni::sys::{jint, jlong};
@@ -43,12 +43,12 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     input_seed: JByteArray,
     output: JByteArray,
 ) -> jint {
-    let seed_array = match jni_helpers::extract_random_seed(&env, &input_seed) {
+    let seed_vec = match jni_helpers::from_jbytearray_to_vec(&env, &input_seed) {
         Ok(value) => value,
         Err(value) => return value,
     };
-
-    let mut rng = ChaCha8Rng::from_seed(seed_array);
+    let fixed_array: [u8; SEED_SIZE] = seed_vec[0..SEED_SIZE].try_into().unwrap();
+    let mut rng = ChaCha8Rng::from_seed(fixed_array);
 
     let scalar = scalars_from_random::<ChaCha8Rng>(&mut rng);
 
