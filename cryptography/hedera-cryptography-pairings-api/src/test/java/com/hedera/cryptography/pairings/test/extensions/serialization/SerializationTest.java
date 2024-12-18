@@ -20,23 +20,23 @@ import org.junit.jupiter.params.provider.MethodSource;
 @WithRng
 public class SerializationTest {
 
-    public static Stream<Arguments> serDesArguments() {
+    public static Stream<Arguments> arguments() {
         final PairingFriendlyCurve curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
-        final EthereumSerialization altBn128SerDes = new EthereumSerialization(curve);
+        final EthereumSerialization ethereumSerialization = new EthereumSerialization(curve);
         return Stream.of(
                 Arguments.of(
                         curve,
-                        new ElementsSerDes(
-                                altBn128SerDes.fieldSerializer(),
-                                altBn128SerDes.groupSerializer(),
-                                altBn128SerDes.fieldDeserializer(),
-                                altBn128SerDes.groupDeserializer(curve.group1()),
-                                altBn128SerDes.groupDeserializer(curve.group2())
+                        new SerializationTester(
+                                ethereumSerialization.fieldSerializer(),
+                                ethereumSerialization.groupSerializer(),
+                                ethereumSerialization.fieldDeserializer(),
+                                ethereumSerialization.groupDeserializer(curve.group1()),
+                                ethereumSerialization.groupDeserializer(curve.group2())
                         )
                 ),
                 Arguments.of(
                         curve,
-                        new ElementsSerDes(
+                        new SerializationTester(
                                 DefaultFieldElementSerialization.getSerializer(),
                                 DefaultGroupElementSerialization.getSerializer(),
                                 DefaultFieldElementSerialization.getDeserializer(curve.field()),
@@ -48,24 +48,40 @@ public class SerializationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("serDesArguments")
-    void serDesRandom(final PairingFriendlyCurve curve, final ElementsSerDes serDes, final Random r) {
+    @MethodSource("arguments")
+    void serDesRandom(final PairingFriendlyCurve curve, final SerializationTester tester, final Random r) {
         final FieldElement fieldElement = curve.field().random(r);
         assertEquals(
                 fieldElement,
-                serDes.serializeDeserialize(fieldElement)
+                tester.serializeDeserialize(fieldElement)
         );
 
         final GroupElement group1Element = curve.group1().random(r);
         assertEquals(
                 group1Element,
-                serDes.serializeDeserializeGroup1(group1Element)
+                tester.serializeDeserializeGroup1(group1Element)
         );
 
         final GroupElement group2Element = curve.group2().random(r);
         assertEquals(
                 group2Element,
-                serDes.serializeDeserializeGroup1(group2Element)
+                tester.serializeDeserializeGroup2(group2Element)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("arguments")
+    void serDesZero(final PairingFriendlyCurve curve, final SerializationTester tester) {
+        final GroupElement group1Element = curve.group1().zero();
+        assertEquals(
+                group1Element,
+                tester.serializeDeserializeGroup1(group1Element)
+        );
+
+        final GroupElement group2Element = curve.group2().zero();
+        assertEquals(
+                group2Element,
+                tester.serializeDeserializeGroup2(group2Element)
         );
     }
 }

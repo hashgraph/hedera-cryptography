@@ -6,11 +6,11 @@ import com.hedera.cryptography.utils.serialization.Deserializer;
 import com.hedera.cryptography.utils.serialization.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public record ElementsSerDes(@NonNull Serializer<FieldElement> fieldSerializer,
-                             @NonNull Serializer<GroupElement> groupSerializer,
-                             @NonNull Deserializer<FieldElement> fieldDeserializer,
-                             @NonNull Deserializer<GroupElement> group1Deserializer,
-                             @NonNull Deserializer<GroupElement> group2Deserializer) {
+public record SerializationTester(@NonNull Serializer<FieldElement> fieldSerializer,
+                                  @NonNull Serializer<GroupElement> groupSerializer,
+                                  @NonNull Deserializer<FieldElement> fieldDeserializer,
+                                  @NonNull Deserializer<GroupElement> group1Deserializer,
+                                  @NonNull Deserializer<GroupElement> group2Deserializer) {
 
     public FieldElement serializeDeserialize(final FieldElement fieldElement) {
         return fieldDeserializer().deserialize(fieldSerializer().serialize(fieldElement));
