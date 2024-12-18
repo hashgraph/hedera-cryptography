@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 Hedera Hashgraph, LLC
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-import com.hedera.gradle.extensions.CargoExtension
-import com.hedera.gradle.extensions.CargoToolchain
+package com.hedera.gradle.tasks
 
-plugins { id("java") }
+import java.io.File
 
-val cargo = project.extensions.create<CargoExtension>("cargo")
+internal object CargoUtil {
 
-cargo.targets(*CargoToolchain.values())
-
-if (System.getenv().containsKey("CI")) {
-    // Disable, due to 'Could not load entry ... from remote build cache: Read timed out'
-    tasks.named("installRustToolchains") { outputs.cacheIf { false } }
+    /*
+     * Clean the global Cargo cache to not have it as (unstable) part
+     * of the output of the RustToolchainInstallTask.
+     */
+    fun cleanCache(cargoFolder: File) {
+        File(cargoFolder, ".global-cache").delete()
+        File(cargoFolder, "registry/cache").deleteRecursively()
+    }
 }

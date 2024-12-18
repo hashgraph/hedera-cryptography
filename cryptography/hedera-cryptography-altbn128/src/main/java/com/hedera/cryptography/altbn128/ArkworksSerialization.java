@@ -191,6 +191,22 @@ public enum ArkworksSerialization {
     }
 
     /**
+     * Sets or clears the Y coordinate negative flag in the Arkworks serialized bytes.
+     *
+     * @param bytes the Arkworks serialized bytes
+     * @param set   true to set the flag, false to clear it
+     */
+    public static void setYNegativeFlag(@NonNull final byte[] bytes, boolean set) {
+        if (set) {
+            // Set the flag using bitwise OR
+            bytes[bytes.length - 1] |= MASK_Y_COORDINATE;
+        } else {
+            // Clear the flag using bitwise AND with the negated mask
+            bytes[bytes.length - 1] &= ~MASK_Y_COORDINATE;
+        }
+    }
+
+    /**
      * Removes the flags from this serialized element
      *
      * @param bytes the Arkworks serialized bytes
@@ -222,26 +238,26 @@ public enum ArkworksSerialization {
     }
 
     /**
-     * Serialize the coordinates into a byte array
+     * Creates a byte array from a list of BigInteger values
      *
-     * @param x the X coordinate
-     * @param y the Y coordinate
-     * @return the serialized bytes
+     * @param xs all the xs elements
+     * @param ys some other group of optional ys
+     * @return the serialized bytes in arkworks format
      */
     @NonNull
-    public static byte[] coordinatesToBytes(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
-        final int numCount = Objects.requireNonNull(x, "x must not be null").size()
-                + Objects.requireNonNull(y, "y must not be null").size();
-        final byte[] bytes = new byte[NUMBER_SIZE_BYTES * numCount];
-        for (int i = 0; i < numCount; i++) {
-            final BigInteger bi = i < x.size() ? x.get(i) : y.get(i - x.size());
+    public static byte[] coordinatesToBytes(@NonNull final List<BigInteger> xs, @Nullable List<BigInteger> ys) {
+        Objects.requireNonNull(xs, "xs must not be null");
+        final int coordinateSize = xs.size();
+        final int numElements = coordinateSize + (ys != null ? ys.size() : 0);
+        final byte[] bytes = new byte[NUMBER_SIZE_BYTES * numElements];
+        for (int i = 0; i < numElements; i++) {
+            final BigInteger bi = i < coordinateSize ? xs.get(i) : ys.get(i - coordinateSize);
             final byte[] biArray = bi.toByteArray();
             if (biArray.length > NUMBER_SIZE_BYTES) {
                 throw new IllegalArgumentException("BigInteger is too large to fit in a 254-bit number");
             }
             copyAndReverse(biArray, 0, bytes, i * NUMBER_SIZE_BYTES, biArray.length);
         }
-
         return bytes;
     }
 }

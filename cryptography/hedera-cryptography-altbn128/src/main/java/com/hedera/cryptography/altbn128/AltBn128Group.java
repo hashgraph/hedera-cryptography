@@ -18,6 +18,7 @@ package com.hedera.cryptography.altbn128;
 
 import com.hedera.cryptography.altbn128.adapter.jni.ArkBn254Adapter;
 import com.hedera.cryptography.altbn128.facade.GroupFacade;
+import com.hedera.cryptography.altbn128.facade.GroupFacade.FromBytesFlags;
 import com.hedera.cryptography.pairings.api.Field;
 import com.hedera.cryptography.pairings.api.FieldElement;
 import com.hedera.cryptography.pairings.api.Group;
@@ -111,6 +112,58 @@ public class AltBn128Group implements Group {
     }
 
     /**
+     * Creates a group element from its serialized encoding, validating if the point is in the curve.
+     *
+     * @throws NullPointerException if the bytes is null
+     * @throws IllegalArgumentException if the bytes is of invalid size or the point does not belong to the curve
+     * @throws AltBn128Exception in case of error.
+     * @deprecated Implementation specific
+     */
+    @NonNull
+    @Override
+    @Deprecated
+    public GroupElement fromBytes(@NonNull final byte[] bytes) {
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes));
+    }
+
+    /**
+     * Internal method to construct a {@link GroupElement} from a byte[] representation using different modes.
+     *
+     * @param bytes the intended representation
+     * @param flags the modes use: {@link FromBytesFlags#DEFAULT} for standard behaviour
+     * @return the groupElement object.
+     * @apiNote This is an internal method. No external user of the pairings library will be able to access this as it is not part of the api.
+     * @implNote the use of flag: {@link FromBytesFlags#compress()}  would render the internal representation incompatible with arithmetics operations
+     *  until we add support for internal group element compression
+     */
+    public GroupElement fromBytes(@NonNull final byte[] bytes, @NonNull final FromBytesFlags flags) {
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes, flags));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
+        Objects.requireNonNull(x, "x must not be null");
+        Objects.requireNonNull(y, "y must not be null");
+        final byte[] bytes = ArkworksSerialization.coordinatesToBytes(x, y);
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes, FromBytesFlags.DEFAULT));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public GroupElement fromXCoordinate(@NonNull final List<BigInteger> x, final boolean isYNegative) {
+        byte[] bytes = ArkworksSerialization.coordinatesToBytes(x, null);
+        ArkworksSerialization.setYNegativeFlag(bytes, isYNegative);
+        return new AltBn128GroupElement(this, facade.fromBytes(bytes, new FromBytesFlags(true, false, false)));
+    }
+
+    /**
      * {@inheritDoc}
      */
     @NonNull
@@ -123,7 +176,7 @@ public class AltBn128Group implements Group {
         for (int i = 0; i < HASH_RETRIES; i++) {
             calculator.append(candidate);
             candidate = calculator.hash();
-            final byte[] element = facade.fromXCoordinate(candidate);
+            final byte[] element = facade.hashToGroup(candidate);
             if (element != null) {
                 return new AltBn128GroupElement(this, element);
             }
@@ -204,29 +257,6 @@ public class AltBn128Group implements Group {
     @Override
     public int hashCode() {
         return Objects.hashCode(group);
-    }
-
-    /**
-     * Creates a group element from its serialized encoding, validating if the point is in the curve.
-     *
-     * @throws NullPointerException if the bytes is null
-     * @throws IllegalArgumentException if the bytes is of invalid size or the point does not belong to the curve
-     * @throws AltBn128Exception in case of error.
-     */
-    @NonNull
-    @Override
-    public GroupElement fromBytes(@NonNull final byte[] bytes) {
-        return new AltBn128GroupElement(this, facade.fromBytes(bytes));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public GroupElement fromCoordinates(@NonNull final List<BigInteger> x, @NonNull final List<BigInteger> y) {
-        final byte[] bytes = ArkworksSerialization.coordinatesToBytes(x, y);
-        return fromBytes(bytes);
     }
 
     /**

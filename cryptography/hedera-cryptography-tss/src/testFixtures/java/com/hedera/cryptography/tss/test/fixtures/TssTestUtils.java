@@ -100,7 +100,8 @@ public class TssTestUtils {
 
         final var serializer = new Serializer()
                 .put(TssMessage.MESSAGE_CURRENT_VERSION)
-                .put((int) signatureSchema.toByte())
+                .put((int) signatureSchema.getCurve().getId())
+                .put(signatureSchema.getGroupAssignment().getId())
                 .put(generatingShare)
                 .putListSameSize(zeros, GroupElement::toBytes);
         for (int i = 0; i < totalShares; i++) {

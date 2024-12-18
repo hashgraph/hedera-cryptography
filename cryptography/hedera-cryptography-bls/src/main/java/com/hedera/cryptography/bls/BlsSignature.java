@@ -20,8 +20,6 @@ import com.hedera.cryptography.pairings.api.BilinearPairing;
 import com.hedera.cryptography.pairings.api.Group;
 import com.hedera.cryptography.pairings.api.GroupElement;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
-import com.hedera.cryptography.utils.ByteArrayUtils.Deserializer;
-import com.hedera.cryptography.utils.ByteArrayUtils.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 import java.util.Objects;
@@ -41,45 +39,6 @@ public record BlsSignature(@NonNull GroupElement element, @NonNull SignatureSche
     public BlsSignature {
         Objects.requireNonNull(element, "element must not be null");
         Objects.requireNonNull(signatureSchema, "signatureSchema must not be null");
-    }
-
-    /**
-     * Serializes this {@link BlsPrivateKey} into a byte array.
-     *
-     * @return the serialized form of this object
-     * @deprecated use a {@link com.hedera.cryptography.utils.serialization.Serializer} instance
-     * e.g.: {@link com.hedera.cryptography.bls.extensions.serialization.DefaultBlsSignatureSerialization}
-     */
-    @NonNull
-    @Deprecated
-    public byte[] toBytes() {
-        return new Serializer()
-                .put(this.signatureSchema().toByte())
-                .put(this.element()::toBytes)
-                .toBytes();
-    }
-
-    /**
-     * Returns a {@link BlsSignature} instance out of this object serialized form
-     * @param bytes the serialized form of this object
-     * @return a {@link BlsSignature} instance
-     * @throws IllegalArgumentException if the key representation is invalid
-     * @deprecated use a {@link com.hedera.cryptography.utils.serialization.Deserializer} instance
-     * e.g.: {@link com.hedera.cryptography.bls.extensions.serialization.DefaultBlsSignatureSerialization}
-     */
-    @NonNull
-    @Deprecated
-    public static BlsSignature fromBytes(@NonNull final byte[] bytes) {
-        try {
-            final Deserializer deserializer = new Deserializer(bytes);
-            var schema = SignatureSchema.create(deserializer.readByte());
-            var element = deserializer.read(
-                    schema.getSignatureGroup()::fromBytes,
-                    schema.getSignatureGroup().elementSize());
-            return new BlsSignature(element, schema);
-        } catch (IllegalStateException e) {
-            throw new IllegalArgumentException("Unable to deserialize pairing private key", e);
-        }
     }
 
     /**

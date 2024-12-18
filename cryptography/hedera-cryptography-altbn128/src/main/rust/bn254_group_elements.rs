@@ -16,9 +16,9 @@
 
 use crate::group_element_utils::*;
 use crate::jni_helpers;
-use crate::jni_helpers::{G1, G2};
+use crate::jni_helpers::{G1, G2, SEED_SIZE};
 use jni::objects::{JByteArray, JLongArray, JObject, JObjectArray};
-use jni::sys::{jint, jlong};
+use jni::sys::{jboolean, jint, jlong};
 use jni::JNIEnv;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -47,10 +47,11 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     input_seed: JByteArray,
     output: JByteArray,
 ) -> jint {
-    let seed_array = match jni_helpers::extract_random_seed(&env, &input_seed) {
+    let input_vec = match jni_helpers::from_jbytearray_to_vec(&env, &input_seed) {
         Ok(value) => value,
         Err(value) => return value,
     };
+    let seed_array: [u8; SEED_SIZE] = input_vec[0..SEED_SIZE].try_into().unwrap();
     let mut rng = ChaCha8Rng::from_seed(seed_array);
     match group_id {
         GROUP1 => {
@@ -81,31 +82,35 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
 /// *   -4   Business Error: Point is not in the curve
 /// * A less than 0 error code in case of error
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_groupElementsFromXCoordinate(
+pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn254Adapter_groupElementsHashToGroup(
     env: JNIEnv,
     _instance: JObject,
     group_id: jint,
     input_x: JByteArray,
     output: JByteArray,
 ) -> jint {
-    let hash_array = match jni_helpers::extract_random_seed(&env, &input_x) {
+    let hash_vec = match jni_helpers::from_jbytearray_to_vec(&env, &input_x) {
         Ok(value) => value,
         Err(value) => return value,
     };
 
     if group_id == GROUP1 {
-        elements_from_hash_generic::<G1Config>(env, &hash_array, output)
+        elements_from_hash_generic::<G1Config>(env, &hash_vec, output)
     } else {
-        elements_from_hash_generic::<G2Config>(env, &hash_array, output)
+        elements_from_hash_generic::<G2Config>(env, &hash_vec, output)
     }
 }
 
-/// JNI function that determines if a byte array representation of a group element is valid
+/// JNI function that determines to get the arkworks internal byte array representation of a group element
+/// under different modes.
 /// # Arguments
 /// * `env` _ The JNI environment.
 /// * `_instance` _ The Java instance calling this function.
 /// * `group_id`  in which group to perform the operation
-/// * `value`   the byte that of size GROUP2_ELEMENT_AFFINE_SIZE represents the group element
+/// * `is_compressed`   if the array representation is in compressed format
+/// * `validate`   if it should be validated that the point is in the curve and in the correct subgroup
+/// * `compress`  if the point should be returned in the compressed format
+/// * `value`   the byte array that represents the group element
 /// # Returns
 /// *   0    Success
 /// *  BUSINESS_ERROR_POINT_NOT_IN_CURVE   Business Error: Point is not in the curve
@@ -115,16 +120,24 @@ pub extern "system" fn Java_com_hedera_cryptography_altbn128_adapter_jni_ArkBn25
     env: JNIEnv,
     _instance: JObject,
     group_id: jint,
+    is_compressed: jboolean,
+    validate: jboolean,
+    compress: jboolean,
     value: JByteArray,
+    output: JByteArray,
 ) -> jint {
-    let input_bytes = match jni_helpers::from_jbytearray_to_vec(env, &value) {
+    let input_vec = match jni_helpers::from_jbytearray_to_vec(&env, &value) {
         Ok(value) => value,
         Err(value) => return value,
     };
-    match group_id {
-        GROUP1 => jni_helpers::validate_g1point(&input_bytes),
-        _ => jni_helpers::validate_g2point(&input_bytes),
-    }
+  match group_id {
+     GROUP1 => {
+         jni_helpers::hadle_group::<G1>(env, is_compressed, validate, compress, output, &input_vec).unwrap_or_else(|value| value)
+     }
+     _ => {
+         jni_helpers::hadle_group::<G2>(env, is_compressed, validate, compress, output, &input_vec).unwrap_or_else(|value| value)
+     }
+  }
 }
 
 /// Returns the zero group element

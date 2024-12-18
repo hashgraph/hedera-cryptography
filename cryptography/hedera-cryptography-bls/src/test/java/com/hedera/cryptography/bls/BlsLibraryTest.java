@@ -78,7 +78,7 @@ class BlsLibraryTest {
     void testRandomnessSinglePrivateKeyByteDistribution(SignatureSchema schema, final Random rng) {
         final var key = BlsPrivateKey.create(schema, rng);
         final var keyBytes = DefaultBlsPrivateKeySerialization.getSerializer().serialize(key);
-        assertDistribution(keyBytes, POPULATION_SIZE, DEVIATION); // Allow a 5% deviation
+        assertDistribution(keyBytes, DEVIATION); // Allow a 5% deviation
     }
 
     @ParameterizedTest
@@ -98,7 +98,7 @@ class BlsLibraryTest {
     void testRandomnessSinglePublicKeyByteDistribution(SignatureSchema schema, final Random rng) {
         final var key = BlsPrivateKey.create(schema, rng).createPublicKey();
         final var keyBytes = DefaultBlsPublicKeySerialization.getSerializer().serialize(key);
-        assertDistribution(keyBytes, POPULATION_SIZE, DEVIATION); // Allow a 5% deviation
+        assertDistribution(keyBytes, DEVIATION); // Allow a 5% deviation
     }
 
     @ParameterizedTest
@@ -293,9 +293,10 @@ class BlsLibraryTest {
             try {
                 // If we did not get an exception, the value should be at least not verifiable against the public key
                 assertFalse(
-                        pk.verifySignature(signatureFlippedBytes, message), "Invalid signature should be identified");
+                        deserializer.deserialize(signatureFlippedBytes).verify(pk, message),
+                        "Invalid signature should be identified");
             } catch (Exception e) {
-                assertEquals(IllegalArgumentException.class, e.getClass(), "Invalid signature should be identified");
+                assertEquals(IllegalStateException.class, e.getClass(), "Invalid signature should be identified");
             }
         });
     }
@@ -399,16 +400,16 @@ class BlsLibraryTest {
     }
 
     /**
-     * @param keyBytes
-     * @param populationSize
-     * @param deviation
+     * Asserts the individual values in a key are not repeated (with an accepted deviation)
+     * @param keyBytes  the bytes to assert
+     * @param deviation accepted difference
      */
-    private static void assertDistribution(final byte[] keyBytes, final int populationSize, final double deviation) {
-        final int[] frequencies = new int[populationSize];
+    private static void assertDistribution(final byte[] keyBytes, final double deviation) {
+        final int[] frequencies = new int[BlsLibraryTest.POPULATION_SIZE];
         for (byte b : keyBytes) {
             frequencies[Byte.toUnsignedInt(b)]++;
         }
-        double tolerance = populationSize * deviation;
+        final double tolerance = BlsLibraryTest.POPULATION_SIZE * deviation;
         for (byte b : keyBytes) {
             assertTrue(
                     frequencies[Byte.toUnsignedInt(b)] <= tolerance,
