@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hedera.cryptography.pairings.extensions.serialization;
 
 import com.hedera.cryptography.pairings.api.FieldElement;
@@ -35,7 +51,12 @@ public class EthereumSerialization {
         final byte[] output = new byte[fieldModulusByteCount * bigInts.length];
         for (int i = 0; i < bigInts.length; i++) {
             final byte[] biBytes = bigInts[i].toByteArray();
-            System.arraycopy(biBytes, 0, output, i * fieldModulusByteCount + (fieldModulusByteCount - biBytes.length), biBytes.length);
+            System.arraycopy(
+                    biBytes,
+                    0,
+                    output,
+                    i * fieldModulusByteCount + (fieldModulusByteCount - biBytes.length),
+                    biBytes.length);
         }
 
         return output;
@@ -60,9 +81,7 @@ public class EthereumSerialization {
         bigInts.forEach(this::isValid);
 
         return group.fromCoordinates(
-                bigInts.subList(0, bigInts.size() / 2),
-                bigInts.subList(bigInts.size() / 2, bigInts.size())
-        );
+                bigInts.subList(0, bigInts.size() / 2), bigInts.subList(bigInts.size() / 2, bigInts.size()));
     }
 
     public Serializer<FieldElement> fieldSerializer() {
@@ -81,7 +100,7 @@ public class EthereumSerialization {
         return bytes -> deserializeGroup(bytes, group);
     }
 
-    public void isValid(final BigInteger bigInteger){
+    public void isValid(final BigInteger bigInteger) {
         if (bigInteger.compareTo(fieldModulus) >= 0) {
             throw new IllegalArgumentException("Serialized element is bigger than the field modulus");
         }

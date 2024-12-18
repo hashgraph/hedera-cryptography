@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.hedera.cryptography.pairings.test.extensions.serialization;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,9 +47,7 @@ public class SerializationTest {
                                 ethereumSerialization.groupSerializer(),
                                 ethereumSerialization.fieldDeserializer(),
                                 ethereumSerialization.groupDeserializer(curve.group1()),
-                                ethereumSerialization.groupDeserializer(curve.group2())
-                        )
-                ),
+                                ethereumSerialization.groupDeserializer(curve.group2()))),
                 Arguments.of(
                         curve,
                         new SerializationTester(
@@ -41,47 +55,29 @@ public class SerializationTest {
                                 DefaultGroupElementSerialization.getSerializer(),
                                 DefaultFieldElementSerialization.getDeserializer(curve.field()),
                                 DefaultGroupElementSerialization.getDeserializer(curve.group1()),
-                                DefaultGroupElementSerialization.getDeserializer(curve.group2())
-                        )
-                )
-        );
+                                DefaultGroupElementSerialization.getDeserializer(curve.group2()))));
     }
 
     @ParameterizedTest
     @MethodSource("arguments")
     void serDesRandom(final PairingFriendlyCurve curve, final SerializationTester tester, final Random r) {
         final FieldElement fieldElement = curve.field().random(r);
-        assertEquals(
-                fieldElement,
-                tester.serializeDeserialize(fieldElement)
-        );
+        assertEquals(fieldElement, tester.serializeDeserialize(fieldElement));
 
         final GroupElement group1Element = curve.group1().random(r);
-        assertEquals(
-                group1Element,
-                tester.serializeDeserializeGroup1(group1Element)
-        );
+        assertEquals(group1Element, tester.serializeDeserializeGroup1(group1Element));
 
         final GroupElement group2Element = curve.group2().random(r);
-        assertEquals(
-                group2Element,
-                tester.serializeDeserializeGroup2(group2Element)
-        );
+        assertEquals(group2Element, tester.serializeDeserializeGroup2(group2Element));
     }
 
     @ParameterizedTest
     @MethodSource("arguments")
     void serDesZero(final PairingFriendlyCurve curve, final SerializationTester tester) {
         final GroupElement group1Element = curve.group1().zero();
-        assertEquals(
-                group1Element,
-                tester.serializeDeserializeGroup1(group1Element)
-        );
+        assertEquals(group1Element, tester.serializeDeserializeGroup1(group1Element));
 
         final GroupElement group2Element = curve.group2().zero();
-        assertEquals(
-                group2Element,
-                tester.serializeDeserializeGroup2(group2Element)
-        );
+        assertEquals(group2Element, tester.serializeDeserializeGroup2(group2Element));
     }
 }
