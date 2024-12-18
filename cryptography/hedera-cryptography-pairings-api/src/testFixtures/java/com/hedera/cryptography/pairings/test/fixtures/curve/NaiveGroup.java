@@ -186,4 +186,12 @@ public class NaiveGroup implements Group {
     public int elementSize() {
         return Integer.BYTES;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int coordinateCofactorCount() {
+        return 1;
+    }
 }

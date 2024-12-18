@@ -224,4 +224,11 @@ public interface Group {
      * @return the size in bytes
      */
     int elementSize();
+
+    /**
+     * Returns the number of cofactors in a coordinate for this group
+     *
+     * @return the number of cofactors
+     */
+    int coordinateCofactorCount();
 }

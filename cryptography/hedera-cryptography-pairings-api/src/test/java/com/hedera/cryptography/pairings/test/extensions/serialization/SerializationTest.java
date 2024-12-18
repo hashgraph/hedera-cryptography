@@ -9,7 +9,7 @@ import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import com.hedera.cryptography.pairings.extensions.serialization.DefaultFieldElementSerialization;
 import com.hedera.cryptography.pairings.extensions.serialization.DefaultGroupElementSerialization;
-import com.hedera.cryptography.pairings.extensions.serialization.EthereumAltBn128SerDes;
+import com.hedera.cryptography.pairings.extensions.serialization.EthereumSerialization;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.Random;
 import java.util.stream.Stream;
@@ -22,7 +22,7 @@ public class SerializationTest {
 
     public static Stream<Arguments> serDesArguments() {
         final PairingFriendlyCurve curve = PairingFriendlyCurves.findInstance(Curve.ALT_BN128);
-        final EthereumAltBn128SerDes altBn128SerDes = new EthereumAltBn128SerDes(curve);
+        final EthereumSerialization altBn128SerDes = new EthereumSerialization(curve);
         return Stream.of(
                 Arguments.of(
                         curve,
@@ -30,8 +30,8 @@ public class SerializationTest {
                                 altBn128SerDes.fieldSerializer(),
                                 altBn128SerDes.groupSerializer(),
                                 altBn128SerDes.fieldDeserializer(),
-                                altBn128SerDes.groupDeserializer(),
-                                altBn128SerDes.groupDeserializer()
+                                altBn128SerDes.groupDeserializer(curve.group1()),
+                                altBn128SerDes.groupDeserializer(curve.group2())
                         )
                 ),
                 Arguments.of(

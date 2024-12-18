@@ -119,6 +119,15 @@ public class NaiveField implements Field {
     /**
      * {@inheritDoc}
      */
+    @NonNull
+    @Override
+    public BigInteger modulus() {
+        return BigInteger.valueOf(Integer.MAX_VALUE);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @NonNull
     public PairingFriendlyCurve getPairingFriendlyCurve() {

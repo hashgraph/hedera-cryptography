@@ -34,6 +34,9 @@ import java.util.Objects;
  * for {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
  */
 public class AltBn128Field implements Field {
+    private static final String MOD = "21888242871839275222246405745257275088696311157297823662689037894645226208583";
+    private static final BigInteger MOD_BI = new BigInteger(MOD);
+
     private final FieldFacade facade;
 
     /**
@@ -119,6 +122,15 @@ public class AltBn128Field implements Field {
     @Override
     public int seedSize() {
         return facade.randomSeedSize();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public BigInteger modulus() {
+        return MOD_BI;
     }
 
     /**

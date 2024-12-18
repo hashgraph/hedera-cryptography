@@ -276,6 +276,14 @@ public class AltBn128Group implements Group {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int coordinateCofactorCount() {
+        return group == AltBN128CurveGroup.GROUP1 ? 1 : 2;
+    }
+
+    /**
      * Returns the facade.
      * Internal method
      * @return the facade

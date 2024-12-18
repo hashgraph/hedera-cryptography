@@ -102,6 +102,14 @@ public interface Field {
     int seedSize();
 
     /**
+     * Gets the modulus of the field
+     *
+     * @return the modulus
+     */
+    @NonNull
+    BigInteger modulus();
+
+    /**
      * Get the pairing that this field is used in
      *
      * @return the pairing
