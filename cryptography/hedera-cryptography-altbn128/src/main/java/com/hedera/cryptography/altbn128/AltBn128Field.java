@@ -34,7 +34,9 @@ import java.util.Objects;
  * for {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
  */
 public class AltBn128Field implements Field {
+    /** The modulus for this field, all values will be smaller than this */
     private static final String MOD = "21888242871839275222246405745257275088696311157297823662689037894645226208583";
+    /** The modulus as a BigInteger */
     private static final BigInteger MOD_BI = new BigInteger(MOD);
 
     private final FieldFacade facade;

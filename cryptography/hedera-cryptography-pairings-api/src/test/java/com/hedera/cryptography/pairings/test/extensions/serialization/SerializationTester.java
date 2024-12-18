@@ -22,6 +22,15 @@ import com.hedera.cryptography.utils.serialization.Deserializer;
 import com.hedera.cryptography.utils.serialization.Serializer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Helper class to test serialization and deserialization
+ *
+ * @param fieldSerializer    the field serializer
+ * @param groupSerializer    the group serializer
+ * @param fieldDeserializer  the field deserializer
+ * @param group1Deserializer the group1 deserializer
+ * @param group2Deserializer the group2 deserializer
+ */
 public record SerializationTester(
         @NonNull Serializer<FieldElement> fieldSerializer,
         @NonNull Serializer<GroupElement> groupSerializer,
@@ -29,15 +38,36 @@ public record SerializationTester(
         @NonNull Deserializer<GroupElement> group1Deserializer,
         @NonNull Deserializer<GroupElement> group2Deserializer) {
 
-    public FieldElement serializeDeserialize(final FieldElement fieldElement) {
+    /**
+     * Serialize and deserialize a field element
+     *
+     * @param fieldElement the field element
+     * @return the deserialized field element
+     */
+    @NonNull
+    public FieldElement serializeDeserialize(@NonNull final FieldElement fieldElement) {
         return fieldDeserializer().deserialize(fieldSerializer().serialize(fieldElement));
     }
 
-    public GroupElement serializeDeserializeGroup1(final GroupElement groupElement) {
+    /**
+     * Serialize and deserialize a group element
+     *
+     * @param groupElement the group element
+     * @return the deserialized group element
+     */
+    @NonNull
+    public GroupElement serializeDeserializeGroup1(@NonNull final GroupElement groupElement) {
         return group1Deserializer().deserialize(groupSerializer().serialize(groupElement));
     }
 
-    public GroupElement serializeDeserializeGroup2(final GroupElement groupElement) {
+    /**
+     * Serialize and deserialize a group element
+     *
+     * @param groupElement the group element
+     * @return the deserialized group element
+     */
+    @NonNull
+    public GroupElement serializeDeserializeGroup2(@NonNull final GroupElement groupElement) {
         return group2Deserializer().deserialize(groupSerializer().serialize(groupElement));
     }
 }

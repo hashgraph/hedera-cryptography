@@ -226,7 +226,8 @@ public interface Group {
     int elementSize();
 
     /**
-     * Returns the number of cofactors in a coordinate for this group
+     * Returns the number of cofactors in a coordinate for this group (the number of integers needed to represent a
+     * coordinate)
      *
      * @return the number of cofactors
      */
