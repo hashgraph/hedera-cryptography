@@ -17,7 +17,10 @@
 package com.hedera.cryptography.tss.extensions;
 
 import static com.hedera.cryptography.tss.test.fixtures.TssTestUtils.rndSks;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.GroupAssignment;
@@ -30,6 +33,8 @@ import com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSer
 import com.hedera.cryptography.tss.impl.Groth21Service;
 import com.hedera.cryptography.tss.test.fixtures.TssTestCommittee;
 import com.hedera.cryptography.tss.test.fixtures.TssTestUtils;
+import com.hedera.cryptography.tss.test.fixtures.beaver.Beaver;
+import com.hedera.cryptography.utils.test.fixtures.rng.SeededRandom;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import com.hedera.cryptography.utils.test.fixtures.stream.StreamUtils;
 import java.util.ArrayList;
@@ -81,6 +86,30 @@ class Groth21ServiceTest {
 
         assertArrayEquals(myMessageBytes, serializer.serialize(message));
         assertTrue(tssService.genesisStage().verifyTssMessage(participantDirectory, message));
+    }
+
+    @Test
+    void testGenesisWithBeaver() throws Exception {
+        new Beaver(new SeededRandom())
+                .withCommittee()
+                .randomKeys()
+                .withCommitteeSize(5, 1)
+                .and()
+                .withTssService(SERVICE)
+                .genesis()
+                .senders(1, 2, 3)
+                .test()
+                .assertEqualLedgerIds(1, 2)
+                //                .retrieveLedgerId(1, key -> {
+                //                    assertNotNull(key);
+                //                    assertEquals(1, key.getGroupAssignment().getGroupSize());
+                //                })
+                .retrieveShares(1, (privateShares, publicShares) -> {
+                    assertNotNull(privateShares);
+                    assertNotNull(publicShares);
+                    assertEquals(5, privateShares.size());
+                    assertEquals(5, publicShares.size());
+                });
     }
 
     @Test
