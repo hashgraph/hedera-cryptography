@@ -19,6 +19,7 @@ package com.hedera.cryptography.pairings.test.extensions.serialization;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurve;
 import com.hedera.cryptography.pairings.api.PairingFriendlyCurves;
 import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves;
+import com.hedera.cryptography.pairings.test.fixtures.extensions.serialization.SerializationTester;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import java.util.Random;
 import java.util.stream.Stream;
@@ -37,7 +38,7 @@ public class SerializationTest {
 
     @ParameterizedTest
     @MethodSource("arguments")
-    void serDesRandom(final SerializationTester tester, final Random r) {
+    void testSerialization(final SerializationTester tester, final Random r) {
         tester.testAll(r);
     }
 }

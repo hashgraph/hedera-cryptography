@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hedera.cryptography.pairings.test.extensions.serialization;
+package com.hedera.cryptography.pairings.test.fixtures.extensions.serialization;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
