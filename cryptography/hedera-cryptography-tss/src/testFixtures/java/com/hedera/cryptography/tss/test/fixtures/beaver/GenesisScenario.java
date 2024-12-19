@@ -35,6 +35,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * A test scenario builder for TSS genesis operations. This class facilitates testing of TSS share generation,
+ * extraction, and verification in a controlled environment.
+ *
+ * <p>The scenario allows for:
+ * <ul>
+ *   <li>Setting up multiple sender participants</li>
+ *   <li>Generating and verifying TSS messages</li>
+ *   <li>Extracting and comparing private shares</li>
+ *   <li>Verifying ledger ID consistency</li>
+ * </ul>
+ */
 public class GenesisScenario {
     private final Beaver beaver;
     private List<Integer> senders;
@@ -44,6 +56,13 @@ public class GenesisScenario {
     private BlsPublicKey aggregatedPublicKey;
     private TssShareExtractor tssShareExtractor;
 
+    /**
+     * Creates a new genesis scenario with the specified Beaver instance.
+     *
+     * @param beaver The Beaver instance containing committee and service configurations
+     * @throws NullPointerException  if beaver is null
+     * @throws IllegalStateException if committee or TSS service is not configured in the beaver instance
+     */
     public GenesisScenario(@NonNull Beaver beaver) {
         this.beaver = Objects.requireNonNull(beaver, "beaver must not be null");
         if (beaver.getCommittee() == null) {
@@ -54,6 +73,14 @@ public class GenesisScenario {
         }
     }
 
+    /**
+     * Specifies the participant IDs that will act as senders in this scenario.
+     *
+     * @param senders Array of participant IDs
+     * @return This scenario instance for method chaining
+     * @throws NullPointerException     if senders array is null
+     * @throws IllegalArgumentException if senders array is empty
+     */
     @NonNull
     public GenesisScenario senders(@NonNull final int... senders) {
         Objects.requireNonNull(senders, "senders cannot be null");
@@ -64,6 +91,15 @@ public class GenesisScenario {
         return this;
     }
 
+    /**
+     * Executes the genesis test scenario by generating TSS messages, extracting shares, and preparing verification
+     * data.
+     *
+     * @return This scenario instance for method chaining
+     * @throws NullPointerException  if any required components are null
+     * @throws IllegalStateException if senders have not been set or if the number of shares doesn't match
+     * @throws Exception             if any other error occurs during test execution
+     */
     @NonNull
     public GenesisScenario test() throws Exception {
         final TssParticipantDirectory committee = beaver.getCommittee();
@@ -100,6 +136,15 @@ public class GenesisScenario {
         return this;
     }
 
+
+    /**
+     * Verifies that the ledger IDs are equal for the specified participants.
+     *
+     * @param participantIds Array of participant IDs to compare
+     * @return This scenario instance for method chaining
+     * @throws IllegalArgumentException if fewer than two participant IDs are provided
+     * @throws AssertionError           if the ledger IDs are not equal
+     */
     @NonNull
     public GenesisScenario assertEqualLedgerIds(int... participantIds) {
         if (participantIds.length < 2) {
@@ -116,6 +161,14 @@ public class GenesisScenario {
         return this;
     }
 
+    /**
+     * Retrieves and verifies private share information for a single participant.
+     *
+     * @param participantId The ID of the participant whose share should be verified
+     * @param assertion     A consumer that performs the verification
+     * @return This scenario instance for method chaining
+     * @throws NullPointerException if assertion is null or if required components are missing
+     */
     @NonNull
     public GenesisScenario retrievePrivateShare(int participantId,
             QuadConsumer<TssShareExtractor, TssParticipantDirectory, List<TssPublicShare>, TssParticipantPrivateInfo> assertion) {
@@ -124,6 +177,15 @@ public class GenesisScenario {
         return this;
     }
 
+    /**
+     * Retrieves and verifies private share information for two participants.
+     *
+     * @param participantId1 The ID of the first participant
+     * @param participantId2 The ID of the second participant
+     * @param assertion      A consumer that performs the verification
+     * @return This scenario instance for method chaining
+     * @throws NullPointerException if assertion is null or if required components are missing
+     */
     @NonNull
     public GenesisScenario retrievePrivateShares(int participantId1, int participantId2,
             HexaConsumer<TssShareExtractor, TssParticipantDirectory, List<TssPublicShare>, BlsPublicKey, TssParticipantPrivateInfo, TssParticipantPrivateInfo> assertion) {
