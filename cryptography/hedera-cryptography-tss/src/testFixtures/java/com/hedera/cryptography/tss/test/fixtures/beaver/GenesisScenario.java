@@ -16,31 +16,41 @@
 
 package com.hedera.cryptography.tss.test.fixtures.beaver;
 
-import com.hedera.cryptography.tss.api.TssMessage;
-import com.hedera.cryptography.tss.api.TssPrivateShare;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import com.hedera.cryptography.bls.BlsPublicKey;
+import com.hedera.cryptography.tss.api.TssParticipantDirectory;
+import com.hedera.cryptography.tss.api.TssParticipantPrivateInfo;
 import com.hedera.cryptography.tss.api.TssPublicShare;
+import com.hedera.cryptography.tss.api.TssService;
+import com.hedera.cryptography.tss.api.TssShareExtractor;
+import com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization;
+import com.hedera.cryptography.utils.test.fixtures.HexaConsumer;
+import com.hedera.cryptography.utils.test.fixtures.QuadConsumer;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class GenesisScenario {
     private final Beaver beaver;
     private List<Integer> senders;
     private Map<Integer, byte[]> ledgerIds = new HashMap<>();
-    private Map<Integer, List<TssPrivateShare>> privateSharesMap = new HashMap<>();
-    private Map<Integer, List<TssPublicShare>> publicSharesMap = new HashMap<>();
+    private Map<Integer, TssParticipantPrivateInfo> privateSharesMap = new HashMap<>();
+    private List<TssPublicShare> allPublicShares;
+    private BlsPublicKey aggregatedPublicKey;
+    private TssShareExtractor tssShareExtractor;
 
     public GenesisScenario(@NonNull Beaver beaver) {
         this.beaver = Objects.requireNonNull(beaver, "beaver must not be null");
         if (beaver.getCommittee() == null) {
             throw new IllegalStateException("Committee must be set before genesis scenario can be created");
+        }
+        if (beaver.getTssService() == null) {
+            throw new IllegalStateException("TssService must be set before genesis scenario can be created");
         }
     }
 
@@ -56,34 +66,36 @@ public class GenesisScenario {
 
     @NonNull
     public GenesisScenario test() throws Exception {
+        final TssParticipantDirectory committee = beaver.getCommittee();
+        final var committeeBuilder = beaver.getCommitteeBuilder();
+        final TssService tssService = beaver.getTssService();
+
         if (senders == null) {
             throw new IllegalStateException("senders must be set");
         }
-        if (senders.size() != beaver.getCommittee().getThreshold()) {
-            throw new IllegalStateException("Number of senders must be equal to threshold");
+
+        final var myMessage = tssService.genesisStage().generateTssMessage(committee);
+        Objects.requireNonNull(myMessage, "message could not be generated");
+        final var serializer = DefaultTssMessageSerialization.getSerializer(committeeBuilder.getSchema());
+        assertNotNull(DefaultTssMessageSerialization.getDeserializer(committeeBuilder.getSchema(), committee)
+                .deserialize(serializer.serialize(myMessage)));
+        final var otherMessage = tssService.genesisStage().generateTssMessage(committee);
+        tssShareExtractor =
+                tssService.genesisStage().shareExtractor(committee, List.of(myMessage, otherMessage));
+
+        allPublicShares = tssShareExtractor.allPublicShares();
+        Objects.requireNonNull(allPublicShares, "public shares could not be extracted");
+
+        if (!Objects.equals(committeeBuilder.getNumberOfShares(), allPublicShares.size())) {
+            throw new IllegalStateException("Number of shares does not match");
         }
 
-        // Generate and process messages for each sender
-        List<TssMessage> messages = new ArrayList<>();
-        for (Integer sender : senders) {
-            var message = beaver.getTssService().genesisStage().generateTssMessage(beaver.getCommittee());
-            messages.add(message);
+        aggregatedPublicKey = TssPublicShare.aggregate(allPublicShares);
+        assertNotNull(aggregatedPublicKey);
 
-            // Store shares for later retrieval
-            var tssShareExtractor =
-                    beaver.getTssService().genesisStage().shareExtractor(beaver.getCommittee(), messages);
-
-            var privateInfo = beaver.privateInfoOf(sender);
-            privateSharesMap.put(sender, tssShareExtractor.ownedPrivateShares(privateInfo));
-            publicSharesMap.put(sender, new ArrayList<>(tssShareExtractor.allPublicShares()));
-
-            // Simulate ledger ID generation (you'll need to implement this based on your actual logic)
-            ledgerIds.put(sender, generateLedgerId(sender));
+        for (int i = 0; i < committeeBuilder.getNumberParticipants(); i++) {
+            privateSharesMap.put(i, committeeBuilder.privateInfoOf(i));
         }
-
-        // Perform verification steps
-        verifyShares();
-        verifySignatures();
 
         return this;
     }
@@ -105,91 +117,21 @@ public class GenesisScenario {
     }
 
     @NonNull
-    public GenesisScenario retrieveLedgerId(int participantId, Consumer<LedgerKey> assertion) {
-        byte[] ledgerId = ledgerIds.get(participantId);
-        if (ledgerId == null) {
-            throw new IllegalStateException("No ledger ID found for participant " + participantId);
-        }
-
-        // Create a LedgerKey object (you'll need to implement this based on your actual class)
-        LedgerKey key = new LedgerKey(ledgerId, 1); // Assuming group index is 1 as per test
-        assertion.accept(key);
+    public GenesisScenario retrievePrivateShare(int participantId,
+            QuadConsumer<TssShareExtractor, TssParticipantDirectory, List<TssPublicShare>, TssParticipantPrivateInfo> assertion) {
+        assertion.accept(tssShareExtractor, beaver.getCommittee(), allPublicShares,
+                privateSharesMap.get(participantId));
         return this;
     }
 
     @NonNull
-    public GenesisScenario retrieveShares(
-            int participantId, BiConsumer<List<TssPrivateShare>, List<TssPublicShare>> assertion) {
-        List<TssPrivateShare> privateShares = privateSharesMap.get(participantId);
-        List<TssPublicShare> publicShares = publicSharesMap.get(participantId);
-
-        if (privateShares == null || publicShares == null) {
-            throw new IllegalStateException("No shares found for participant " + participantId);
-        }
-
-        assertion.accept(privateShares, publicShares);
+    public GenesisScenario retrievePrivateShares(int participantId1, int participantId2,
+            HexaConsumer<TssShareExtractor, TssParticipantDirectory, List<TssPublicShare>, BlsPublicKey, TssParticipantPrivateInfo, TssParticipantPrivateInfo> assertion) {
+        assertion.accept(tssShareExtractor, beaver.getCommittee(), allPublicShares, aggregatedPublicKey,
+                privateSharesMap.get(participantId1),
+                privateSharesMap.get(participantId2));
         return this;
     }
 
-    private void verifyShares() {
-        // Verify that private and public shares match for each participant
-        for (Integer sender : senders) {
-            var privateShares = privateSharesMap.get(sender);
-            var publicShares = publicSharesMap.get(sender);
 
-            if (privateShares.size() != publicShares.size()) {
-                throw new IllegalStateException(
-                        "Mismatch in private and public shares count for participant " + sender);
-            }
-
-            for (int i = 0; i < privateShares.size(); i++) {
-                if (!privateShares
-                        .get(i)
-                        .privateKey()
-                        .createPublicKey()
-                        .equals(publicShares.get(i).publicKey())) {
-                    throw new IllegalStateException("Private and public keys do not match for participant " + sender);
-                }
-            }
-        }
-    }
-
-    private void verifySignatures() {
-        // Verify signatures for each participant
-        byte[] testMessage = "TestMessage".getBytes();
-
-        for (Integer sender : senders) {
-            var privateShares = privateSharesMap.get(sender);
-            var publicShares = publicSharesMap.get(sender);
-
-            var signatures =
-                    privateShares.stream().map(share -> share.sign(testMessage)).collect(Collectors.toList());
-
-            for (int i = 0; i < signatures.size(); i++) {
-                if (!signatures.get(i).verify(publicShares.get(i), testMessage)) {
-                    throw new IllegalStateException("Signature verification failed for participant " + sender);
-                }
-            }
-        }
-    }
-
-    // Fixme: Implement real
-    private byte[] generateLedgerId(int participantId) {
-        return ("LedgerId-" + participantId).getBytes();
-    }
-
-    // Fixme: Implement real
-    public static class LedgerKey {
-        private final byte[] id;
-        private final int groupIndex;
-
-        public LedgerKey(byte[] id, int groupIndex) {
-            this.id = id;
-            this.groupIndex = groupIndex;
-        }
-
-        public int getGroupIndex() {
-            return groupIndex;
-        }
-    }
 }

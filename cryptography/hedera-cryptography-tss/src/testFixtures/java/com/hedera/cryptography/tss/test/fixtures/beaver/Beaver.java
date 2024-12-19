@@ -16,25 +16,18 @@
 
 package com.hedera.cryptography.tss.test.fixtures.beaver;
 
-import com.hedera.cryptography.bls.BlsPrivateKey;
-import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
-import com.hedera.cryptography.tss.api.TssParticipantPrivateInfo;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.utils.test.fixtures.rng.SeededRandom;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
 
 public class Beaver {
     private final Random rng;
     private CommitteeBuilder committeeBuilder;
     private TssService tssService;
-    private SignatureSchema signatureSchema;
-    private ExecutorService executorService;
     private TssParticipantDirectory committee;
-    private BlsPrivateKey[] privateKeys;
 
     public Beaver() {
         this(new SeededRandom());
@@ -55,7 +48,6 @@ public class Beaver {
 
     void setCommitteeBuilder(@NonNull final CommitteeBuilder committeeBuilder) {
         this.committeeBuilder = Objects.requireNonNull(committeeBuilder, "committeeBuilder cannot be null");
-        privateKeys = committeeBuilder.getKeys();
         committee = Objects.requireNonNull(committeeBuilder.build(), "committee cannot be created");
     }
 
@@ -65,14 +57,10 @@ public class Beaver {
     }
 
     @NonNull
-    BlsPrivateKey[] getKeys() {
-        return privateKeys;
+    CommitteeBuilder getCommitteeBuilder() {
+        return committeeBuilder;
     }
 
-    @NonNull
-    TssParticipantPrivateInfo privateInfoOf(final int participantId) {
-        return new TssParticipantPrivateInfo(participantId, privateKeys[participantId]);
-    }
 
     public Beaver withTssService(@NonNull final TssService tssService) {
         this.tssService = Objects.requireNonNull(tssService, "tssService cannot be null");

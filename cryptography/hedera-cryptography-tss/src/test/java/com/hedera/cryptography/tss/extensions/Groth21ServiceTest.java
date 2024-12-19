@@ -26,8 +26,11 @@ import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
+import com.hedera.cryptography.tss.api.TssParticipantDirectory;
+import com.hedera.cryptography.tss.api.TssParticipantPrivateInfo;
 import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
+import com.hedera.cryptography.tss.api.TssShareExtractor;
 import com.hedera.cryptography.tss.api.TssShareSignature;
 import com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization;
 import com.hedera.cryptography.tss.impl.Groth21Service;
@@ -93,46 +96,70 @@ class Groth21ServiceTest {
         new Beaver(new SeededRandom())
                 .withCommittee()
                 .randomKeys()
-                .withCommitteeSize(5, 1)
+                .withCommitteeSize(GENESIS_SIZE, GENESIS_SHARES)
                 .and()
                 .withTssService(SERVICE)
                 .genesis()
-                .senders(1, 2, 3)
+                .senders(1, 2)
                 .test()
                 .assertEqualLedgerIds(1, 2)
-                //                .retrieveLedgerId(1, key -> {
-                //                    assertNotNull(key);
-                //                    assertEquals(1, key.getGroupAssignment().getGroupSize());
-                //                })
-                .retrieveShares(1, (privateShares, publicShares) -> {
+                .retrievePrivateShare(0, (extractor, directory, allPublicShares, info) -> {
+                    final var privateShares = extractor.ownedPrivateShares(info);
                     assertNotNull(privateShares);
-                    assertNotNull(publicShares);
-                    assertEquals(5, privateShares.size());
-                    assertEquals(5, publicShares.size());
-                });
+                    assertEquals(GENESIS_SHARES, privateShares.size());
+
+                    final var ownedPublicShares = info.ownedShares(directory).stream()
+                            .map(share -> allPublicShares.get(share - 1))
+                            .toList();
+                    StreamUtils.zipStream(privateShares, ownedPublicShares)
+                            .forEach(e -> assertEquals(
+                                    e.getKey().privateKey().createPublicKey(), e.getValue().publicKey()));
+                })
+                .retrievePrivateShares(0, 1,
+                        (extractor, directory, allPublicShares, aggregatedPublicKey, info1, info2) -> {
+                            final var privateShares = extractor.ownedPrivateShares(info1);
+                            final var otherPrivateShares = extractor.ownedPrivateShares(info2);
+
+                            final var allPrivateShares = new ArrayList<>(privateShares);
+                            allPrivateShares.addAll(otherPrivateShares);
+
+                            final byte[] message = "MyMessage".getBytes();
+                            final var signatures =
+                                    allPrivateShares.stream().map(share -> share.sign(message)).toList();
+
+                            StreamUtils.zipStream(signatures, allPublicShares)
+                                    .forEach(e -> assertTrue(e.getKey().verify(e.getValue(), message)));
+
+                            final var aggregatedSignature = TssShareSignature.aggregate(signatures);
+
+                            assertTrue(aggregatedSignature.verify(aggregatedPublicKey, message));
+                        });
     }
 
     @Test
     void testGenesis() {
+        // Setup
         final var genesisCommittee = new TssTestCommittee(GENESIS_SIZE, GENESIS_SHARES, keys);
-        final var participantDirectory = genesisCommittee.participantDirectory();
+        final TssParticipantDirectory participantDirectory = genesisCommittee.participantDirectory();
         final var myMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
-        final var myInfo = genesisCommittee.privateInfoOf(0);
         assertNotNull(myMessage);
-        var serializer = DefaultTssMessageSerialization.getSerializer(SIGNATURE_SCHEMA);
+        final var serializer = DefaultTssMessageSerialization.getSerializer(SIGNATURE_SCHEMA);
         assertNotNull(DefaultTssMessageSerialization.getDeserializer(SIGNATURE_SCHEMA, participantDirectory)
                 .deserialize(serializer.serialize(myMessage)));
         final var otherMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
-        final var tssShareExtractor =
+        final TssShareExtractor tssShareExtractor =
                 tssService.genesisStage().shareExtractor(participantDirectory, List.of(myMessage, otherMessage));
 
+        // Genesis start
         final var allPublicShares = tssShareExtractor.allPublicShares();
         assertNotNull(allPublicShares);
-        assertEquals(GENESIS_SIZE * GENESIS_SHARES, allPublicShares.size());
+        assertEquals(GENESIS_SIZE * GENESIS_SHARES, allPublicShares.size()); // Number of shares of all participants
 
         final var aggregatedPublicKey = TssPublicShare.aggregate(allPublicShares);
         assertNotNull(aggregatedPublicKey);
 
+        // Validate participant's private shares (different method)
+        final TssParticipantPrivateInfo myInfo = genesisCommittee.privateInfoOf(0);
         final var privateShares = tssShareExtractor.ownedPrivateShares(myInfo);
         assertNotNull(privateShares);
         assertEquals(GENESIS_SHARES, privateShares.size());
@@ -144,6 +171,7 @@ class Groth21ServiceTest {
                 .forEach(e -> assertEquals(
                         e.getKey().privateKey().createPublicKey(), e.getValue().publicKey()));
 
+        // Validate participant's private shares (same method)
         final var otherInfo = genesisCommittee.privateInfoOf(1);
         final var otherPrivateShares = tssService
                 .genesisStage()
@@ -153,6 +181,8 @@ class Groth21ServiceTest {
 
         final var allPrivateShares = new ArrayList<>(privateShares);
         allPrivateShares.addAll(otherPrivateShares);
+
+        // Validating signatures and message
         final byte[] message = "MyMessage".getBytes();
         final var signatures =
                 allPrivateShares.stream().map(share -> share.sign(message)).toList();

@@ -21,6 +21,7 @@ import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
+import com.hedera.cryptography.tss.api.TssParticipantPrivateInfo;
 import com.hedera.cryptography.utils.test.fixtures.Pair;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
@@ -33,9 +34,13 @@ public class CommitteeBuilder {
     private List<Pair<Integer, Integer>> customShareDistribution;
     private List<Integer> absentParticipants;
     private BlsPrivateKey[] keys;
+    private SignatureSchema schema;
     int numberParticipants = 0;
+    int customNumberParticipants = 0;
     int sharesPerParticipant = 0;
     int customThreshold = 0;
+    int numberOfShares = -1;
+
 
     CommitteeBuilder(final Beaver beaver) {
         this.beaver = beaver;
@@ -68,10 +73,10 @@ public class CommitteeBuilder {
         if (sharesPerParticipant < 1) {
             throw new IllegalArgumentException("Shares per participant must be greater than 0");
         }
-        if (this.numberParticipants != 0 || this.sharesPerParticipant != 0) {
+        if (this.customNumberParticipants != 0 || this.sharesPerParticipant != 0) {
             throw new IllegalStateException("Cannot set committee size when it is already set");
         }
-        this.numberParticipants = numberParticipants;
+        this.customNumberParticipants = numberParticipants;
         this.sharesPerParticipant = sharesPerParticipant;
 
         return this;
@@ -101,33 +106,47 @@ public class CommitteeBuilder {
     }
 
     @NonNull
+    public CommitteeBuilder withSchema(@NonNull final Curve curve, @NonNull final GroupAssignment groupAssignment) {
+        this.schema = SignatureSchema.create(curve, groupAssignment);
+        return this;
+    }
+
+    @NonNull
     TssParticipantDirectory build() {
-        if (numberParticipants == 0 || sharesPerParticipant == 0) {
+        if (customNumberParticipants == 0 || sharesPerParticipant == 0) {
             throw new IllegalStateException("Committee size must be set");
         }
+        if (schema == null) {
+            schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_SIGNATURES);
+        }
         if (randomKeys) {
-            keys = new BlsPrivateKey[numberParticipants];
-            final var schema = SignatureSchema.create(Curve.ALT_BN128, GroupAssignment.SHORT_PUBLIC_KEYS);
-            for (int i = 0; i < numberParticipants; i++) {
+            keys = new BlsPrivateKey[customNumberParticipants];
+            for (int i = 0; i < customNumberParticipants; i++) {
                 keys[i] = BlsPrivateKey.create(schema, beaver.getRng());
             }
         } else if (keys == null) {
             throw new IllegalStateException("Keys must be set");
         }
 
-        final int threshold =
-                customThreshold == 0 ? (numberParticipants * sharesPerParticipant + 2) / 2 : customThreshold;
+        if (customNumberParticipants > 0 && sharesPerParticipant > 0) {
+            numberParticipants = customNumberParticipants;
+            numberOfShares = customNumberParticipants * sharesPerParticipant;
+            final var threshold = customThreshold == 0 ? (numberOfShares + 2) / 2 : customThreshold;
+            final var directoryBuilder = TssParticipantDirectory.createBuilder().withThreshold(threshold);
 
-        final var directoryBuilder = TssParticipantDirectory.createBuilder().withThreshold(threshold);
-
-        if (numberParticipants > 0 && sharesPerParticipant > 0) {
-            for (int i = 0; i < numberParticipants; i++) {
+            for (int i = 0; i < customNumberParticipants; i++) {
                 if (absentParticipants != null && absentParticipants.contains(i)) {
                     continue;
                 }
                 directoryBuilder.withParticipant(i, sharesPerParticipant, keys[i].createPublicKey());
             }
+            return directoryBuilder.build();
         } else if (customShareDistribution != null) {
+            numberParticipants = customShareDistribution.size();
+            numberOfShares = customShareDistribution.stream().mapToInt(Pair::right).sum();
+            final var threshold = customThreshold == 0 ? (numberOfShares + 2) / 2 : customThreshold;
+            final var directoryBuilder = TssParticipantDirectory.createBuilder().withThreshold(threshold);
+
             for (int i = 0; i < customShareDistribution.size(); i++) {
                 if (absentParticipants != null && absentParticipants.contains(i)) {
                     continue;
@@ -135,11 +154,11 @@ public class CommitteeBuilder {
                 final var distribution = customShareDistribution.get(i);
                 directoryBuilder.withParticipant(distribution.left(), distribution.right(), keys[i].createPublicKey());
             }
+            return directoryBuilder.build();
         } else {
             throw new IllegalStateException("Committee size must be set");
         }
 
-        return directoryBuilder.build();
     }
 
     public Beaver and() {
@@ -150,5 +169,28 @@ public class CommitteeBuilder {
     @NonNull
     BlsPrivateKey[] getKeys() {
         return keys;
+    }
+
+    int getNumberOfShares() {
+        return numberOfShares;
+    }
+
+    SignatureSchema getSchema() {
+        return schema;
+    }
+
+    int getNumberParticipants() {
+        return numberParticipants;
+    }
+
+    /**
+     * Returns the private info of {@code participantId}
+     *
+     * @param participantId participant participantId
+     * @return the private info of {@code participantId}
+     */
+    @NonNull
+    TssParticipantPrivateInfo privateInfoOf(final int participantId) {
+        return new TssParticipantPrivateInfo(participantId, this.keys[participantId]);
     }
 }
