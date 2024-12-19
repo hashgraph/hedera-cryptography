@@ -12,7 +12,7 @@ dependencies.constraints {
         because("com.github.spotbugs.annotations")
     }
     api("org.junit.jupiter:junit-jupiter-api:5.10.2") { because("org.junit.jupiter.api") }
-    api("org.junit.jupiter:junit-jupiter-engine:5.10.2") { because("org.junit.jupiter.engine") }
+    api("org.junit.jupiter:junit-jupiter-engine:5.11.4") { because("org.junit.jupiter.engine") }
     api("org.mockito:mockito-core:5.8.0") { because("org.mockito") }
     api("org.mockito:mockito-junit-jupiter:5.8.0") { because("org.mockito.junit.jupiter") }
     api("org.junit.jupiter:junit-jupiter-api:5.10.2") { because("org.junit.jupiter.api") }
