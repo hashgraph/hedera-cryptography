@@ -118,7 +118,7 @@ public final class NaiveGroupElement implements GroupElement {
     @NonNull
     @Override
     public List<BigInteger> getYCoordinate() {
-        return List.of(value.toBigInteger());
+        return List.of(BigInteger.ZERO);
     }
 
     @Override
@@ -179,7 +179,7 @@ public final class NaiveGroupElement implements GroupElement {
             return false;
         }
         var that = (NaiveGroupElement) obj;
-        return Objects.equals(this.group, that.group) && this.value == that.value;
+        return Objects.equals(this.value, that.value);
     }
 
     @Override

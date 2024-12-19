@@ -97,7 +97,7 @@ public class NaiveField implements Field {
     @Override
     @NonNull
     public FieldElement fromBigInteger(@NonNull final BigInteger bigInteger) {
-        return fromBytes(bigInteger.toByteArray());
+        return new NaiveFieldElement(this, bigInteger.intValueExact());
     }
 
     /**
@@ -122,7 +122,7 @@ public class NaiveField implements Field {
     @NonNull
     @Override
     public BigInteger modulus() {
-        return BigInteger.valueOf(Integer.MAX_VALUE);
+        return BigInteger.valueOf(Integer.MAX_VALUE + 1L);
     }
 
     /**
