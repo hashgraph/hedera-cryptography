@@ -2,8 +2,8 @@
  * Alt bn-128 implementation of the pairings api
  */
 module com.hedera.cryptography.altbn128 {
+    requires transitive com.hedera.cryptography.pairings.api;
     requires com.hedera.common.nativesupport;
-    requires com.hedera.cryptography.pairings.api;
     requires com.hedera.cryptography.utils;
     requires org.bouncycastle.provider;
     requires static transitive com.github.spotbugs.annotations;
