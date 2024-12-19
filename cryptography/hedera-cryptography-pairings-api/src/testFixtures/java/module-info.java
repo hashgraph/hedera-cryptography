@@ -4,9 +4,9 @@ import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves.Te
 
 module com.hedera.cryptography.pairings.test.fixtures {
     requires com.hedera.cryptography.utils;
+    requires org.junit.jupiter.api;
     requires static transitive com.hedera.cryptography.pairings.api;
     requires static transitive com.github.spotbugs.annotations;
-    requires org.junit.jupiter.api;
 
     exports com.hedera.cryptography.pairings.test.fixtures.curve;
     exports com.hedera.cryptography.pairings.test.fixtures.extensions.serialization;
