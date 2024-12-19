@@ -19,6 +19,7 @@ package com.hedera.cryptography.tss.test.fixtures.beaver;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.hedera.cryptography.bls.BlsPublicKey;
+import com.hedera.cryptography.tss.api.TssMessage;
 import com.hedera.cryptography.tss.api.TssParticipantDirectory;
 import com.hedera.cryptography.tss.api.TssParticipantPrivateInfo;
 import com.hedera.cryptography.tss.api.TssPublicShare;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A test scenario builder for TSS genesis operations. This class facilitates testing of TSS share generation,
@@ -54,7 +56,7 @@ public class GenesisScenario {
     private Map<Integer, TssParticipantPrivateInfo> privateSharesMap = new HashMap<>();
     private List<TssPublicShare> allPublicShares;
     private BlsPublicKey aggregatedPublicKey;
-    private TssShareExtractor tssShareExtractor;
+    private List<TssMessage> messages;
 
     /**
      * Creates a new genesis scenario with the specified Beaver instance.
@@ -110,14 +112,23 @@ public class GenesisScenario {
             throw new IllegalStateException("senders must be set");
         }
 
-        final var myMessage = tssService.genesisStage().generateTssMessage(committee);
-        Objects.requireNonNull(myMessage, "message could not be generated");
-        final var serializer = DefaultTssMessageSerialization.getSerializer(committeeBuilder.getSchema());
-        assertNotNull(DefaultTssMessageSerialization.getDeserializer(committeeBuilder.getSchema(), committee)
-                .deserialize(serializer.serialize(myMessage)));
-        final var otherMessage = tssService.genesisStage().generateTssMessage(committee);
-        tssShareExtractor =
-                tssService.genesisStage().shareExtractor(committee, List.of(myMessage, otherMessage));
+        messages =
+                IntStream.range(0, committeeBuilder.getNumberParticipants()).mapToObj(i -> {
+                            if (!senders.contains(i)) {
+                                return null;
+                            }
+                            final var myMessage = tssService.genesisStage().generateTssMessage(committee);
+                            Objects.requireNonNull(myMessage, "message could not be generated");
+                            final var serializer = DefaultTssMessageSerialization.getSerializer(committeeBuilder.getSchema());
+                            assertNotNull(
+                                    DefaultTssMessageSerialization.getDeserializer(committeeBuilder.getSchema(), committee)
+                                            .deserialize(serializer.serialize(myMessage)));
+                            return myMessage;
+                        })
+                        .filter(Objects::nonNull)
+                        .toList();
+
+        final var tssShareExtractor = tssService.genesisStage().shareExtractor(committee, messages);
 
         allPublicShares = tssShareExtractor.allPublicShares();
         Objects.requireNonNull(allPublicShares, "public shares could not be extracted");
@@ -172,7 +183,8 @@ public class GenesisScenario {
     @NonNull
     public GenesisScenario retrievePrivateShare(int participantId,
             QuadConsumer<TssShareExtractor, TssParticipantDirectory, List<TssPublicShare>, TssParticipantPrivateInfo> assertion) {
-        assertion.accept(tssShareExtractor, beaver.getCommittee(), allPublicShares,
+        assertion.accept(beaver.getTssService().genesisStage().shareExtractor(beaver.getCommittee(), messages),
+                beaver.getCommittee(), allPublicShares,
                 privateSharesMap.get(participantId));
         return this;
     }
@@ -189,7 +201,8 @@ public class GenesisScenario {
     @NonNull
     public GenesisScenario retrievePrivateShares(int participantId1, int participantId2,
             HexaConsumer<TssShareExtractor, TssParticipantDirectory, List<TssPublicShare>, BlsPublicKey, TssParticipantPrivateInfo, TssParticipantPrivateInfo> assertion) {
-        assertion.accept(tssShareExtractor, beaver.getCommittee(), allPublicShares, aggregatedPublicKey,
+        assertion.accept(beaver.getTssService().genesisStage().shareExtractor(beaver.getCommittee(), messages),
+                beaver.getCommittee(), allPublicShares, aggregatedPublicKey,
                 privateSharesMap.get(participantId1),
                 privateSharesMap.get(participantId2));
         return this;

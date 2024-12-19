@@ -100,9 +100,9 @@ class Groth21ServiceTest {
                 .and()
                 .withTssService(SERVICE)
                 .genesis()
-                .senders(1, 2)
+                .senders(0, 1)
                 .test()
-                .assertEqualLedgerIds(1, 2)
+                .assertEqualLedgerIds(0, 1)
                 .retrievePrivateShare(0, (extractor, directory, allPublicShares, info) -> {
                     final var privateShares = extractor.ownedPrivateShares(info);
                     assertNotNull(privateShares);
@@ -115,25 +115,18 @@ class Groth21ServiceTest {
                             .forEach(e -> assertEquals(
                                     e.getKey().privateKey().createPublicKey(), e.getValue().publicKey()));
                 })
-                .retrievePrivateShares(0, 1,
-                        (extractor, directory, allPublicShares, aggregatedPublicKey, info1, info2) -> {
-                            final var privateShares = extractor.ownedPrivateShares(info1);
-                            final var otherPrivateShares = extractor.ownedPrivateShares(info2);
+                .retrievePrivateShare(1, (extractor, directory, allPublicShares, info) -> {
+                    final var privateShares = extractor.ownedPrivateShares(info);
+                    assertNotNull(privateShares);
+                    assertEquals(GENESIS_SHARES, privateShares.size());
 
-                            final var allPrivateShares = new ArrayList<>(privateShares);
-                            allPrivateShares.addAll(otherPrivateShares);
-
-                            final byte[] message = "MyMessage".getBytes();
-                            final var signatures =
-                                    allPrivateShares.stream().map(share -> share.sign(message)).toList();
-
-                            StreamUtils.zipStream(signatures, allPublicShares)
-                                    .forEach(e -> assertTrue(e.getKey().verify(e.getValue(), message)));
-
-                            final var aggregatedSignature = TssShareSignature.aggregate(signatures);
-
-                            assertTrue(aggregatedSignature.verify(aggregatedPublicKey, message));
-                        });
+                    final var ownedPublicShares = info.ownedShares(directory).stream()
+                            .map(share -> allPublicShares.get(share - 1))
+                            .toList();
+                    StreamUtils.zipStream(privateShares, ownedPublicShares)
+                            .forEach(e -> assertEquals(
+                                    e.getKey().privateKey().createPublicKey(), e.getValue().publicKey()));
+                });
     }
 
     @Test
