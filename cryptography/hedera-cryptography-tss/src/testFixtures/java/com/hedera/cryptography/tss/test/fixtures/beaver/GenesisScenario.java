@@ -26,7 +26,6 @@ import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
 import com.hedera.cryptography.tss.api.TssShareExtractor;
 import com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization;
-import com.hedera.cryptography.utils.test.fixtures.HexaConsumer;
 import com.hedera.cryptography.utils.test.fixtures.QuadConsumer;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
@@ -188,25 +187,4 @@ public class GenesisScenario {
                 privateSharesMap.get(participantId));
         return this;
     }
-
-    /**
-     * Retrieves and verifies private share information for two participants.
-     *
-     * @param participantId1 The ID of the first participant
-     * @param participantId2 The ID of the second participant
-     * @param assertion      A consumer that performs the verification
-     * @return This scenario instance for method chaining
-     * @throws NullPointerException if assertion is null or if required components are missing
-     */
-    @NonNull
-    public GenesisScenario retrievePrivateShares(int participantId1, int participantId2,
-            HexaConsumer<TssShareExtractor, TssParticipantDirectory, List<TssPublicShare>, BlsPublicKey, TssParticipantPrivateInfo, TssParticipantPrivateInfo> assertion) {
-        assertion.accept(beaver.getTssService().genesisStage().shareExtractor(beaver.getCommittee(), messages),
-                beaver.getCommittee(), allPublicShares, aggregatedPublicKey,
-                privateSharesMap.get(participantId1),
-                privateSharesMap.get(participantId2));
-        return this;
-    }
-
-
 }
