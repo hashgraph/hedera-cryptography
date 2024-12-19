@@ -72,6 +72,7 @@ jobs:
 
   test-cross-platform:
     name: Test on ${{ matrix.os }}
+    if: ${{ github.actor != 'dependabot[bot]' }}
     needs: build
     strategy:
       matrix:
