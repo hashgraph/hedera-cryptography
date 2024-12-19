@@ -3,7 +3,7 @@ import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves.Fa
 import com.hedera.cryptography.pairings.test.fixtures.curve.TestFixtureCurves.TestBn;
 
 module com.hedera.cryptography.pairings.test.fixtures {
-    requires com.hedera.cryptography.utils;
+    requires transitive com.hedera.cryptography.utils;
     requires org.junit.jupiter.api;
     requires static transitive com.hedera.cryptography.pairings.api;
     requires static transitive com.github.spotbugs.annotations;
