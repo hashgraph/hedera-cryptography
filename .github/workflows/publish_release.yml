@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 name: "Publish Release"
 
 on:
@@ -102,7 +103,7 @@ jobs:
       new-version: ${{ needs.prepare-release.outputs.version }}
       dry-run-enabled: ${{ github.event.inputs.dry-run-enabled == 'true' }}
       java-distribution: ${{ github.event.inputs.java-distribution || 'temurin' }}
-      java-version: ${{ github.event.inputs.java-version || '21.0.1' }}
+      java-version: ${{ github.event.inputs.java-version || '21.0.4' }}
       gradle-version: ${{ github.event.inputs.gradle-version || 'wrapper' }}
     secrets:
       gradle-cache-username: ${{ secrets.GRADLE_CACHE_USERNAME }}
