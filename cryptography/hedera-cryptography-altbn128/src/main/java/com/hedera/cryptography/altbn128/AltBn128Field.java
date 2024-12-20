@@ -1,19 +1,4 @@
-/*
- * Copyright (C) 2024 Hedera Hashgraph, LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package com.hedera.cryptography.altbn128;
 
 import static com.hedera.cryptography.utils.ValidationUtils.expectOrThrow;
@@ -34,6 +19,11 @@ import java.util.Objects;
  * for {@link com.hedera.cryptography.pairings.api.curves.KnownCurves#ALT_BN128}
  */
 public class AltBn128Field implements Field {
+    /** The modulus for this field, all values will be smaller than this */
+    private static final String MOD = "21888242871839275222246405745257275088696311157297823662689037894645226208583";
+    /** The modulus as a BigInteger */
+    private static final BigInteger MOD_BI = new BigInteger(MOD);
+
     private final FieldFacade facade;
 
     /**
@@ -119,6 +109,15 @@ public class AltBn128Field implements Field {
     @Override
     public int seedSize() {
         return facade.randomSeedSize();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public BigInteger modulus() {
+        return MOD_BI;
     }
 
     /**
