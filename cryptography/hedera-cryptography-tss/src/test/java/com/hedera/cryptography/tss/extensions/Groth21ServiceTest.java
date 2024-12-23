@@ -1,35 +1,28 @@
-/*
- * Copyright (C) 2024 Hedera Hashgraph, LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package com.hedera.cryptography.tss.extensions;
 
 import static com.hedera.cryptography.tss.test.fixtures.TssTestUtils.rndSks;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
 import com.hedera.cryptography.bls.GroupAssignment;
 import com.hedera.cryptography.bls.SignatureSchema;
 import com.hedera.cryptography.pairings.api.Curve;
+import com.hedera.cryptography.tss.api.TssParticipantDirectory;
+import com.hedera.cryptography.tss.api.TssParticipantPrivateInfo;
 import com.hedera.cryptography.tss.api.TssPublicShare;
 import com.hedera.cryptography.tss.api.TssService;
+import com.hedera.cryptography.tss.api.TssShareExtractor;
 import com.hedera.cryptography.tss.api.TssShareSignature;
 import com.hedera.cryptography.tss.extensions.serialization.DefaultTssMessageSerialization;
 import com.hedera.cryptography.tss.impl.Groth21Service;
 import com.hedera.cryptography.tss.test.fixtures.TssTestCommittee;
 import com.hedera.cryptography.tss.test.fixtures.TssTestUtils;
+import com.hedera.cryptography.tss.test.fixtures.beaver.Beaver;
+import com.hedera.cryptography.utils.test.fixtures.rng.SeededRandom;
 import com.hedera.cryptography.utils.test.fixtures.rng.WithRng;
 import com.hedera.cryptography.utils.test.fixtures.stream.StreamUtils;
 import java.util.ArrayList;
@@ -84,26 +77,69 @@ class Groth21ServiceTest {
     }
 
     @Test
+    void testGenesisWithBeaver() throws Exception {
+        new Beaver(new SeededRandom())
+                .withCommittee()
+                .randomKeys()
+                .withCommitteeSize(GENESIS_SIZE, GENESIS_SHARES)
+                .and()
+                .withTssService(SERVICE)
+                .genesis()
+                .senders(0, 1)
+                .test()
+                .assertEqualLedgerIds(0, 1)
+                .retrievePrivateShare(0, (extractor, directory, allPublicShares, info) -> {
+                    final var privateShares = extractor.ownedPrivateShares(info);
+                    assertNotNull(privateShares);
+                    assertEquals(GENESIS_SHARES, privateShares.size());
+
+                    final var ownedPublicShares = info.ownedShares(directory).stream()
+                            .map(share -> allPublicShares.get(share - 1))
+                            .toList();
+                    StreamUtils.zipStream(privateShares, ownedPublicShares)
+                            .forEach(e -> assertEquals(
+                                    e.getKey().privateKey().createPublicKey(),
+                                    e.getValue().publicKey()));
+                })
+                .retrievePrivateShare(1, (extractor, directory, allPublicShares, info) -> {
+                    final var privateShares = extractor.ownedPrivateShares(info);
+                    assertNotNull(privateShares);
+                    assertEquals(GENESIS_SHARES, privateShares.size());
+
+                    final var ownedPublicShares = info.ownedShares(directory).stream()
+                            .map(share -> allPublicShares.get(share - 1))
+                            .toList();
+                    StreamUtils.zipStream(privateShares, ownedPublicShares)
+                            .forEach(e -> assertEquals(
+                                    e.getKey().privateKey().createPublicKey(),
+                                    e.getValue().publicKey()));
+                });
+    }
+
+    @Test
     void testGenesis() {
+        // Setup
         final var genesisCommittee = new TssTestCommittee(GENESIS_SIZE, GENESIS_SHARES, keys);
-        final var participantDirectory = genesisCommittee.participantDirectory();
+        final TssParticipantDirectory participantDirectory = genesisCommittee.participantDirectory();
         final var myMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
-        final var myInfo = genesisCommittee.privateInfoOf(0);
         assertNotNull(myMessage);
-        var serializer = DefaultTssMessageSerialization.getSerializer(SIGNATURE_SCHEMA);
+        final var serializer = DefaultTssMessageSerialization.getSerializer(SIGNATURE_SCHEMA);
         assertNotNull(DefaultTssMessageSerialization.getDeserializer(SIGNATURE_SCHEMA, participantDirectory)
                 .deserialize(serializer.serialize(myMessage)));
         final var otherMessage = tssService.genesisStage().generateTssMessage(participantDirectory);
-        final var tssShareExtractor =
+        final TssShareExtractor tssShareExtractor =
                 tssService.genesisStage().shareExtractor(participantDirectory, List.of(myMessage, otherMessage));
 
+        // Genesis start
         final var allPublicShares = tssShareExtractor.allPublicShares();
         assertNotNull(allPublicShares);
-        assertEquals(GENESIS_SIZE * GENESIS_SHARES, allPublicShares.size());
+        assertEquals(GENESIS_SIZE * GENESIS_SHARES, allPublicShares.size()); // Number of shares of all participants
 
         final var aggregatedPublicKey = TssPublicShare.aggregate(allPublicShares);
         assertNotNull(aggregatedPublicKey);
 
+        // Validate participant's private shares (different method)
+        final TssParticipantPrivateInfo myInfo = genesisCommittee.privateInfoOf(0);
         final var privateShares = tssShareExtractor.ownedPrivateShares(myInfo);
         assertNotNull(privateShares);
         assertEquals(GENESIS_SHARES, privateShares.size());
@@ -115,6 +151,7 @@ class Groth21ServiceTest {
                 .forEach(e -> assertEquals(
                         e.getKey().privateKey().createPublicKey(), e.getValue().publicKey()));
 
+        // Validate participant's private shares (same method)
         final var otherInfo = genesisCommittee.privateInfoOf(1);
         final var otherPrivateShares = tssService
                 .genesisStage()
@@ -124,6 +161,8 @@ class Groth21ServiceTest {
 
         final var allPrivateShares = new ArrayList<>(privateShares);
         allPrivateShares.addAll(otherPrivateShares);
+
+        // Validating signatures and message
         final byte[] message = "MyMessage".getBytes();
         final var signatures =
                 allPrivateShares.stream().map(share -> share.sign(message)).toList();
