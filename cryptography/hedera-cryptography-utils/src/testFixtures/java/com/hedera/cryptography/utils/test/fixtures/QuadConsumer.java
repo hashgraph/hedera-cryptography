@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 package com.hedera.cryptography.utils.test.fixtures;
 
 import edu.umd.cs.findbugs.annotations.NonNull;

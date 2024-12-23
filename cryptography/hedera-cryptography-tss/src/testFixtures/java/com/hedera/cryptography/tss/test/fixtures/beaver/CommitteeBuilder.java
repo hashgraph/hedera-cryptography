@@ -1,19 +1,4 @@
-/*
- * Copyright (C) 2024 Hedera Hashgraph, LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package com.hedera.cryptography.tss.test.fixtures.beaver;
 
 import com.hedera.cryptography.bls.BlsPrivateKey;
@@ -62,7 +47,7 @@ import java.util.Objects;
  * TssParticipantDirectory directory = builder.build();
  * }</pre>
  */
-final public class CommitteeBuilder {
+public final class CommitteeBuilder {
     private final Beaver beaver;
     private boolean randomKeys = false;
     private List<Pair<Integer, Integer>> customShareDistribution;
@@ -246,7 +231,8 @@ final public class CommitteeBuilder {
             return directoryBuilder.build();
         } else if (customShareDistribution != null) {
             numberParticipants = customShareDistribution.size();
-            numberOfShares = customShareDistribution.stream().mapToInt(Pair::right).sum();
+            numberOfShares =
+                    customShareDistribution.stream().mapToInt(Pair::right).sum();
             final var threshold = customThreshold == 0 ? (numberOfShares + 2) / 2 : customThreshold;
             final var directoryBuilder = TssParticipantDirectory.createBuilder().withThreshold(threshold);
 
@@ -261,7 +247,6 @@ final public class CommitteeBuilder {
         } else {
             throw new IllegalStateException("Committee size must be set");
         }
-
     }
 
     /**

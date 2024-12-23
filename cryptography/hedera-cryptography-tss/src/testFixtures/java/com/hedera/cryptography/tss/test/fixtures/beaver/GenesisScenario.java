@@ -1,19 +1,4 @@
-/*
- * Copyright (C) 2024 Hedera Hashgraph, LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package com.hedera.cryptography.tss.test.fixtures.beaver;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -111,21 +96,21 @@ public class GenesisScenario {
             throw new IllegalStateException("senders must be set");
         }
 
-        messages =
-                IntStream.range(0, committeeBuilder.getNumberParticipants()).mapToObj(i -> {
-                            if (!senders.contains(i)) {
-                                return null;
-                            }
-                            final var myMessage = tssService.genesisStage().generateTssMessage(committee);
-                            Objects.requireNonNull(myMessage, "message could not be generated");
-                            final var serializer = DefaultTssMessageSerialization.getSerializer(committeeBuilder.getSchema());
-                            assertNotNull(
-                                    DefaultTssMessageSerialization.getDeserializer(committeeBuilder.getSchema(), committee)
-                                            .deserialize(serializer.serialize(myMessage)));
-                            return myMessage;
-                        })
-                        .filter(Objects::nonNull)
-                        .toList();
+        messages = IntStream.range(0, committeeBuilder.getNumberParticipants())
+                .mapToObj(i -> {
+                    if (!senders.contains(i)) {
+                        return null;
+                    }
+                    final var myMessage = tssService.genesisStage().generateTssMessage(committee);
+                    Objects.requireNonNull(myMessage, "message could not be generated");
+                    final var serializer = DefaultTssMessageSerialization.getSerializer(committeeBuilder.getSchema());
+                    assertNotNull(
+                            DefaultTssMessageSerialization.getDeserializer(committeeBuilder.getSchema(), committee)
+                                    .deserialize(serializer.serialize(myMessage)));
+                    return myMessage;
+                })
+                .filter(Objects::nonNull)
+                .toList();
 
         final var tssShareExtractor = tssService.genesisStage().shareExtractor(committee, messages);
 
@@ -145,7 +130,6 @@ public class GenesisScenario {
 
         return this;
     }
-
 
     /**
      * Verifies that the ledger IDs are equal for the specified participants.
@@ -180,10 +164,14 @@ public class GenesisScenario {
      * @throws NullPointerException if assertion is null or if required components are missing
      */
     @NonNull
-    public GenesisScenario retrievePrivateShare(int participantId,
-            QuadConsumer<TssShareExtractor, TssParticipantDirectory, List<TssPublicShare>, TssParticipantPrivateInfo> assertion) {
-        assertion.accept(beaver.getTssService().genesisStage().shareExtractor(beaver.getCommittee(), messages),
-                beaver.getCommittee(), allPublicShares,
+    public GenesisScenario retrievePrivateShare(
+            int participantId,
+            QuadConsumer<TssShareExtractor, TssParticipantDirectory, List<TssPublicShare>, TssParticipantPrivateInfo>
+                    assertion) {
+        assertion.accept(
+                beaver.getTssService().genesisStage().shareExtractor(beaver.getCommittee(), messages),
+                beaver.getCommittee(),
+                allPublicShares,
                 privateSharesMap.get(participantId));
         return this;
     }
