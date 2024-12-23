@@ -6,4 +6,5 @@ module com.hedera.cryptography.utils.test.fixtures {
 
     exports com.hedera.cryptography.utils.test.fixtures.stream;
     exports com.hedera.cryptography.utils.test.fixtures.rng;
+    exports com.hedera.cryptography.utils.test.fixtures;
 }
