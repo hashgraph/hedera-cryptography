@@ -94,26 +94,91 @@ jobs:
           echo "version=$(cat VERSION | tr -d '[:space:]')" | tee -a ${GITHUB_OUTPUT}
 
   publish-maven-central:
-    name: Publish
-    uses: ./.github/workflows/zxc-release-maven-central.yaml
+    name: Publish Maven Central
+    runs-on: network-node-linux-medium
     needs:
       - prepare-release
-    with:
-      custom-job-label: Maven Central
-      new-version: ${{ needs.prepare-release.outputs.version }}
-      dry-run-enabled: ${{ github.event.inputs.dry-run-enabled == 'true' }}
-      java-distribution: ${{ github.event.inputs.java-distribution || 'temurin' }}
-      java-version: ${{ github.event.inputs.java-version || '21.0.4' }}
-      gradle-version: ${{ github.event.inputs.gradle-version || 'wrapper' }}
-    secrets:
-      gradle-cache-username: ${{ secrets.GRADLE_CACHE_USERNAME }}
-      gradle-cache-password: ${{ secrets.GRADLE_CACHE_PASSWORD }}
-      gpg-key-contents: ${{ secrets.GPG_KEY_CONTENTS }}
-      gpg-key-passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
-      git-user-name: ${{ secrets.GIT_USER_NAME }}
-      git-user-email: ${{ secrets.GIT_USER_EMAIL }}
-      ossrh-user-name: ${{ secrets.SVCS_OSSRH_USER_NAME }}
-      ossrh-user-password: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
+    outputs:
+      notes: ${{ steps.create-release-notes.outputs.RELEASE_NOTES }} # Keeping this to ensure the job is the same as zxc-release-maven-central.yaml for testing but it seems non-functional since there's no create-release-notes step.
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      # This step is required for some self-hosted runners because the default gpg does not include the gpg2 command.
+      - name: Install GnuPG Tools
+        run: |
+          if ! command -v gpg2 >/dev/null 2>&1; then
+            echo "::group::Updating APT Repository Indices"
+              sudo apt update
+            echo "::endgroup::"
+            echo "::group::Installing GnuPG Tools"
+              sudo apt install -y gnupg2
+            echo "::endgroup::"
+          fi
+
+      - name: Import GPG key
+        id: gpg_key
+        uses: step-security/ghaction-import-gpg@6c8fe4d0126a59d57c21f87c9ae5dd3451fa3cca # v.6.1.0
+        if: ${{ github.event.inputs.dry-run-enabled != true && !cancelled() && !failure() }}
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY_CONTENTS }}
+          passphrase: ${{ secrets.GPG_KEY_PASSPHRASE }}
+          git_config_global: true
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+
+      - name: Setup Java
+        uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
+        with:
+          distribution: ${{ github.event.inputs.java-distribution || 'temurin' }}
+          java-version: ${{ github.event.inputs.java-version || '21.0.4' }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        with:
+          gradle-version: wrapper
+
+      # This step is used to update the version number in the build.properties file.
+      - name: Apply Version Number Update (Explicit)
+        run: ./gradlew versionAsSpecified --scan -PnewVersion=${{ needs.prepare-release.outputs.version }}
+
+      # Technically, this step is not required but is executed to provide the end users with a summary of the version
+      # numbers assigned to each published artifact.
+      - name: Version Report
+        run: ./gradlew githubVersionSummary --scan
+
+      # Technically, this step is not required because the release steps will build what is required; however,
+      # if one or more components fails to build then it could result in a partial publish to Maven Central.
+      # The inclusion of this step ensures the job fails cleanly without publishing to Maven Central if any of the
+      # components fail to build.
+      - name: Gradle Assemble
+        id: gradle-build
+        if: ${{ github.event.inputs.dry-run-enabled != true && !cancelled() && !failure() }}
+        run: ./gradlew assemble --scan
+
+      # Publishes the artifacts to the Maven Central Nexus staging repository.
+      # TODO for initial release and testing, we use -PpublishTestRelease to not automatically release from staging.
+      - name: Gradle Publish to Maven Central - common
+        if: ${{ github.event.inputs.dry-run-enabled != true && !cancelled() && !failure() }}
+        env:
+          NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
+          NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
+        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache --scan -PpublishTestRelease=true
+
+      - name: Gradle Publish to Maven Central - cryptography
+        if: ${{ github.event.inputs.dry-run-enabled != true && !cancelled() && !failure() }}
+        env:
+          NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
+          NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
+        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache --scan -PpublishTestRelease=true
 
   create-github-release:
     name: Github / Release
