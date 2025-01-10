@@ -98,8 +98,6 @@ jobs:
     runs-on: network-node-linux-medium
     needs:
       - prepare-release
-    outputs:
-      notes: ${{ steps.create-release-notes.outputs.RELEASE_NOTES }} # Keeping this to ensure the job is the same as zxc-release-maven-central.yaml for testing but it seems non-functional since there's no create-release-notes step.
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
