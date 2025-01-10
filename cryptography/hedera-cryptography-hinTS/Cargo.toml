@@ -1,0 +1,23 @@
+[package]
+name = "hints"
+version = "0.0.1"
+edition = "2021"
+description = "Library for hinTS"
+categories = ["cryptography"]
+keywords = ["cryptography"]
+
+[lib]
+name = "hints"
+path = "src/main/rust/lib.rs"
+crate-type = ["cdylib"]
+
+
+[profile.bench]
+opt-level = 3
+
+[profile.test]
+opt-level = 3
+
+[features]
+
+[dependencies]
