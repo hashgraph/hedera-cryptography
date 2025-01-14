@@ -57,13 +57,13 @@ jobs:
           cache-read-only: false
 
       - name: Build software
-        run: ./gradlew assemble --scan
+        run: ./gradlew assemble
 
       - name: Code Quality Checks
-        run: ./gradlew qualityCheck --continue --scan
+        run: ./gradlew qualityCheck --continue
 
       - name: Gradle Unit Test
-        run: ./gradlew :aggregation:testCodeCoverageReport test --continue --scan
+        run: ./gradlew :aggregation:testCodeCoverageReport test --continue
 
       - name: Publish Unit Test Results
         uses: step-security/publish-unit-test-result-action@cc82caac074385ae176d39d2d143ad05e1130b2d # v2.18.0
@@ -106,7 +106,7 @@ jobs:
 
       - name: Gradle Unit Test
         # We do -PskipInstallRustToolchains=true, because all cargoBuild task results are taken FROM-CACHE
-        run: ./gradlew test -PskipInstallRustToolchains=true --scan --continue
+        run: ./gradlew test -PskipInstallRustToolchains=true --continue
 
   analyze:
     name: Analyze
