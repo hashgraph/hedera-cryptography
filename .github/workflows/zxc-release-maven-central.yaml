@@ -128,12 +128,12 @@ jobs:
 
       # This step is used to update the version number in the build.properties file.
       - name: Apply Version Number Update (Explicit)
-        run: ./gradlew versionAsSpecified --scan -PnewVersion=${{ inputs.new-version }}
+        run: ./gradlew versionAsSpecified -PnewVersion=${{ inputs.new-version }}
 
       # Technically, this step is not required but is executed to provide the end users with a summary of the version
       # numbers assigned to each published artifact.
       - name: Version Report
-        run: ./gradlew githubVersionSummary --scan
+        run: ./gradlew githubVersionSummary
 
       # Technically, this step is not required because the release steps will build what is required; however,
       # if one or more components fails to build then it could result in a partial publish to Maven Central.
@@ -142,7 +142,7 @@ jobs:
       - name: Gradle Assemble
         id: gradle-build
         if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
-        run: ./gradlew assemble --scan
+        run: ./gradlew assemble
 
       # Publishes the artifacts to the Maven Central Nexus staging repository.
       # TODO for initial release and testing, we use -PpublishTestRelease to not automatically release from staging.
@@ -151,11 +151,11 @@ jobs:
         env:
           NEXUS_USERNAME: ${{ secrets.ossrh-user-name }}
           NEXUS_PASSWORD: ${{ secrets.ossrh-user-password }}
-        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache --scan -PpublishTestRelease=true
+        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
 
       - name: Gradle Publish to Maven Central - cryptography
         if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
         env:
           NEXUS_USERNAME: ${{ secrets.ossrh-user-name }}
           NEXUS_PASSWORD: ${{ secrets.ossrh-user-password }}
-        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache --scan -PpublishTestRelease=true
+        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
