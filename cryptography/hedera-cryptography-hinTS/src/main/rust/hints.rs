@@ -874,12 +874,16 @@ mod tests {
         let serialized_epk = serialize(&epks[0]);
         let deserialized_epk = deserialize::<ExtendedPublicKey>(&serialized_epk);
 
+        let serialized_crs = serialize(&crs);
+        let deserialized_crs = deserialize::<CRS>(&serialized_crs);
+
         assert_eq!(vk, deserialized_vk);
         assert_eq!(ak, deserialized_ak);
         assert_eq!(π, deserialized_π);
         assert_eq!(sks[0], deserialized_sk);
         assert_eq!(epks[0].pk_i, deserialized_pk);
         assert_eq!(epks[0], deserialized_epk);
+        assert_eq!(crs, deserialized_crs);
 
         // print out sizes for our information
         println!("vk size: {}", serialized_vk.len());
@@ -888,6 +892,7 @@ mod tests {
         println!("sk size: {}", serialized_sk.len());
         println!("pk size: {}", serialized_pk.len());
         println!("epk size: {}", serialized_epk.len());
+        println!("crs size: {}", serialized_crs.len());
     }
 
     #[test]

@@ -22,16 +22,16 @@ use ark_ec::{scalar_mul::fixed_base::FixedBase, VariableBaseMSM};
 use ark_ff::{One, PrimeField, UniformRand, Zero};
 use ark_poly::DenseUVPolynomial;
 use ark_std::{format, marker::PhantomData, ops::*, vec};
+use ark_serialize::{CanonicalSerialize, CanonicalDeserialize};
 
 use ark_std::rand::RngCore;
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
 
 pub struct KZG10<E: Pairing, P: DenseUVPolynomial<E::ScalarField>> {
     _engine: PhantomData<E>,
     _poly: PhantomData<P>,
 }
 
+#[derive(CanonicalDeserialize, CanonicalSerialize, PartialEq, Debug)]
 pub struct UniversalParams<E: Pairing> {
     /// Group elements of the form `{ \beta^i G }`, where `i` ranges from 0 to `degree`.
     pub powers_of_g: Vec<E::G1Affine>,
