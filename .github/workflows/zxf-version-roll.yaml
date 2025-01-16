@@ -72,6 +72,7 @@ jobs:
           echo "::group::Show SemVer Binary Version Info"
           semver --version
           echo "::endgroup::"
+          
       - name: Read Current Version
         id: read_version
         run: |
@@ -79,6 +80,7 @@ jobs:
           echo "Current version: $current_version"
           echo "version=$current_version" >> $GITHUB_ENV
           printf "Current Version: $current_version" >> $GITHUB_STEP_SUMMARY
+
       - name: Increment Minor Version
         id: increment_version
         run: |
@@ -91,12 +93,15 @@ jobs:
           echo "New version: $new_version"
           echo "new_version=$new_version" >> $GITHUB_ENV
           printf "New Version: new_version" >> $GITHUB_STEP_SUMMARY
+
       - name: Update version.txt
         run: |
           echo $new_version > version.txt
+
       - name: Publish to Maven Central
         run: |
           ./gradlew versionAsSpecified -PnewVersion=$new_version
+
       - name: Add & Commit
         uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:

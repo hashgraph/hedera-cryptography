@@ -17,12 +17,6 @@
 name: "ZXF: Trigger Semantic Release"
 on:
   workflow_dispatch:
-    inputs:
-      number_input:
-        description: "Build ID of the Tag (example: 43 = build_00043)"
-        type: string
-        required: true
-        default: ""
 
 defaults:
   run:
@@ -43,38 +37,13 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Process, Validate, and Pad Build Input
-        run: |
-          echo "The input is ${{ inputs.number_input }}"
-          if ! [[ "${{ inputs.number_input }}" =~ ^[0-9]+$ ]]; then
-            echo "Input is not a valid integer"
-            exit 1
-          fi
-          echo "Input is a valid integer: $(( ${{ inputs.number_input }} ))"
-          # 5-digit padding
-          padded_number=$(printf "%05d" ${{ inputs.number_input }})
-          echo "Padded number is: $padded_number"
-          # Add "build_" prefix to the padded number
-          build_tag="build-$padded_number"
-          echo "Prefixed number is: $build_tag"
-          # Export as environment variable
-          echo "BUILD_TAG=$build_tag" >> $GITHUB_ENV
       - name: Checkout Code
         id: checkout_code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: '0'
-          ref: ${{ env.BUILD_TAG }}
           token: ${{ secrets.GH_ACCESS_TOKEN }}
 
-      - name: Display Current Branch or Tag
-        run: |
-          # Check if it's a tag
-          if git describe --exact-match --tags >/dev/null 2>&1; then
-            echo "Checked out tag: $(git describe --exact-match --tags)"
-          else
-            echo "Checked out branch: $(git symbolic-ref --short HEAD)"
-          fi
       - name: Import GPG Key
         id: gpg_importer
         uses: step-security/ghaction-import-gpg@6c8fe4d0126a59d57c21f87c9ae5dd3451fa3cca # v6.1.0
@@ -94,10 +63,12 @@ jobs:
         run: |
           echo "Installing semantic-release"
           npm install -g semantic-release
+
       - name: Configure Git for Semantic Release
         run: |
           git config user.name "${{ secrets.GIT_USER_NAME }}"
           git config user.email "${{ secrets.GIT_USER_EMAIL }}"
+          
       - name: Run Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
