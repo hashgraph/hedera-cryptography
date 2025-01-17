@@ -6,4 +6,4 @@ plugins {
     id("org.hiero.gradle.feature.test-multios")
 }
 
-cargo { libname = "hinTS" }
+cargo { libname = "hints" }
