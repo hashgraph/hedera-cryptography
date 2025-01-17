@@ -87,12 +87,12 @@ public class HintsLibraryBridge {
      * Validates the hinTS public key for the given number of parties.
      *
      * @param crs the CRS object
-     * @param hintsKey the hinTS key
+     * @param hintsPublicKey the hinTS key
      * @param partyId the party id
      * @param n the number of parties
      * @return true if the hints are valid; false otherwise
      */
-    public native boolean validateHintsKey(final byte[] crs, final byte[] hintsKey, int partyId, int n);
+    public native boolean validateHintsKey(final byte[] crs, final byte[] hintsPublicKey, int partyId, int n);
 
     /**
      * Runs the hinTS preprocessing algorithm on the given validated hint keys and party weights for the given number
@@ -102,17 +102,17 @@ public class HintsLibraryBridge {
      *     well-formed aggregate public key.</li>
      *     <li>The succinct verification key to use when verifying an aggregate signature.</li>
      * </ol>
-     * The parties, hintsKeys, and weights model the original {@code Map<Integer, Bytes> hintsKeys} and {@code
+     * The parties, hintsPublicKeys, and weights model the original {@code Map<Integer, Bytes> hintsPublicKeys} and {@code
      * Map<Integer, Long> weights} input arguments and use arrays for performance reasons.
      * @param crs the CRS object
-     * @param parties the party ids for the indices in hintsKeys and weights
-     * @param hintsKeys the valid hinTS keys by party id
+     * @param parties the party ids for the indices in hintsPublicKeys and weights
+     * @param hintsPublicKeys the valid hinTS keys by party id
      * @param weights the weights by party id
      * @param n the number of parties
      * @return the preprocessed keys
      */
     public native byte[] preprocess(
-            final byte[] crs, final int[] parties, final byte[][] hintsKeys, final long[] weights, int n);
+            final byte[] crs, final int[] parties, final byte[][] hintsPublicKeys, final long[] weights, int n);
 
     /**
      * Signs a message with a BLS private key.
