@@ -1,8 +1,23 @@
-use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup, VariableBaseMSM};
+//
+// Copyright (C) 2024 Hedera Hashgraph, LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /// module responsible for generating the CRS
 /// implements the algorithm in https://eprint.iacr.org/2022/1592.pdf
+use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup, VariableBaseMSM};
 use ark_ff::{Field, PrimeField};
-use ark_serialize::CanonicalSerialize;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{ops::*, UniformRand};
 use rand::Rng;
 use sha2::*;
@@ -12,6 +27,7 @@ use crate::hints::{Curve, G1AffinePoint, G2AffinePoint, CRS, F};
 use crate::kzg;
 
 /// standard Schnorr proof of knowledge
+#[derive(CanonicalDeserialize, CanonicalSerialize, PartialEq, Debug)]
 pub struct ContributionProof {
     p1_mul_z: G1AffinePoint,
     z_plus_hr: F,
@@ -31,6 +47,9 @@ impl PowersOfTauProtocol {
         }
     }
 
+    /// contributes to the CRS ceremony by adding key material to the existing CRS;
+    /// the participant's material is derived from a random scalar r.
+    /// returns the updated CRS and the proof of validity of the contribution.
     pub fn contribute(crs: &CRS, r: F) -> (CRS, ContributionProof) {
         let degree = crs.powers_of_g.len() - 1;
 
@@ -67,29 +86,21 @@ impl PowersOfTauProtocol {
         (next_crs, proof)
     }
 
+    /// verifies that the update to the CRS is valid using the proof of contribution
     pub fn verify_contribution(prev_crs: &CRS, next_crs: &CRS, proof: &ContributionProof) -> bool {
-        let lhs = <Curve as Pairing>::pairing(next_crs.powers_of_g[0], next_crs.powers_of_h[1]);
-        let rhs = <Curve as Pairing>::pairing(next_crs.powers_of_g[1], next_crs.powers_of_h[0]);
-        assert_eq!(lhs, rhs);
-        let lhs = <Curve as Pairing>::pairing(next_crs.powers_of_g[31], next_crs.powers_of_h[32]);
-        let rhs = <Curve as Pairing>::pairing(next_crs.powers_of_g[32], next_crs.powers_of_h[31]);
-        assert_eq!(lhs, rhs);
-
         check_or_return_false!(check1(
             &prev_crs.powers_of_g[1],
             &next_crs.powers_of_g[1],
             proof
         ));
-        println!("check1 passed");
-        check_or_return_false!(check2(&next_crs));
-        println!("check2 passed");
-        check_or_return_false!(check3(&next_crs));
-        println!("check3 passed");
+        check_or_return_false!(check2(next_crs));
+        check_or_return_false!(check3(next_crs));
 
         true
     }
 }
 
+/// Schnorr prover for knowledge of discrete logarithm of next_p1 w.r.t. prev_p1
 fn schnorr_nizk<R: Rng>(
     prev_p1: &G1AffinePoint,
     next_p1: &G1AffinePoint,
@@ -100,14 +111,14 @@ fn schnorr_nizk<R: Rng>(
     let prev_p1_mul_z = prev_p1.mul(&z).into_affine();
     let h = random_oracle(prev_p1, next_p1, &prev_p1_mul_z);
     let z_plus_hr = z + h * r;
-    println!("z_plus_hr: {:?}", z_plus_hr);
-    println!("r: {:?}", r);
+
     ContributionProof {
         p1_mul_z: prev_p1_mul_z,
         z_plus_hr,
     }
 }
 
+/// verify the Schnorr proof of knowledge of discrete logarithm of next_p1 w.r.t. prev_p1
 fn check1(prev_p1: &G1AffinePoint, next_p1: &G1AffinePoint, proof: &ContributionProof) -> bool {
     let h = random_oracle(prev_p1, next_p1, &proof.p1_mul_z);
     let lhs = prev_p1.mul(&proof.z_plus_hr).into_affine();
@@ -115,6 +126,7 @@ fn check1(prev_p1: &G1AffinePoint, next_p1: &G1AffinePoint, proof: &Contribution
     lhs == rhs
 }
 
+// random oracle used for the Fiat-Shamir transformation of Schnorr proof
 fn random_oracle(
     prev_p1: &G1AffinePoint,
     next_p1: &G1AffinePoint,
@@ -139,7 +151,7 @@ fn random_oracle(
 }
 
 // checks well-formedness using pairing equations
-fn check2(crs: &CRS) -> bool {
+fn _check2_unoptimized(crs: &CRS) -> bool {
     let n = crs.powers_of_g.len() - 1;
 
     for i in 0..n {
@@ -155,7 +167,7 @@ fn check2(crs: &CRS) -> bool {
 }
 
 // eqn 4.3 in https://eprint.iacr.org/2022/1592.pdf
-fn _check2_optimized(crs: &CRS) -> bool {
+fn check2(crs: &CRS) -> bool {
     let n = crs.powers_of_g.len() - 1;
 
     let mut crs_bytes = Vec::new();
@@ -203,7 +215,7 @@ fn _check2_optimized(crs: &CRS) -> bool {
     let rhs_rhs = <<Curve as Pairing>::G2 as VariableBaseMSM>::msm(
         &crs.powers_of_h[1..=n],
         &(0..=n - 1)
-            .map(|i| rho1.pow(&[i as u64]))
+            .map(|i| rho2.pow(&[i as u64]))
             .collect::<Vec<F>>(),
     )
     .unwrap()
@@ -236,18 +248,24 @@ pub fn compute_sha256(inputs: &[impl AsRef<[u8]>]) -> [u8; 32] {
 
 #[allow(unused_imports)]
 mod tests {
-    use super::*;
+    use super::{PowersOfTauProtocol as Prot, *};
 
     #[test]
     fn test_powers_of_tau_protocol() {
         let degree = 32;
-        let crs = PowersOfTauProtocol::init(degree);
+        let crs = Prot::init(degree);
 
         let mut rng = rand::thread_rng();
-        let (next_crs, proof) = PowersOfTauProtocol::contribute(&crs, F::rand(&mut rng));
+        let (next_crs, proof) = Prot::contribute(&crs, F::rand(&mut rng));
+        assert!(Prot::verify_contribution(&crs, &next_crs, &proof));
 
-        assert!(PowersOfTauProtocol::verify_contribution(
-            &crs, &next_crs, &proof
-        ));
+        let (next_next_crs, proof) = Prot::contribute(&next_crs, F::rand(&mut rng));
+        assert!(Prot::verify_contribution(&next_crs, &next_next_crs, &proof));
+
+        // serialization test
+        assert_eq!(
+            next_next_crs,
+            crate::hints::deserialize::<CRS>(&crate::hints::serialize(&next_next_crs))
+        );
     }
 }

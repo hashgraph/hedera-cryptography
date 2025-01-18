@@ -822,6 +822,7 @@ pub fn deserialize<T: CanonicalDeserialize>(buf: &[u8]) -> T {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::setup::PowersOfTauProtocol;
 
     use ark_std::rand::Rng;
     use ark_std::test_rng;
@@ -937,16 +938,20 @@ mod tests {
         let num_signers = n - 1;
 
         // -------------- sample one-time SRS ---------------
-        //run KZG setup
         let rng = &mut test_rng();
-        let params = KZG::setup(n, rng).expect("Setup failed");
+
+        let init_crs = PowersOfTauProtocol::init(n);
+        let (crs, proof) = PowersOfTauProtocol::contribute(&init_crs, F::from(42u64));
+        assert!(PowersOfTauProtocol::verify_contribution(
+            &init_crs, &crs, &proof
+        ));
 
         // -------------- sample universe specific values ---------------
         //sample random keys
         let sks: Vec<SecretKey> = (0..num_signers).map(|_| HinTS::keygen(rng)).collect();
 
         let epks = (0..num_signers)
-            .map(|i| HinTS::hint_gen(&params, n, i, &sks[i]))
+            .map(|i| HinTS::hint_gen(&crs, n, i, &sks[i]))
             .collect::<Vec<ExtendedPublicKey>>();
 
         //sample random weights for each party
@@ -958,9 +963,9 @@ mod tests {
             .collect();
 
         //run universe setup
-        let (vk, ak) = HinTS::preprocess(n, &params, &signers_info);
+        let (vk, ak) = HinTS::preprocess(n, &crs, &signers_info);
 
-        (params, ak, vk, sks, epks)
+        (crs, ak, vk, sks, epks)
     }
 
     fn sample_weights(n: usize) -> Vec<F> {
