@@ -14,7 +14,6 @@
 // limitations under the License.
 
 pub mod hints;
-pub mod jni_crs;
 pub mod setup;
 
 mod kzg;
