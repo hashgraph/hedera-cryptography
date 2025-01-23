@@ -30,6 +30,7 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::collections::HashMap;
 use ark_std::{ops::*, UniformRand};
 use sha2::{Digest, Sha256};
+use rand_chacha::rand_core::SeedableRng;
 
 // hinTS depends on the utils and kzg modules
 use crate::kzg;
@@ -187,9 +188,10 @@ pub struct VerificationKey {
 pub struct HinTS;
 
 impl HinTS {
-    /// generates a random secret key using the supplied random number generator
-    pub fn keygen<R: rand::Rng>(rng: &mut R) -> SecretKey {
-        F::rand(rng)
+    /// generates a random secret key using a PRNG seeded by the input entropy
+    pub fn keygen(seed: [u8; 32]) -> SecretKey {
+        let mut rng = rand_chacha::ChaCha8Rng::from_seed(seed);
+        F::rand(&mut rng)
     }
 
     /// generates the extended public key (a.k.a. hint) for signer with
@@ -823,9 +825,7 @@ pub fn deserialize<T: CanonicalDeserialize>(buf: &[u8]) -> T {
 mod tests {
     use super::*;
     use crate::setup::PowersOfTauProtocol;
-
-    use ark_std::rand::Rng;
-    use ark_std::test_rng;
+    use rand::Rng;
 
     #[test]
     fn test_serialization() {
@@ -938,17 +938,17 @@ mod tests {
         let num_signers = n - 1;
 
         // -------------- sample one-time SRS ---------------
-        let rng = &mut test_rng();
-
         let init_crs = PowersOfTauProtocol::init(n);
-        let (crs, proof) = PowersOfTauProtocol::contribute(&init_crs, F::from(42u64));
+        // WARN: supply a random seed, not a fixed one as shown here.
+        let (crs, proof) = PowersOfTauProtocol::contribute(&init_crs, [86u8; 32]);
         assert!(PowersOfTauProtocol::verify_contribution(
             &init_crs, &crs, &proof
         ));
 
         // -------------- sample universe specific values ---------------
         //sample random keys
-        let sks: Vec<SecretKey> = (0..num_signers).map(|_| HinTS::keygen(rng)).collect();
+        // WARN: supply a random seed, not a fixed one as shown here.
+        let sks: Vec<SecretKey> = (0..num_signers).map(|_| HinTS::keygen([42u8; 32])).collect();
 
         let epks = (0..num_signers)
             .map(|i| HinTS::hint_gen(&crs, n, i, &sks[i]))
@@ -969,7 +969,7 @@ mod tests {
     }
 
     fn sample_weights(n: usize) -> Vec<F> {
-        let rng = &mut test_rng();
+        let rng = &mut ark_std::test_rng();
         (0..n)
             .map(|_| F::from(rng.gen_range(1..10)) + F::from(10))
             .collect()
@@ -977,7 +977,7 @@ mod tests {
 
     /// n is the size of the bitmap, and probability is for true or 1.
     fn sample_bitmap(n: usize, probability: f64) -> Vec<F> {
-        let rng = &mut test_rng();
+        let rng = &mut ark_std::test_rng();
         let mut bitmap = vec![];
         for _i in 0..n {
             //let r = u64::rand(&mut rng);

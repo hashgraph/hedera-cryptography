@@ -20,6 +20,7 @@ use ark_ff::{Field, PrimeField};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{ops::*, UniformRand};
 use rand::Rng;
+use rand_chacha::rand_core::SeedableRng;
 use sha2::*;
 
 use crate::check_or_return_false;
@@ -50,7 +51,10 @@ impl PowersOfTauProtocol {
     /// contributes to the CRS ceremony by adding key material to the existing CRS;
     /// the participant's material is derived from a random scalar r.
     /// returns the updated CRS and the proof of validity of the contribution.
-    pub fn contribute(crs: &CRS, r: F) -> (CRS, ContributionProof) {
+    pub fn contribute(crs: &CRS, seed: [u8; 32]) -> (CRS, ContributionProof) {
+        let mut rng = rand_chacha::ChaCha8Rng::from_seed(seed);
+        let r = F::rand(&mut rng);
+
         let degree = crs.powers_of_g.len() - 1;
 
         let powers_of_r = (0..=degree).map(|i| r.pow(&[i as u64])).collect::<Vec<F>>();
@@ -80,7 +84,7 @@ impl PowersOfTauProtocol {
             &crs.powers_of_g[1],
             &next_crs.powers_of_g[1],
             &r,
-            &mut rand::thread_rng(),
+            &mut rng,
         );
 
         (next_crs, proof)
@@ -255,11 +259,12 @@ mod tests {
         let degree = 32;
         let crs = Prot::init(degree);
 
-        let mut rng = rand::thread_rng();
-        let (next_crs, proof) = Prot::contribute(&crs, F::rand(&mut rng));
+        // WARN: don't use a fixed seed in production
+        let (next_crs, proof) = Prot::contribute(&crs, [0u8; 32]);
         assert!(Prot::verify_contribution(&crs, &next_crs, &proof));
 
-        let (next_next_crs, proof) = Prot::contribute(&next_crs, F::rand(&mut rng));
+        // WARN: don't use a fixed seed in production
+        let (next_next_crs, proof) = Prot::contribute(&next_crs, [1u8; 32]);
         assert!(Prot::verify_contribution(&next_crs, &next_next_crs, &proof));
 
         // serialization test
