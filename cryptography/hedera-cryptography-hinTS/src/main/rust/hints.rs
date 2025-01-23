@@ -37,6 +37,8 @@ use crate::kzg;
 use crate::utils;
 use crate::{assert_power_of_2, check_or_return_false};
 
+/// The size of input randomness
+pub const RANDOM_SIZE: usize = 32;
 /// Pairing friendly curve powering the hinTS scheme
 pub type Curve = Bls12_381;
 /// KZG polynomial commitment scheme

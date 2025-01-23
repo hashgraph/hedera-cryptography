@@ -14,12 +14,11 @@
 // limitations under the License.
 //
 
-use ark_ff::PrimeField;
 use jni::objects::{JByteArray, JObject};
 use jni::sys::{jbyte, jlong, jbyteArray, jsize, jboolean};
 use jni::JNIEnv;
 use crate::setup::{ContributionProof, PowersOfTauProtocol};
-use crate::hints::{deserialize, serialize, CRS, F};
+use crate::hints::{deserialize, serialize, CRS, RANDOM_SIZE};
 
 /// JNI function to create a new CRS object
 /// # Arguments
@@ -74,9 +73,12 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_upd
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
-    let random = F::from_le_bytes_mod_order(&random_vec);
+    let random_arr :[u8; RANDOM_SIZE] = match random_vec.try_into() {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
 
-    let (crs, contribution_proof) = PowersOfTauProtocol::contribute(&prev_crs, random);
+    let (crs, contribution_proof) = PowersOfTauProtocol::contribute(&prev_crs, random_arr);
 
     let serialized_crs = serialize(&crs);
     let crs_vec: Vec<jbyte> = serialized_crs.iter().map(|&x| x as jbyte).collect();
