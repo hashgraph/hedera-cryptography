@@ -144,7 +144,7 @@ jobs:
         with:
           gradle-version: wrapper
 
-      # This step is used to update the version number in the build.properties file.
+      # This step is used to update the version number in the version.txt file.
       - name: Apply Version Number Update (Explicit)
         run: ./gradlew versionAsSpecified --scan -PnewVersion=${{ needs.prepare-release.outputs.version }}
 
