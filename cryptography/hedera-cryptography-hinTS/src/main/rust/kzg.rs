@@ -208,7 +208,8 @@ fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: DenseUVPolynomial
 }
 
 fn convert_to_bigints<F: PrimeField>(p: &[F]) -> Vec<F::BigInt> {
-    let coeffs = ark_std::cfg_iter!(p)
+    let coeffs = p
+        .into_iter()
         .map(|s| s.into_bigint())
         .collect::<Vec<_>>();
     coeffs
