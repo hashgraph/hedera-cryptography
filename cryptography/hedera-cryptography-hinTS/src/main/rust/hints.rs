@@ -402,8 +402,8 @@ impl HinTS {
     }
 
     /// verifies the partial signature under the signer's public key
-    pub fn partial_verify(crs: &CRS, msg: &[u8], pk: &PublicKey, sig: &PartialSignature) -> bool {
-        let lhs = <Curve as Pairing>::pairing(pk, hash_to_g2(msg));
+    pub fn partial_verify(crs: &CRS, msg: &[u8], epk: &ExtendedPublicKey, sig: &PartialSignature) -> bool {
+        let lhs = <Curve as Pairing>::pairing(epk.pk_i, hash_to_g2(msg));
         let rhs = <Curve as Pairing>::pairing(crs.powers_of_g[0], sig);
         lhs == rhs
     }
@@ -570,7 +570,9 @@ impl HinTS {
         check_or_return_false!(denominator * π.agg_weight >= numerator * vk.total_weight);
 
         // verify the signature first
-        check_or_return_false!(Self::partial_verify(crs, msg, &π.agg_pk, &π.agg_sig));
+        let lhs = <Curve as Pairing>::pairing(&π.agg_pk, hash_to_g2(msg));
+        let rhs = <Curve as Pairing>::pairing(crs.powers_of_g[0], &π.agg_sig);
+        check_or_return_false!(lhs == rhs);
 
         // compute nth root of unity
         let ω: F = utils::nth_root_of_unity(vk.n);
