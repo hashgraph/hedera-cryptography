@@ -67,29 +67,28 @@ public class HintsLibraryBridge {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Generates a new BLS key pair.
-     * @return the key pair
+     * Generates a new secret key.
+     * @param random 32 random bytes
+     * @return the secret key, or null on error
      */
-    public native byte[] newBlsKeyPair();
+    public native byte[] generateSecretKey(final byte[] random);
 
     /**
-     * Computes the hints for the given public key and number of parties.
+     * Computes the hints for the given secret key and number of parties.
      *
      * @param crs the CRS object
-     * @param blsPrivateKey the private key
+     * @param secretKey the secret key
      * @param partyId the party id
      * @param n the number of parties
      * @return the hints
      */
-    public native byte[] computeHints(final byte[] crs, final byte[] blsPrivateKey, int partyId, int n);
+    public native byte[] computeHints(final byte[] crs, final byte[] secretKey, int partyId, int n);
 
     /**
      * Validates the hinTS public key for the given number of parties.
      *
      * @param crs the CRS object
      * @param hintsPublicKey the hinTS key
-     * @param partyId the party id
-     * @param n the number of parties
      * @return true if the hints are valid; false otherwise
      */
     public native boolean validateHintsKey(final byte[] crs, final byte[] hintsPublicKey, int partyId, int n);
@@ -104,6 +103,13 @@ public class HintsLibraryBridge {
      * </ol>
      * The parties, hintsPublicKeys, and weights model the original {@code Map<Integer, Bytes> hintsPublicKeys} and {@code
      * Map<Integer, Long> weights} input arguments and use arrays for performance reasons.
+     * <p>
+     * NOTE: this preprocess() method needs to learn about weights and hints of all the parties that could possibly
+     * take part in signing, even though some of the parties may not always contribute their partial signatures,
+     * e.g. if the nodes are down, or the latency is high, and we only see signatures that we've received so far.
+     * This is needed so that the verifyAggregate() method can consider the proper signing threshold when verifying
+     * an aggregate signature.
+     *
      * @param crs the CRS object
      * @param parties the party ids for the indices in hintsPublicKeys and weights
      * @param hintsPublicKeys the valid hinTS keys by party id
@@ -111,7 +117,7 @@ public class HintsLibraryBridge {
      * @param n the number of parties
      * @return the preprocessed keys
      */
-    public native byte[] preprocess(
+    public native AggregationAndVerificationKeys preprocess(
             final byte[] crs, final int[] parties, final byte[][] hintsPublicKeys, final long[] weights, int n);
 
     /**
@@ -129,11 +135,11 @@ public class HintsLibraryBridge {
      * @param crs the CRS object
      * @param signature the signature
      * @param message the message
-     * @param publicKey the public key
+     * @param extendedPublicKey the extended public key
      * @return true if the signature is valid; false otherwise
      */
     public native boolean verifyBls(
-            final byte[] crs, final byte[] signature, final byte[] message, final byte[] publicKey);
+            final byte[] crs, final byte[] signature, final byte[] message, final byte[] extendedPublicKey);
 
     /**
      * Aggregates the signatures for party ids using hinTS aggregation and verification keys.

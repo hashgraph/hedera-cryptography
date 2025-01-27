@@ -1,0 +1,95 @@
+//
+// Copyright (C) 2025 Hedera Hashgraph, LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use jni::JNIEnv;
+use jni::objects::{JByteArray, JObject};
+use jni::sys::{jbyte, jbyteArray};
+use crate::hints::{deserialize, serialize, RANDOM_SIZE};
+
+/// Creates a jbyteArray out of a Vec<jbyte> object.
+/// # Arguments
+/// * `env` - The JNI environment.
+/// * `vec` the input vector
+/// # Returns
+/// *   a byte array with the input vector written, or null on error
+pub fn jbyte_vec_to_jbyte_array(env: &JNIEnv, vec: &Vec<jbyte>) -> jbyteArray {
+    let array = env.new_byte_array(vec.len() as i32);
+    match env.set_byte_array_region(array.as_ref().unwrap(), 0, &vec) {
+        Ok(()) => array.unwrap().into_raw(),
+        Err(_) => {
+            let _ = env.delete_local_ref(JObject::from(array.unwrap()));
+            std::ptr::null_mut()
+        }
+    }
+}
+
+/// Creates a jbyteArray out of a Vec<u8> object.
+/// # Arguments
+/// * `env` - The JNI environment.
+/// * `vec` the input vector
+/// # Returns
+/// *   a byte array with the input vector written, or null on error
+pub fn u8_vec_to_jbyte_array(env: &JNIEnv, vec: &Vec<u8>) -> jbyteArray {
+    let jbyte_vec = vec.iter().map(|&x| x as jbyte).collect();
+    jbyte_vec_to_jbyte_array(env, &jbyte_vec)
+}
+
+/// Creates a jbyteArray out of a pair of Vec<u8> objects.
+/// # Arguments
+/// * `env` - The JNI environment.
+/// * `vec1` the input vector 1
+/// * `vec2` the input vector 2
+/// # Returns
+/// *   a byte array with all the vectors written one after another, or null on error
+pub fn two_u8_vec_to_jbyte_array(env: &JNIEnv, vec1: &Vec<u8>, vec2: &Vec<u8>) -> jbyteArray {
+    let jbyte_vec = vec1.iter().chain(vec2.iter()).map(|&x| x as jbyte).collect();
+    jbyte_vec_to_jbyte_array(env, &jbyte_vec)
+}
+
+
+/// Creates a `[u8; RANDOM_SIZE]` array out of a given Java byte array,
+/// which must be of size RANDOM_SIZE (currently 32).
+/// # Arguments
+/// * `env` - The JNI environment.
+/// * `random_array` the Java byte array of size RANDOM_SIZE
+/// # Returns
+/// *   an entropy array as accepted by the CRS/HinTS implementation, or Err
+pub fn build_entropy_array(env: &JNIEnv, random_array: &JByteArray) -> Result<[u8; RANDOM_SIZE], ()> {
+    let random_vec = match env.convert_byte_array(&random_array) {
+        Ok(val) => val,
+        Err(_) => return Result::Err(())
+    };
+    let random_arr :[u8; RANDOM_SIZE] = match random_vec.try_into() {
+        Ok(val) => val,
+        Err(_) => return Result::Err(())
+    };
+    Ok(random_arr)
+}
+
+/// Deserializes a JByteArray into an object, or returns Err.
+pub fn deserialize_jbyte_array<T: CanonicalDeserialize>(env: &JNIEnv, jarray: &JByteArray) -> Result<T, ()> {
+    match env.convert_byte_array(&jarray) {
+        Ok(val) => Ok(deserialize(&val)),
+        Err(_) => Err(())
+    }
+}
+
+/// Serializes an object into a jbyteArray.
+pub fn serialize_object<T: CanonicalSerialize>(env: &JNIEnv, obj: &T) -> jbyteArray {
+    let vec = serialize(obj);
+    u8_vec_to_jbyte_array(env, &vec)
+}
