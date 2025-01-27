@@ -262,11 +262,13 @@ impl HinTS {
     }
 
     /// verifies whether the extended public key is well-formed
-    pub fn verify_hint(crs: &CRS, hint: &ExtendedPublicKey) -> bool {
-        let i = hint.i;
-
+    /// for the given universe size n and index i
+    pub fn verify_hint(crs: &CRS, n: usize, i: usize, hint: &ExtendedPublicKey) -> bool {
         // sanity check on the hint
-        assert_eq!(hint.n, hint.qz_i_terms.len());
+        assert_power_of_2!(n);
+        check_or_return_false!(hint.i == i);
+        check_or_return_false!(hint.n == n);
+        check_or_return_false!(n == hint.qz_i_terms.len());
 
         //e([sk_i L_i(τ)]1, [1]2) = e([sk_i]1, [L_i(τ)]2)
         let l_i_of_x = utils::lagrange_poly(hint.n, i);
@@ -400,8 +402,8 @@ impl HinTS {
     }
 
     /// verifies the partial signature under the signer's public key
-    pub fn partial_verify(crs: &CRS, msg: &[u8], pk: &PublicKey, sig: &PartialSignature) -> bool {
-        let lhs = <Curve as Pairing>::pairing(pk, hash_to_g2(msg));
+    pub fn partial_verify(crs: &CRS, msg: &[u8], epk: &ExtendedPublicKey, sig: &PartialSignature) -> bool {
+        let lhs = <Curve as Pairing>::pairing(epk.pk_i, hash_to_g2(msg));
         let rhs = <Curve as Pairing>::pairing(crs.powers_of_g[0], sig);
         lhs == rhs
     }
@@ -568,7 +570,9 @@ impl HinTS {
         check_or_return_false!(denominator * π.agg_weight >= numerator * vk.total_weight);
 
         // verify the signature first
-        check_or_return_false!(Self::partial_verify(crs, msg, &π.agg_pk, &π.agg_sig));
+        let lhs = <Curve as Pairing>::pairing(&π.agg_pk, hash_to_g2(msg));
+        let rhs = <Curve as Pairing>::pairing(crs.powers_of_g[0], &π.agg_sig);
+        check_or_return_false!(lhs == rhs);
 
         // compute nth root of unity
         let ω: F = utils::nth_root_of_unity(vk.n);
