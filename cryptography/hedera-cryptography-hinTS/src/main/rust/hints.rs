@@ -262,11 +262,13 @@ impl HinTS {
     }
 
     /// verifies whether the extended public key is well-formed
-    pub fn verify_hint(crs: &CRS, hint: &ExtendedPublicKey) -> bool {
-        let i = hint.i;
-
+    /// for the given universe size n and index i
+    pub fn verify_hint(crs: &CRS, n: usize, i: usize, hint: &ExtendedPublicKey) -> bool {
         // sanity check on the hint
-        assert_eq!(hint.n, hint.qz_i_terms.len());
+        assert_power_of_2!(n);
+        check_or_return_false!(hint.i == i);
+        check_or_return_false!(hint.n == n);
+        check_or_return_false!(n == hint.qz_i_terms.len());
 
         //e([sk_i L_i(τ)]1, [1]2) = e([sk_i]1, [L_i(τ)]2)
         let l_i_of_x = utils::lagrange_poly(hint.n, i);
