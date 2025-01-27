@@ -19,7 +19,7 @@
   "prepare": [
     [
       "@semantic-release/exec",
-      { "cmd": "./gradlew versionAsSpecified --scan -PnewVersion=${nextRelease.version}" }
+      { "cmd": "./gradlew versionAsSpecified -PnewVersion=${nextRelease.version}" }
     ],
     [
       "@semantic-release/git",
