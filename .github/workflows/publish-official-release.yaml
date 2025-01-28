@@ -28,6 +28,13 @@ permissions:
   id-token: write
   contents: write
   actions: write
+  pages: write
+
+env:
+  REGISTRY: ghcr.io
+  LC_ALL: C.UTF-8
+  GRADLE_CACHE_USERNAME: ${{ secrets.GRADLE_CACHE_USERNAME }}
+  GRADLE_CACHE_PASSWORD: ${{ secrets.GRADLE_CACHE_PASSWORD }}
 
 jobs:
   publish:
@@ -75,7 +82,7 @@ jobs:
       - name: Install Dependencies
         run: |
           echo "Installing semantic-release"
-          npm install -g semantic-release
+          npm install
 
       - name: Configure Git for Semantic Release
         run: |
@@ -89,6 +96,7 @@ jobs:
         run: |
           echo "Dry Running semantic-release now"
           npx semantic-release --dry-run --debug
+          echo "The version number assigned to the next release is: $VERSION"
 
       - name: Run Semantic Release
         if: ${{ inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
