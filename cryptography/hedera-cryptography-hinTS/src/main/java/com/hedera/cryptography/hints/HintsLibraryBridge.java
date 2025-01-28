@@ -109,6 +109,9 @@ public class HintsLibraryBridge {
      * e.g. if the nodes are down, or the latency is high, and we only see signatures that we've received so far.
      * This is needed so that the verifyAggregate() method can consider the proper signing threshold when verifying
      * an aggregate signature.
+     * <p>
+     * NOTE: the maximum number of parties is equal to n-1. E.g. if n is equal to 4, then the parties, hintsPublicKeys, and
+     * weights can contain at most 3 elements. Otherwise, the HinTS algorithms won't produce correct results.
      *
      * @param crs the CRS object
      * @param parties the party ids for the indices in hintsPublicKeys and weights
