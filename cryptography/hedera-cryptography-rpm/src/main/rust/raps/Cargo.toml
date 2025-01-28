@@ -3,6 +3,11 @@ version = "0.1.0"
 name = "raps"
 edition = "2021"
 
+[lib]
+name = "raps"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
 [dependencies]
 bincode = { workspace = true }
 sp1-sdk = { workspace = true }
