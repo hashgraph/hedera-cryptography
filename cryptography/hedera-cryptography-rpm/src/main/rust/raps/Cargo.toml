@@ -1,0 +1,26 @@
+[package]
+version = "0.1.0"
+name = "raps"
+edition = "2021"
+
+[dependencies]
+bincode = { workspace = true }
+sp1-sdk = { workspace = true }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+serde = { version = "1.0.200", default-features = false, features = ["derive"] }
+serde-big-array = { workspace = true }
+serde-hex = { workspace = true }
+smallvec = "1.13"
+clap = { version = "4.0", features = ["derive", "env"] }
+tracing = "0.1.40"
+hex = { workspace = true }
+alloy-sol-types = { workspace = true }
+ab-rotation-lib = { workspace = true }
+sha2 = { workspace = true }
+
+[build-dependencies]
+sp1-helper = { workspace = true }
+
+[features]
+default = []
+cuda = ["sp1-sdk/cuda"]
