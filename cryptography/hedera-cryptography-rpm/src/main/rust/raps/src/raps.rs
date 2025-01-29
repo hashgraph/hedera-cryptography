@@ -59,7 +59,7 @@ impl RAPS {
         // Setup the prover client.
         let client = ProverClient::new();
 
-        let (ab_curr_hash, ab_next_hash, stmt) = generate_statement(
+        let (ab_curr_hash, _ab_next_hash, stmt) = generate_statement(
             *ab_genesis_hash,
             prev_proof.as_ref(),
             vk.hash_u32(),

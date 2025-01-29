@@ -12,6 +12,7 @@ derive_more = { version = "1.0.0", features = ["deref"] }
 ed25519-dalek = { version = "2.1.1", features = ["serde", "rand_core"] }
 hex = "0.4.3"
 rand = "0.8.5"
+rand_chacha = { version = "^0.3.0" }
 serde = { version = "1.0", features = ["derive"] }
 serde-big-array = "0.5.1"
 serde-hex = "0.1.0"

@@ -9,6 +9,7 @@ bincode = { workspace = true }
 derive_more = { workspace = true }
 ed25519-dalek = { workspace = true }
 rand = { workspace = true }
+rand_chacha = { workspace = true }
 serde = { workspace = true }
 serde-big-array = { workspace = true }
 sha2 = { workspace = true }
