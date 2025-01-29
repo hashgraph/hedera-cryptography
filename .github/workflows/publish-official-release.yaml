@@ -97,6 +97,7 @@ jobs:
           echo "Dry Running semantic-release now"
           npx semantic-release --dry-run --debug
           echo "The version number assigned to the next release is: $VERSION"
+          echo $VERSION > version.txt
 
       - name: Run Semantic Release
         if: ${{ inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
@@ -126,9 +127,10 @@ jobs:
           add: "version.txt"
           commit: --signoff
 
-      # This step is used to update the version number in the build.properties file.
-      - name: Apply Gradle Version Number Update (Explicit)
-        run: ./gradlew versionAsSpecified -PnewVersion="$NEW_VERSION"
+      # This step is used in dry-run mode to add -SNAPSHOT suffix to version number in version.txt
+      - name: Dry Ryn Apply Gradle Version Number Update (Explicit)
+        if: ${{ inputs.dry-run-enabled == 'true' && !cancelled() && !failure() }}
+        run: ./gradlew versionAsSnapshot
 
       # Technically, this step is not required but is executed to provide the end users with a summary of the version
       # numbers assigned to each published artifact.
@@ -141,7 +143,7 @@ jobs:
       # components fail to build.
       - name: Gradle Assemble
         id: gradle-build
-        if: ${{ inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
+        if: ${{ !cancelled() && !failure() }}
         run: ./gradlew assemble
 
       # Publishes the artifacts to the Maven Central Nexus staging repository.
@@ -158,3 +160,18 @@ jobs:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
         run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache
+
+      # DRY RUN Publishes the snapshot artifacts to the Maven Central Nexus staging repository.
+      - name: Dry Run Snapshot Gradle Publish to Maven Central - common
+        if: ${{ inputs.dry-run-enabled == 'true' && !cancelled() && !failure() }}
+        env:
+          NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
+          NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
+        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
+
+      - name: Dry Run Snapshot Gradle Publish to Maven Central - cryptography
+        if: ${{ inputs.dry-run-enabled == 'true' && !cancelled() && !failure() }}
+        env:
+          NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
+          NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
+        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
