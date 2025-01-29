@@ -1,6 +1,6 @@
 use ab_rotation_lib::{
     address_book::{AddressBook, Signatures},
-    ed25519::{Signature, SigningKey, VerifyingKey},
+    ed25519::{Signature, SigningKey, VerifyingKey, ENTROPY_SIZE},
     statement::Statement,
     PublicValuesStruct,
 };
@@ -12,8 +12,8 @@ use sp1_sdk::{
 pub struct RAPS {}
 
 impl RAPS {
-    pub fn keygen() -> (SigningKey, VerifyingKey) {
-        let sk = SigningKey::generate();
+    pub fn keygen(seed: [u8; ENTROPY_SIZE]) -> (SigningKey, VerifyingKey) {
+        let sk = SigningKey::generate(seed);
         let vk = VerifyingKey(sk.0.verifying_key());
         (sk, vk)
     }
@@ -83,14 +83,6 @@ impl RAPS {
             );
         }
 
-        println!(
-            "Invoking proof for rotation from 0x{} to 0x{} (genesis 0x{})",
-            &hex::encode(ab_curr_hash)[..8],
-            &hex::encode(ab_next_hash)[..8],
-            &hex::encode(ab_genesis_hash)[..8]
-        );
-
-        let start_time = std::time::Instant::now();
         // Generate the proofs
         let proof: SP1ProofWithPublicValues = client
             .prove(pk, stdin.clone())
@@ -98,17 +90,13 @@ impl RAPS {
             .run()
             .expect("failed to generate proof");
 
-        println!("Proof generation took {:?}", start_time.elapsed());
-
         proof
     }
 
     pub fn verify_proof(vk: &SP1VerifyingKey, proof: &SP1ProofWithPublicValues) -> bool {
-        let start_time = std::time::Instant::now();
         // Setup the prover client.
         let client = ProverClient::new();
         let verification = client.verify(proof, vk);
-        println!("Proof verification took {:?}", start_time.elapsed());
         verification.is_ok()
     }
 }
@@ -196,7 +184,7 @@ mod tests {
         let mut prev_signing_keys = genesis_signing_keys;
         let mut prev_verifying_keys = genesis_verifying_keys;
 
-        // simulate 10 rotations
+        // simulate 15 rotations
         for day in 0..15 {
             assert!(RAPS::verify_proof(&vk, &prev_proof));
             debug(&prev_proof);
@@ -235,7 +223,8 @@ mod tests {
     }
 
     fn generate_signers<const N: usize>() -> ([SigningKey; N], [VerifyingKey; N]) {
-        let keys: [(SigningKey, VerifyingKey); N] = std::array::from_fn(|_| RAPS::keygen());
+        let keys: [(SigningKey, VerifyingKey); N] =
+            std::array::from_fn(|i| RAPS::keygen([i as u8; ENTROPY_SIZE]));
         let signing_keys: [SigningKey; N] = keys.clone().map(|sk| sk.0);
         let verifying_keys: [VerifyingKey; N] = keys.map(|sk| sk.1);
 

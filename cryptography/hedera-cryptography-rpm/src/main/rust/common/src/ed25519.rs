@@ -1,12 +1,12 @@
 use derive_more::derive::Deref;
 use serde::{Deserialize, Serialize};
 use serde_big_array::Array;
+use rand_chacha::rand_core::SeedableRng;
 
+pub const ENTROPY_SIZE: usize = 32;
 pub const PUBLIC_KEY_LENGTH: usize = ed25519_dalek::PUBLIC_KEY_LENGTH;
 pub const SIGNATURE_LENGTH: usize = ed25519_dalek::SIGNATURE_LENGTH;
 pub const SECRET_KEY_LENGTH: usize = ed25519_dalek::SECRET_KEY_LENGTH;
-
-///////////
 
 #[repr(transparent)]
 #[derive(Debug, Deref, Clone)]
@@ -36,8 +36,8 @@ impl VerifyingKey {
 pub struct SigningKey(pub ed25519_dalek::SigningKey);
 
 impl SigningKey {
-    pub fn generate() -> Self {
-        let mut csprng = rand::rngs::OsRng;
+    pub fn generate(seed: [u8; ENTROPY_SIZE]) -> Self {
+        let mut csprng = rand_chacha::ChaCha8Rng::from_seed(seed);
         let signing_key: ed25519_dalek::SigningKey =
             ed25519_dalek::SigningKey::generate(&mut csprng);
         Self(signing_key)

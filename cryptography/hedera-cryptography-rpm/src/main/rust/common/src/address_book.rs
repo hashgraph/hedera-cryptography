@@ -7,7 +7,7 @@ use crate::ed25519;
 
 pub type Weight = u64;
 
-pub const MAXIMUM_VALIDATORS: usize = 64;
+pub const MAXIMUM_VALIDATORS: usize = 256;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AddressBookEntry {
