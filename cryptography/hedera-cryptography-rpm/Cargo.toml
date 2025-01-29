@@ -1,7 +1,6 @@
 [workspace]
 members = [
     "src/main/rust/common",
-    "src/main/rust/zkvm_program",
     "src/main/rust/raps",
 ]
 resolver = "2"
