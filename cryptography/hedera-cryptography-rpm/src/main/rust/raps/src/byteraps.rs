@@ -47,7 +47,7 @@ impl ByteRAPS {
 
     pub fn proof_setup(zkvm_elf: impl AsRef<[u8]>) -> (Vec<u8>, Vec<u8>) {
         // Setup the prover client.
-        let client = ProverClient::new();
+        let client = ProverClient::from_env();
 
         // Setup the program.
         let (pk, vk) = client.setup(zkvm_elf.as_ref());

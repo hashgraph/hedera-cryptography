@@ -36,7 +36,7 @@ impl RAPS {
 
     pub fn proof_setup(zkvm_elf: &[u8]) -> (SP1ProvingKey, SP1VerifyingKey) {
         // Setup the prover client.
-        let client = ProverClient::new();
+        let client = ProverClient::from_env();
 
         // Setup the program.
         let (pk, vk) = client.setup(zkvm_elf);
@@ -57,7 +57,7 @@ impl RAPS {
         signatures: &Signatures, // signatures attesting the next AddressBook
     ) -> SP1ProofWithPublicValues {
         // Setup the prover client.
-        let client = ProverClient::new();
+        let client = ProverClient::from_env();
 
         let (ab_curr_hash, _ab_next_hash, stmt) = generate_statement(
             *ab_genesis_hash,
@@ -85,7 +85,7 @@ impl RAPS {
 
         // Generate the proofs
         let proof: SP1ProofWithPublicValues = client
-            .prove(pk, stdin.clone())
+            .prove(pk, &stdin)
             .compressed()
             .run()
             .expect("failed to generate proof");
@@ -95,7 +95,7 @@ impl RAPS {
 
     pub fn verify_proof(vk: &SP1VerifyingKey, proof: &SP1ProofWithPublicValues) -> bool {
         // Setup the prover client.
-        let client = ProverClient::new();
+        let client = ProverClient::from_env();
         let verification = client.verify(proof, vk);
         verification.is_ok()
     }
