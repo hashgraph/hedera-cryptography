@@ -15,7 +15,9 @@
 
 pub mod hints;
 pub mod jni_crs;
+pub mod jni_hints;
 pub mod setup;
 
 mod kzg;
 mod utils;
+mod jni_util;
