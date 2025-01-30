@@ -23,6 +23,7 @@ sp1-sdk = "3.2"
 sp1-zkvm = "3.2"
 
 ab-rotation-lib = { path = "src/main/rust/common" }
+openssl = { version = "0.10", features = ["vendored"] }
 
 [patch.crates-io]
 sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", tag = "sha2-v0.10.8-patch-v1" }
