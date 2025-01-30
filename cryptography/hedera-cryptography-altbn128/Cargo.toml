@@ -29,5 +29,5 @@ ark-bn254 = { version = "0.4.0", default-features = false, features = [ "curve" 
 ark-serialize = { version = "^0.4.2", default-features = true }
 jni = "0.21.1"
 
-rand = "*"
-rand_chacha = "*"
+rand = "0.8.5"
+rand_chacha = "0.3.0"
