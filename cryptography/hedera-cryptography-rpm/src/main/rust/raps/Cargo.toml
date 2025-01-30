@@ -22,6 +22,7 @@ hex = { workspace = true }
 alloy-sol-types = { workspace = true }
 ab-rotation-lib = { workspace = true }
 sha2 = { workspace = true }
+openssl = { version = "0.10", features = ["vendored"] }
 
 [build-dependencies]
 sp1-helper = { workspace = true }
