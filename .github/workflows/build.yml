@@ -53,9 +53,11 @@ jobs:
 
       - name: Setup clang-tools (Windows cross-compile)
         run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 15CF4D18AF4F7421
+          sudo add-apt-repository deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main
           sudo apt-get update
-          sudo apt-get -y install clang-tools-14
-          sudo ln -s /usr/bin/clang-cl-14 /usr/bin/clang-cl
+          sudo apt-get -y install clang-tools-19
+          sudo ln -s /usr/bin/clang-cl-19 /usr/bin/clang-cl
           clang-cl -v 
 
       - name: Setup Gradle
