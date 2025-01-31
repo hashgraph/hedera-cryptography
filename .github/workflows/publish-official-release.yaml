@@ -89,33 +89,39 @@ jobs:
           git config user.name "${{ secrets.GIT_USER_NAME }}"
           git config user.email "${{ secrets.GIT_USER_EMAIL }}"
 
-      - name: Dry Run Semantic Release
-        if: ${{ inputs.dry-run-enabled == 'true' && !cancelled() && !failure() }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-        run: |
-          echo "Dry Running semantic-release now"
-          npx semantic-release --dry-run --debug
-          echo "The version number assigned to the next release is: $VERSION"
-          echo $VERSION > version.txt
-
+      # Both actual and dry-run semantic-release will output the new version to version.txt
+      # as is defined in .releaserc but actual release should also publish a tag
       - name: Run Semantic Release
-        if: ${{ inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
+        if: ${{ !cancelled() && !failure() }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
         run: |
-          echo "Running semantic-release now"
-          npx semantic-release --debug
-
-      - name: Get Latest Tag and update version.txt
+          if [[ "${{ inputs.dry-run-enabled }}" == "true" ]]; then
+            echo "Dry Running semantic-release now..."
+            npx semantic-release --dry-run
+          else
+            echo "Running semantic-release now..."
+            npx semantic-release
+          fi
+        
+      - name: Compare version.txt with the tag latest tag and update if needed
         if: ${{ inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
         run: |
           git fetch --tags
-          LATEST_TAG=$(git describe --tags --abbrev=0)
-          echo "NEW_VERSION=$LATEST_TAG" >> "$GITHUB_ENV"
-          echo "Latest tag pushed to repo: $LATEST_TAG"
-          echo "Updating version.txt with latest tag"
-          echo $LATEST_TAG > version.txt
+          LATEST_TAG=$(git describe --tags --abbrev=0 || echo "")
+
+          FILE_VERSION=$(cat version.txt)
+
+          echo "Latest Git tag: $LATEST_TAG"
+          echo "Current version.txt content: $FILE_VERSION"
+
+          if [[ "$FILE_VERSION" != "$LATEST_TAG" ]]; then
+            echo "WARNING: version.txt ($FILE_VERSION) does not match the latest tag ($LATEST_TAG)."
+            echo "Updating version.txt to match the latest tag."
+            echo "$LATEST_TAG" > version.txt
+          else
+            echo "version.txt is already up to date."
+          fi
 
       - name: Commit and Push version.txt
         if: ${{ inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
@@ -127,7 +133,7 @@ jobs:
           add: "version.txt"
           commit: --signoff
 
-      # This step is used in dry-run mode to add -SNAPSHOT suffix to version number in version.txt
+      # This step is used only in dry-run mode to add -SNAPSHOT suffix to version number in version.txt
       - name: Dry Ryn Apply Gradle Version Number Update (Explicit)
         if: ${{ inputs.dry-run-enabled == 'true' && !cancelled() && !failure() }}
         run: ./gradlew versionAsSnapshot
