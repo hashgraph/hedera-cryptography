@@ -26,6 +26,12 @@ impl ByteRAPS {
         sk.sign(message.as_ref()).0.to_vec()
     }
 
+    pub fn verify_signature(vk: impl AsRef<[u8]>, message: impl AsRef<[u8]>, signature: impl AsRef<[u8]>) -> bool {
+        let vk = VerifyingKey(vk.as_ref().try_into().unwrap());
+        let sig = Signature(serde_big_array::Array(signature.as_ref().try_into().unwrap()));
+        vk.verify(message, &sig)
+    }
+
     pub fn compute_address_book_hash(verifying_keys: Vec<impl AsRef<[u8]>>, weights: Vec<u64>) -> [u8; 32] {
         let ab = build_address_book(verifying_keys, weights);
         ab_rotation_lib::address_book::serialize_and_digest_sha256(&ab)

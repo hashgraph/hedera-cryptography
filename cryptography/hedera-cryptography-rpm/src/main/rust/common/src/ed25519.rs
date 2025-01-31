@@ -23,9 +23,9 @@ impl VerifyingKey {
         self.0.to_bytes()
     }
 
-    pub fn verify(&self, message: &[u8], signature: &Signature) -> bool {
+    pub fn verify(&self, message: impl AsRef<[u8]>, signature: &Signature) -> bool {
         let signature = <ed25519_dalek::Signature>::from_bytes(signature);
-        self.0.verify_strict(message, &signature).is_ok()
+        self.0.verify_strict(message.as_ref(), &signature).is_ok()
     }
 }
 
@@ -51,9 +51,9 @@ impl SigningKey {
         self.0.to_bytes()
     }
 
-    pub fn sign(&self, message: &[u8]) -> Signature {
+    pub fn sign(&self, message: impl AsRef<[u8]>) -> Signature {
         use ed25519_dalek::ed25519::signature::Signer;
-        Signature(Array(self.0.sign(message).to_bytes()))
+        Signature(Array(self.0.sign(message.as_ref()).to_bytes()))
     }
 }
 
