@@ -4,6 +4,7 @@ use serde_big_array::Array;
 use smallvec::SmallVec;
 
 use crate::ed25519;
+use crate::sha256;
 
 pub type Weight = u64;
 
@@ -90,21 +91,8 @@ pub fn calculate_signers_weight(ab: &AddressBook, signatures: &Signatures, messa
     })
 }
 
-pub fn digest_sha256(data: impl AsRef<[u8]>) -> [u8; 32] {
-    use sha2::{Digest, Sha256};
-
-    // create a Sha256 object
-    let mut hasher = Sha256::new();
-    // write input message
-    hasher.update(data.as_ref());
-    // read hash digest and consume hasher
-    let result: [u8; 32] = hasher.finalize().into();
-
-    result
-}
-
 pub fn serialize_and_digest_sha256(data: &impl serde::Serialize) -> [u8; 32] {
     // NOTE: uses the same `bincode` as the `sp1_zkvm::io::read` and family
     let data_bytes = bincode::serialize(data).unwrap();
-    digest_sha256(data_bytes)
+    sha256::digest_sha256(data_bytes)
 }

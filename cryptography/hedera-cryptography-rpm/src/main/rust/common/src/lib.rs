@@ -5,6 +5,7 @@ use alloy_sol_types::sol;
 
 pub mod address_book;
 pub mod ed25519;
+pub mod sha256;
 pub mod statement;
 
 sol! {

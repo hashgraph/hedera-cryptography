@@ -7,9 +7,10 @@ sp1_zkvm::entrypoint!(main);
 
 use ab_rotation_lib::{
     address_book::{
-        calculate_signers_weight, calculate_total_weight, digest_sha256,
+        calculate_signers_weight, calculate_total_weight,
         serialize_and_digest_sha256,
     },
+    sha256::digest_sha256,
     statement::Statement,
     PublicValuesStruct,
 };

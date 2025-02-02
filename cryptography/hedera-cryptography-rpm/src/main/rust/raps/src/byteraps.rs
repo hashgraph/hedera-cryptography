@@ -1,7 +1,7 @@
 use alloy_sol_types::SolType;
 use crate::raps::RAPS;
 use smallvec::SmallVec;
-use sp1_sdk::{ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1VerifyingKey};
+use sp1_sdk::{SP1ProofWithPublicValues, SP1ProvingKey, SP1VerifyingKey};
 
 use ab_rotation_lib::address_book::Signatures;
 
@@ -38,7 +38,7 @@ impl ByteRAPS {
     }
 
     pub fn compute_tss_vk_hash(tss_vk: impl AsRef<[u8]>) -> [u8; 32] {
-        ab_rotation_lib::address_book::digest_sha256(tss_vk)
+        ab_rotation_lib::sha256::digest_sha256(tss_vk)
     }
 
     pub fn rotation_message(ab_hash: &[u8; 32], tss_vk_hash: &[u8; 32]) -> Vec<u8> {
@@ -52,11 +52,7 @@ impl ByteRAPS {
     }
 
     pub fn proof_setup(zkvm_elf: impl AsRef<[u8]>) -> (Vec<u8>, Vec<u8>) {
-        // Setup the prover client.
-        let client = ProverClient::from_env();
-
-        // Setup the program.
-        let (pk, vk) = client.setup(zkvm_elf.as_ref());
+        let (pk, vk) = RAPS::proof_setup(zkvm_elf.as_ref());
 
         let mut pk_buf: Vec<u8> = Vec::new();
         bincode::serialize_into(&mut pk_buf, &pk).expect("failed to serialize pk");
