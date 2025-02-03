@@ -19,6 +19,11 @@ on:
         type: string
         required: false
         default: "21.0.4"
+      branch:
+        description: "Branch to release from"
+        type: string
+        required: false
+        default: "main"
 
 defaults:
   run:
@@ -52,7 +57,7 @@ jobs:
         with:
           token: ${{ secrets.GH_ACCESS_TOKEN }}
           fetch-depth: 0
-          ref: "main"
+          ref: ${{ inputs.branch }}
 
       - name: Setup Java
         uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0

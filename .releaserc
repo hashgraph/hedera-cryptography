@@ -24,6 +24,9 @@
   "branches":[
     {
       "name": "main"
+    },
+    {
+      "name": "193-implement-semantic-release"
     }
   ]
 }
