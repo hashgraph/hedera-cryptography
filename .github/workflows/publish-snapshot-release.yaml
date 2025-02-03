@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-name: "Publish Release"
+name: "Publish Snapshot Release"
 
 on:
   push:
