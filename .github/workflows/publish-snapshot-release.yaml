@@ -26,7 +26,7 @@ env:
 
 jobs:
   publish-maven-central:
-    name: Publish Maven Central
+    name: Publish Snapshot Release of Hedera Cryptography
     runs-on: network-node-linux-medium
     steps:
       - name: Harden Runner
