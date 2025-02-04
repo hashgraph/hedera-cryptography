@@ -89,12 +89,12 @@ jobs:
           set +x
           echo "Installing semantic-release"
           npm install
-          sudo apt-get install vim
 
       - name: Configure Git for Semantic Release
         run: |
           git config user.name "${{ secrets.GIT_USER_NAME }}"
           git config user.email "${{ secrets.GIT_USER_EMAIL }}"
+          git config --global core.editor "/usr/bin/vim"
 
       # Both actual and dry-run semantic-release will output the new version to version.txt
       # as is defined in .releaserc but actual release should also publish a tag
