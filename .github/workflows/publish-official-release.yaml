@@ -89,6 +89,7 @@ jobs:
           set +x
           echo "Installing semantic-release"
           npm install
+          sudo apt-get install vim
 
       - name: Configure Git for Semantic Release
         run: |
