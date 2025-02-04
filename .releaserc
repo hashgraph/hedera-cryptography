@@ -12,7 +12,6 @@
         "preset": "conventionalcommits"
       }
     ],
-    "@semantic-release/git",
     "@semantic-release/github"
   ],
   "verifyRelease": [
