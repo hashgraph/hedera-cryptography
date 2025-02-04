@@ -86,6 +86,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          set +x
           echo "Installing semantic-release"
           npm install
 
