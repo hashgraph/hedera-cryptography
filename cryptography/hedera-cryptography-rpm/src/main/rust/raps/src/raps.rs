@@ -102,6 +102,23 @@ impl RAPS {
         // Setup the prover client.
         let client = ProverClient::builder().cpu().build();
         let verification = client.verify(proof, vk);
+
+        let mut vk_digest = [0u8; 32];
+        for (i, &num) in vk.hash_u32().iter().enumerate() {
+            vk_digest[i * 4..(i + 1) * 4].copy_from_slice(&num.to_le_bytes());
+        }
+
+        //parse the proof and check whether vk_digest matches
+        let parsed_vk_digest = {
+            let parsed_prev_proof =
+                PublicValuesStruct::abi_decode(&proof.public_values.to_vec(), true).unwrap();
+            parsed_prev_proof.vk_digest.0
+        };
+
+        if parsed_vk_digest != vk_digest {
+            return false;
+        }
+
         verification.is_ok()
     }
 }

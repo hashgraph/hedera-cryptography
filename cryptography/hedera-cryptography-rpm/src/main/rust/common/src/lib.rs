@@ -16,5 +16,6 @@ sol! {
         bytes32 ab_curr_hash;
         bytes32 ab_next_hash;
         bytes32 tss_vk_hash;
+        bytes32 vk_digest;
     }
 }

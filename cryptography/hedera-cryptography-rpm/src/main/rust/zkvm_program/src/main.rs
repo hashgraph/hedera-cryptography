@@ -33,6 +33,11 @@ pub fn main() {
     // Get the SHA256 of the genesis AB
     let ab_genesis_hash: [u8; 32] = statement.ab_genesis_hash;
 
+    let mut vk_digest = [0u8; 32];
+    for (i, &num) in statement.vk_digest.iter().enumerate() {
+        vk_digest[i * 4..(i + 1) * 4].copy_from_slice(&num.to_le_bytes());
+    }
+
     // Get the SHA256 of the current AB (using the provided ECALL)
     println!("cycle-tracker-start: digesting current ab");
     let ab_curr_hash: [u8; 32] = serialize_and_digest_sha256(&statement.ab_curr);
@@ -59,6 +64,7 @@ pub fn main() {
             ab_curr_hash: ab_prev_hash.into(),
             ab_next_hash: ab_curr_hash.into(),
             tss_vk_hash: tss_vk_prev_hash.into(),
+            vk_digest: vk_digest.into(),
         };
 
         let prev_pv_abi_encoded = prev_pv.abi_encode();
@@ -100,6 +106,7 @@ pub fn main() {
         ab_curr_hash: ab_curr_hash.into(),
         ab_next_hash: ab_next_hash.into(),
         tss_vk_hash: statement.tss_vk_next_hash.into(),
+        vk_digest: vk_digest.into(),
     };
 
     sp1_zkvm::io::commit_slice(&public_values.abi_encode());
