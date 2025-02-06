@@ -2,6 +2,9 @@
 package com.hedera.cryptography.rpm;
 
 import com.hedera.common.nativesupport.SingletonLoader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * A JNI Bridge for the HistoryLibrary implementation as defined at
@@ -10,7 +13,7 @@ import com.hedera.common.nativesupport.SingletonLoader;
 public class HistoryLibraryBridge {
     /** Instance Holder for lazy loading and concurrency handling */
     private static final SingletonLoader<HistoryLibraryBridge> INSTANCE_HOLDER =
-            new SingletonLoader<>("rpm", new HistoryLibraryBridge());
+            new SingletonLoader<>("raps", new HistoryLibraryBridge());
 
     static {
         // Open the package to allow access to the native library
@@ -35,79 +38,138 @@ public class HistoryLibraryBridge {
     }
 
     /**
+     * Loads the Succinct RISC-V zkVM implementing the AddressBook rotation program,
+     * which is in the ELF (executable and linkable) format.
+     *
+     * @return a byte array with the ELF
+     * @throws IOException if I/O errors occur
+     */
+    public static byte[] loadAddressBookRotationProgram() throws IOException {
+        try (final InputStream is = HistoryLibraryBridge.class.getResourceAsStream("/ab-rotation-program");
+                final ByteArrayOutputStream baos = new ByteArrayOutputStream(); ) {
+            // The current program is about 350KB, so try to read it in one go
+            byte[] buffer = new byte[400 * 1024];
+            int bytesRead;
+
+            while ((bytesRead = is.read(buffer)) != -1) {
+                baos.write(buffer, 0, bytesRead);
+            }
+
+            return baos.toByteArray();
+        }
+    }
+
+    /**
      * Returns the SNARK verification key in use by this library.
      * <p>
      * <b>Important:</b> If this changes, the ledger id must also change.
+     * @param elf the ELF (executable and linkable format) file for the Succinct RISC-V zkVM
      */
-    public native byte[] snarkVerificationKey();
+    public native ProvingAndVerifyingSnarkKeys snarkVerificationKey(final byte[] elf);
 
     /**
      * Returns a new Schnorr key pair.
+     * @param random the random 256 bits (32 bytes)
      */
-    public native byte[] newSchnorrKeyPair();
+    public native SigningAndVerifyingSchnorrKeys newSchnorrKeyPair(final byte[] random);
 
     /**
-     * Signs a message with a Schnorr private key. In Hiero TSS, this will always be the concatenation
-     * of an address book hash and the associated metadata.
+     * Constructs a rotation message by concatenating the hash of the next address book with the hash
+     * of the hinTS VerificationKey.
+     * @param nextAddressBookHash the hash of the next address book
+     * @param hintsVerificationKeyHash the hash of the hinTS VerificationKey
+     * @return
+     */
+    public static byte[] formatRotationMessage(
+            final byte[] nextAddressBookHash, final byte[] hintsVerificationKeyHash) {
+        final byte[] arr = new byte[nextAddressBookHash.length + hintsVerificationKeyHash.length];
+        System.arraycopy(nextAddressBookHash, 0, arr, 0, nextAddressBookHash.length);
+        System.arraycopy(hintsVerificationKeyHash, 0, arr, nextAddressBookHash.length, hintsVerificationKeyHash.length);
+        return arr;
+    }
+
+    /**
+     * Signs a rotation message with a Schnorr signing key. In Hiero TSS, this message will always be the concatenation
+     * of an address book hash and the hash of the hinTS VerificationKey as returned by the HistoryLibraryBridge.formatRotationMessage()
+     * method.
      *
      * @param message the message
-     * @param privateKey the private key
+     * @param signingKey the signing key
      * @return the signature
      */
-    public native byte[] signSchnorr(final byte[] message, final byte[] privateKey);
+    public native byte[] signSchnorr(final byte[] message, final byte[] signingKey);
 
     /**
-     * Checks that a signature on a message verifies under a Schnorr public key.
+     * Checks that a signature on a message verifies under a Schnorr verifying key.
      *
      * @param signature the signature
      * @param message the message
-     * @param publicKey the public key
+     * @param verifyingKey the verifying key
      * @return true if the signature is valid; false otherwise
      */
-    public native boolean verifySchnorr(final byte[] signature, final byte[] message, final byte[] publicKey);
+    public native boolean verifySchnorr(final byte[] signature, final byte[] message, final byte[] verifyingKey);
 
     /**
      * Computes the hash of the given address book with the same algorithm used by the SNARK circuit.
-     * @param addressBook the address book
+     * <p>
+     * The verifyingKeys and weights arrays model the address book. The elements of these arrays are related,
+     * so that verifyingKeys[0] is a verifying key for a node with a weight of weights[0]. Note that the order
+     * of the entries matters, and should generally match the order of the nodes in the actual AddressBook
+     * (e.g. sorted by the increasing nodeId.)
+     *
+     * @param verifyingKeys the address book verifying keys
+     * @param weights the address book weights
      * @return the hash of the address book
      */
-    public native byte[] hashAddressBook(final byte[] addressBook);
+    public native byte[] hashAddressBook(final byte[][] verifyingKeys, final long[] weights);
 
     /**
-     * Returns a SNARK recursively proving the target address book and associated metadata belong to the given ledger
-     * id's chain of trust that includes the given source address book, based on its own proof of belonging. (Unless the
+     * Returns a hash of the given hinTS verification key.
+     * @param verificationKey the hinTS verification key as obtained from HintsLibraryBridge.preprocess()
+     * @return the hash of the given key
+     */
+    public native byte[] hashHintsVerificationKey(final byte[] verificationKey);
+
+    /**
+     * Returns a SNARK recursively proving the next address book and associated metadata belong to the given ledger
+     * id's chain of trust that includes the given current address book, based on its own proof of belonging. (Unless the
      * source address book hash <i>is</i> the ledger id, which is the base case of the recursion).
-     * <p>
-     * The {@code nodeIds} and  {@code sourceSignatures} arrays together model the higher level
-     * {@code Map<Long, Bytes> sourceSignatures}, and use arrays for performance reasons.
      *
-     * @param ledgerId the ledger id, the concatenation of the genesis address book hash and the SNARK verification key
-     * @param sourceProof if not null, the proof the source address book is in the ledger id's chain of trust
-     * @param sourceAddressBook the source roster
-     * @param nodeIds nodeIds for the signatures in sourceSignatures
-     * @param sourceSignatures the source address book signatures on the target address book hash and its metadata
-     * @param targetAddressBookHash the hash of the target address book
-     * @param targetMetadata the metadata of the target address book
-     * @return the SNARK proving the target address book and metadata belong to the ledger id's chain of trust
+     * @param snarkProvingKey the SNARK proving key
+     * @param snarkVerifyingKey the SNARK verifying key
+     * @param genesisAddressBookHash the hash of the genesis address book
+     *
+     * @param currentAddressBookVerifyingKeys the current address book verifying keys
+     * @param currentAddressBookWeights the current address book weights
+     *
+     * @param nextAddressBookVerifyingKeys the next address book verifying keys
+     * @param nextAddressBookWeights the next address book weights
+     *
+     * @param currentAddressBookProof the current address book proof, or null if it's the genesis address book
+     *
+     * @param nextAddressBookHintsVerificationKeyHash the hash of the next address book hinTS verification key
+     * @param signatures the Schnorr signatures produced by the current address book for the next address book
+     *
+     * @return the SNARK proving the next address book and metadata belong to the ledger id's chain of trust
      */
     public native byte[] proveChainOfTrust(
-            final byte[] ledgerId,
-            final byte[] sourceProof,
-            final byte[] sourceAddressBook,
-            final long[] nodeIds,
-            final byte[][] sourceSignatures,
-            final byte[] targetAddressBookHash,
-            final byte[] targetMetadata);
+            final byte[] snarkProvingKey,
+            final byte[] snarkVerifyingKey,
+            final byte[] genesisAddressBookHash,
+            final byte[][] currentAddressBookVerifyingKeys,
+            final long[] currentAddressBookWeights,
+            final byte[][] nextAddressBookVerifyingKeys,
+            final long[] nextAddressBookWeights,
+            final byte[] currentAddressBookProof,
+            final byte[] nextAddressBookHintsVerificationKeyHash,
+            final byte[][] signatures);
 
     /**
      * Verifies the given SNARK proves the given address book hash and associated metadata belong to the given
      * ledger id's chain of trust
-     * @param ledgerId the ledger id
-     * @param addressBookHash the hash of the address book
-     * @param metadata the metadata associated to the address book
+     * @param snarkVerifyingKey the SNARK verifying key
      * @param proof the SNARK proving the address book hash and metadata belong to the ledger id's chain of trust
      * @return true if the proof is valid; false otherwise
      */
-    public native boolean verifyChainOfTrust(
-            final byte[] ledgerId, final byte[] addressBookHash, final byte[] metadata, final byte[] proof);
+    public native boolean verifyChainOfTrust(final byte[] snarkVerifyingKey, final byte[] proof);
 }
