@@ -18,8 +18,8 @@ serde-big-array = "0.5.1"
 serde-hex = "0.1.0"
 sha2 = "0.10.8"
 smallvec = { version = "1.13", features = ["const_generics", "serde"] }
-sp1-sdk = "4.0.1"
-sp1-zkvm = "4.0.1"
+sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", rev = "a4e023df60a43cc00ba54469966b257801732421" }
+sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", rev = "a4e023df60a43cc00ba54469966b257801732421" }
 
 ab-rotation-lib = { path = "src/main/rust/common" }
 
