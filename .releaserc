@@ -1,34 +1,76 @@
 {
+  "branches": [
+    "193-implement-semantic-release",
+    "main"
+  ],
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
       {
-        "preset": "conventionalcommits"
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            { "type": "feat", "section": "Features" },
+            { "type": "fix", "section": "Bug Fixes" },
+            { "type": "docs", "section": "Documentation" },
+            { "type": "style", "section": "Styles" },
+            { "type": "refactor", "section": "Code Refactoring" },
+            { "type": "perf", "section": "Performance Improvements" },
+            { "type": "test", "section": "Tests" },
+            { "type": "build", "section": "Build System" },
+            { "type": "ci", "section": "Continuous Integration" },
+            { "type": "chore", "hidden": true },
+            { "type": "revert", "section": "Reverts" }
+          ]
+        }
       }
     ],
-    "@semantic-release/release-notes-generator",
-    "@semantic-release/changelog",
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            { "type": "feat", "section": "Features" },
+            { "type": "fix", "section": "Bug Fixes" },
+            { "type": "docs", "section": "Documentation" },
+            { "type": "style", "section": "Styles" },
+            { "type": "refactor", "section": "Code Refactoring" },
+            { "type": "perf", "section": "Performance Improvements" },
+            { "type": "test", "section": "Tests" },
+            { "type": "build", "section": "Build System" },
+            { "type": "ci", "section": "Continuous Integration" },
+            { "type": "chore", "hidden": true },
+            { "type": "revert", "section": "Reverts" }
+          ]
+        }
+      }
+    ],
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    "@semantic-release/github",
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "echo ${nextRelease.version} > version.txt"
+      }
+    ],
     [
       "@semantic-release/git",
       {
-        "assets": ["CHANGELOG.md", "package.json"],
-        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        "assets": [
+          "CHANGELOG.md",
+          "version.txt"
+        ],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
+        "commitOptions": {
+          "sign": true
+        }
       }
-    ],
-    "@semantic-release/github"
-  ],
-  "verifyRelease": [
-    [
-      "@semantic-release/exec",
-      { "cmd": "echo ${nextRelease.version} > version.txt" }
     ]
-  ],
-  "branches": [
-    {
-      "name": "main"
-    },
-    {
-      "name": "193-implement-semantic-release"
-    }
   ]
 }
