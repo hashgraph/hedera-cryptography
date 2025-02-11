@@ -55,10 +55,10 @@ public class HintsLibraryBridge {
         if (signersNum < 1) {
             return null;
         }
-        return _initCRS(signersNum);
+        return initCRSImpl(signersNum);
     }
 
-    private native byte[] _initCRS(long signersNum);
+    private native byte[] initCRSImpl(long signersNum);
 
     /**
      * Update a previous CRS object with a new contribution.

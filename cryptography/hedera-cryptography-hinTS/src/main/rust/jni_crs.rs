@@ -29,7 +29,7 @@ use crate::jni_util;
 /// # Returns
 /// *   a byte array with a serialized CRS object, or null on error
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge__1initCRS(
+pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_initCRSImpl(
     env: JNIEnv,
     _instance: JObject,
     signers_num: jlong,
