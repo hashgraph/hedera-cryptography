@@ -63,7 +63,7 @@ public class HintsLibraryBridge {
     /**
      * Update a previous CRS object with a new contribution.
      * @param prevCRS the previous CRS object
-     * @param random the random contribution of 128 bits (16 bytes)
+     * @param random the random contribution of 256 bits (32 bytes)
      * @return the updated CRS object and a concatenated contribution proof for the update
      */
     public native byte[] updateCRS(final byte[] prevCRS, final byte[] random);
