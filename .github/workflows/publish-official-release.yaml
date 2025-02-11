@@ -141,7 +141,7 @@ jobs:
         with:
           author_name: ${{ secrets.GIT_USER_NAME }}
           author_email: ${{ secrets.GIT_USER_EMAIL }}
-          message: "chore: update version.txt"
+          message: "chore: new release"
           add: '["version.txt", "CHANGELOG.md"]'
           commit: --signoff
 

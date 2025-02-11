@@ -56,7 +56,7 @@
     [
       "@semantic-release/exec",
       {
-        "successCmd": "echo ${nextRelease.version} > version.txt"
+        "prepareCmd": "echo ${nextRelease.version} > version.txt"
       }
     ]
   ]
