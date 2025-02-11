@@ -106,7 +106,7 @@ jobs:
       - name: Run Semantic Release
         if: ${{ !cancelled() && !failure() }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
         run: |
           if [[ "${{ inputs.dry-run-enabled }}" == "true" ]]; then
             echo "Dry Running semantic-release now..."
@@ -135,16 +135,15 @@ jobs:
             echo "version.txt is already up to date."
           fi
 
-      # Commented out for the moment to try to use the semantic-release to push the version.txt file in order to not trigger CI
-      # - name: Commit and Push version.txt
-      #   if: ${{ inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
-      #   uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
-      #   with:
-      #     author_name: ${{ secrets.GIT_USER_NAME }}
-      #     author_email: ${{ secrets.GIT_USER_EMAIL }}
-      #     message: "chore: update version.txt"
-      #     add: "version.txt"
-      #     commit: --signoff
+      - name: Commit and Push version.txt
+        if: ${{ inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
+        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
+        with:
+          author_name: ${{ secrets.GIT_USER_NAME }}
+          author_email: ${{ secrets.GIT_USER_EMAIL }}
+          message: "chore: update version.txt"
+          add: '["version.txt", "CHANGELOG.md"]'
+          commit: --signoff
 
       # This step is used only in dry-run mode to add -SNAPSHOT suffix to version number in version.txt
       - name: Dry Run Apply Gradle Version Number Update (Explicit)
