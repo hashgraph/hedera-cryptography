@@ -39,11 +39,26 @@ public class HintsLibraryBridge {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Generates a new CRS object for the given number of signers.
-     * @param signersNum the number of signers
+     * Generates a new CRS object for the given number of signers plus 1.
+     * <p>
+     * The provided signersNum argument must be greater than the maximum number of nodes
+     * that the network supports by at least 1. For example, if the network supports up to 1023 nodes,
+     * then the signersNum argument must be equal to at least 1024. It's mathematically
+     * okay to have the singersNum much larger than the current number of nodes in the network,
+     * however, this will result in a larger space required to store the CRS.
+     *
+     * @param signersNum the number of signers plus 1
      * @return the CRS object
      */
-    public native byte[] initCRS(long signersNum);
+    public byte[] initCRS(long signersNum) {
+        // Support a degenerate case of 0 signers, or a normal case with more signers. Otherwise, error out.
+        if (signersNum < 1) {
+            return null;
+        }
+        return _initCRS(signersNum);
+    }
+
+    private native byte[] _initCRS(long signersNum);
 
     /**
      * Update a previous CRS object with a new contribution.

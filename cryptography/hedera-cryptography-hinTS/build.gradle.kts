@@ -7,4 +7,7 @@ plugins {
 
 cargo { libname = "hints" }
 
-testModuleInfo { requires("org.junit.jupiter.api") }
+testModuleInfo {
+    requires("org.junit.jupiter.api")
+    requires("org.junit.jupiter.params")
+}
