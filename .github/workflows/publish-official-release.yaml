@@ -52,20 +52,6 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Debug dry-run-enabled OUTPUT
-        run: |
-          echo "Dry Run Enabled: ${{ inputs.dry-run-enabled }}"
-      
-      - name: Debug dry-run-enabled TRUE
-        if: ${{ inputs.dry-run-enabled == true }}
-        run: |
-          echo "Dry Run Enabled: ${{ inputs.dry-run-enabled }}"
-
-      - name: Debug dry-run-enabled NOT TRUE
-        if: ${{ inputs.dry-run-enabled != true }}
-        run: |
-          echo "Dry Run Enabled: ${{ inputs.dry-run-enabled }}"
-
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -120,7 +106,7 @@ jobs:
           # the process hangs indefinitely awaiting input in the dialogue
           EDITOR: "echo 'Created-by: semantic-release' > $1"
         run: |
-          if [[ "${{ inputs.dry-run-enabled }}" == "true" ]]; then
+          if [[ "${{ inputs.dry-run-enabled }}" == true ]]; then
             echo "Dry Running semantic-release now..."
             npx semantic-release --dry-run
           else
@@ -129,7 +115,7 @@ jobs:
           fi
 
       - name: Compare version.txt with the tag latest tag and update if needed
-        if: ${{ inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
+        if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
         run: |
           git fetch --tags
           LATEST_TAG=$(git describe --tags --abbrev=0 || echo "")
@@ -149,7 +135,7 @@ jobs:
           fi
 
       - name: Commit and Push version.txt
-        if: ${{ inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
+        if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
         uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
           author_name: ${{ secrets.GIT_USER_NAME }}
@@ -160,7 +146,7 @@ jobs:
 
       # This step is used only in dry-run mode to add -SNAPSHOT suffix to version number in version.txt
       - name: Dry Run Apply Gradle Version Number Update (Explicit)
-        if: ${{ inputs.dry-run-enabled == 'true' && !cancelled() && !failure() }}
+        if: ${{ inputs.dry-run-enabled == true && !cancelled() && !failure() }}
         run: ./gradlew versionAsSnapshot
 
       # Technically, this step is not required but is executed to provide the end users with a summary of the version
@@ -179,14 +165,14 @@ jobs:
 
       # Publishes the artifacts to the Maven Central Nexus staging repository.
       - name: Gradle Publish to Maven Central - common
-        if: ${{ inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
+        if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
         run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
 
       - name: Gradle Publish to Maven Central - cryptography
-        if: ${{ inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
+        if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
@@ -194,14 +180,14 @@ jobs:
 
       # DRY RUN Publishes the snapshot artifacts to the Maven Central Nexus staging repository.
       - name: Dry Run Snapshot Gradle Publish to Maven Central - common
-        if: ${{ inputs.dry-run-enabled == 'true' && !cancelled() && !failure() }}
+        if: ${{ inputs.dry-run-enabled == true && !cancelled() && !failure() }}
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
         run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
 
       - name: Dry Run Snapshot Gradle Publish to Maven Central - cryptography
-        if: ${{ inputs.dry-run-enabled == 'true' && !cancelled() && !failure() }}
+        if: ${{ inputs.dry-run-enabled == true && !cancelled() && !failure() }}
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
