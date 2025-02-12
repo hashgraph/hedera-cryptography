@@ -71,6 +71,7 @@ jobs:
           gradle-version: wrapper
 
       - name: Import GPG Key
+        id: gpg
         uses: step-security/ghaction-import-gpg@6c8fe4d0126a59d57c21f87c9ae5dd3451fa3cca # v6.1.0
         with:
           git_commit_gpgsign: true
@@ -90,23 +91,20 @@ jobs:
           echo "Installing semantic-release"
           npm install
 
-      - name: Install Editor
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y vim
-
-      - name: Configure Git for Semantic Release
-        run: |
-          git config user.name "${{ secrets.GIT_USER_NAME }}"
-          git config user.email "${{ secrets.GIT_USER_EMAIL }}"
-          git config --global core.editor "/usr/bin/vim"
-
       # Both actual and dry-run semantic-release will output the new version to version.txt
       # as is defined in .releaserc but actual release should also publish a tag
       - name: Run Semantic Release
         if: ${{ !cancelled() && !failure() }}
         env:
           GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          GIT_AUTHOR_NAME: ${{ steps.gpg.outputs.name}}
+          GIT_AUTHOR_EMAIL: ${{ steps.gpg.outputs.email}}
+          GIT_COMMITTER_NAME: ${{ steps.gpg.outputs.name}}
+          GIT_COMMITTER_EMAIL: ${{ steps.gpg.outputs.email}}
+          # The EDITOR var is required to ensure the tag is signed with the GPG key
+          # as semantic-release doesn't support headless tag signing and
+          # the process hangs indefinitely awaiting input in the dialogue
+          EDITOR: "echo 'Created-by: semantic-release' > $1"
         run: |
           if [[ "${{ inputs.dry-run-enabled }}" == "true" ]]; then
             echo "Dry Running semantic-release now..."
@@ -121,6 +119,7 @@ jobs:
         run: |
           git fetch --tags
           LATEST_TAG=$(git describe --tags --abbrev=0 || echo "")
+          LATEST_TAG=${LATEST_TAG#v}  # Remove leading 'v' from the tag
 
           FILE_VERSION=$(cat version.txt)
 
