@@ -52,6 +52,20 @@ jobs:
         with:
           egress-policy: audit
 
+      - name: Debug dry-run-enabled OUTPUT
+        run: |
+          echo "Dry Run Enabled: ${{ inputs.dry-run-enabled }}"
+      
+      - name: Debug dry-run-enabled TRUE
+        if: ${{ inputs.dry-run-enabled == true }}
+        run: |
+          echo "Dry Run Enabled: ${{ inputs.dry-run-enabled }}"
+
+      - name: Debug dry-run-enabled NOT TRUE
+        if: ${{ inputs.dry-run-enabled != true }}
+        run: |
+          echo "Dry Run Enabled: ${{ inputs.dry-run-enabled }}"
+
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
