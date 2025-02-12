@@ -14,11 +14,12 @@
 // limitations under the License.
 //
 
+use std::any::Any;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use jni::JNIEnv;
 use jni::objects::{JByteArray, JObject};
 use jni::sys::{jbyte, jbyteArray};
-use crate::hints::{deserialize, serialize, RANDOM_SIZE};
+use crate::hints::{serialize, RANDOM_SIZE};
 
 /// Creates a jbyteArray out of a Vec<jbyte> object.
 /// # Arguments
@@ -81,10 +82,14 @@ pub fn build_entropy_array(env: &JNIEnv, random_array: &JByteArray) -> Result<[u
 }
 
 /// Deserializes a JByteArray into an object, or returns Err.
-pub fn deserialize_jbyte_array<T: CanonicalDeserialize>(env: &JNIEnv, jarray: &JByteArray) -> Result<T, ()> {
-    match env.convert_byte_array(&jarray) {
-        Ok(val) => Ok(deserialize(&val)),
-        Err(_) => Err(())
+pub fn deserialize_jbyte_array<T: CanonicalDeserialize>(env: &JNIEnv, jarray: &JByteArray) -> Result<T, Box<dyn Any>> {
+    let vec = match env.convert_byte_array(&jarray) {
+        Ok(val) => val,
+        Err(err) => return Err(Box::new(err))
+    };
+    match T::deserialize_uncompressed(&*vec) {
+        Ok(val) => Ok(val),
+        Err(err) => Err(Box::new(err))
     }
 }
 
