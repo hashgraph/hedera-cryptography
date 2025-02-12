@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.hedera.cryptography.rpm;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -9,12 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.hedera.cryptography.hints.AggregationAndVerificationKeys;
 import com.hedera.cryptography.hints.HintsLibraryBridge;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-@Disabled(
-        "Requires JNI implementation for HistoryLibraryBridge, which is blocked on https://github.com/hashgraph/hedera-cryptography/pull/245")
 public class HistoryLibraryBridgeTest {
     private static final HistoryLibraryBridge HISTORY = HistoryLibraryBridge.getInstance();
     private static final HintsLibraryBridge HINTS = HintsLibraryBridge.getInstance();
@@ -61,15 +59,23 @@ public class HistoryLibraryBridgeTest {
     // Finished modeling the Address Book
     // ------------------------------------------------------------------------
 
+    // A helper assertion that also prints entire arrays in addition to the default first mismatching index only
+    private void assertArrayEquals(byte[] expected, byte[] actual) {
+        Assertions.assertArrayEquals(
+                expected,
+                actual,
+                () -> "Expected:\n" + Arrays.toString(expected) + "\nbut got:\n" + Arrays.toString(actual) + "\n");
+    }
+
     @Test
     void testSnarkVerificationKey() throws IOException {
         final byte[] elf = HistoryLibraryBridge.loadAddressBookRotationProgram();
-        assertEquals(350036, elf.length);
+        assertEquals(351132, elf.length);
 
         final ProvingAndVerifyingSnarkKeys keys = HISTORY.snarkVerificationKey(elf);
 
         // The pk is 164 MB, so we just check its size for practicality.
-        assertEquals(164190655, keys.provingKey().length);
+        assertEquals(164193054, keys.provingKey().length);
 
         assertArrayEquals(HistoryConstants.SNARK_VERIFYING_KEY, keys.verifyingKey());
     }
@@ -196,7 +202,7 @@ public class HistoryLibraryBridgeTest {
 
         // It's almost 1.5 MB, so we only check the length for practicality.
         // The verifyChainOfTrust() test right below will verify the actual bytes for us.
-        assertEquals(1477326, proof.length);
+        assertEquals(1477358, proof.length);
 
         // NOTE: computing the proof takes some 3 minutes on a MacBook Pro,
         // and may take even longer on a less powerful system. So we might as well

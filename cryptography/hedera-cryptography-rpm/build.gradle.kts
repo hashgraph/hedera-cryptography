@@ -5,7 +5,7 @@ plugins {
     id("org.hiero.gradle.feature.test-multios")
 }
 
-cargo { libname = "rpm" }
+cargo { libname = "raps" }
 
 testModuleInfo {
     requires("org.junit.jupiter.api")
