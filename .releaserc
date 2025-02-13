@@ -1,6 +1,7 @@
 {
   "branches": [
-    "main"
+    "main",
+    "193-implement-semantic-release"
   ],
   "plugins": [
     [
