@@ -131,7 +131,7 @@ jobs:
         run: ./gradlew -PskipInstallRustToolchains=true qualityCheck --continue
 
       - name: Gradle Unit Test
-        run: {CG_EXEC} ./gradlew -PskipInstallRustToolchains=true test :aggregation:testCodeCoverageReport --continue
+        run: ${CG_EXEC} ./gradlew -PskipInstallRustToolchains=true test :aggregation:testCodeCoverageReport --continue
 
       - name: Publish Unit Test Results
         uses: step-security/publish-unit-test-result-action@cc82caac074385ae176d39d2d143ad05e1130b2d # v2.18.0
