@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-name: "Publish Snapshot Release"
+name: "Publish Current Version Snapshot Release"
 
 on:
   push:
@@ -18,8 +18,7 @@ defaults:
     shell: bash
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
 
 env:
   REGISTRY: ghcr.io
