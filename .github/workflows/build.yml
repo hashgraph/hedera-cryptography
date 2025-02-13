@@ -29,6 +29,7 @@ env:
   LC_ALL: C.UTF-8
   GRADLE_CACHE_USERNAME: ${{ secrets.GRADLE_CACHE_USERNAME }}
   GRADLE_CACHE_PASSWORD: ${{ secrets.GRADLE_CACHE_PASSWORD }}
+  CG_EXEC: ionice -c 2 -n 2 nice -n 19
 
 jobs:
   build_rust_macos:
@@ -130,7 +131,7 @@ jobs:
         run: ./gradlew -PskipInstallRustToolchains=true qualityCheck --continue
 
       - name: Gradle Unit Test
-        run: ./gradlew -PskipInstallRustToolchains=true test :aggregation:testCodeCoverageReport --continue
+        run: {CG_EXEC} ./gradlew -PskipInstallRustToolchains=true test :aggregation:testCodeCoverageReport --continue
 
       - name: Publish Unit Test Results
         uses: step-security/publish-unit-test-result-action@cc82caac074385ae176d39d2d143ad05e1130b2d # v2.18.0
