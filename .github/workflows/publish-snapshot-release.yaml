@@ -81,7 +81,7 @@ jobs:
           gradle-version: ${{ env.GRADLE_VERSION }}
 
       # This step is used to update the version number to a snapshot in the version.txt file in the runner.
-      - name: Add snapshot suffix to current version
+      - name: Add SNAPSHOT Suffix to Current Version
         run: ./gradlew versionAsSnapshot
 
       # Technically, this step is not required but is executed to provide the end users with a summary of the version
