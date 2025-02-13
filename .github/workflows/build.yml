@@ -174,7 +174,7 @@ jobs:
 
       - name: Gradle Unit Test
         # We do -PskipInstallRustToolchains=true, because all cargoBuild task results are taken FROM-CACHE
-        run: ./gradlew test -PskipInstallRustToolchains=true --continue
+        run: ${CG_EXEC} ./gradlew test -PskipInstallRustToolchains=true --continue
 
   analyze:
     name: Analyze
