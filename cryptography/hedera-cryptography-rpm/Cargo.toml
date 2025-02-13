@@ -1,16 +1,31 @@
-[package]
-name = "rpm"
-version = "0.0.1"
-edition = "2021"
-description = "Recursive prove module"
-categories = ["cryptography"]
-keywords = ["cryptography"]
+[workspace]
+members = [
+    "src/main/rust/common",
+    "src/main/rust/raps",
+]
+resolver = "2"
 
-[lib]
-name = "rpm"
-path = "src/main/rust/lib.rs"
-crate-type = ["cdylib"]
+[workspace.dependencies]
+alloy-sol-types = "0.8"
+bincode = "1.3.3"
+derive_more = { version = "1.0.0", features = ["deref"] }
+ed25519-dalek = { version = "2.1.1", features = ["serde", "rand_core"] }
+hex = "0.4.3"
+rand = "0.8.5"
+rand_chacha = { version = "^0.3.0" }
+serde = { version = "1.0", features = ["derive"] }
+serde-big-array = "0.5.1"
+serde-hex = "0.1.0"
+sha2 = "0.10.8"
+smallvec = { version = "1.13", features = ["const_generics", "serde"] }
+sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", rev = "a4e023df60a43cc00ba54469966b257801732421", default-features = false }
+sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", rev = "a4e023df60a43cc00ba54469966b257801732421" }
 
+ab-rotation-lib = { path = "src/main/rust/common" }
+
+[patch.crates-io]
+sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", tag = "sha2-v0.10.8-patch-v1" }
+curve25519-dalek = { git = "https://github.com/sp1-patches/curve25519-dalek", tag = "curve25519_dalek-v4.1.3-patch-v1" }
 
 [profile.bench]
 opt-level = 3
@@ -18,6 +33,3 @@ opt-level = 3
 [profile.test]
 opt-level = 3
 
-[features]
-
-[dependencies]

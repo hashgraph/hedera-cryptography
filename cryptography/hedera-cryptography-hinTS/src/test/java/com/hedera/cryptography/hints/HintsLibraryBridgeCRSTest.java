@@ -3,11 +3,15 @@ package com.hedera.cryptography.hints;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class HintsLibraryBridgeCRSTest {
     private static final HintsLibraryBridge INSTANCE = HintsLibraryBridge.getInstance();
@@ -29,6 +33,19 @@ public class HintsLibraryBridgeCRSTest {
     @Test
     void testInitCRS() {
         initAndVerifyCRS();
+    }
+
+    @Test
+    void testInitCRSConstraints() {
+        assertNull(INSTANCE.initCRS(0));
+        assertNull(INSTANCE.initCRS(-2));
+        assertNull(INSTANCE.initCRS(Long.MIN_VALUE));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 11, 101, 1024})
+    void testInitCRSLength(final int n) {
+        assertEquals(304 + n * 288, INSTANCE.initCRS(n).length);
     }
 
     private byte[] updateAndVerifyCRS(final byte[] prevCRS) {
@@ -53,6 +70,24 @@ public class HintsLibraryBridgeCRSTest {
     }
 
     @Test
+    void testUpdateCRSConstraints() {
+        assertNull(INSTANCE.updateCRS(null, CRSConstants.RANDOM));
+        assertNull(INSTANCE.updateCRS(initAndVerifyCRS(), null));
+
+        // Only byte[32] is valid for entropy input:
+        assertNull(INSTANCE.updateCRS(initAndVerifyCRS(), new byte[0]));
+        assertNull(INSTANCE.updateCRS(initAndVerifyCRS(), new byte[2]));
+        assertNull(INSTANCE.updateCRS(initAndVerifyCRS(), new byte[33]));
+
+        // Only a real CRS should work correctly
+        assertNull(INSTANCE.updateCRS(new byte[0], CRSConstants.RANDOM));
+        assertNull(INSTANCE.updateCRS(new byte[1], CRSConstants.RANDOM));
+        // This last one cause a panic. It seems that 16 zeros are able to
+        // represent an (invalid) serialized CRS struct somehow.
+        // assertNull(INSTANCE.updateCRS(new byte[16], CRSConstants.RANDOM));
+    }
+
+    @Test
     void testVerifyCRS() {
         final byte[] prevCRS = initAndVerifyCRS();
         final byte[] nextCRSandContributionProof = updateAndVerifyCRS(prevCRS);
@@ -62,5 +97,44 @@ public class HintsLibraryBridgeCRSTest {
                 Arrays.copyOfRange(nextCRSandContributionProof, CRS_4_LENGTH, nextCRSandContributionProof.length);
 
         assertTrue(INSTANCE.verifyCRS(prevCRS, nextCRS, contributionProof));
+
+        // Damage the nextCRS first:
+        nextCRS[456]++;
+        nextCRS[917]--;
+        nextCRS[1357]++;
+
+        assertFalse(INSTANCE.verifyCRS(prevCRS, nextCRS, contributionProof));
+
+        // Undo the nextCRS dmage:
+        nextCRS[456]--;
+        nextCRS[917]++;
+        nextCRS[1357]--;
+        // and damage the contributionProof instead:
+        contributionProof[55]++;
+        contributionProof[79]--;
+        contributionProof[102]++;
+
+        assertFalse(INSTANCE.verifyCRS(prevCRS, nextCRS, contributionProof));
+
+        // Restore the contributionProof back, and check one more time, just for sanity:
+        contributionProof[55]--;
+        contributionProof[79]++;
+        contributionProof[102]--;
+
+        assertTrue(INSTANCE.verifyCRS(prevCRS, nextCRS, contributionProof));
+    }
+
+    @Test
+    void testVerifyCRSConstraints() {
+        final byte[] prevCRS = initAndVerifyCRS();
+        final byte[] nextCRSandContributionProof = updateAndVerifyCRS(prevCRS);
+
+        final byte[] nextCRS = Arrays.copyOf(nextCRSandContributionProof, CRS_4_LENGTH);
+        final byte[] contributionProof =
+                Arrays.copyOfRange(nextCRSandContributionProof, CRS_4_LENGTH, nextCRSandContributionProof.length);
+
+        assertFalse(INSTANCE.verifyCRS(null, nextCRS, contributionProof));
+        assertFalse(INSTANCE.verifyCRS(prevCRS, null, contributionProof));
+        assertFalse(INSTANCE.verifyCRS(prevCRS, nextCRS, null));
     }
 }

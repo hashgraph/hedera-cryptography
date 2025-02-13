@@ -31,8 +31,75 @@ env:
   GRADLE_CACHE_PASSWORD: ${{ secrets.GRADLE_CACHE_PASSWORD }}
 
 jobs:
+  build_rust_macos:
+    # Build macOS Rust targets separately on a macOS runner to have access to macOS SDKs
+    name: Build Rust - macOS
+    runs-on: macos-14
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Java
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          distribution: temurin
+          java-version: 21.0.4
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
+        with:
+          cache-read-only: false
+
+      - name: Build Cargo Darwin
+        run: ./gradlew cargoBuildX86Darwin cargoBuildAarch64Darwin
+
+  build_rust_linux_windows:
+    name: Build Rust - Linux / Windows
+    runs-on: network-node-linux-medium
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Java
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          distribution: temurin
+          java-version: 21.0.4
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
+        with:
+          cache-read-only: false
+
+      - name: Setup clang-tools (Windows cross-compile)
+        # Make sure 'clang-cl' and 'llvm-lib' are installed for compiling crates with C++ code for Windows
+        # https://github.com/hiero-ledger/hiero-gradle-conventions/issues/97
+        run: |
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 15CF4D18AF4F7421
+          sudo add-apt-repository deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main
+          sudo apt-get update
+          sudo apt-get -y install clang-tools-19
+          sudo ln -s /usr/bin/clang-cl-19 /usr/bin/clang-cl
+          sudo ln -s /usr/bin/llvm-lib-19 /usr/bin/llvm-lib
+          clang-cl -v
+          llvm-lib -v
+
+      - name: Build Cargo Linux / Windows
+        run: ./gradlew cargoBuildX86Linux cargoBuildAarch64Linux cargoBuildX86Windows
+
   build:
     name: Build TSS Crypto Library
+    needs: [build_rust_macos, build_rust_linux_windows]
     runs-on: network-node-linux-medium
     steps:
       - name: Harden Runner
@@ -52,18 +119,18 @@ jobs:
           java-version: 21.0.4
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
         with:
           cache-read-only: false
 
       - name: Build software
-        run: ./gradlew assemble
+        run: ./gradlew -PskipInstallRustToolchains=true assemble
 
       - name: Code Quality Checks
-        run: ./gradlew qualityCheck --continue
+        run: ./gradlew -PskipInstallRustToolchains=true qualityCheck --continue
 
       - name: Gradle Unit Test
-        run: ./gradlew :aggregation:testCodeCoverageReport test --continue
+        run: ./gradlew -PskipInstallRustToolchains=true test :aggregation:testCodeCoverageReport --continue
 
       - name: Publish Unit Test Results
         uses: step-security/publish-unit-test-result-action@cc82caac074385ae176d39d2d143ad05e1130b2d # v2.18.0
@@ -100,7 +167,7 @@ jobs:
           java-version: 21.0.4
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
         with:
           cache-read-only: false
 

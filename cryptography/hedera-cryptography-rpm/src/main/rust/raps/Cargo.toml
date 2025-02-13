@@ -1,0 +1,28 @@
+[package]
+version = "0.1.0"
+name = "raps"
+edition = "2021"
+
+[lib]
+name = "raps"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+bincode = { workspace = true }
+crunchy = "=0.2.2" # downgrade to 0.2.2 due to https://github.com/eira-fransham/crunchy/issues/13
+sp1-sdk = { workspace = true }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+serde = { version = "1.0.200", default-features = false, features = ["derive"] }
+serde-big-array = { workspace = true }
+serde-hex = { workspace = true }
+smallvec = "1.13"
+clap = { version = "4.0", features = ["derive", "env"] }
+tracing = "0.1.40"
+hex = { workspace = true }
+alloy-sol-types = { workspace = true }
+ab-rotation-lib = { workspace = true }
+sha2 = { workspace = true }
+
+[features]
+default = []

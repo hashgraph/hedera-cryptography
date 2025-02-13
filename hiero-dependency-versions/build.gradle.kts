@@ -10,10 +10,10 @@ val junit5 = "5.11.4"
 val mockito = "5.15.2"
 
 dependencies.constraints {
-    api("com.github.spotbugs:spotbugs-annotations:4.9.0") {
+    api("com.github.spotbugs:spotbugs-annotations:4.9.1") {
         because("com.github.spotbugs.annotations")
     }
-    api("com.google.code.gson:gson:2.11.0") { because("com.google.gson") }
+    api("com.google.code.gson:gson:2.12.1") { because("com.google.gson") }
     api("jakarta.inject:jakarta.inject-api:2.0.1") { because("jakarta.inject") }
     api("org.bouncycastle:bcprov-jdk18on:1.80") { because("org.bouncycastle.provider") }
     api("org.junit.jupiter:junit-jupiter-api:$junit5") { because("org.junit.jupiter.api") }
