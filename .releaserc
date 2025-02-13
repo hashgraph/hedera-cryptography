@@ -6,43 +6,13 @@
     [
       "@semantic-release/commit-analyzer",
       {
-        "preset": "conventionalcommits",
-        "presetConfig": {
-          "types": [
-            { "type": "feat", "section": "Features" },
-            { "type": "fix", "section": "Bug Fixes" },
-            { "type": "docs", "section": "Documentation" },
-            { "type": "style", "section": "Styles" },
-            { "type": "refactor", "section": "Code Refactoring" },
-            { "type": "perf", "section": "Performance Improvements" },
-            { "type": "test", "section": "Tests" },
-            { "type": "build", "section": "Build System" },
-            { "type": "ci", "section": "Continuous Integration" },
-            { "type": "chore", "hidden": true },
-            { "type": "revert", "section": "Reverts" }
-          ]
-        }
+        "preset": "conventionalcommits"
       }
     ],
     [
       "@semantic-release/release-notes-generator",
       {
-        "preset": "conventionalcommits",
-        "presetConfig": {
-          "types": [
-            { "type": "feat", "section": "Features" },
-            { "type": "fix", "section": "Bug Fixes" },
-            { "type": "docs", "section": "Documentation" },
-            { "type": "style", "section": "Styles" },
-            { "type": "refactor", "section": "Code Refactoring" },
-            { "type": "perf", "section": "Performance Improvements" },
-            { "type": "test", "section": "Tests" },
-            { "type": "build", "section": "Build System" },
-            { "type": "ci", "section": "Continuous Integration" },
-            { "type": "chore", "hidden": true },
-            { "type": "revert", "section": "Reverts" }
-          ]
-        }
+        "preset": "conventionalcommits"
       }
     ],
     [
