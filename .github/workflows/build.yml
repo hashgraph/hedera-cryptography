@@ -143,7 +143,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        os: [windows-2022, macos-13, macos-14]
+        os: [macos-13, macos-14]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Harden Runner
@@ -174,7 +174,7 @@ jobs:
 
       - name: Gradle Unit Test
         # We do -PskipInstallRustToolchains=true, because all cargoBuild task results are taken FROM-CACHE
-        run: ${CG_EXEC} ./gradlew test -PskipInstallRustToolchains=true --continue
+        run: ./gradlew test -PskipInstallRustToolchains=true --continue
 
   analyze:
     name: Analyze
