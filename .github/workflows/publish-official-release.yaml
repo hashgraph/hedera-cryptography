@@ -180,14 +180,14 @@ jobs:
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
-        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache
+        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
 
       - name: Gradle Publish to Maven Central - cryptography
         if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
-        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache
+        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
 
       # Publishes the artifacts to the Maven Central Nexus staging repository.
       - name: DRY RUN Gradle Publish to Maven Central - common
