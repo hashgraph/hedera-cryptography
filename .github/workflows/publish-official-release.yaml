@@ -101,8 +101,8 @@ jobs:
           echo "Installing semantic-release"
           npm install
 
-      # Both actual and dry-run semantic-release will output the new version to version.txt
-      # as is defined in .releaserc but actual release should also publish a tag
+      # Dry run will only output logs which can be used to verify the release process and next version
+      # Actual release will also publish a tag and release and update version.txt and CHANGELOG.md
       - name: Run Semantic Release
         if: ${{ !cancelled() && !failure() }}
         env:
@@ -112,7 +112,7 @@ jobs:
           GIT_COMMITTER_NAME: ${{ steps.gpg.outputs.name}}
           GIT_COMMITTER_EMAIL: ${{ steps.gpg.outputs.email}}
           # The EDITOR var is required to ensure the tag is signed with the GPG key
-          # as semantic-release doesn't support headless tag signing and
+          # as semantic-release doesn't support headless annotated signed tags and
           # the process hangs indefinitely awaiting input in the dialogue
           EDITOR: "echo 'Created-by: semantic-release' > $1"
         run: |
@@ -174,7 +174,7 @@ jobs:
         if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
         run: ./gradlew assemble
 
-      # Publishes the artifacts to the Maven Central Nexus staging repository.
+      # Publishes the artifacts to the Maven Central Nexus repository.
       - name: Gradle Publish to Maven Central - common
         if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
         env:
