@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: "Branch to release from"
+        description: "Branch to release from:"
         type: string
         required: false
         default: "main"

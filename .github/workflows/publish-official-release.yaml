@@ -20,7 +20,7 @@ on:
         required: false
         default: "21.0.4"
       branch:
-        description: "Branch to release from"
+        description: "Branch to release from:"
         type: string
         required: false
         default: "main"
@@ -135,7 +135,7 @@ jobs:
             echo "version.txt is already up to date."
           fi
 
-      - name: Commit and Push version.txt
+      - name: Commit and Push Modified Files
         if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
         uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
         with:
