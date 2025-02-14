@@ -98,7 +98,7 @@ jobs:
         if: ${{ !cancelled() && !failure() }}
         run: ./gradlew assemble
 
-      # Publishes the artifacts to the Maven Central Nexus staging repository.
+      # Publishes the artifacts to the Maven Central Nexus snapshot repository.
       - name: Gradle Publish to Maven Central - common
         if: ${{ !cancelled() && !failure() }}
         env:
