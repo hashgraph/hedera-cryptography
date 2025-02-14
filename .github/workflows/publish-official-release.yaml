@@ -121,7 +121,7 @@ jobs:
             npx semantic-release --dry-run
           else
             echo "Running semantic-release now..."
-            npx semantic-release --debug
+            npx semantic-release
           fi
 
       - name: Compare version.txt with the tag latest tag and update if needed
