@@ -97,7 +97,14 @@ public class HintsLibraryBridge {
      * @param n the number of parties
      * @return the hints
      */
-    public native byte[] computeHints(final byte[] crs, final byte[] secretKey, int partyId, int n);
+    public byte[] computeHints(final byte[] crs, final byte[] secretKey, int partyId, int n) {
+        if (!validateCRS(crs, n) || !validatePartyId(partyId, n) || secretKey == null) {
+            return null;
+        }
+        return computeHintsImpl(crs, secretKey, partyId, n);
+    }
+
+    private native byte[] computeHintsImpl(final byte[] crs, final byte[] secretKey, int partyId, int n);
 
     /**
      * Validates the hinTS public key for the given number of parties.
@@ -106,7 +113,14 @@ public class HintsLibraryBridge {
      * @param hintsPublicKey the hinTS key
      * @return true if the hints are valid; false otherwise
      */
-    public native boolean validateHintsKey(final byte[] crs, final byte[] hintsPublicKey, int partyId, int n);
+    public boolean validateHintsKey(final byte[] crs, final byte[] hintsPublicKey, int partyId, int n) {
+        if (!validateCRS(crs, n) || !validatePartyId(partyId, n) || hintsPublicKey == null) {
+            return false;
+        }
+        return validateHintsKeyImpl(crs, hintsPublicKey, partyId, n);
+    }
+
+    private native boolean validateHintsKeyImpl(final byte[] crs, final byte[] hintsPublicKey, int partyId, int n);
 
     /**
      * Runs the hinTS preprocessing algorithm on the given validated hint keys and party weights for the given number
@@ -135,7 +149,29 @@ public class HintsLibraryBridge {
      * @param n the number of parties
      * @return the preprocessed keys
      */
-    public native AggregationAndVerificationKeys preprocess(
+    public AggregationAndVerificationKeys preprocess(
+            final byte[] crs, final int[] parties, final byte[][] hintsPublicKeys, final long[] weights, int n) {
+        // Basic sanity
+        if (!validateCRS(crs, n) || parties == null || hintsPublicKeys == null || weights == null) {
+            return null;
+        }
+        // ensure the arrays modeling the map are good and satisfy the maximum size constraint
+        if (parties.length >= n || hintsPublicKeys.length != parties.length || weights.length != parties.length) {
+            return null;
+        }
+        // ensure all the partiIds, hintsPublicKeys, and weights make sense
+        for (int i = 0; i < parties.length; i++) {
+            if (!validatePartyId(parties[i], n)) {
+                return null;
+            }
+            if (hintsPublicKeys[i] == null || weights[i] < 0) {
+                return null;
+            }
+        }
+        return preprocessImpl(crs, parties, hintsPublicKeys, weights, n);
+    }
+
+    private native AggregationAndVerificationKeys preprocessImpl(
             final byte[] crs, final int[] parties, final byte[][] hintsPublicKeys, final long[] weights, int n);
 
     /**
@@ -145,7 +181,14 @@ public class HintsLibraryBridge {
      * @param privateKey the private key
      * @return the signature
      */
-    public native byte[] signBls(final byte[] message, final byte[] privateKey);
+    public byte[] signBls(final byte[] message, final byte[] privateKey) {
+        if (message == null || message.length == 0 || privateKey == null || privateKey.length == 0) {
+            return null;
+        }
+        return signBlsImpl(message, privateKey);
+    }
+
+    private native byte[] signBlsImpl(final byte[] message, final byte[] privateKey);
 
     /**
      * Checks that a signature on a message verifies under a BLS public key.
@@ -156,7 +199,22 @@ public class HintsLibraryBridge {
      * @param extendedPublicKey the extended public key
      * @return true if the signature is valid; false otherwise
      */
-    public native boolean verifyBls(
+    public boolean verifyBls(
+            final byte[] crs, final byte[] signature, final byte[] message, final byte[] extendedPublicKey) {
+        if (crs == null
+                || crs.length == 0
+                || signature == null
+                || signature.length == 0
+                || message == null
+                || message.length == 0
+                || extendedPublicKey == null
+                || extendedPublicKey.length == 0) {
+            return false;
+        }
+        return verifyBlsImpl(crs, signature, message, extendedPublicKey);
+    }
+
+    private native boolean verifyBlsImpl(
             final byte[] crs, final byte[] signature, final byte[] message, final byte[] extendedPublicKey);
 
     /**
@@ -169,7 +227,29 @@ public class HintsLibraryBridge {
      * @param partialSignatures the partial signatures by party id
      * @return the aggregated signature
      */
-    public native byte[] aggregateSignatures(
+    public byte[] aggregateSignatures(
+            final byte[] crs,
+            final byte[] aggregationKey,
+            final byte[] verificationKey,
+            final int[] parties,
+            final byte[][] partialSignatures) {
+        if (crs == null
+                || crs.length == 0
+                || aggregationKey == null
+                || aggregationKey.length == 0
+                || verificationKey == null
+                || verificationKey.length == 0
+                || parties == null
+                || parties.length == 0
+                || partialSignatures == null
+                || partialSignatures.length == 0
+                || parties.length != partialSignatures.length) {
+            return null;
+        }
+        return aggregateSignaturesImpl(crs, aggregationKey, verificationKey, parties, partialSignatures);
+    }
+
+    private native byte[] aggregateSignaturesImpl(
             final byte[] crs,
             final byte[] aggregationKey,
             final byte[] verificationKey,
@@ -189,11 +269,43 @@ public class HintsLibraryBridge {
      * @param thresholdDenominator the denominator of a fraction of total weight the signature must have
      * @return true if the signature is valid; false otherwise
      */
-    public native boolean verifyAggregate(
+    public boolean verifyAggregate(
+            final byte[] crs,
+            final byte[] signature,
+            final byte[] message,
+            final byte[] verificationKey,
+            long thresholdNumerator,
+            long thresholdDenominator) {
+        if (crs == null
+                || crs.length == 0
+                || signature == null
+                || signature.length == 0
+                || message == null
+                || message.length == 0
+                || verificationKey == null
+                || verificationKey.length == 0
+                || thresholdNumerator <= 0L
+                || thresholdDenominator <= 0L) {
+            return false;
+        }
+        return verifyAggregateImpl(crs, signature, message, verificationKey, thresholdNumerator, thresholdDenominator);
+    }
+
+    private native boolean verifyAggregateImpl(
             final byte[] crs,
             final byte[] signature,
             final byte[] message,
             final byte[] verificationKey,
             long thresholdNumerator,
             long thresholdDenominator);
+
+    // Returns true if the n is a positive power of two, and the crs isn't null and its length matches the n.
+    private static boolean validateCRS(final byte[] crs, final int n) {
+        return n > 0 && (n & (n - 1)) == 0 && crs != null && crs.length == (304 + n * 288);
+    }
+
+    // Returns true if 0 <= partiyId < n.
+    private static boolean validatePartyId(final int partyId, final int n) {
+        return partyId >= 0 && partyId < n;
+    }
 }

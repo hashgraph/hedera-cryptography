@@ -3,17 +3,29 @@ package com.hedera.cryptography.hints;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class HintsLibraryBridgeTest {
     private static final HintsLibraryBridge INSTANCE = HintsLibraryBridge.getInstance();
+    private static final byte[] EMPTY = new byte[0];
 
     @Test
     void testGenerateSecretKey() {
         final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
         assertArrayEquals(HintsConstants.SECRET_KEY, secretKey);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 0, 1, 16, 31, 33})
+    void testGenerateSecretKeyInvalidRangeForRandomInput(final int range) {
+        assertNull(INSTANCE.generateSecretKey(range == -1 ? null : new byte[range]));
     }
 
     @Test
@@ -30,6 +42,50 @@ public class HintsLibraryBridgeTest {
     }
 
     @Test
+    void testComputeHintsConstraints() {
+        final byte[] crs = INSTANCE.initCRS(4);
+        final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
+
+        // n must be power of two
+        assertNull(INSTANCE.computeHints(crs, secretKey, 2, 3));
+        assertNull(INSTANCE.computeHints(crs, secretKey, 2, 5));
+
+        // n must match the CRS size
+        assertNull(INSTANCE.computeHints(crs, secretKey, 2, 8));
+
+        // 0 <= partyId < n
+        assertNull(INSTANCE.computeHints(crs, secretKey, -1, 4));
+        assertNull(INSTANCE.computeHints(crs, secretKey, Integer.MIN_VALUE, 4));
+        assertNull(INSTANCE.computeHints(crs, secretKey, 4, 4));
+        assertNull(INSTANCE.computeHints(crs, secretKey, Integer.MAX_VALUE, 4));
+
+        // nulls
+        assertNull(INSTANCE.computeHints(null, secretKey, 2, 4));
+        assertNull(INSTANCE.computeHints(crs, null, 2, 4));
+
+        // corrupt the CRS
+        crs[27]++;
+        crs[172]--;
+        crs[387]++;
+        assertNull(INSTANCE.computeHints(crs, secretKey, 2, 4));
+
+        // uncorrupt the CRS...
+        crs[27]--;
+        crs[172]++;
+        crs[387]--;
+        // and corrupt the key instead
+        secretKey[7]++;
+        // surprisingly, a corrupted key works just fine, although of course the result should be incorrect
+        final byte[] resultWithCorruptedKey = INSTANCE.computeHints(crs, secretKey, 2, 4);
+
+        // uncorrupt the key and perform the last sanity check
+        secretKey[7]--;
+        final byte[] normalResult = INSTANCE.computeHints(crs, secretKey, 2, 4);
+        assertArrayEquals(HintsConstants.HINTS, normalResult);
+        assertFalse(Arrays.equals(resultWithCorruptedKey, normalResult));
+    }
+
+    @Test
     void testValidateHintsKey() {
         final byte[] crs = INSTANCE.initCRS(4);
         assertArrayEquals(CRSConstants.INIT_CRS_4, crs);
@@ -40,6 +96,52 @@ public class HintsLibraryBridgeTest {
         final byte[] hints = INSTANCE.computeHints(crs, secretKey, 2, 4);
         assertArrayEquals(HintsConstants.HINTS, hints);
 
+        assertTrue(INSTANCE.validateHintsKey(crs, hints, 2, 4));
+    }
+
+    @Test
+    void testValidateHintsConstraints() {
+        final byte[] crs = INSTANCE.initCRS(4);
+        final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
+        final byte[] hints = INSTANCE.computeHints(crs, secretKey, 2, 4);
+
+        // n must be power of two
+        assertFalse(INSTANCE.validateHintsKey(crs, hints, 2, 3));
+        assertFalse(INSTANCE.validateHintsKey(crs, hints, 2, 5));
+
+        // n must match the CRS size
+        assertFalse(INSTANCE.validateHintsKey(crs, hints, 2, 8));
+
+        // 0 <= partyId < n
+        assertFalse(INSTANCE.validateHintsKey(crs, hints, -1, 4));
+        assertFalse(INSTANCE.validateHintsKey(crs, hints, Integer.MIN_VALUE, 4));
+        assertFalse(INSTANCE.validateHintsKey(crs, hints, 4, 4));
+        assertFalse(INSTANCE.validateHintsKey(crs, hints, Integer.MAX_VALUE, 4));
+
+        // nulls
+        assertFalse(INSTANCE.validateHintsKey(null, hints, 2, 4));
+        assertFalse(INSTANCE.validateHintsKey(crs, null, 2, 4));
+
+        // corrupt the CRS
+        crs[27]++;
+        crs[172]--;
+        crs[387]++;
+        assertFalse(INSTANCE.validateHintsKey(crs, hints, 2, 4));
+
+        // uncorrupt the CRS...
+        crs[27]--;
+        crs[172]++;
+        crs[387]--;
+        // and corrupt the hints instead
+        hints[17]++;
+        hints[111]--;
+        hints[302]++;
+        assertFalse(INSTANCE.validateHintsKey(crs, hints, 2, 4));
+
+        // undo hints corruption and perform a sanity check
+        hints[17]--;
+        hints[111]++;
+        hints[302]--;
         assertTrue(INSTANCE.validateHintsKey(crs, hints, 2, 4));
     }
 
@@ -61,6 +163,83 @@ public class HintsLibraryBridgeTest {
     }
 
     @Test
+    void testPreprocessConstraints() {
+        final byte[] crs = INSTANCE.initCRS(4);
+
+        final byte[] secretKey0 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_0);
+        final byte[] hints0 = INSTANCE.computeHints(crs, secretKey0, 0, 4);
+
+        final byte[] secretKey1 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_1);
+        final byte[] hints1 = INSTANCE.computeHints(crs, secretKey1, 1, 4);
+
+        final byte[] secretKey2 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
+        final byte[] hints2 = INSTANCE.computeHints(crs, secretKey2, 2, 4);
+
+        final byte[] secretKey3 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_3);
+        final byte[] hints3 = INSTANCE.computeHints(crs, secretKey3, 3, 4);
+
+        // check n and crs length
+        assertNull(INSTANCE.preprocess(
+                crs, new int[] {0, 1, 2}, new byte[][] {hints0, hints1, hints2}, new long[] {111, 1, 222}, 3));
+        assertNull(INSTANCE.preprocess(
+                crs, new int[] {0, 1, 2}, new byte[][] {hints0, hints1, hints2}, new long[] {111, 1, 222}, 5));
+        assertNull(INSTANCE.preprocess(
+                crs, new int[] {0, 1, 2}, new byte[][] {hints0, hints1, hints2}, new long[] {111, 1, 222}, 8));
+
+        // nulls
+        assertNull(INSTANCE.preprocess(
+                null, new int[] {0, 1, 2}, new byte[][] {hints0, hints1, hints2}, new long[] {111, 1, 222}, 4));
+        assertNull(INSTANCE.preprocess(crs, null, new byte[][] {hints0, hints1, hints2}, new long[] {111, 1, 222}, 4));
+        assertNull(INSTANCE.preprocess(crs, new int[] {0, 1, 2}, null, new long[] {111, 1, 222}, 4));
+        assertNull(INSTANCE.preprocess(crs, new int[] {0, 1, 2}, new byte[][] {hints0, hints1, hints2}, null, 4));
+
+        // parties lengths
+        assertNull(INSTANCE.preprocess(
+                crs,
+                new int[] {0, 1, 2, 3},
+                new byte[][] {hints0, hints1, hints2, hints3},
+                new long[] {111, 1, 222, 999},
+                4));
+        assertNull(INSTANCE.preprocess(
+                crs, new int[] {0, 1, 2}, new byte[][] {hints0, hints1}, new long[] {111, 1, 222}, 4));
+        assertNull(INSTANCE.preprocess(
+                crs, new int[] {0, 1, 2}, new byte[][] {hints0, hints1, hints2}, new long[] {111, 1}, 4));
+
+        // sane values
+        assertNull(INSTANCE.preprocess(
+                crs, new int[] {0, 1, 4}, new byte[][] {hints0, hints1, hints2}, new long[] {111, 1, 222}, 4));
+        assertNull(INSTANCE.preprocess(
+                crs, new int[] {0, 1, 2}, new byte[][] {null, hints1, hints2}, new long[] {111, 1, 222}, 4));
+        assertNull(INSTANCE.preprocess(
+                crs, new int[] {0, 1, 2}, new byte[][] {hints0, hints1, hints2}, new long[] {111, -1, 222}, 4));
+
+        // corrupt the CRS
+        crs[27]++;
+        crs[172]--;
+        crs[387]++;
+        assertNull(INSTANCE.preprocess(
+                crs, new int[] {0, 1, 2}, new byte[][] {hints0, hints1, hints2}, new long[] {111, 1, 222}, 4));
+
+        // uncorrupt the CRS...
+        crs[27]--;
+        crs[172]++;
+        crs[387]--;
+        // and corrupt the hints instead
+        hints1[17]++;
+        hints1[111]--;
+        hints1[302]++;
+        assertNull(INSTANCE.preprocess(
+                crs, new int[] {0, 1, 2}, new byte[][] {hints0, hints1, hints2}, new long[] {111, 1, 222}, 4));
+
+        // uncorrupt the hints and do a sanity check
+        hints1[17]--;
+        hints1[111]++;
+        hints1[302]--;
+        assertNotNull(INSTANCE.preprocess(
+                crs, new int[] {0, 1, 2}, new byte[][] {hints0, hints1, hints2}, new long[] {111, 1, 222}, 4));
+    }
+
+    @Test
     void testSignBls() {
         final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
         assertArrayEquals(HintsConstants.SECRET_KEY, secretKey);
@@ -68,6 +247,19 @@ public class HintsLibraryBridgeTest {
         // Use the RANDOM as a message to sign, because why not?
         final byte[] signature = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey);
         assertArrayEquals(HintsConstants.SIGNATURE, signature);
+    }
+
+    @Test
+    void testSignBlsConstraints() {
+        final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
+
+        assertNull(INSTANCE.signBls(null, secretKey));
+        assertNull(INSTANCE.signBls(EMPTY, secretKey));
+        assertNull(INSTANCE.signBls(HintsConstants.RANDOM_2, null));
+        assertNull(INSTANCE.signBls(HintsConstants.RANDOM_2, EMPTY));
+
+        // The message can be anything, and the key is just a number, so it technically can be anything too.
+        // So there's nothing more to test.
     }
 
     @Test
@@ -85,6 +277,51 @@ public class HintsLibraryBridgeTest {
         final byte[] signature = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey);
         assertArrayEquals(HintsConstants.SIGNATURE, signature);
 
+        assertTrue(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, hints));
+    }
+
+    @Test
+    void testVerifyBlsConstraints() {
+        final byte[] crs = INSTANCE.initCRS(4);
+        final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
+        final byte[] hints = INSTANCE.computeHints(crs, secretKey, 2, 4);
+        final byte[] signature = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey);
+
+        assertFalse(INSTANCE.verifyBls(null, signature, HintsConstants.RANDOM_2, hints));
+        assertFalse(INSTANCE.verifyBls(EMPTY, signature, HintsConstants.RANDOM_2, hints));
+        assertFalse(INSTANCE.verifyBls(crs, null, HintsConstants.RANDOM_2, hints));
+        assertFalse(INSTANCE.verifyBls(crs, EMPTY, HintsConstants.RANDOM_2, hints));
+        assertFalse(INSTANCE.verifyBls(crs, signature, null, hints));
+        assertFalse(INSTANCE.verifyBls(crs, signature, EMPTY, hints));
+        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, null));
+        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, EMPTY));
+
+        // corrupt the CRS
+        crs[27]++;
+        crs[172]--;
+        crs[387]++;
+        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, hints));
+
+        // uncorrupt the CRS...
+        crs[27]--;
+        crs[172]++;
+        crs[387]--;
+        // and corrupt the signature
+        signature[23]++;
+        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, hints));
+
+        // undo the signature...
+        signature[23]--;
+        // and corrupt the hints instead
+        hints[17]++;
+        hints[111]--;
+        hints[302]++;
+        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, hints));
+
+        // uncorrupt the hints and do a sanity check
+        hints[17]--;
+        hints[111]++;
+        hints[302]--;
         assertTrue(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, hints));
     }
 
@@ -116,6 +353,87 @@ public class HintsLibraryBridgeTest {
                 });
 
         assertArrayEquals(HintsConstants.AGGREGATE_SIGNATURE, result);
+    }
+
+    @Test
+    void testAggregateSignaturesConstraints() {
+        final byte[] crs = INSTANCE.initCRS(4);
+
+        // partyId 0
+        final byte[] secretKey0 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_0);
+        final byte[] hints0 = INSTANCE.computeHints(crs, secretKey0, 0, 4);
+        final byte[] signature0 = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey0);
+
+        // partyId 2
+        final byte[] secretKey2 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
+        final byte[] hints2 = INSTANCE.computeHints(crs, secretKey2, 2, 4);
+        final byte[] signature2 = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey2);
+
+        final AggregationAndVerificationKeys keys =
+                INSTANCE.preprocess(crs, new int[] {0, 2}, new byte[][] {hints0, hints2}, new long[] {111, 222}, 4);
+
+        assertNull(INSTANCE.aggregateSignatures(
+                null, keys.aggregationKey(), keys.verificationKey(), new int[] {0, 2}, new byte[][] {
+                    signature2, signature0
+                }));
+        assertNull(INSTANCE.aggregateSignatures(
+                EMPTY, keys.aggregationKey(), keys.verificationKey(), new int[] {0, 2}, new byte[][] {
+                    signature2, signature0
+                }));
+        assertNull(INSTANCE.aggregateSignatures(
+                crs, null, keys.verificationKey(), new int[] {0, 2}, new byte[][] {signature2, signature0}));
+        assertNull(INSTANCE.aggregateSignatures(
+                crs, EMPTY, keys.verificationKey(), new int[] {0, 2}, new byte[][] {signature2, signature0}));
+        assertNull(INSTANCE.aggregateSignatures(
+                crs, keys.aggregationKey(), null, new int[] {0, 2}, new byte[][] {signature2, signature0}));
+        assertNull(INSTANCE.aggregateSignatures(
+                crs, keys.aggregationKey(), EMPTY, new int[] {0, 2}, new byte[][] {signature2, signature0}));
+        assertNull(INSTANCE.aggregateSignatures(
+                crs, keys.aggregationKey(), keys.verificationKey(), null, new byte[][] {signature2, signature0}));
+        assertNull(INSTANCE.aggregateSignatures(
+                crs, keys.aggregationKey(), keys.verificationKey(), new int[0], new byte[][] {signature2, signature0}));
+        assertNull(INSTANCE.aggregateSignatures(
+                crs, keys.aggregationKey(), keys.verificationKey(), new int[] {0, 2}, null));
+        assertNull(INSTANCE.aggregateSignatures(
+                crs, keys.aggregationKey(), keys.verificationKey(), new int[] {0, 2}, new byte[][] {}));
+        assertNull(INSTANCE.aggregateSignatures(
+                crs, keys.aggregationKey(), keys.verificationKey(), new int[] {0, 2}, new byte[][] {signature2}));
+
+        // corrupt the CRS
+        crs[27]++;
+        crs[172]--;
+        crs[387]++;
+        assertNull(INSTANCE.aggregateSignatures(
+                crs, keys.aggregationKey(), keys.verificationKey(), new int[] {0, 2}, new byte[][] {
+                    signature2, signature0
+                }));
+        // uncorrupt the CRS...
+        crs[27]--;
+        crs[172]++;
+        crs[387]--;
+        // and corrupt the aggregationKey
+        keys.aggregationKey()[11]++;
+        assertNull(INSTANCE.aggregateSignatures(
+                crs, keys.aggregationKey(), keys.verificationKey(), new int[] {0, 2}, new byte[][] {
+                    signature2, signature0
+                }));
+
+        // uncorrupt the aggregationKey...
+        keys.aggregationKey()[11]--;
+        // the method survives a corrupt verificationKey, so...
+        // corrupt a signature instead
+        signature2[17]++;
+        assertNull(INSTANCE.aggregateSignatures(
+                crs, keys.aggregationKey(), keys.verificationKey(), new int[] {0, 2}, new byte[][] {
+                    signature2, signature0
+                }));
+
+        // undo the damage and run a sanity check
+        signature2[17]--;
+        assertNotNull(INSTANCE.aggregateSignatures(
+                crs, keys.aggregationKey(), keys.verificationKey(), new int[] {0, 2}, new byte[][] {
+                    signature2, signature0
+                }));
     }
 
     @Test
@@ -188,5 +506,81 @@ public class HintsLibraryBridgeTest {
         assertArrayEquals(HintsConstants.AGGREGATE_SIGNATURE_3, result);
 
         assertFalse(INSTANCE.verifyAggregate(crs, result, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+    }
+
+    @Test
+    void testVerifyAggregateConstraints() {
+        final byte[] crs = INSTANCE.initCRS(4);
+
+        final byte[] secretKey0 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_0);
+        final byte[] hints0 = INSTANCE.computeHints(crs, secretKey0, 0, 4);
+        final byte[] signature0 = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey0);
+
+        final byte[] secretKey1 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_1);
+        final byte[] hints1 = INSTANCE.computeHints(crs, secretKey1, 1, 4);
+
+        final byte[] secretKey2 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
+        final byte[] hints2 = INSTANCE.computeHints(crs, secretKey2, 2, 4);
+        final byte[] signature2 = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey2);
+
+        final AggregationAndVerificationKeys keys = INSTANCE.preprocess(
+                crs, new int[] {0, 2, 1}, new byte[][] {hints0, hints2, hints1}, new long[] {111, 222, 1}, 4);
+
+        final byte[] aggregateSignature = INSTANCE.aggregateSignatures(
+                crs, keys.aggregationKey(), keys.verificationKey(), new int[] {2, 0}, new byte[][] {
+                    signature2, signature0
+                });
+
+        assertFalse(INSTANCE.verifyAggregate(
+                null, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(
+                EMPTY, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(crs, null, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(crs, EMPTY, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(crs, aggregateSignature, null, keys.verificationKey(), 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(crs, aggregateSignature, EMPTY, keys.verificationKey(), 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(crs, aggregateSignature, HintsConstants.RANDOM_2, null, 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(crs, aggregateSignature, HintsConstants.RANDOM_2, EMPTY, 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(
+                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 0, 3));
+        assertFalse(INSTANCE.verifyAggregate(
+                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), -1, 3));
+        assertFalse(INSTANCE.verifyAggregate(
+                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 0));
+        assertFalse(INSTANCE.verifyAggregate(
+                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, -3));
+
+        // corrupt the CRS
+        crs[27]++;
+        crs[172]--;
+        crs[387]++;
+        assertFalse(INSTANCE.verifyAggregate(
+                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        // uncorrupt the CRS...
+        crs[27]--;
+        crs[172]++;
+        crs[387]--;
+
+        // corrupt the aggregate aggregateSignature
+        aggregateSignature[17]++;
+        assertFalse(INSTANCE.verifyAggregate(
+                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        // undo
+        aggregateSignature[17]--;
+
+        // corrupt the message, or rather, just supply an incorrect one
+        assertFalse(
+                INSTANCE.verifyAggregate(crs, aggregateSignature, new byte[] {1, 2, 3}, keys.verificationKey(), 1, 3));
+
+        // corrupt the verificationKey
+        keys.verificationKey()[17]--;
+        assertFalse(INSTANCE.verifyAggregate(
+                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        // undo
+        keys.verificationKey()[17]++;
+
+        // and run a sanity check
+        assertTrue(INSTANCE.verifyAggregate(
+                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
     }
 }

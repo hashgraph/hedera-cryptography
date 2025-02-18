@@ -39,7 +39,7 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_gen
 
 /// JNI for HintsLibraryBridge.computeHints
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_computeHints(
+pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_computeHintsImpl(
     env: JNIEnv,
     _instance: JObject,
     crs_jarray: JByteArray,
@@ -63,7 +63,7 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_com
 
 /// JNI for HintsLibraryBridge.validateHintsKey
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_validateHintsKey(
+pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_validateHintsKeyImpl(
     env: JNIEnv,
     _instance: JObject,
     crs_jarray: JByteArray,
@@ -86,7 +86,7 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_val
 
 /// JNI for HintsLibraryBridge.preprocess
 #[no_mangle]
-pub unsafe extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_preprocess(
+pub unsafe extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_preprocessImpl(
     mut env: JNIEnv,
     _instance: JObject,
     crs_jarray: JByteArray,
@@ -159,7 +159,7 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBri
 
 /// JNI for HintsLibraryBridge.signBls
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_signBls(
+pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_signBlsImpl(
     env: JNIEnv,
     _instance: JObject,
     message_jarray: JByteArray,
@@ -181,7 +181,7 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_sig
 
 /// JNI for HintsLibraryBridge.verifyBls
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_verifyBls(
+pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_verifyBlsImpl(
     env: JNIEnv,
     _instance: JObject,
     crs_jarray: JByteArray,
@@ -214,7 +214,7 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
 
 /// JNI for HintsLibraryBridge.aggregateSignatures
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_aggregateSignatures(
+pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_aggregateSignaturesImpl(
     mut env: JNIEnv,
     _instance: JObject,
     crs_jarray: JByteArray,
@@ -278,7 +278,7 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_agg
 
 /// JNI for HintsLibraryBridge.verifyAggregate
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_verifyAggregate(
+pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_verifyAggregateImpl(
     env: JNIEnv,
     _instance: JObject,
     crs_jarray: JByteArray,
