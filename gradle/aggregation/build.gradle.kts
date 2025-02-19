@@ -6,6 +6,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":hedera-cryptography-altbn128"))
-    implementation(project(":hedera-cryptography-tss"))
+    implementation(project(":hedera-cryptography-hinTS"))
+    implementation(project(":hedera-cryptography-rpm"))
 }
