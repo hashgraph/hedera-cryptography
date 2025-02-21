@@ -20,7 +20,7 @@ use jni::JNIEnv;
 use smallvec::SmallVec;
 use sp1_sdk::{SP1ProofWithPublicValues, SP1ProvingKey, SP1VerifyingKey};
 use ab_rotation_lib::address_book::{AddressBook, Signatures};
-use ab_rotation_lib::ed25519::{Signature, SigningKey, VerifyingKey};
+use ab_rotation_lib::ed25519::{Signature, SigningKey, VerifyingKey, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SIGNATURE_LENGTH};
 use crate::jni_util;
 use crate::raps::RAPS;
 
@@ -111,7 +111,11 @@ pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_sig
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
-    let sk = SigningKey::from_bytes(signing_key_vec.as_slice().try_into().unwrap());
+    let signing_key_arr: &[u8; SECRET_KEY_LENGTH] = match signing_key_vec.as_slice().try_into() {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+    let sk = SigningKey::from_bytes(signing_key_arr);
 
     let result = sk.sign(&message.to_vec()).0.to_vec();
 
@@ -127,11 +131,15 @@ pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_ver
     message_jarray: JByteArray,
     verifying_key_jarray: JByteArray,
 ) -> jboolean {
-    let signature: Vec<u8> = match env.convert_byte_array(&signature_jarray) {
+    let signature_vec: Vec<u8> = match env.convert_byte_array(&signature_jarray) {
         Ok(val) => val,
         Err(_) => return jboolean::from(false)
     };
-    let signature = Signature(serde_big_array::Array(signature.as_slice().try_into().unwrap()));
+    let signature_arr: &[u8; SIGNATURE_LENGTH] = match signature_vec.as_slice().try_into() {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+    let signature = Signature(serde_big_array::Array(*signature_arr));
 
     let message = match env.convert_byte_array(&message_jarray) {
         Ok(val) => val,
@@ -142,14 +150,21 @@ pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_ver
         Ok(val) => val,
         Err(_) => return jboolean::from(false)
     };
-    let vk = VerifyingKey(verifying_key_vec.as_slice().try_into().unwrap());
+    let verifying_key_arr: &[u8; PUBLIC_KEY_LENGTH] = match verifying_key_vec.as_slice().try_into() {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+    let vk = match VerifyingKey::from_bytes(verifying_key_arr) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
 
     jboolean::from(vk.verify(message, &signature))
 }
 
 /// JNI for HistoryLibraryBridge.hashAddressBook
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_hashAddressBook(
+pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_hashAddressBookImpl(
     mut env: JNIEnv,
     _instance: JObject,
     verifying_keys_jarray: JObjectArray,
@@ -185,7 +200,7 @@ pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_has
 
 /// JNI for HistoryLibraryBridge.proveChainOfTrust
 #[no_mangle]
-pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_proveChainOfTrust(
+pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_proveChainOfTrustImpl(
     mut env: JNIEnv,
     _instance: JObject,
     snark_proving_key_jarray: JByteArray,
