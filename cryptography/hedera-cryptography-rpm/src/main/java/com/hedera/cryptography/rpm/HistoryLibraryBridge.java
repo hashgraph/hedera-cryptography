@@ -121,7 +121,14 @@ public class HistoryLibraryBridge {
      * @param weights the address book weights
      * @return the hash of the address book
      */
-    public native byte[] hashAddressBook(final byte[][] verifyingKeys, final long[] weights);
+    public byte[] hashAddressBook(final byte[][] verifyingKeys, final long[] weights) {
+        if (verifyingKeys == null || weights == null || verifyingKeys.length != weights.length) {
+            return null;
+        }
+        return hashAddressBookImpl(verifyingKeys, weights);
+    }
+
+    private native byte[] hashAddressBookImpl(final byte[][] verifyingKeys, final long[] weights);
 
     /**
      * Returns a hash of the given hinTS verification key.
@@ -152,7 +159,57 @@ public class HistoryLibraryBridge {
      *
      * @return the SNARK proving the next address book and metadata belong to the ledger id's chain of trust
      */
-    public native byte[] proveChainOfTrust(
+    public byte[] proveChainOfTrust(
+            final byte[] snarkProvingKey,
+            final byte[] snarkVerifyingKey,
+            final byte[] genesisAddressBookHash,
+            final byte[][] currentAddressBookVerifyingKeys,
+            final long[] currentAddressBookWeights,
+            final byte[][] nextAddressBookVerifyingKeys,
+            final long[] nextAddressBookWeights,
+            final byte[] currentAddressBookProof,
+            final byte[] nextAddressBookHintsVerificationKeyHash,
+            final byte[][] signatures) {
+        if (snarkProvingKey == null
+                || snarkProvingKey.length == 0
+                || genesisAddressBookHash == null
+                || genesisAddressBookHash.length == 0
+                || currentAddressBookVerifyingKeys == null
+                || currentAddressBookVerifyingKeys.length == 0
+                || currentAddressBookWeights == null
+                || currentAddressBookWeights.length == 0
+                || nextAddressBookVerifyingKeys == null
+                || nextAddressBookVerifyingKeys.length == 0
+                || nextAddressBookWeights == null
+                || nextAddressBookWeights.length == 0
+                || nextAddressBookHintsVerificationKeyHash == null
+                || nextAddressBookHintsVerificationKeyHash.length == 0
+                || signatures == null
+                || signatures.length == 0) {
+            return null;
+        }
+        if (currentAddressBookVerifyingKeys.length != currentAddressBookWeights.length
+                || signatures.length != currentAddressBookWeights.length
+                || nextAddressBookVerifyingKeys.length != nextAddressBookWeights.length) {
+            return null;
+        }
+        if (currentAddressBookProof != null && currentAddressBookProof.length == 0) {
+            return null;
+        }
+        return proveChainOfTrustImpl(
+                snarkProvingKey,
+                snarkVerifyingKey,
+                genesisAddressBookHash,
+                currentAddressBookVerifyingKeys,
+                currentAddressBookWeights,
+                nextAddressBookVerifyingKeys,
+                nextAddressBookWeights,
+                currentAddressBookProof,
+                nextAddressBookHintsVerificationKeyHash,
+                signatures);
+    }
+
+    private native byte[] proveChainOfTrustImpl(
             final byte[] snarkProvingKey,
             final byte[] snarkVerifyingKey,
             final byte[] genesisAddressBookHash,

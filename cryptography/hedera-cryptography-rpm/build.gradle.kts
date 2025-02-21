@@ -9,5 +9,6 @@ cargo { libname = "raps" }
 
 testModuleInfo {
     requires("org.junit.jupiter.api")
+    requires("org.junit.jupiter.params")
     requires("com.hedera.cryptography.hints")
 }
