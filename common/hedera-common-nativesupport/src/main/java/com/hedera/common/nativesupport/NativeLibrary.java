@@ -1,23 +1,7 @@
-/*
- * Copyright (C) 2024 Hedera Hashgraph, LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+// SPDX-License-Identifier: Apache-2.0
 package com.hedera.common.nativesupport;
 
 import com.hedera.common.nativesupport.internal.RunOnlyOnce;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -105,9 +89,9 @@ public class NativeLibrary {
      * @param libExtensions defaults extensions for each os to use to load the library
      */
     private NativeLibrary(
-            @NonNull final String name,
-            @NonNull final Map<OperatingSystem, String> libPrefixes,
-            @NonNull final Map<OperatingSystem, String> libExtensions) {
+            final String name,
+            final Map<OperatingSystem, String> libPrefixes,
+            final Map<OperatingSystem, String> libExtensions) {
         this.name = Objects.requireNonNull(name, "name must not be null");
         this.libExtensions = Map.copyOf(Objects.requireNonNull(libExtensions, "libExtensions must not be null"));
         this.libPrefixes = Map.copyOf(Objects.requireNonNull(libPrefixes, "libPrefixes must not be null"));
@@ -121,11 +105,10 @@ public class NativeLibrary {
      * @param libExtensions Custom library file extensions for each operating system.
      * @return An instance of NativeLibrary.
      */
-    @NonNull
     public static NativeLibrary withName(
-            @NonNull final String name,
-            @NonNull final Map<OperatingSystem, String> libPrefixes,
-            @NonNull final Map<OperatingSystem, String> libExtensions) {
+            final String name,
+            final Map<OperatingSystem, String> libPrefixes,
+            final Map<OperatingSystem, String> libExtensions) {
         return new NativeLibrary(name, libPrefixes, libExtensions);
     }
 
@@ -135,8 +118,7 @@ public class NativeLibrary {
      * @param name The name of the library.
      * @return An instance of NativeLibrary.
      */
-    @NonNull
-    public static NativeLibrary withName(@NonNull final String name) {
+    public static NativeLibrary withName(final String name) {
         return withName(name, DEFAULT_LIB_PREFIXES, DEFAULT_LIB_EXTENSIONS);
     }
 
@@ -145,7 +127,6 @@ public class NativeLibrary {
      *
      * @return the library name
      */
-    @NonNull
     public String name() {
         return this.name;
     }
@@ -155,7 +136,6 @@ public class NativeLibrary {
      *
      * @return A string representing the relative path.
      */
-    @NonNull
     public String locationInJar() {
         return locationInJar(this.name, this.libPrefixes, this.libExtensions);
     }
@@ -168,11 +148,10 @@ public class NativeLibrary {
      * @param libExtensions Library file extensions for each operating system.
      * @return The path to the library in the JAR file.
      */
-    @NonNull
     public static String locationInJar(
-            @NonNull final String libraryName,
-            @NonNull final Map<OperatingSystem, String> libPrefixes,
-            @NonNull final Map<OperatingSystem, String> libExtensions) {
+            final String libraryName,
+            final Map<OperatingSystem, String> libPrefixes,
+            final Map<OperatingSystem, String> libExtensions) {
         Objects.requireNonNull(libraryName, "name must not be null");
         Objects.requireNonNull(libPrefixes, "libPrefixes must not be null");
         Objects.requireNonNull(libExtensions, "libExtensions must not be null");
@@ -220,7 +199,7 @@ public class NativeLibrary {
      * @param c the class whose module contains the native library
      * @throws IllegalStateException if the module does not open the package where the resource is located
      */
-    public void install(@NonNull final Class<?> c) {
+    public void install(final Class<?> c) {
         if (!c.getModule().isOpen(packageNameOfResource(), this.getClass().getModule())) {
             // getResourceAsStream() will not throw an exception if the package is not opened, it will just return null
             // so we manually check if the package is opened
@@ -236,7 +215,7 @@ public class NativeLibrary {
     /**
      * Calls the {@link #install(InputStream)} method and catches any checked exceptions, rethrowing them as unchecked exceptions.
      */
-    private void installUnchecked(@NonNull final Class<?> c) {
+    private void installUnchecked(final Class<?> c) {
         try {
             install(c.getModule().getResourceAsStream(locationInJar()));
         } catch (IOException e) {
@@ -252,7 +231,7 @@ public class NativeLibrary {
      * @throws IOException if there's an error reading the file or setting permissions.
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void install(@NonNull final InputStream resourceStream) throws IOException {
+    private void install(final InputStream resourceStream) throws IOException {
         Objects.requireNonNull(resourceStream, "resourceStream must not be null");
         final OperatingSystem os = OperatingSystem.current();
         final String libName =
@@ -280,7 +259,6 @@ public class NativeLibrary {
      * @return the path to the temporary directory.
      * @throws IOException if the temporary directory cannot be created or an I/O error occurs.
      */
-    @NonNull
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private Path createTempDirectory() throws IOException {
         final Path tempDirectory = Files.createTempDirectory(name);
