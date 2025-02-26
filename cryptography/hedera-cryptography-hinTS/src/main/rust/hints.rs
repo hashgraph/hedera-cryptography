@@ -819,12 +819,10 @@ pub fn hash_to_g2(msg: impl AsRef<[u8]>) -> G2AffinePoint {
 
 pub fn serialize<T: CanonicalSerialize>(t: &T) -> Vec<u8> {
     let mut buf = Vec::new();
+    // unwrap() should be safe because we serialize into a variable-size vector.
+    // However, it might fail if the `t` is invalid somehow, although the probability of this must be low.
     t.serialize_uncompressed(&mut buf).unwrap();
     buf
-}
-
-pub fn deserialize<T: CanonicalDeserialize>(buf: &[u8]) -> T {
-    T::deserialize_uncompressed(buf).unwrap()
 }
 
 #[cfg(test)]
@@ -832,6 +830,14 @@ mod tests {
     use super::*;
     use crate::setup::PowersOfTauProtocol;
     use rand::Rng;
+
+    /// An UNSAFE private helper method to use in Rust unit tests in this inner `tests` module ONLY.
+    /// This method assumes that the deserialization succeeds, which the tests must guarantee.
+    /// DO NOT use this method in production code because it will cause a panic and a JVM crash
+    /// if the input buffer cannot be deserialized properly.
+    fn deserialize<T: CanonicalDeserialize>(buf: &[u8]) -> T {
+        T::deserialize_uncompressed(buf).unwrap()
+    }
 
     #[test]
     fn test_serialization() {
