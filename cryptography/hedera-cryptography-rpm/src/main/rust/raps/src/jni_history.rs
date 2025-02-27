@@ -21,6 +21,7 @@ use smallvec::SmallVec;
 use sp1_sdk::{SP1ProofWithPublicValues, SP1ProvingKey, SP1VerifyingKey};
 use ab_rotation_lib::address_book::{AddressBook, Signatures};
 use ab_rotation_lib::ed25519::{Signature, SigningKey, VerifyingKey, PUBLIC_KEY_LENGTH, SECRET_KEY_LENGTH, SIGNATURE_LENGTH};
+use ab_rotation_lib::sha256::HASH_LENGTH;
 use crate::jni_util;
 use crate::raps::RAPS;
 
@@ -175,7 +176,7 @@ pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_has
         Err(_) => return std::ptr::null_mut()
     };
 
-    let ab = AddressBook::new(verifying_keys_array, weights.as_slice().try_into().unwrap());
+    let ab = AddressBook::new(verifying_keys_array, weights);
     let hash = ab_rotation_lib::address_book::serialize_and_digest_sha256(&ab);
 
     jni_util::u8_vec_to_jbyte_array(&env, &hash.to_vec())
@@ -236,6 +237,10 @@ pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_pro
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
+    let genesis_address_book_hash_arr: [u8; HASH_LENGTH] = match genesis_address_book_hash_vec.as_slice().try_into() {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
 
     let (current_address_book_verifying_keys_array, current_address_book_weights) = match jni_util::build_address_book_arrays(&mut env, current_address_book_verifying_keys_jarray, current_address_book_weights_jarray) {
         Ok(val) => val,
@@ -267,6 +272,10 @@ pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_pro
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
+    let next_address_book_hints_verification_key_hash_arr: [u8; HASH_LENGTH] = match next_address_book_hints_verification_key_hash_vec.as_slice().try_into() {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
 
     let num_of_sigs = match env.get_array_length(&signatures_jarray) {
         Ok(len) => len,
@@ -286,23 +295,31 @@ pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_pro
                 Ok(val) => val,
                 Err(_) => return std::ptr::null_mut()
             };
-            let signature: Signature = Signature(serde_big_array::Array(sig_vec.as_slice().try_into().unwrap()));
+            let sig_arr: [u8; SIGNATURE_LENGTH] = match sig_vec.as_slice().try_into() {
+                Ok(val) => val,
+                Err(_) => return std::ptr::null_mut()
+            };
+            let signature: Signature = Signature(serde_big_array::Array(sig_arr));
 
             signatures_array.push(Option::Some(signature));
         }
     }
     let signatures = Signatures(SmallVec::from_vec(signatures_array));
 
-    let next_proof = RAPS::construct_rotation_proof(
+    let next_proof_option = RAPS::construct_rotation_proof(
         &pk,
         &vk,
-        &genesis_address_book_hash_vec.as_slice().try_into().unwrap(),
+        &genesis_address_book_hash_arr,
         &ab_curr,
         &ab_next,
         current_proof,
-        &next_address_book_hints_verification_key_hash_vec.as_slice().try_into().unwrap(),
+        &next_address_book_hints_verification_key_hash_arr,
         &signatures,
     );
+    let next_proof = match next_proof_option {
+        Some(val) => val,
+        None => return std::ptr::null_mut()
+    };
 
     let mut proof_buf: Vec<u8> = Vec::new();
     match bincode::serialize_into(&mut proof_buf, &next_proof) {

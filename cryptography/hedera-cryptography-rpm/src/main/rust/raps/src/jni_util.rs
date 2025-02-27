@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-use ab_rotation_lib::ed25519::{VerifyingKey, ENTROPY_SIZE};
+use ab_rotation_lib::ed25519::{VerifyingKey, ENTROPY_SIZE, PUBLIC_KEY_LENGTH};
 use jni::JNIEnv;
 use jni::objects::{JByteArray, JLongArray, JObject, JObjectArray};
 use jni::sys::{jbyte, jbyteArray, jlong, jsize};
@@ -28,11 +28,14 @@ const RANDOM_SIZE: usize = ENTROPY_SIZE;
 /// # Returns
 /// *   a byte array with the input vector written, or null on error
 pub fn jbyte_vec_to_jbyte_array(env: &JNIEnv, vec: &Vec<jbyte>) -> jbyteArray {
-    let array = env.new_byte_array(vec.len() as i32);
-    match env.set_byte_array_region(array.as_ref().unwrap(), 0, &vec) {
-        Ok(()) => array.unwrap().into_raw(),
+    let array = match env.new_byte_array(vec.len() as i32) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+    match env.set_byte_array_region(&array, 0, &vec) {
+        Ok(()) => array.into_raw(),
         Err(_) => {
-            let _ = env.delete_local_ref(JObject::from(array.unwrap()));
+            let _ = env.delete_local_ref(JObject::from(array));
             std::ptr::null_mut()
         }
     }
@@ -91,8 +94,14 @@ pub fn build_address_book_arrays(
             Ok(val) => val,
             Err(_) => return Result::Err(())
         };
-
-        let key = VerifyingKey(key_vec.as_slice().try_into().unwrap());
+        let key_arr: [u8; PUBLIC_KEY_LENGTH] = match key_vec.as_slice().try_into() {
+            Ok(val) => val,
+            Err(_) => return Result::Err(())
+        };
+        let key = match VerifyingKey::from_bytes(&key_arr) {
+            Ok(val) => val,
+            Err(_) => return Result::Err(())
+        };
 
         verifying_keys_array.push(key);
     }

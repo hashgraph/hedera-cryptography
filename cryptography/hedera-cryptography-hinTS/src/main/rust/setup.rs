@@ -270,7 +270,7 @@ mod tests {
         // serialization test
         assert_eq!(
             next_next_crs,
-            crate::hints::deserialize::<CRS>(&crate::hints::serialize(&next_next_crs))
+            CRS::deserialize_uncompressed(&crate::hints::serialize(&next_next_crs)).unwrap()
         );
     }
 }
