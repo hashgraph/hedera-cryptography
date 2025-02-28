@@ -14,9 +14,11 @@
 // limitations under the License.
 //
 
+use std::env;
 use jni::objects::{JByteArray, JLongArray, JObject, JObjectArray, JValue};
-use jni::sys::{jbyteArray, jboolean, jobject, jsize};
-use jni::JNIEnv;
+use jni::sys::{jbyteArray, jboolean, jobject, jsize, jint, JNI_VERSION_1_2};
+use jni::{JNIEnv, JavaVM};
+use rayon;
 use smallvec::SmallVec;
 use sp1_sdk::{SP1ProofWithPublicValues, SP1ProvingKey, SP1VerifyingKey};
 use ab_rotation_lib::address_book::{AddressBook, Signatures};
@@ -24,6 +26,29 @@ use ab_rotation_lib::ed25519::{Signature, SigningKey, VerifyingKey, PUBLIC_KEY_L
 use ab_rotation_lib::sha256::HASH_LENGTH;
 use crate::jni_util;
 use crate::raps::RAPS;
+
+/// The default level of parallelism if the TSS_LIB_NUM_OF_CORES env var is missing or invalid.
+const DEFAULT_NUM_OF_CORES: usize = 1;
+
+/// JNI_OnLoad gets called only once when the library is first loaded into the process
+#[no_mangle]
+pub extern "system" fn JNI_OnLoad(
+    _vm: JavaVM,
+    _reserved: *const u8,
+) -> jint {
+    // Limit the concurrency per the configuration. This can only be done once, and must be done
+    // before the SNARK library has had a chance to do this. If we try to call `build_global()` again,
+    // whether with the same num_of_cores or a different one, it will return an Err Result
+    // and not have any effect.
+    // So we do this here in this JNI_OnLoad function first thing when this library loads.
+    let num_of_cores = match env::var("TSS_LIB_NUM_OF_CORES") {
+        Ok(val) => val.parse::<usize>().unwrap_or(DEFAULT_NUM_OF_CORES),
+        Err(_) => DEFAULT_NUM_OF_CORES
+    };
+    let _ = rayon::ThreadPoolBuilder::new().num_threads(num_of_cores).build_global();
+
+    JNI_VERSION_1_2
+}
 
 /// JNI for HistoryLibraryBridge.snarkVerificationKey
 #[no_mangle]
