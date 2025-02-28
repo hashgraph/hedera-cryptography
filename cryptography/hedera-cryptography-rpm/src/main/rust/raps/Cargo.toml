@@ -24,6 +24,7 @@ alloy-sol-types = { workspace = true }
 ab-rotation-lib = { workspace = true }
 sha2 = { workspace = true }
 jni = "0.21.1"
+rayon = { version = "1.10.0" }
 
 [features]
 default = []
