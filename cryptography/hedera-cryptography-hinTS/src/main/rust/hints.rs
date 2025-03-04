@@ -402,8 +402,14 @@ impl HinTS {
     }
 
     /// verifies the partial signature under the signer's public key
-    pub fn partial_verify(crs: &CRS, msg: &[u8], epk: &ExtendedPublicKey, sig: &PartialSignature) -> bool {
-        let lhs = <Curve as Pairing>::pairing(epk.pk_i, hash_to_g2(msg));
+    pub fn partial_verify(
+        crs: &CRS,
+        msg: &[u8],
+        ak: &AggregationKey,
+        party_id: usize,
+        sig: &PartialSignature
+    ) -> bool {
+        let lhs = <Curve as Pairing>::pairing(ak.pks[party_id], hash_to_g2(msg));
         let rhs = <Curve as Pairing>::pairing(crs.powers_of_g[0], sig);
         lhs == rhs
     }

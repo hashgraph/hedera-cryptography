@@ -270,37 +270,47 @@ public class HintsLibraryBridgeTest {
         final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
         assertArrayEquals(HintsConstants.SECRET_KEY, secretKey);
 
-        final byte[] hints = INSTANCE.computeHints(crs, secretKey, 2, 4);
+        final int partyId = 2;
+
+        final byte[] hints = INSTANCE.computeHints(crs, secretKey, partyId, 4);
         assertArrayEquals(HintsConstants.HINTS, hints);
+
+        final AggregationAndVerificationKeys keys =
+                INSTANCE.preprocess(crs, new int[] {partyId}, new byte[][] {hints}, new long[] {111}, 4);
 
         // Use the RANDOM as a message to sign, because why not?
         final byte[] signature = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey);
         assertArrayEquals(HintsConstants.SIGNATURE, signature);
 
-        assertTrue(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, hints));
+        assertTrue(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, keys.aggregationKey(), partyId));
     }
 
     @Test
     void testVerifyBlsConstraints() {
         final byte[] crs = INSTANCE.initCRS(4);
         final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
-        final byte[] hints = INSTANCE.computeHints(crs, secretKey, 2, 4);
+        final int partyId = 2;
+        final byte[] hints = INSTANCE.computeHints(crs, secretKey, partyId, 4);
+        final AggregationAndVerificationKeys keys =
+                INSTANCE.preprocess(crs, new int[] {partyId}, new byte[][] {hints}, new long[] {111}, 4);
         final byte[] signature = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey);
 
-        assertFalse(INSTANCE.verifyBls(null, signature, HintsConstants.RANDOM_2, hints));
-        assertFalse(INSTANCE.verifyBls(EMPTY, signature, HintsConstants.RANDOM_2, hints));
-        assertFalse(INSTANCE.verifyBls(crs, null, HintsConstants.RANDOM_2, hints));
-        assertFalse(INSTANCE.verifyBls(crs, EMPTY, HintsConstants.RANDOM_2, hints));
-        assertFalse(INSTANCE.verifyBls(crs, signature, null, hints));
-        assertFalse(INSTANCE.verifyBls(crs, signature, EMPTY, hints));
-        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, null));
-        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, EMPTY));
+        assertFalse(INSTANCE.verifyBls(null, signature, HintsConstants.RANDOM_2, keys.aggregationKey(), partyId));
+        assertFalse(INSTANCE.verifyBls(EMPTY, signature, HintsConstants.RANDOM_2, keys.aggregationKey(), partyId));
+        assertFalse(INSTANCE.verifyBls(crs, null, HintsConstants.RANDOM_2, keys.aggregationKey(), partyId));
+        assertFalse(INSTANCE.verifyBls(crs, EMPTY, HintsConstants.RANDOM_2, keys.aggregationKey(), partyId));
+        assertFalse(INSTANCE.verifyBls(crs, signature, null, keys.aggregationKey(), partyId));
+        assertFalse(INSTANCE.verifyBls(crs, signature, EMPTY, keys.aggregationKey(), partyId));
+        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, null, partyId));
+        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, EMPTY, partyId));
+        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, keys.aggregationKey(), -1));
+        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, keys.aggregationKey(), 666));
 
         // corrupt the CRS
         crs[27]++;
         crs[172]--;
         crs[387]++;
-        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, hints));
+        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, keys.aggregationKey(), partyId));
 
         // uncorrupt the CRS...
         crs[27]--;
@@ -308,21 +318,21 @@ public class HintsLibraryBridgeTest {
         crs[387]--;
         // and corrupt the signature
         signature[23]++;
-        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, hints));
+        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, keys.aggregationKey(), partyId));
 
         // undo the signature...
         signature[23]--;
-        // and corrupt the hints instead
-        hints[17]++;
-        hints[111]--;
-        hints[302]++;
-        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, hints));
+        // and corrupt the aggregationKey instead
+        keys.aggregationKey()[17]++;
+        keys.aggregationKey()[111]--;
+        keys.aggregationKey()[302]++;
+        assertFalse(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, keys.aggregationKey(), partyId));
 
-        // uncorrupt the hints and do a sanity check
-        hints[17]--;
-        hints[111]++;
-        hints[302]--;
-        assertTrue(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, hints));
+        // uncorrupt the aggregationKey and do a sanity check
+        keys.aggregationKey()[17]--;
+        keys.aggregationKey()[111]++;
+        keys.aggregationKey()[302]--;
+        assertTrue(INSTANCE.verifyBls(crs, signature, HintsConstants.RANDOM_2, keys.aggregationKey(), partyId));
     }
 
     @Test

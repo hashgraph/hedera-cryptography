@@ -187,7 +187,8 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
     crs_jarray: JByteArray,
     signature_jarray: JByteArray,
     message_jarray: JByteArray,
-    extended_public_key_jarray: JByteArray,
+    aggregation_key_jarray: JByteArray,
+    party_id: jint
 ) -> jboolean {
     let crs: CRS = match jni_util::deserialize_jbyte_array(&env, &crs_jarray) {
         Ok(val) => val,
@@ -199,7 +200,7 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
         Err(_) => return jboolean::from(false)
     };
 
-    let extended_public_key: ExtendedPublicKey = match jni_util::deserialize_jbyte_array(&env, &extended_public_key_jarray) {
+    let aggregation_key: AggregationKey = match jni_util::deserialize_jbyte_array(&env, &aggregation_key_jarray) {
         Ok(val) => val,
         Err(_) => return jboolean::from(false)
     };
@@ -209,7 +210,7 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
         Err(_) => return jboolean::from(false)
     };
 
-    jboolean::from(HinTS::partial_verify(&crs, &message, &extended_public_key, &signature))
+    jboolean::from(HinTS::partial_verify(&crs, &message, &aggregation_key, party_id as usize, &signature))
 }
 
 /// JNI for HintsLibraryBridge.aggregateSignatures

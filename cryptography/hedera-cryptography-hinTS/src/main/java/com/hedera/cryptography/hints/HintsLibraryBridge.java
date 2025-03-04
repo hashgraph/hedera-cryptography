@@ -196,26 +196,36 @@ public class HintsLibraryBridge {
      * @param crs the CRS object
      * @param signature the signature
      * @param message the message
-     * @param extendedPublicKey the extended public key
+     * @param aggregationKey the extended public key
+     * @param partyId the party id whose public key from the aggregationKey should be used for verifying the signature
      * @return true if the signature is valid; false otherwise
      */
     public boolean verifyBls(
-            final byte[] crs, final byte[] signature, final byte[] message, final byte[] extendedPublicKey) {
+            final byte[] crs,
+            final byte[] signature,
+            final byte[] message,
+            final byte[] aggregationKey,
+            final int partyId) {
         if (crs == null
                 || crs.length == 0
                 || signature == null
                 || signature.length == 0
                 || message == null
                 || message.length == 0
-                || extendedPublicKey == null
-                || extendedPublicKey.length == 0) {
+                || aggregationKey == null
+                || aggregationKey.length == 0
+                || !validatePartyId(partyId, inferNFromCRSLength(crs))) {
             return false;
         }
-        return verifyBlsImpl(crs, signature, message, extendedPublicKey);
+        return verifyBlsImpl(crs, signature, message, aggregationKey, partyId);
     }
 
     private native boolean verifyBlsImpl(
-            final byte[] crs, final byte[] signature, final byte[] message, final byte[] extendedPublicKey);
+            final byte[] crs,
+            final byte[] signature,
+            final byte[] message,
+            final byte[] aggregationKey,
+            final int partyId);
 
     /**
      * Aggregates the signatures for party ids using hinTS aggregation and verification keys.
@@ -302,6 +312,13 @@ public class HintsLibraryBridge {
     // Returns true if the n is a positive power of two, and the crs isn't null and its length matches the n.
     private static boolean validateCRS(final byte[] crs, final int n) {
         return n > 0 && (n & (n - 1)) == 0 && crs != null && crs.length == (304 + n * 288);
+    }
+
+    private static int inferNFromCRSLength(final byte[] crs) {
+        if (crs == null) {
+            return -1;
+        }
+        return (crs.length - 304) / 288;
     }
 
     // Returns true if 0 <= partiyId < n.
