@@ -540,7 +540,6 @@ public class HistoryLibraryBridgeTest {
         // partyId 2
         final byte[] secretKey2 = HINTS.generateSecretKey(HistoryConstants.RANDOM_2);
         final byte[] hints2 = HINTS.computeHints(crs, secretKey2, 2, SIGNERS_NUM);
-        final SigningAndVerifyingSchnorrKeys schnorrKeys2 = HISTORY.newSchnorrKeyPair(HistoryConstants.RANDOM_2);
 
         // partyId 3
         final byte[] secretKey3 = HINTS.generateSecretKey(HistoryConstants.RANDOM_3);
@@ -561,7 +560,9 @@ public class HistoryLibraryBridgeTest {
         final byte[][] signatures = new byte[][] {
             HISTORY.signSchnorr(message, schnorrKeys0.signingKey()),
             HISTORY.signSchnorr(message, schnorrKeys1.signingKey()),
-            HISTORY.signSchnorr(message, schnorrKeys2.signingKey()),
+            // partyId 2 has the lowest weight, so its signature isn't important.
+            // Pretend we never received it even and pass `null` here:
+            null,
             HISTORY.signSchnorr(message, schnorrKeys3.signingKey())
         };
 
