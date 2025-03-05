@@ -38,5 +38,5 @@ panic = "abort"
 lto = "fat"
 strip = true
 debug = false
-opt-level = "z"
+opt-level = 3
 codegen-units = 1
