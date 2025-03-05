@@ -116,7 +116,7 @@ jobs:
           # the process hangs indefinitely awaiting input in the dialogue
           EDITOR: "echo 'Created-by: semantic-release' > $1"
         run: |
-          if [[ "${{ inputs.dry-run-enabled }}" == true ]]; then
+          if [[ "${{ inputs.dry-run-enabled }}" == "true" ]]; then
             echo "Dry Running semantic-release now..."
             npx semantic-release --dry-run
           else
