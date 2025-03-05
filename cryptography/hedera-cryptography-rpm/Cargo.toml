@@ -33,3 +33,10 @@ opt-level = 3
 [profile.test]
 opt-level = 3
 
+[profile.release]
+panic = "abort"
+lto = "fat"
+strip = true
+debug = false
+opt-level = "z"
+codegen-units = 1
