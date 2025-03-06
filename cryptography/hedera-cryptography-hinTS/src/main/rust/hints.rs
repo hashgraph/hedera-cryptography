@@ -22,12 +22,12 @@ use ark_ec::{
     short_weierstrass::{Affine, Projective},
     AffineRepr, CurveGroup,
 };
-use ark_ff::{field_hashers::DefaultFieldHasher, BigInteger256, Field};
+use ark_ff::{field_hashers::{DefaultFieldHasher, HashToField}, Field};
 use ark_poly::{univariate::DensePolynomial, Polynomial};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::collections::HashMap;
 use ark_std::{ops::*, UniformRand};
-use sha2::{Digest, Sha256};
+use sha2::Sha256;
 use rand_chacha::rand_core::SeedableRng;
 
 // hinTS depends on the utils and kzg modules
@@ -198,14 +198,21 @@ pub struct HinTS;
 
 impl HinTS {
     /// generates a random secret key using a PRNG seeded by the input entropy
-    pub fn keygen(seed: [u8; 32]) -> SecretKey {
+    pub fn keygen(
+        seed: [u8; 32]
+    ) -> SecretKey {
         let mut rng = rand_chacha::ChaCha8Rng::from_seed(seed);
         F::rand(&mut rng)
     }
 
     /// generates the extended public key (a.k.a. hint) for signer with
     /// secret key sk and index i within a universe of n-1 signers
-    pub fn hint_gen(crs: &CRS, n: usize, i: usize, sk: &SecretKey) -> Result<ExtendedPublicKey, HinTSError> {
+    pub fn hint_gen(
+        crs: &CRS,
+        n: usize,
+        i: usize,
+        sk: &SecretKey
+    ) -> Result<ExtendedPublicKey, HinTSError> {
         // let us first perform sanity checks on the input
 
         // we require n to be a power of 2
@@ -297,7 +304,12 @@ impl HinTS {
     /// verifies whether the extended public key (a.k.a. hint) is well-formed for the 
     /// given universe size n and index i; note that errors indicate incorrect inputs
     /// while a return value of false indicates that the hint is maliciously crafted
-    pub fn verify_hint(crs: &CRS, n: usize, i: usize, hint: &ExtendedPublicKey) -> Result<bool, HinTSError> {
+    pub fn verify_hint(
+        crs: &CRS,
+        n: usize,
+        i: usize,
+        hint: &ExtendedPublicKey
+    ) -> Result<bool, HinTSError> {
         // sanity check on the inputs
 
         // we require n to be a power of 2
@@ -481,8 +493,11 @@ impl HinTS {
     }
 
     /// signs a message using the signer's secret key, producing a partial signature
-    pub fn sign(msg: &[u8], sk: &SecretKey) -> PartialSignature {
-        hash_to_g2(msg).mul(sk).into_affine()
+    pub fn sign(
+        msg: &[u8],
+        sk: &SecretKey
+    ) -> Result<PartialSignature, HinTSError> {
+        Ok(hash_to_g2(msg)?.mul(sk).into_affine())
     }
 
     /// verifies the partial signature under the signer's public key
@@ -492,10 +507,10 @@ impl HinTS {
         ak: &AggregationKey,
         party_id: usize,
         sig: &PartialSignature
-    ) -> bool {
-        let lhs = <Curve as Pairing>::pairing(ak.pks[party_id], hash_to_g2(msg));
+    ) -> Result<bool, HinTSError> {
+        let lhs = <Curve as Pairing>::pairing(ak.pks[party_id], hash_to_g2(msg)?);
         let rhs = <Curve as Pairing>::pairing(crs.powers_of_g[0], sig);
-        lhs == rhs
+        Ok(lhs == rhs)
     }
 
     /// aggregates partial signatures to construct a threshold signature
@@ -620,7 +635,7 @@ impl HinTS {
             q2_of_tau_com,
             q3_of_tau_com,
             q4_of_tau_com,
-        );
+        )?;
         let r_div_ω: F = r / ω;
 
         let psw_of_r_proof = KZG::compute_opening_proof(&crs, &psw_of_x, &r);
@@ -685,7 +700,7 @@ impl HinTS {
         check_or_return_false!(denominator * π.agg_weight >= numerator * vk.total_weight);
 
         // verify the signature first
-        let lhs = <Curve as Pairing>::pairing(&π.agg_pk, hash_to_g2(msg));
+        let lhs = <Curve as Pairing>::pairing(&π.agg_pk, hash_to_g2(msg)?);
         let rhs = <Curve as Pairing>::pairing(vk.g_0, &π.agg_sig);
         check_or_return_false!(lhs == rhs);
 
@@ -709,7 +724,7 @@ impl HinTS {
             π.q2_of_tau_com,
             π.q3_of_tau_com,
             π.q4_of_tau_com,
-        );
+        )?;
 
         // verify the polynomial openings at r and r / ω
         check_or_return_false!(verify_openings_in_proof(vk, π, r)?);
@@ -776,37 +791,24 @@ fn random_oracle(
     q2_com: G1AffinePoint,
     q3_com: G1AffinePoint,
     q4_com: G1AffinePoint,
-) -> F {
+) -> Result<F, HinTSError> {
     let mut serialized_data = Vec::new();
-    sk_com.serialize_compressed(&mut serialized_data).unwrap();
-    w_com.serialize_compressed(&mut serialized_data).unwrap();
-    b_com.serialize_compressed(&mut serialized_data).unwrap();
-    parsum_com
-        .serialize_compressed(&mut serialized_data)
-        .unwrap();
-    qx_com.serialize_compressed(&mut serialized_data).unwrap();
-    qz_com.serialize_compressed(&mut serialized_data).unwrap();
-    qx_mul_x_com
-        .serialize_compressed(&mut serialized_data)
-        .unwrap();
-    q1_com.serialize_compressed(&mut serialized_data).unwrap();
-    q2_com.serialize_compressed(&mut serialized_data).unwrap();
-    q3_com.serialize_compressed(&mut serialized_data).unwrap();
-    q4_com.serialize_compressed(&mut serialized_data).unwrap();
+    sk_com.serialize_compressed(&mut serialized_data)?;
+    w_com.serialize_compressed(&mut serialized_data)?;
+    b_com.serialize_compressed(&mut serialized_data)?;
+    parsum_com.serialize_compressed(&mut serialized_data)?;
+    qx_com.serialize_compressed(&mut serialized_data)?;
+    qz_com.serialize_compressed(&mut serialized_data)?;
+    qx_mul_x_com.serialize_compressed(&mut serialized_data)?;
+    q1_com.serialize_compressed(&mut serialized_data)?;
+    q2_com.serialize_compressed(&mut serialized_data)?;
+    q3_com.serialize_compressed(&mut serialized_data)?;
+    q4_com.serialize_compressed(&mut serialized_data)?;
 
-    let mut hash_result = Sha256::digest(serialized_data.as_slice());
-    hash_result[31] = 0u8; //this makes sure we get a number below modulus
-    let hash_bytes = hash_result.as_slice();
+    let hasher = <DefaultFieldHasher<Sha256> as HashToField<F>>::new(&[]);
+    let field_elements = hasher.hash_to_field(&serialized_data, 1);
 
-    let mut hash_values: [u64; 4] = [0; 4];
-    hash_values[0] = u64::from_le_bytes(hash_bytes[0..8].try_into().unwrap());
-    hash_values[1] = u64::from_le_bytes(hash_bytes[8..16].try_into().unwrap());
-    hash_values[2] = u64::from_le_bytes(hash_bytes[16..24].try_into().unwrap());
-    hash_values[3] = u64::from_le_bytes(hash_bytes[24..32].try_into().unwrap());
-
-    let bi = BigInteger256::new(hash_values);
-
-    F::try_from(bi).unwrap()
+    Ok(field_elements[0])
 }
 
 fn verify_opening(
@@ -825,7 +827,11 @@ fn verify_opening(
     lhs == rhs
 }
 
-fn verify_openings_in_proof(vk: &VerificationKey, π: &ThresholdSignature, r: F) -> Result<bool, HinTSError> {
+fn verify_openings_in_proof(
+    vk: &VerificationKey,
+    π: &ThresholdSignature,
+    r: F
+) -> Result<bool, HinTSError> {
     //adjust the w_of_x_com
     let adjustment = F::from(0) - π.agg_weight;
     let adjustment_com = vk.l_n_minus_1_of_tau_com.mul(adjustment);
@@ -868,7 +874,9 @@ fn verify_openings_in_proof(vk: &VerificationKey, π: &ThresholdSignature, r: F)
     ))
 }
 
-fn preprocess_qz_contributions(q1_contributions: &Vec<Vec<G1AffinePoint>>) -> Vec<G1AffinePoint> {
+fn preprocess_qz_contributions(
+    q1_contributions: &Vec<Vec<G1AffinePoint>>
+) -> Vec<G1AffinePoint> {
     let n = q1_contributions.len();
     let mut q1_coms = vec![];
 
@@ -889,7 +897,10 @@ fn preprocess_qz_contributions(q1_contributions: &Vec<Vec<G1AffinePoint>>) -> Ve
     q1_coms
 }
 
-fn compute_psw_poly(weights: &Vec<Weight>, bitmap: &Vec<F>) -> Result<DensePolynomial<F>, HinTSError> {
+fn compute_psw_poly(
+    weights: &Vec<Weight>,
+    bitmap: &Vec<F>
+) -> Result<DensePolynomial<F>, HinTSError> {
     let n = weights.len(); // assumes power of 2 size
 
     let mut parsum = F::from(0);
@@ -907,7 +918,10 @@ fn compute_psw_poly(weights: &Vec<Weight>, bitmap: &Vec<F>) -> Result<DensePolyn
 }
 
 /// computes the inner product between a vector of group elements and bitvector
-fn inner_product<T: AffineRepr>(elements: &Vec<T>, bitmap: &Vec<F>) -> T {
+fn inner_product<T: AffineRepr>(
+    elements: &Vec<T>,
+    bitmap: &Vec<F>
+) -> T {
     elements
         .iter()
         .zip(bitmap.iter())
@@ -923,24 +937,27 @@ fn add<T: AffineRepr>(elements: impl IntoIterator<Item = T>) -> T {
 }
 
 /// hashes a byte array to an elliptic curve group element
-pub fn hash_to_g2(msg: impl AsRef<[u8]>) -> G2AffinePoint {
+pub fn hash_to_g2(
+    msg: impl AsRef<[u8]>
+) -> Result<G2AffinePoint, HinTSError> {
     const DST_G2: &str = "BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_";
     let g2_mapper = MapToCurveBasedHasher::<
         G2ProjectivePoint,
         DefaultFieldHasher<Sha256, 128>,
         WBMap<G2Config>,
-    >::new(DST_G2.as_bytes())
-    .unwrap();
-    let q: G2AffinePoint = g2_mapper.hash(msg.as_ref()).unwrap();
-    q
+    >::new(DST_G2.as_bytes())?;
+    g2_mapper.hash(msg.as_ref()).map_err(|e| HinTSError::HashingError(e))
 }
 
-pub fn serialize<T: CanonicalSerialize>(t: &T) -> Vec<u8> {
+pub fn serialize<T: CanonicalSerialize>(
+    t: &T
+) -> Result<Vec<u8>, HinTSError> {
     let mut buf = Vec::new();
     // unwrap() should be safe because we serialize into a variable-size vector.
-    // However, it might fail if the `t` is invalid somehow, although the probability of this must be low.
-    t.serialize_uncompressed(&mut buf).unwrap();
-    buf
+    // However, it might fail if the `t` is invalid somehow, although this
+    // should only occur if there is an error in the caller or this library.
+    t.serialize_uncompressed(&mut buf)?;
+    Ok(buf)
 }
 
 #[cfg(test)]
@@ -968,25 +985,25 @@ mod tests {
         let π = HinTS::aggregate(&crs, &ak, &vk, &sigs).unwrap();
 
         // test (de)-serialization
-        let serialized_vk = serialize(&vk);
+        let serialized_vk = serialize(&vk).unwrap();
         let deserialized_vk = deserialize::<VerificationKey>(&serialized_vk);
 
-        let serialized_ak = serialize(&ak);
+        let serialized_ak = serialize(&ak).unwrap();
         let deserialized_ak = deserialize::<AggregationKey>(&serialized_ak);
 
-        let serialized_π = serialize(&π);
+        let serialized_π = serialize(&π).unwrap();
         let deserialized_π = deserialize::<ThresholdSignature>(&serialized_π);
 
-        let serialized_sk = serialize(&sks[0]);
+        let serialized_sk = serialize(&sks[0]).unwrap();
         let deserialized_sk = deserialize::<SecretKey>(&serialized_sk);
 
-        let serialized_pk = serialize(&epks[0].pk_i);
+        let serialized_pk = serialize(&epks[0].pk_i).unwrap();
         let deserialized_pk = deserialize::<PublicKey>(&serialized_pk);
 
-        let serialized_epk = serialize(&epks[0]);
+        let serialized_epk = serialize(&epks[0]).unwrap();
         let deserialized_epk = deserialize::<ExtendedPublicKey>(&serialized_epk);
 
-        let serialized_crs = serialize(&crs);
+        let serialized_crs = serialize(&crs).unwrap();
         let deserialized_crs = deserialize::<CRS>(&serialized_crs);
 
         assert_eq!(vk, deserialized_vk);
@@ -1043,7 +1060,7 @@ mod tests {
         let mut sigs = HashMap::new();
         bitmap.iter().enumerate().for_each(|(i, &bit)| {
             if bit == F::from(1) {
-                sigs.insert(i, HinTS::sign(msg, &sks[i]));
+                sigs.insert(i, HinTS::sign(msg, &sks[i]).unwrap());
             }
         });
 
