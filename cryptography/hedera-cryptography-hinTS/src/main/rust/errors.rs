@@ -1,0 +1,54 @@
+//
+// Copyright (C) 2024 Hedera Hashgraph, LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+use std::error::Error;
+use std::fmt;
+use ark_serialize::SerializationError;
+
+/// Error enum to wrap underlying failures in HinTS operations, 
+/// or wrap errors coming from dependencies (namely, arkworks).
+#[derive(Debug)]
+pub enum HinTSError {
+    /// Error coming from `ark_serialize` upon deserialization
+    DeserializationError(SerializationError),
+    /// Happens when the network size parameter is not a power of 2
+    InvalidNetworkSize(usize),
+    /// Happens when the CRS is insufficient for the operation
+    InsufficientCRS(usize),
+    /// Multi-purpose error type for describing invalid inputs
+    InvalidInput(String),
+    /// Multi-purpose error type for when the cryptography failed
+    CryptographyCatastrophe(String),
+}
+
+impl Error for HinTSError {}
+
+impl fmt::Display for HinTSError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            HinTSError::DeserializationError(ref err) => err.fmt(f),
+            HinTSError::InvalidNetworkSize(n) => write!(f, "Network size must be a power of 2. Got {n}"),
+            HinTSError::InsufficientCRS(d) => write!(f, "CRS is insufficient for the operation. Expected degree {d}"),
+            HinTSError::InvalidInput(ref s) => write!(f, "Invalid input: {s}"),
+            HinTSError::CryptographyCatastrophe(ref s) => write!(f, "Cryptography catastrophe: {s}"),
+        }
+    }
+}
+
+impl From<SerializationError> for HinTSError {
+    fn from(err: SerializationError) -> HinTSError {
+        HinTSError::DeserializationError(err)
+    }
+}

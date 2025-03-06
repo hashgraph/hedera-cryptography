@@ -23,7 +23,6 @@ use rand::Rng;
 use rand_chacha::rand_core::SeedableRng;
 use sha2::*;
 
-use crate::check_or_return_false;
 use crate::hints::{Curve, G1AffinePoint, G2AffinePoint, CRS, F};
 use crate::kzg;
 
@@ -92,15 +91,11 @@ impl PowersOfTauProtocol {
 
     /// verifies that the update to the CRS is valid using the proof of contribution
     pub fn verify_contribution(prev_crs: &CRS, next_crs: &CRS, proof: &ContributionProof) -> bool {
-        check_or_return_false!(check1(
-            &prev_crs.powers_of_g[1],
-            &next_crs.powers_of_g[1],
-            proof
-        ));
-        check_or_return_false!(check2(next_crs));
-        check_or_return_false!(check3(next_crs));
+        let c1 = check1(&prev_crs.powers_of_g[1], &next_crs.powers_of_g[1], proof);
+        let c2 = check2(next_crs);
+        let c3 = check3(next_crs);
 
-        true
+        c1 && c2 && c3
     }
 }
 
@@ -270,7 +265,7 @@ mod tests {
         // serialization test
         assert_eq!(
             next_next_crs,
-            CRS::deserialize_uncompressed(&crate::hints::serialize(&next_next_crs)).unwrap()
+            CRS::deserialize_uncompressed(crate::hints::serialize(&next_next_crs).as_slice()).unwrap()
         );
     }
 }

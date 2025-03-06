@@ -23,9 +23,7 @@ use ark_ec::{
     AffineRepr, CurveGroup,
 };
 use ark_ff::{field_hashers::DefaultFieldHasher, BigInteger256, Field};
-use ark_poly::{
-    univariate::DensePolynomial, EvaluationDomain, Evaluations, Polynomial, Radix2EvaluationDomain,
-};
+use ark_poly::{univariate::DensePolynomial, Polynomial};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::collections::HashMap;
 use ark_std::{ops::*, UniformRand};
@@ -35,7 +33,7 @@ use rand_chacha::rand_core::SeedableRng;
 // hinTS depends on the utils and kzg modules
 use crate::kzg;
 use crate::utils;
-use crate::{assert_power_of_2, check_or_return_false};
+use crate::errors::*;
 
 /// The size of input randomness
 pub const RANDOM_SIZE: usize = 32;
@@ -64,6 +62,15 @@ pub type SecretKey = F;
 pub type PublicKey = G1AffinePoint;
 /// Type denoting a signer's weight, which is just a scalar value
 pub type Weight = F;
+
+macro_rules! check_or_return_false {
+    ($cond:expr) => {
+        if !$cond {
+            return Ok(false);
+        }
+    };
+}
+
 
 #[derive(Clone, Debug, PartialEq, CanonicalDeserialize, CanonicalSerialize)]
 /// hinTS aggregate signature
@@ -198,11 +205,33 @@ impl HinTS {
 
     /// generates the extended public key (a.k.a. hint) for signer with
     /// secret key sk and index i within a universe of n-1 signers
-    pub fn hint_gen(crs: &CRS, n: usize, i: usize, sk: &SecretKey) -> ExtendedPublicKey {
-        assert_power_of_2!(n);
+    pub fn hint_gen(crs: &CRS, n: usize, i: usize, sk: &SecretKey) -> Result<ExtendedPublicKey, HinTSError> {
+        // let us first perform sanity checks on the input
+
+        // we require n to be a power of 2
+        if !utils::is_n_valid(n) {
+            return Err(HinTSError::InvalidNetworkSize(n));
+        }
+
+        // obviously, i must be less than n
+        if i >= n {
+            return Err(HinTSError::InvalidInput(
+                format!("Invalid index i = {} greater than n = {}", i, n))
+            );
+        }
+
+        // CRS must be large enough to support the operation
+        // NOTE: CRS must also be valid, but we assume that here!
+        if crs.powers_of_g.len() - 1 < n {
+            return Err(HinTSError::InsufficientCRS(n));
+        }
 
         //let us compute the q1 term
-        let l_i_of_x = utils::lagrange_poly(n, i);
+        let l_i_of_x = utils::lagrange_poly(n, i).ok_or(
+            HinTSError::CryptographyCatastrophe(
+                format!("Unable to compute Lagrange<n,i>(x) for i = {}, n = {}", i, n)
+            )
+        )?;
         let z_of_x = utils::compute_vanishing_poly(n);
 
         let mut qz_terms = vec![];
@@ -213,14 +242,18 @@ impl HinTS {
                 num = l_i_of_x.mul(&l_i_of_x).sub(&l_i_of_x);
             } else {
                 //cross-terms
-                let l_j_of_x = utils::lagrange_poly(n, j);
+                let l_j_of_x = utils::lagrange_poly(n, j).ok_or(
+                    HinTSError::CryptographyCatastrophe(
+                        format!("Unable to compute Lagrange<n,j>(x) for j = {}, n = {}", j, n)
+                    )
+                )?;
                 num = l_j_of_x.mul(&l_i_of_x);
             }
 
             let f = num.div(&z_of_x);
             let sk_times_f = utils::poly_eval_mult_c(&f, &sk);
 
-            let com = KZG::commit_g1(&crs, &sk_times_f).unwrap();
+            let com = KZG::commit_g1(&crs, &sk_times_f);
 
             qz_terms.push(com);
         }
@@ -237,19 +270,19 @@ impl HinTS {
         //qx_term_mul_tau = sk_i * (l_i(x) - l_i(0)) / x
         let qx_term_mul_tau = utils::poly_eval_mult_c(&num, &sk);
         //qx_term_com = [ sk_i * (l_i(τ) - l_i(0)) / τ ]_1
-        let qx_term_com = KZG::commit_g1(&crs, &qx_term).unwrap();
+        let qx_term_com = KZG::commit_g1(&crs, &qx_term);
         //qx_term_mul_tau_com = [ sk_i * (l_i(τ) - l_i(0)) ]_1
-        let qx_term_mul_tau_com = KZG::commit_g1(&crs, &qx_term_mul_tau).unwrap();
+        let qx_term_mul_tau_com = KZG::commit_g1(&crs, &qx_term_mul_tau);
 
         //release my public key
         let sk_as_poly = utils::compute_constant_poly(sk);
-        let pk = KZG::commit_g1(&crs, &sk_as_poly).unwrap();
+        let pk = KZG::commit_g1(&crs, &sk_as_poly);
 
         let sk_times_l_i_of_x = utils::poly_eval_mult_c(&l_i_of_x, &sk);
-        let com_sk_l_i_g1 = KZG::commit_g1(&crs, &sk_times_l_i_of_x).unwrap();
-        let com_sk_l_i_g2 = KZG::commit_g2(&crs, &sk_times_l_i_of_x).unwrap();
+        let com_sk_l_i_g1 = KZG::commit_g1(&crs, &sk_times_l_i_of_x);
+        let com_sk_l_i_g2 = KZG::commit_g2(&crs, &sk_times_l_i_of_x);
 
-        ExtendedPublicKey {
+        Ok(ExtendedPublicKey {
             i: i,
             n: n,
             pk_i: pk,
@@ -258,40 +291,68 @@ impl HinTS {
             qz_i_terms: qz_terms,
             qx_i_term: qx_term_com,
             qx_i_term_mul_tau: qx_term_mul_tau_com,
-        }
+        })
     }
 
-    /// verifies whether the extended public key is well-formed
-    /// for the given universe size n and index i
-    pub fn verify_hint(crs: &CRS, n: usize, i: usize, hint: &ExtendedPublicKey) -> bool {
-        // sanity check on the hint
-        assert_power_of_2!(n);
+    /// verifies whether the extended public key (a.k.a. hint) is well-formed for the 
+    /// given universe size n and index i; note that errors indicate incorrect inputs
+    /// while a return value of false indicates that the hint is maliciously crafted
+    pub fn verify_hint(crs: &CRS, n: usize, i: usize, hint: &ExtendedPublicKey) -> Result<bool, HinTSError> {
+        // sanity check on the inputs
+
+        // we require n to be a power of 2
+        if !utils::is_n_valid(n) {
+            return Err(HinTSError::InvalidNetworkSize(n));
+        }
+
+        // obviously, i must be less than n
+        if i >= n {
+            return Err(HinTSError::InvalidInput(
+                format!("Invalid index i = {} greater than n = {}", i, n))
+            );
+        }
+
+        // CRS must be large enough to support the operation
+        // NOTE: CRS must also be valid, but we assume that here!
+        if crs.powers_of_g.len() - 1 < n {
+            return Err(HinTSError::InsufficientCRS(n));
+        }
+
+        // return false immediately if some simple checks dont hold on the hint
         check_or_return_false!(hint.i == i);
         check_or_return_false!(hint.n == n);
         check_or_return_false!(n == hint.qz_i_terms.len());
 
         //e([sk_i L_i(τ)]1, [1]2) = e([sk_i]1, [L_i(τ)]2)
-        let l_i_of_x = utils::lagrange_poly(hint.n, i);
-        let z_of_x = utils::compute_vanishing_poly(hint.n);
+        let l_i_of_x = utils::lagrange_poly(n, i).ok_or(
+            HinTSError::CryptographyCatastrophe(
+                format!("Unable to compute Lagrange<n,i>(x) for i = {}, n = {}", i, n)
+            )
+        )?;
+        let z_of_x = utils::compute_vanishing_poly(n);
 
-        let l_i_of_tau_com = KZG::commit_g2(&crs, &l_i_of_x).unwrap();
+        let l_i_of_tau_com = KZG::commit_g2(&crs, &l_i_of_x);
         let lhs = <Curve as Pairing>::pairing(hint.sk_i_l_i_of_tau_com_1, crs.powers_of_h[0]);
         let rhs = <Curve as Pairing>::pairing(hint.pk_i, l_i_of_tau_com);
         check_or_return_false!(lhs == rhs);
 
-        for j in 0..hint.n {
+        for j in 0..n {
             let num: DensePolynomial<F>;
             if i == j {
                 num = l_i_of_x.clone().mul(&l_i_of_x).sub(&l_i_of_x);
             } else {
                 //cross-terms
-                let l_j_of_x = utils::lagrange_poly(hint.n, j);
+                let l_j_of_x = utils::lagrange_poly(n, j).ok_or(
+                    HinTSError::CryptographyCatastrophe(
+                        format!("Unable to compute Lagrange<n,j>(x) for j = {}, n = {}", j, n)
+                    )
+                )?;
                 num = l_j_of_x.mul(&l_i_of_x);
             }
             let f = num.div(&z_of_x);
 
             //f = li^2 - l_i / z or li lj / z
-            let f_com = KZG::commit_g2(&crs, &f).unwrap();
+            let f_com = KZG::commit_g2(&crs, &f);
 
             let lhs = <Curve as Pairing>::pairing(hint.qz_i_terms[j], crs.powers_of_h[0]);
             let rhs = <Curve as Pairing>::pairing(hint.pk_i, f_com);
@@ -309,7 +370,7 @@ impl HinTS {
         //qx_term = (l_i(x) - l_i(0)) / x
         let qx_term = &num.div(&den);
         //qx_term_com = [ sk_i * (l_i(τ) - l_i(0)) / τ ]_1
-        let qx_term_com = KZG::commit_g2(&crs, &qx_term).unwrap();
+        let qx_term_com = KZG::commit_g2(&crs, &qx_term);
         let lhs = <Curve as Pairing>::pairing(hint.qx_i_term, crs.powers_of_h[0]);
         let rhs = <Curve as Pairing>::pairing(hint.pk_i, qx_term_com);
         check_or_return_false!(lhs == rhs);
@@ -317,12 +378,12 @@ impl HinTS {
         //qx_term_mul_tau = (l_i(x) - l_i(0))
         let qx_term_mul_tau = &num;
         //qx_term_mul_tau_com = [ (l_i(τ) - l_i(0)) ]_1
-        let qx_term_mul_tau_com = KZG::commit_g2(&crs, &qx_term_mul_tau).unwrap();
+        let qx_term_mul_tau_com = KZG::commit_g2(&crs, &qx_term_mul_tau);
         let lhs = <Curve as Pairing>::pairing(hint.qx_i_term_mul_tau, crs.powers_of_h[0]);
         let rhs = <Curve as Pairing>::pairing(hint.pk_i, qx_term_mul_tau_com);
         check_or_return_false!(lhs == rhs);
 
-        true
+        Ok(true)
     }
 
     /// preprocesses all signers' extended public keys and weights,
@@ -331,23 +392,42 @@ impl HinTS {
         n: usize,
         crs: &CRS,
         signer_info: &HashMap<usize, (Weight, ExtendedPublicKey)>,
-    ) -> (VerificationKey, AggregationKey) {
-        assert_power_of_2!(n);
+    ) -> Result<(VerificationKey, AggregationKey), HinTSError> {
+        // sanity check on the inputs
+
+        // we require n to be a power of 2
+        if !utils::is_n_valid(n) {
+            return Err(HinTSError::InvalidNetworkSize(n));
+        }
+
+        // CRS must be large enough to support the operation
+        // NOTE: CRS must also be valid, but we assume that here!
+        if crs.powers_of_g.len() - 1 < n {
+            return Err(HinTSError::InsufficientCRS(n));
+        }
 
         let mut weights: Vec<Weight> = Vec::new();
         let mut epks: Vec<ExtendedPublicKey> = Vec::new();
         for i in 0..n {
             if let Some((weight, hint)) = signer_info.get(&i) {
-                assert!(hint.n == n);
+                if hint.n != n {
+                    return Err(HinTSError::InvalidInput(
+                        format!("Invalid hint: got hint.n = {}, expected n = {}", hint.n, n))
+                    );
+                }
                 weights.push(weight.clone());
                 epks.push(hint.clone());
             } else {
                 weights.push(F::from(0));
-                epks.push(Self::hint_gen(crs, n, i, &F::from(0)));
+                epks.push(Self::hint_gen(crs, n, i, &F::from(0))?);
             }
         }
 
-        let w_of_x = utils::interpolate_poly_over_mult_subgroup(&weights);
+        let w_of_x = utils::interpolate_poly_over_mult_subgroup(&weights).ok_or(
+            HinTSError::CryptographyCatastrophe(
+                format!("Unable to construct Radix2EvaluationDomain for n = {}", weights.len())
+            )
+        )?;
 
         //allocate space to collect setup material from all n-1 parties
         let mut qz_contributions: Vec<Vec<G1AffinePoint>> = vec![Default::default(); n];
@@ -367,7 +447,11 @@ impl HinTS {
 
         let z_of_x = utils::compute_vanishing_poly(n);
         let x_monomial = utils::compute_x_monomial();
-        let l_n_minus_1_of_x = utils::lagrange_poly(n, n - 1);
+        let l_n_minus_1_of_x = utils::lagrange_poly(n, n - 1).ok_or(
+            HinTSError::CryptographyCatastrophe(
+                format!("Unable to compute Lagrange<n,i>(x) for i = {}, n = {}", n - 1, n)
+            )
+        )?;
 
         let total_weight = weights.iter().fold(F::from(0), |acc, &x| acc + x);
 
@@ -377,11 +461,11 @@ impl HinTS {
             g_0: crs.powers_of_g[0],
             h_0: crs.powers_of_h[0],
             h_1: crs.powers_of_h[1],
-            l_n_minus_1_of_tau_com: KZG::commit_g1(&crs, &l_n_minus_1_of_x).unwrap(),
-            w_of_tau_com: KZG::commit_g1(&crs, &w_of_x).unwrap(),
+            l_n_minus_1_of_tau_com: KZG::commit_g1(&crs, &l_n_minus_1_of_x),
+            w_of_tau_com: KZG::commit_g1(&crs, &w_of_x),
             sk_of_tau_com: add::<G2AffinePoint>(sk_l_of_tau_coms),
-            z_of_tau_com: KZG::commit_g2(&crs, &z_of_x).unwrap(),
-            tau_com: KZG::commit_g2(&crs, &x_monomial).unwrap(),
+            z_of_tau_com: KZG::commit_g2(&crs, &z_of_x),
+            tau_com: KZG::commit_g2(&crs, &x_monomial),
         };
 
         let ak = AggregationKey {
@@ -393,7 +477,7 @@ impl HinTS {
             qx_mul_tau_terms: qx_mul_tau_contributions,
         };
 
-        (vk, ak)
+        Ok((vk, ak))
     }
 
     /// signs a message using the signer's secret key, producing a partial signature
@@ -420,9 +504,20 @@ impl HinTS {
         ak: &AggregationKey,
         vk: &VerificationKey,
         partial_signatures: &HashMap<usize, PartialSignature>,
-    ) -> ThresholdSignature {
-        // compute the nth root of unity
+    ) -> Result<ThresholdSignature, HinTSError> {
         let n = ak.n;
+
+        // CRS must be large enough to support the operation
+        // NOTE: CRS must also be valid, but we assume that here!
+        if crs.powers_of_g.len() - 1 < n {
+            return Err(HinTSError::InsufficientCRS(n));
+        }
+
+        // we require n to be a power of 2
+        if !utils::is_n_valid(n) {
+            return Err(HinTSError::InvalidNetworkSize(n));
+        }
+
         let n_inv = F::from(1) / F::from(n as u64);
 
         // compute bitmap based on entries in partial_signatures
@@ -446,15 +541,31 @@ impl HinTS {
         bitmap[n - 1] = F::from(1);
 
         //compute all the scalars we will need in the prover
-        let ω: F = utils::nth_root_of_unity(n);
+        let ω: F = utils::nth_root_of_unity(n).ok_or(
+            HinTSError::CryptographyCatastrophe(
+                format!("Unable to construct Radix2EvaluationDomain for n = {}", n)
+            )
+        )?;
         let ω_inv: F = F::from(1) / ω;
 
         //compute all the polynomials we will need in the prover
         let z_of_x = utils::compute_vanishing_poly(n); //returns Z(X) = X^n - 1
-        let l_n_minus_1_of_x = utils::lagrange_poly(n, n - 1);
-        let w_of_x = utils::interpolate_poly_over_mult_subgroup(&weights);
-        let b_of_x = utils::interpolate_poly_over_mult_subgroup(&bitmap);
-        let psw_of_x = compute_psw_poly(&weights, &bitmap);
+        let l_n_minus_1_of_x = utils::lagrange_poly(n, n - 1).ok_or(
+            HinTSError::CryptographyCatastrophe(
+                format!("Unable to compute Lagrange<n,i>(x) for i = {}, n = {}", n - 1, n)
+            )
+        )?;
+        let w_of_x = utils::interpolate_poly_over_mult_subgroup(&weights).ok_or(
+            HinTSError::CryptographyCatastrophe(
+                format!("Unable to construct Radix2EvaluationDomain for n = {}", weights.len())
+            )
+        )?;
+        let b_of_x = utils::interpolate_poly_over_mult_subgroup(&bitmap).ok_or(
+            HinTSError::CryptographyCatastrophe(
+                format!("Unable to construct Radix2EvaluationDomain for n = {}", bitmap.len())
+            )
+        )?;
+        let psw_of_x = compute_psw_poly(&weights, &bitmap)?;
         let psw_of_x_div_ω = utils::poly_domain_mult_ω(&psw_of_x, &ω_inv);
 
         //ParSumW(X) = ParSumW(X/ω) + W(X) · b(X) + Z(X) · Q1(X)
@@ -489,12 +600,12 @@ impl HinTS {
             .collect::<Vec<PartialSignature>>();
         let agg_sig = add::<G2AffinePoint>(partial_sigs).mul(n_inv).into_affine();
 
-        let parsum_of_tau_com = KZG::commit_g1(&crs, &psw_of_x).unwrap();
-        let b_of_tau_com = KZG::commit_g1(&crs, &b_of_x).unwrap();
-        let q1_of_tau_com = KZG::commit_g1(&crs, &psw_wff_q_of_x).unwrap();
-        let q2_of_tau_com = KZG::commit_g1(&crs, &b_wff_q_of_x).unwrap();
-        let q3_of_tau_com = KZG::commit_g1(&crs, &psw_check_q_of_x).unwrap();
-        let q4_of_tau_com = KZG::commit_g1(&crs, &b_check_q_of_x).unwrap();
+        let parsum_of_tau_com = KZG::commit_g1(&crs, &psw_of_x);
+        let b_of_tau_com = KZG::commit_g1(&crs, &b_of_x);
+        let q1_of_tau_com = KZG::commit_g1(&crs, &psw_wff_q_of_x);
+        let q2_of_tau_com = KZG::commit_g1(&crs, &b_wff_q_of_x);
+        let q3_of_tau_com = KZG::commit_g1(&crs, &psw_check_q_of_x);
+        let q4_of_tau_com = KZG::commit_g1(&crs, &b_check_q_of_x);
 
         // RO(SK, W, B, ParSum, Qx, Qz, Qx(τ ) · τ, Q1, Q2, Q3, Q4)
         let r = random_oracle(
@@ -512,14 +623,13 @@ impl HinTS {
         );
         let r_div_ω: F = r / ω;
 
-        let psw_of_r_proof = KZG::compute_opening_proof(&crs, &psw_of_x, &r).unwrap();
-        let w_of_r_proof = KZG::compute_opening_proof(&crs, &w_of_x, &r).unwrap();
-        let b_of_r_proof = KZG::compute_opening_proof(&crs, &b_of_x, &r).unwrap();
-        let psw_wff_q_of_r_proof = KZG::compute_opening_proof(&crs, &psw_wff_q_of_x, &r).unwrap();
-        let psw_check_q_of_r_proof =
-            KZG::compute_opening_proof(&crs, &psw_check_q_of_x, &r).unwrap();
-        let b_wff_q_of_r_proof = KZG::compute_opening_proof(&crs, &b_wff_q_of_x, &r).unwrap();
-        let b_check_q_of_r_proof = KZG::compute_opening_proof(&crs, &b_check_q_of_x, &r).unwrap();
+        let psw_of_r_proof = KZG::compute_opening_proof(&crs, &psw_of_x, &r);
+        let w_of_r_proof = KZG::compute_opening_proof(&crs, &w_of_x, &r);
+        let b_of_r_proof = KZG::compute_opening_proof(&crs, &b_of_x, &r);
+        let psw_wff_q_of_r_proof = KZG::compute_opening_proof(&crs, &psw_wff_q_of_x, &r);
+        let psw_check_q_of_r_proof = KZG::compute_opening_proof(&crs, &psw_check_q_of_x, &r);
+        let b_wff_q_of_r_proof = KZG::compute_opening_proof(&crs, &b_wff_q_of_x, &r);
+        let b_check_q_of_r_proof = KZG::compute_opening_proof(&crs, &b_check_q_of_x, &r);
 
         // batched opening argument as it is for the same point r
         let merged_proof: G1AffinePoint = (psw_of_r_proof
@@ -531,13 +641,13 @@ impl HinTS {
             + b_check_q_of_r_proof.mul(r.pow([6])))
         .into();
 
-        ThresholdSignature {
+        Ok(ThresholdSignature {
             agg_pk: agg_pk.clone(),
             agg_sig: agg_sig.clone(),
             agg_weight: total_active_weight,
 
             parsum_of_r_div_ω: psw_of_x.evaluate(&r_div_ω),
-            opening_proof_r_div_ω: KZG::compute_opening_proof(&crs, &psw_of_x, &r_div_ω).unwrap(),
+            opening_proof_r_div_ω: KZG::compute_opening_proof(&crs, &psw_of_x, &r_div_ω),
 
             parsum_of_r: psw_of_x.evaluate(&r),
             w_of_r: w_of_x.evaluate(&r),
@@ -559,29 +669,32 @@ impl HinTS {
             qz_of_tau_com: qz_com,
             qx_of_tau_com: qx_com,
             qx_of_tau_mul_tau_com: qx_mul_tau_com,
-        }
+        })
     }
 
     /// verifies whether the threshold signature is valid and
     /// satisfies the desired threshold fraction
     pub fn verify(
-        crs: &CRS,
         msg: &[u8],
         vk: &VerificationKey,
         π: &ThresholdSignature,
         fraction: (F, F), // e.g. (1,3) to denote 1/3 threshold
-    ) -> bool {
+    ) -> Result<bool, HinTSError> {
         // check that the threshold is satisfied
         let (numerator, denominator) = fraction;
         check_or_return_false!(denominator * π.agg_weight >= numerator * vk.total_weight);
 
         // verify the signature first
         let lhs = <Curve as Pairing>::pairing(&π.agg_pk, hash_to_g2(msg));
-        let rhs = <Curve as Pairing>::pairing(crs.powers_of_g[0], &π.agg_sig);
+        let rhs = <Curve as Pairing>::pairing(vk.g_0, &π.agg_sig);
         check_or_return_false!(lhs == rhs);
 
         // compute nth root of unity
-        let ω: F = utils::nth_root_of_unity(vk.n);
+        let ω: F = utils::nth_root_of_unity(vk.n).ok_or(
+            HinTSError::CryptographyCatastrophe(
+                format!("Unable to construct Radix2EvaluationDomain for n = {}", vk.n)
+            )
+        )?;
 
         //RO(SK, W, B, ParSum, Qx, Qz, Qx(τ ) · τ, Q1, Q2, Q3, Q4)
         let r = random_oracle(
@@ -599,17 +712,16 @@ impl HinTS {
         );
 
         // verify the polynomial openings at r and r / ω
-        check_or_return_false!(verify_openings_in_proof(vk, π, r));
+        check_or_return_false!(verify_openings_in_proof(vk, π, r)?);
 
-        let n: u64 = vk.n as u64;
         // this takes logarithmic computation, but concretely efficient
-        let vanishing_of_r: F = r.pow([n]) - F::from(1);
+        let vanishing_of_r: F = r.pow([vk.n as u64]) - F::from(1);
 
         // compute L_i(r) using the relation L_i(x) = Z_V(x) / ( Z_V'(x) (x - ω^i) )
         // where Z_V'(x)^-1 = x / N for N = |V|.
-        let ω_pow_n_minus_1 = ω.pow([n - 1]);
+        let ω_pow_n_minus_1 = ω.pow([(vk.n as u64) - 1]);
         let l_n_minus_1_of_r =
-            (ω_pow_n_minus_1 / F::from(n)) * (vanishing_of_r / (r - ω_pow_n_minus_1));
+            (ω_pow_n_minus_1 / F::from(vk.n as u64)) * (vanishing_of_r / (r - ω_pow_n_minus_1));
 
         //assert polynomial identity B(x) SK(x) = ask + Q_z(x) Z(x) + Q_x(x) x
         let lhs = <Curve as Pairing>::pairing(&π.b_of_tau_com, &vk.sk_of_tau_com);
@@ -647,7 +759,7 @@ impl HinTS {
         let rhs = <Curve as Pairing>::pairing(&π.qx_of_tau_mul_tau_com, &vk.h_0);
         check_or_return_false!(lhs == rhs);
 
-        true
+        Ok(true)
     }
 }
 
@@ -713,7 +825,7 @@ fn verify_opening(
     lhs == rhs
 }
 
-fn verify_openings_in_proof(vk: &VerificationKey, π: &ThresholdSignature, r: F) -> bool {
+fn verify_openings_in_proof(vk: &VerificationKey, π: &ThresholdSignature, r: F) -> Result<bool, HinTSError> {
     //adjust the w_of_x_com
     let adjustment = F::from(0) - π.agg_weight;
     let adjustment_com = vk.l_n_minus_1_of_tau_com.mul(adjustment);
@@ -740,16 +852,20 @@ fn verify_openings_in_proof(vk: &VerificationKey, π: &ThresholdSignature, r: F)
     let rhs = <Curve as Pairing>::pairing(π.opening_proof_r, vk.h_1 - vk.h_0.mul(r).into_affine());
     check_or_return_false!(lhs == rhs);
 
-    let ω: F = utils::nth_root_of_unity(vk.n);
+    let ω: F = utils::nth_root_of_unity(vk.n).ok_or(
+        HinTSError::CryptographyCatastrophe(
+            format!("Unable to construct Radix2EvaluationDomain for n = {}", vk.n)
+        )
+    )?;
     let r_div_ω: F = r / ω;
 
-    verify_opening(
+    Ok(verify_opening(
         vk,
         &π.parsum_of_tau_com,
         &r_div_ω,
         &π.parsum_of_r_div_ω,
         &π.opening_proof_r_div_ω,
-    )
+    ))
 }
 
 fn preprocess_qz_contributions(q1_contributions: &Vec<Vec<G1AffinePoint>>) -> Vec<G1AffinePoint> {
@@ -773,9 +889,8 @@ fn preprocess_qz_contributions(q1_contributions: &Vec<Vec<G1AffinePoint>>) -> Ve
     q1_coms
 }
 
-fn compute_psw_poly(weights: &Vec<Weight>, bitmap: &Vec<F>) -> DensePolynomial<F> {
-    let n = weights.len(); //power of 2 size
-    assert_power_of_2!(n);
+fn compute_psw_poly(weights: &Vec<Weight>, bitmap: &Vec<F>) -> Result<DensePolynomial<F>, HinTSError> {
+    let n = weights.len(); // assumes power of 2 size
 
     let mut parsum = F::from(0);
     let mut evals = vec![];
@@ -784,9 +899,11 @@ fn compute_psw_poly(weights: &Vec<Weight>, bitmap: &Vec<F>) -> DensePolynomial<F
         evals.push(parsum);
     }
 
-    let domain = Radix2EvaluationDomain::<F>::new(n).unwrap();
-    let eval_form = Evaluations::from_vec_and_domain(evals, domain);
-    eval_form.interpolate()
+    utils::interpolate_poly_over_mult_subgroup(&evals).ok_or(
+        HinTSError::CryptographyCatastrophe(
+            format!("Unable to construct Radix2EvaluationDomain for n = {}", evals.len())
+        )
+    )
 }
 
 /// computes the inner product between a vector of group elements and bitvector
@@ -794,13 +911,8 @@ fn inner_product<T: AffineRepr>(elements: &Vec<T>, bitmap: &Vec<F>) -> T {
     elements
         .iter()
         .zip(bitmap.iter())
-        .fold(T::zero(), |acc, (elem, bit)| {
-            if *bit == F::from(1) {
-                acc.add(elem).into_affine()
-            } else {
-                acc
-            }
-        })
+        .filter(|(_, &bit)| bit == F::from(1))
+        .fold(T::zero(), |acc, (elem, _)| acc.add(elem).into_affine())
 }
 
 /// adds up all the group elements in a collection
@@ -853,7 +965,7 @@ mod tests {
 
         let (crs, ak, vk, sks, epks) = sample_universe(universe_n);
         let sigs = sample_signing(num_signers, msg, &sks);
-        let π = HinTS::aggregate(&crs, &ak, &vk, &sigs);
+        let π = HinTS::aggregate(&crs, &ak, &vk, &sigs).unwrap();
 
         // test (de)-serialization
         let serialized_vk = serialize(&vk);
@@ -904,24 +1016,18 @@ mod tests {
         let (crs, ak, vk, sks, _) = sample_universe(universe_n);
         let sigs = sample_signing(num_signers, msg, &sks);
 
-        let π = HinTS::aggregate(&crs, &ak, &vk, &sigs);
+        let π = HinTS::aggregate(&crs, &ak, &vk, &sigs).unwrap();
 
         let threshold = (F::from(1), F::from(3)); // 1/3
-        assert!(HinTS::verify(&crs, msg, &vk, &π, threshold));
+        assert!(HinTS::verify(msg, &vk, &π, threshold).unwrap());
 
         // attack the proof
         let mut π_attack = π.clone();
         π_attack.agg_weight = F::from(1000000000); // some arbitrary weight
-        assert!(!HinTS::verify(&crs, msg, &vk, &π_attack, threshold));
+        assert!(!HinTS::verify(msg, &vk, &π_attack, threshold).unwrap());
 
         // try a really high threshold of 99%
-        assert!(!HinTS::verify(
-            &crs,
-            msg,
-            &vk,
-            &π_attack,
-            (F::from(99), F::from(100))
-        ));
+        assert!(!HinTS::verify(msg, &vk, &π_attack, (F::from(99), F::from(100))).unwrap());
     }
 
     fn sample_signing(
@@ -969,7 +1075,7 @@ mod tests {
         let sks: Vec<SecretKey> = (0..num_signers).map(|_| HinTS::keygen([42u8; 32])).collect();
 
         let epks = (0..num_signers)
-            .map(|i| HinTS::hint_gen(&crs, n, i, &sks[i]))
+            .map(|i| HinTS::hint_gen(&crs, n, i, &sks[i]).unwrap())
             .collect::<Vec<ExtendedPublicKey>>();
 
         //sample random weights for each party
@@ -981,7 +1087,7 @@ mod tests {
             .collect();
 
         //run universe setup
-        let (vk, ak) = HinTS::preprocess(n, &crs, &signers_info);
+        let (vk, ak) = HinTS::preprocess(n, &crs, &signers_info).unwrap();
 
         (crs, ak, vk, sks, epks)
     }

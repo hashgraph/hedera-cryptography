@@ -13,18 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::assert_power_of_2;
 use ark_ff::PrimeField;
 use ark_poly::{
     univariate::DensePolynomial, EvaluationDomain, Evaluations, Polynomial, Radix2EvaluationDomain,
 };
 use ark_std::ops::*;
 
-// returns t(X) = X^n - 1
-// relies on n being a power of 2
-pub fn compute_vanishing_poly<F: PrimeField + From<u64>>(n: usize) -> DensePolynomial<F> {
-    assert_power_of_2!(n);
-
+/// returns the vanishing polynomial for a multiplicative subgroup of size n;
+/// when n is a power of 2, this is equivalent to t(X) = X^n - 1
+pub fn compute_vanishing_poly<F: PrimeField + From<u64>>(
+    n: usize
+) -> DensePolynomial<F> {
     let mut coeffs = vec![];
     for i in 0..n + 1 {
         if i == 0 {
@@ -39,39 +38,40 @@ pub fn compute_vanishing_poly<F: PrimeField + From<u64>>(n: usize) -> DensePolyn
     DensePolynomial { coeffs }
 }
 
-// interpolate polynomial which evaluates to points in v
-// the domain is the powers of n-th root of unity, where n is size of v
-// relies on n being a power of 2
+/// computes the polynomial which evaluates to points in the input vector evals using interpolation;
+/// the domain is the powers of n-th root of unity, where n is size of the evals vector (power of 2)
 pub fn interpolate_poly_over_mult_subgroup<F: PrimeField + From<u64>>(
     evals: &Vec<F>,
-) -> DensePolynomial<F> {
-    let n = evals.len();
-    assert_power_of_2!(n);
-
-    let domain = Radix2EvaluationDomain::<F>::new(n).unwrap();
-    let eval_form = Evaluations::from_vec_and_domain(evals.to_owned(), domain);
-    eval_form.interpolate()
+) -> Option<DensePolynomial<F>> {
+    Radix2EvaluationDomain::<F>::new(evals.len()).map(|d| {
+        Evaluations::from_vec_and_domain(evals.clone(), d).interpolate()
+    })
 }
 
-// 1 at omega^i and 0 elsewhere on domain {omega^i}_{i \in [n]}
-pub fn lagrange_poly<F: PrimeField + From<u64>>(n: usize, i: usize) -> DensePolynomial<F> {
-    assert_power_of_2!(n);
-
+/// outputs the Lagrange polynomial for the ith location in a multiplicative subgroup
+/// of size n, defined to be 1 at omega^i and 0 elsewhere on domain
+/// {omega^i}_{i \in [n]} (where omega is the n-th root of unity)
+pub fn lagrange_poly<F: PrimeField + From<u64>>(
+    n: usize,
+    i: usize
+) -> Option<DensePolynomial<F>> {
     // see sec 3 of https://eprint.iacr.org/2023/567.pdf
-    let ω = nth_root_of_unity::<F>(n);
-    let factor = ω.pow([i as u64]) / F::from(n as u64);
+    nth_root_of_unity::<F>(n).map(|ω| {
+        let factor = ω.pow([i as u64]) / F::from(n as u64);
 
-    let numerator = compute_vanishing_poly(n);
-    let denominator = {
-        let mut coeffs = vec![];
-        coeffs.push(F::from(0u64) - ω.pow([i as u64])); // -ω^i
-        coeffs.push(F::from(1u64)); // X
-        DensePolynomial { coeffs }
-    };
+        let numerator = compute_vanishing_poly(n);
+        let denominator = {
+            let mut coeffs = vec![];
+            coeffs.push(F::from(0u64) - ω.pow([i as u64])); // -ω^i
+            coeffs.push(F::from(1u64)); // X
+            DensePolynomial { coeffs }
+        };
 
-    poly_eval_mult_c(&numerator, &factor).div(&denominator)
+        poly_eval_mult_c(&numerator, &factor).div(&denominator)
+    })
 }
-// returns t(X) = X
+
+/// returns t(X) = X
 pub fn compute_x_monomial<F: PrimeField + From<u64>>() -> DensePolynomial<F> {
     let mut coeffs = vec![];
     coeffs.push(F::from(0u64)); // 0
@@ -79,14 +79,14 @@ pub fn compute_x_monomial<F: PrimeField + From<u64>>() -> DensePolynomial<F> {
     DensePolynomial { coeffs }
 }
 
-// returns t(X) = c
+/// returns t(X) = c
 pub fn compute_constant_poly<F: PrimeField>(c: &F) -> DensePolynomial<F> {
     let mut coeffs = vec![];
     coeffs.push(c.clone()); // c
     DensePolynomial { coeffs }
 }
 
-// computes f(ωx)
+/// computes f(ωx)
 pub fn poly_domain_mult_ω<F: PrimeField>(f: &DensePolynomial<F>, ω: &F) -> DensePolynomial<F> {
     let mut new_poly = f.clone();
     for i in 1..(f.degree() + 1) {
@@ -97,7 +97,7 @@ pub fn poly_domain_mult_ω<F: PrimeField>(f: &DensePolynomial<F>, ω: &F) -> Den
     new_poly
 }
 
-// computes c . f(x), for some constnt c
+/// computes polynomial c . f(x), for some constant c and input polynomial f(x)
 pub fn poly_eval_mult_c<F: PrimeField>(f: &DensePolynomial<F>, c: &F) -> DensePolynomial<F> {
     let mut new_poly = f.clone();
     for i in 0..(f.degree() + 1) {
@@ -106,26 +106,12 @@ pub fn poly_eval_mult_c<F: PrimeField>(f: &DensePolynomial<F>, c: &F) -> DensePo
     new_poly
 }
 
-// returns a generator of the multiplicative subgroup of input size n
-pub fn nth_root_of_unity<F: PrimeField>(n: usize) -> F {
-    assert_power_of_2!(n);
-
-    let domain = Radix2EvaluationDomain::<F>::new(n).unwrap();
-    domain.group_gen
+/// outputs a generator of the multiplicative subgroup of input size n
+pub fn nth_root_of_unity<F: PrimeField>(n: usize) -> Option<F> {
+    Radix2EvaluationDomain::<F>::new(n).map(|d| d.group_gen)
 }
 
-#[macro_export]
-macro_rules! assert_power_of_2 {
-    ($x:expr) => {
-        assert!($x > 0 && ($x & ($x - 1)) == 0, "{} is not a power of 2", $x);
-    };
-}
-
-#[macro_export]
-macro_rules! check_or_return_false {
-    ($cond:expr) => {
-        if !$cond {
-            return false;
-        }
-    };
+/// checks whether n is at least 2 and a power of 2
+pub fn is_n_valid(n: usize) -> bool {
+    n > 1 && (n & (n - 1)) == 0
 }
