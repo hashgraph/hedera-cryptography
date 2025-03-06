@@ -1081,7 +1081,7 @@ mod tests {
         // -------------- sample one-time SRS ---------------
         let init_crs = PowersOfTauProtocol::init(n);
         // WARN: supply a random seed, not a fixed one as shown here.
-        let (crs, proof) = PowersOfTauProtocol::contribute(&init_crs, [86u8; 32]);
+        let (crs, proof) = PowersOfTauProtocol::contribute(&init_crs, [86u8; 32]).unwrap();
         assert!(PowersOfTauProtocol::verify_contribution(
             &init_crs, &crs, &proof
         ));
