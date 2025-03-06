@@ -19,6 +19,7 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use jni::JNIEnv;
 use jni::objects::{JByteArray, JObject};
 use jni::sys::{jbyte, jbyteArray};
+use crate::errors::HinTSError;
 use crate::hints::{serialize, RANDOM_SIZE};
 
 /// Creates a jbyteArray out of a Vec<jbyte> object.
@@ -97,7 +98,10 @@ pub fn deserialize_jbyte_array<T: CanonicalDeserialize>(env: &JNIEnv, jarray: &J
 }
 
 /// Serializes an object into a jbyteArray.
-pub fn serialize_object<T: CanonicalSerialize>(env: &JNIEnv, obj: &T) -> jbyteArray {
-    let vec = serialize(obj);
-    u8_vec_to_jbyte_array(env, &vec)
+pub fn serialize_object<T: CanonicalSerialize>(env: &JNIEnv, obj: &T) -> Result<jbyteArray, HinTSError> {
+    let vec = match serialize(obj) {
+        Ok(val) => val,
+        Err(e) => return Err(e)
+    };
+    Ok(u8_vec_to_jbyte_array(env, &vec))
 }

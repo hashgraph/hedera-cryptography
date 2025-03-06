@@ -35,7 +35,10 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ini
     signers_num: jlong,
 ) -> jbyteArray {
     let crs = PowersOfTauProtocol::init(signers_num as usize);
-    jni_util::serialize_object(&env, &crs)
+    match jni_util::serialize_object(&env, &crs) {
+        Ok(val) => val,
+        Err(_) => std::ptr::null_mut()
+    }
 }
 
 /// JNI function to update a CRS object
@@ -63,10 +66,19 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_upd
         Err(_) => return std::ptr::null_mut()
     };
 
-    let (crs, contribution_proof) = PowersOfTauProtocol::contribute(&prev_crs, random_arr);
+    let (crs, contribution_proof) = match PowersOfTauProtocol::contribute(&prev_crs, random_arr) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
 
-    let serialized_crs = serialize(&crs);
-    let serialized_contribution_proof = serialize(&contribution_proof);
+    let serialized_crs = match serialize(&crs) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+    let serialized_contribution_proof = match serialize(&contribution_proof) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
 
     jni_util::two_u8_vec_to_jbyte_array(&env, &serialized_crs, &serialized_contribution_proof)
 }

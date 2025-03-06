@@ -174,7 +174,10 @@ fn check2(crs: &CRS) -> Result<bool, usize> {
     let n = crs.powers_of_g.len() - 1;
 
     let mut crs_bytes = Vec::new();
-    crs.serialize_uncompressed(&mut crs_bytes);
+    match crs.serialize_uncompressed(&mut crs_bytes) {
+        Ok(_) => (),
+        Err(_) => return Err(0)
+    };
 
     // use random oracle with domain separators
     let rho1 = F::from_le_bytes_mod_order(&compute_sha256(&[crs_bytes.as_slice(), &[1u8]]));

@@ -34,7 +34,10 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_gen
     };
 
     let secret_key = HinTS::keygen(random_arr);
-    jni_util::serialize_object(&env, &secret_key)
+    match jni_util::serialize_object(&env, &secret_key) {
+        Ok(val) => val,
+        Err(_) => std::ptr::null_mut()
+    }
 }
 
 /// JNI for HintsLibraryBridge.computeHints
@@ -57,8 +60,14 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_com
         Err(_) => return std::ptr::null_mut()
     };
 
-    let hint = HinTS::hint_gen(&crs, n as usize, party_id as usize, &secret_key);
-    jni_util::serialize_object(&env, &hint)
+    let hint = match HinTS::hint_gen(&crs, n as usize, party_id as usize, &secret_key) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+    match jni_util::serialize_object(&env, &hint) {
+        Ok(val) => val,
+        Err(_) => std::ptr::null_mut()
+    }
 }
 
 /// JNI for HintsLibraryBridge.validateHintsKey
@@ -81,7 +90,10 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_val
         Err(_) => return jboolean::from(false)
     };
 
-    jboolean::from(HinTS::verify_hint(&crs, n as usize, party_id as usize, &hints))
+    jboolean::from(match HinTS::verify_hint(&crs, n as usize, party_id as usize, &hints) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    })
 }
 
 /// JNI for HintsLibraryBridge.preprocess
@@ -140,10 +152,19 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBri
     // finished building the map
     // ------------------------------------------------------------------------
 
-    let (vk, ak) = HinTS::preprocess(n as usize, &crs, &signer_info);
+    let (vk, ak) = match HinTS::preprocess(n as usize, &crs, &signer_info) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
 
-    let serialized_vk = jni_util::serialize_object(&env, &vk);
-    let serialized_ak = jni_util::serialize_object(&env, &ak);
+    let serialized_vk = match jni_util::serialize_object(&env, &vk) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+    let serialized_ak = match jni_util::serialize_object(&env, &ak) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
 
     let keys_clz = match env.find_class("com/hedera/cryptography/hints/AggregationAndVerificationKeys") {
         Ok(val) => val,
@@ -175,8 +196,14 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_sig
         Err(_) => return std::ptr::null_mut()
     };
 
-    let signature = HinTS::sign(&message, &secret_key);
-    jni_util::serialize_object(&env, &signature)
+    let signature = match HinTS::sign(&message, &secret_key) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+    match jni_util::serialize_object(&env, &signature) {
+        Ok(val) => val,
+        Err(_) => std::ptr::null_mut()
+    }
 }
 
 /// JNI for HintsLibraryBridge.verifyBls
@@ -210,7 +237,10 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
         Err(_) => return jboolean::from(false)
     };
 
-    jboolean::from(HinTS::partial_verify(&crs, &message, &aggregation_key, party_id as usize, &signature))
+    jboolean::from(match HinTS::partial_verify(&crs, &message, &aggregation_key, party_id as usize, &signature) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    })
 }
 
 /// JNI for HintsLibraryBridge.aggregateSignatures
@@ -273,8 +303,14 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_agg
     // finished building the map
     // ------------------------------------------------------------------------
 
-    let threshold_signature = HinTS::aggregate(&crs, &aggregation_key, &verification_key, &partial_signatures);
-    jni_util::serialize_object(&env, &threshold_signature)
+    let threshold_signature = match HinTS::aggregate(&crs, &aggregation_key, &verification_key, &partial_signatures) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+    match jni_util::serialize_object(&env, &threshold_signature) {
+        Ok(val) => val,
+        Err(_) => std::ptr::null_mut()
+    }
 }
 
 /// JNI for HintsLibraryBridge.verifyAggregate
@@ -282,18 +318,12 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_agg
 pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_verifyAggregateImpl(
     env: JNIEnv,
     _instance: JObject,
-    crs_jarray: JByteArray,
     signature_jarray: JByteArray,
     message_jarray: JByteArray,
     verification_key_jarray: JByteArray,
     threshold_numerator: jlong,
     threshold_denominator: jlong,
 ) -> jboolean {
-    let crs: CRS = match jni_util::deserialize_jbyte_array(&env, &crs_jarray) {
-        Ok(val) => val,
-        Err(_) => return jboolean::from(false)
-    };
-
     let signature: ThresholdSignature = match jni_util::deserialize_jbyte_array(&env, &signature_jarray) {
         Ok(val) => val,
         Err(_) => return jboolean::from(false)
@@ -309,5 +339,8 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
         Err(_) => return jboolean::from(false)
     };
 
-    jboolean::from(HinTS::verify(&crs, &message, &verification_key, &signature, (F::from(threshold_numerator), F::from(threshold_denominator))))
+    jboolean::from(match HinTS::verify(&message, &verification_key, &signature, (F::from(threshold_numerator), F::from(threshold_denominator))) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    })
 }

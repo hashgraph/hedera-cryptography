@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.hedera.cryptography.hints;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -15,6 +15,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 public class HintsLibraryBridgeTest {
     private static final HintsLibraryBridge INSTANCE = HintsLibraryBridge.getInstance();
     private static final byte[] EMPTY = new byte[0];
+
+    // A helper assertion that also prints entire arrays in addition to the default first mismatching index only
+    private void assertArrayEquals(byte[] expected, byte[] actual) {
+        Assertions.assertArrayEquals(
+                expected,
+                actual,
+                () -> "Expected:\n" + Arrays.toString(expected) + "\nbut got:\n" + Arrays.toString(actual) + "\n");
+    }
 
     @Test
     void testGenerateSecretKey() {
@@ -479,7 +487,7 @@ public class HintsLibraryBridgeTest {
                 });
         assertArrayEquals(HintsConstants.AGGREGATE_SIGNATURE_2, result);
 
-        assertTrue(INSTANCE.verifyAggregate(crs, result, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        assertTrue(INSTANCE.verifyAggregate(result, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
     }
 
     @Test
@@ -515,7 +523,7 @@ public class HintsLibraryBridgeTest {
                 });
         assertArrayEquals(HintsConstants.AGGREGATE_SIGNATURE_3, result);
 
-        assertFalse(INSTANCE.verifyAggregate(crs, result, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(result, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
     }
 
     @Test
@@ -541,56 +549,39 @@ public class HintsLibraryBridgeTest {
                     signature2, signature0
                 });
 
-        assertFalse(INSTANCE.verifyAggregate(
-                null, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
-        assertFalse(INSTANCE.verifyAggregate(
-                EMPTY, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
-        assertFalse(INSTANCE.verifyAggregate(crs, null, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
-        assertFalse(INSTANCE.verifyAggregate(crs, EMPTY, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
-        assertFalse(INSTANCE.verifyAggregate(crs, aggregateSignature, null, keys.verificationKey(), 1, 3));
-        assertFalse(INSTANCE.verifyAggregate(crs, aggregateSignature, EMPTY, keys.verificationKey(), 1, 3));
-        assertFalse(INSTANCE.verifyAggregate(crs, aggregateSignature, HintsConstants.RANDOM_2, null, 1, 3));
-        assertFalse(INSTANCE.verifyAggregate(crs, aggregateSignature, HintsConstants.RANDOM_2, EMPTY, 1, 3));
-        assertFalse(INSTANCE.verifyAggregate(
-                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 0, 3));
-        assertFalse(INSTANCE.verifyAggregate(
-                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), -1, 3));
-        assertFalse(INSTANCE.verifyAggregate(
-                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 0));
-        assertFalse(INSTANCE.verifyAggregate(
-                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, -3));
-
-        // corrupt the CRS
-        crs[27]++;
-        crs[172]--;
-        crs[387]++;
-        assertFalse(INSTANCE.verifyAggregate(
-                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
-        // uncorrupt the CRS...
-        crs[27]--;
-        crs[172]++;
-        crs[387]--;
+        assertFalse(INSTANCE.verifyAggregate(null, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(EMPTY, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(aggregateSignature, null, keys.verificationKey(), 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(aggregateSignature, EMPTY, keys.verificationKey(), 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(aggregateSignature, HintsConstants.RANDOM_2, null, 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(aggregateSignature, HintsConstants.RANDOM_2, EMPTY, 1, 3));
+        assertFalse(
+                INSTANCE.verifyAggregate(aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 0, 3));
+        assertFalse(
+                INSTANCE.verifyAggregate(aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), -1, 3));
+        assertFalse(
+                INSTANCE.verifyAggregate(aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 0));
+        assertFalse(
+                INSTANCE.verifyAggregate(aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, -3));
 
         // corrupt the aggregate aggregateSignature
         aggregateSignature[17]++;
-        assertFalse(INSTANCE.verifyAggregate(
-                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        assertFalse(
+                INSTANCE.verifyAggregate(aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
         // undo
         aggregateSignature[17]--;
 
         // corrupt the message, or rather, just supply an incorrect one
-        assertFalse(
-                INSTANCE.verifyAggregate(crs, aggregateSignature, new byte[] {1, 2, 3}, keys.verificationKey(), 1, 3));
+        assertFalse(INSTANCE.verifyAggregate(aggregateSignature, new byte[] {1, 2, 3}, keys.verificationKey(), 1, 3));
 
         // corrupt the verificationKey
         keys.verificationKey()[17]--;
-        assertFalse(INSTANCE.verifyAggregate(
-                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        assertFalse(
+                INSTANCE.verifyAggregate(aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
         // undo
         keys.verificationKey()[17]++;
 
         // and run a sanity check
-        assertTrue(INSTANCE.verifyAggregate(
-                crs, aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        assertTrue(INSTANCE.verifyAggregate(aggregateSignature, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
     }
 }
