@@ -50,8 +50,10 @@ public class HintsLibraryBridgeTest {
         assertNull(INSTANCE.computeHints(crs, secretKey, 2, 3));
         assertNull(INSTANCE.computeHints(crs, secretKey, 2, 5));
 
-        // n must match the CRS size
+        // n must match the CRS size...
         assertNull(INSTANCE.computeHints(crs, secretKey, 2, 8));
+        // ...or be smaller than the CRS size, but should still be a positive power of two
+        assertNotNull(INSTANCE.computeHints(crs, secretKey, 0, 2));
 
         // 0 <= partyId < n
         assertNull(INSTANCE.computeHints(crs, secretKey, -1, 4));
