@@ -19,8 +19,8 @@ on:
         type: string
         required: false
         default: "21.0.4"
-      ref:
-        description: "Github ref (branch or named tag) to release from:"
+      branch:
+        description: "Github branch (should always be main unless testing workflow changes) to release from:"
         type: string
         required: false
         default: "main"
@@ -54,7 +54,7 @@ jobs:
         with:
           token: ${{ secrets.GH_ACCESS_TOKEN }}
           fetch-depth: 0
-          ref: ${{ inputs.ref }}
+          ref: ${{ inputs.branch }}
 
       - name: Setup Java
         if: ${{ inputs.dry-run-enabled != true && !cancelled() && !failure() }}
