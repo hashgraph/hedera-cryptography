@@ -271,7 +271,6 @@ public class HintsLibraryBridge {
      * this is only true if the aggregate signature has weight exceeding the specified threshold
      * or total weight stipulated in the verification key.
      *
-     * @param crs the CRS object
      * @param signature the aggregate signature
      * @param message the message
      * @param verificationKey the verification key
@@ -280,15 +279,12 @@ public class HintsLibraryBridge {
      * @return true if the signature is valid; false otherwise
      */
     public boolean verifyAggregate(
-            final byte[] crs,
             final byte[] signature,
             final byte[] message,
             final byte[] verificationKey,
             long thresholdNumerator,
             long thresholdDenominator) {
-        if (crs == null
-                || crs.length == 0
-                || signature == null
+        if (signature == null
                 || signature.length == 0
                 || message == null
                 || message.length == 0
@@ -298,11 +294,10 @@ public class HintsLibraryBridge {
                 || thresholdDenominator <= 0L) {
             return false;
         }
-        return verifyAggregateImpl(crs, signature, message, verificationKey, thresholdNumerator, thresholdDenominator);
+        return verifyAggregateImpl(signature, message, verificationKey, thresholdNumerator, thresholdDenominator);
     }
 
     private native boolean verifyAggregateImpl(
-            final byte[] crs,
             final byte[] signature,
             final byte[] message,
             final byte[] verificationKey,
