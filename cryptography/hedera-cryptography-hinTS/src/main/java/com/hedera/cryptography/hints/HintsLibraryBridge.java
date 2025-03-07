@@ -304,9 +304,10 @@ public class HintsLibraryBridge {
             long thresholdNumerator,
             long thresholdDenominator);
 
-    // Returns true if the n is a positive power of two, and the crs isn't null and its length matches the n.
+    // Returns true if the n is a positive power of two, and the crs isn't null and its length matches or is greater
+    // than the n.
     private static boolean validateCRS(final byte[] crs, final int n) {
-        return n > 0 && (n & (n - 1)) == 0 && crs != null && crs.length == (304 + n * 288);
+        return n > 0 && (n & (n - 1)) == 0 && crs != null && crs.length >= (304 + n * 288);
     }
 
     private static int inferNFromCRSLength(final byte[] crs) {
