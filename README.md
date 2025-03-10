@@ -9,12 +9,8 @@
 This section is a work in progress.
 
 The repository includes the following projects:
-* **cryptography/hedera-cryptography-pairings-api**: API that defines the generic set of primitives to work with Elliptic Curves and pairing-based cryptography.
-* **cryptography/hedera-cryptography-albn128**: Implementation of _hedera-cryptography-pairings-api_ using the BN254 (also known as alt-BN128) Elliptic Curve.
-* **cryptography/hedera-cryptography-bls**: Library that allows the creation of BLS keys and signatures. It works under using a runtime implementation of pairings api.
-* **cryptography/hedera-cryptography-tss**: Library implementing the primitives for operating with a threshold-signature-scheme. The [Groth21](https://eprint.iacr.org/2021/339) algorithm was chosen because it is efficient for use in smart
-contract verification, and we can assign a multiplicity of shares to nodes to get close enough in modeling the
-distribution of weight between nodes. It is based off of prototypes developed by [Rohit Sinha](https://github.com/rsinha),
+* **cryptography/hedera-cryptography-hinTS**: HinTS API that allows participants to calculate their hints, generate keys, and produce and verify aggregate signatures.
+* **cryptography/hedera-cryptography-rpm**: History API, aka RAPS or WRAPS, that allows participants to generate and verify recursive proofs for AddressBooks.
 * **common/hedera-common-nativesupport**: A Helper library providing support for working with jni and external libraries.
 
 For the proposal that originated the work in this repository see:

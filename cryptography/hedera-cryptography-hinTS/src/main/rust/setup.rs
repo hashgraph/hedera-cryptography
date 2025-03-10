@@ -16,14 +16,14 @@
 /// module responsible for generating the CRS
 /// implements the algorithm in https://eprint.iacr.org/2022/1592.pdf
 use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup, VariableBaseMSM};
-use ark_ff::{Field, PrimeField};
+use ark_ff::{field_hashers::{DefaultFieldHasher, HashToField}, Field, PrimeField};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{ops::*, UniformRand};
 use rand::Rng;
 use rand_chacha::rand_core::SeedableRng;
 use sha2::*;
 
-use crate::check_or_return_false;
+use crate::errors::HinTSError;
 use crate::hints::{Curve, G1AffinePoint, G2AffinePoint, CRS, F};
 use crate::kzg;
 
@@ -51,7 +51,7 @@ impl PowersOfTauProtocol {
     /// contributes to the CRS ceremony by adding key material to the existing CRS;
     /// the participant's material is derived from a random scalar r.
     /// returns the updated CRS and the proof of validity of the contribution.
-    pub fn contribute(crs: &CRS, seed: [u8; 32]) -> (CRS, ContributionProof) {
+    pub fn contribute(crs: &CRS, seed: [u8; 32]) -> Result<(CRS, ContributionProof), HinTSError> {
         let mut rng = rand_chacha::ChaCha8Rng::from_seed(seed);
         let r = F::rand(&mut rng);
 
@@ -85,22 +85,28 @@ impl PowersOfTauProtocol {
             &next_crs.powers_of_g[1],
             &r,
             &mut rng,
-        );
+        )?;
 
-        (next_crs, proof)
+        Ok((next_crs, proof))
     }
 
     /// verifies that the update to the CRS is valid using the proof of contribution
     pub fn verify_contribution(prev_crs: &CRS, next_crs: &CRS, proof: &ContributionProof) -> bool {
-        check_or_return_false!(check1(
-            &prev_crs.powers_of_g[1],
-            &next_crs.powers_of_g[1],
-            proof
-        ));
-        check_or_return_false!(check2(next_crs));
-        check_or_return_false!(check3(next_crs));
+        let c1 = {
+            match check1(&prev_crs.powers_of_g[1], &next_crs.powers_of_g[1], proof) {
+                Ok(c1) => c1,
+                Err(_) => false
+            }
+        };
+        let c2 = {
+            match check2(next_crs) {
+                Ok(c2) => c2,
+                Err(_) => false
+            }
+        };
+        let c3 = check3(next_crs);
 
-        true
+        c1 && c2 && c3
     }
 }
 
@@ -110,24 +116,24 @@ fn schnorr_nizk<R: Rng>(
     next_p1: &G1AffinePoint,
     r: &F,
     rng: &mut R,
-) -> ContributionProof {
+) -> Result<ContributionProof, HinTSError> {
     let z = F::rand(rng);
     let prev_p1_mul_z = prev_p1.mul(&z).into_affine();
-    let h = random_oracle(prev_p1, next_p1, &prev_p1_mul_z);
+    let h = random_oracle(prev_p1, next_p1, &prev_p1_mul_z)?;
     let z_plus_hr = z + h * r;
 
-    ContributionProof {
+    Ok(ContributionProof {
         p1_mul_z: prev_p1_mul_z,
         z_plus_hr,
-    }
+    })
 }
 
 /// verify the Schnorr proof of knowledge of discrete logarithm of next_p1 w.r.t. prev_p1
-fn check1(prev_p1: &G1AffinePoint, next_p1: &G1AffinePoint, proof: &ContributionProof) -> bool {
-    let h = random_oracle(prev_p1, next_p1, &proof.p1_mul_z);
+fn check1(prev_p1: &G1AffinePoint, next_p1: &G1AffinePoint, proof: &ContributionProof) -> Result<bool, HinTSError> {
+    let h = random_oracle(prev_p1, next_p1, &proof.p1_mul_z)?;
     let lhs = prev_p1.mul(&proof.z_plus_hr).into_affine();
     let rhs = proof.p1_mul_z.add(next_p1.mul(h)).into_affine();
-    lhs == rhs
+    Ok(lhs == rhs)
 }
 
 // random oracle used for the Fiat-Shamir transformation of Schnorr proof
@@ -135,23 +141,16 @@ fn random_oracle(
     prev_p1: &G1AffinePoint,
     next_p1: &G1AffinePoint,
     prev_p1_mul_z: &G1AffinePoint,
-) -> F {
-    let mut prev_p1_bytes = Vec::new();
-    prev_p1.serialize_uncompressed(&mut prev_p1_bytes).unwrap();
+) -> Result<F, HinTSError> {
+    let mut serialized_data = Vec::new();
+    prev_p1.serialize_compressed(&mut serialized_data)?;
+    next_p1.serialize_compressed(&mut serialized_data)?;
+    prev_p1_mul_z.serialize_compressed(&mut serialized_data)?;
 
-    let mut next_p1_bytes = Vec::new();
-    next_p1.serialize_uncompressed(&mut next_p1_bytes).unwrap();
+    let hasher = <DefaultFieldHasher<Sha256> as HashToField<F>>::new(&[]);
+    let field_elements = hasher.hash_to_field(&serialized_data, 1);
 
-    let mut prev_p1_mul_z_bytes = Vec::new();
-    prev_p1_mul_z
-        .serialize_uncompressed(&mut prev_p1_mul_z_bytes)
-        .unwrap();
-
-    F::from_le_bytes_mod_order(&compute_sha256(&[
-        next_p1_bytes.as_slice(),
-        prev_p1_bytes.as_slice(),
-        prev_p1_mul_z_bytes.as_slice(),
-    ]))
+    Ok(field_elements[0])
 }
 
 // checks well-formedness using pairing equations
@@ -171,11 +170,14 @@ fn _check2_unoptimized(crs: &CRS) -> bool {
 }
 
 // eqn 4.3 in https://eprint.iacr.org/2022/1592.pdf
-fn check2(crs: &CRS) -> bool {
+fn check2(crs: &CRS) -> Result<bool, usize> {
     let n = crs.powers_of_g.len() - 1;
 
     let mut crs_bytes = Vec::new();
-    crs.serialize_uncompressed(&mut crs_bytes).unwrap();
+    match crs.serialize_uncompressed(&mut crs_bytes) {
+        Ok(_) => (),
+        Err(_) => return Err(0)
+    };
 
     // use random oracle with domain separators
     let rho1 = F::from_le_bytes_mod_order(&compute_sha256(&[crs_bytes.as_slice(), &[1u8]]));
@@ -192,18 +194,14 @@ fn check2(crs: &CRS) -> bool {
         &(0..=n - 1)
             .map(|i| rho1.pow(&[i as u64]))
             .collect::<Vec<F>>(),
-    )
-    .unwrap()
-    .into_affine();
+    )?.into_affine();
 
     let lhs_rhs = <<Curve as Pairing>::G2 as VariableBaseMSM>::msm(
         &crs.powers_of_h[1..=n - 1],
         &(1..=n - 1)
             .map(|i| rho2.pow(&[i as u64]))
             .collect::<Vec<F>>(),
-    )
-    .unwrap()
-    .add(crs.powers_of_h[0])
+    )?.add(crs.powers_of_h[0])
     .into_affine();
 
     let rhs_lhs = <<Curve as Pairing>::G1 as VariableBaseMSM>::msm(
@@ -211,9 +209,7 @@ fn check2(crs: &CRS) -> bool {
         &(1..=n - 1)
             .map(|i| rho1.pow(&[i as u64]))
             .collect::<Vec<F>>(),
-    )
-    .unwrap()
-    .add(crs.powers_of_g[0])
+    )?.add(crs.powers_of_g[0])
     .into_affine();
 
     let rhs_rhs = <<Curve as Pairing>::G2 as VariableBaseMSM>::msm(
@@ -221,14 +217,12 @@ fn check2(crs: &CRS) -> bool {
         &(0..=n - 1)
             .map(|i| rho2.pow(&[i as u64]))
             .collect::<Vec<F>>(),
-    )
-    .unwrap()
-    .into_affine();
+    )?.into_affine();
 
     let lhs = <Curve as Pairing>::pairing(lhs_lhs, lhs_rhs);
     let rhs = <Curve as Pairing>::pairing(rhs_lhs, rhs_rhs);
 
-    lhs == rhs
+    Ok(lhs == rhs)
 }
 
 // eqn 4.4 in https://eprint.iacr.org/2022/1592.pdf
@@ -260,17 +254,19 @@ mod tests {
         let crs = Prot::init(degree);
 
         // WARN: don't use a fixed seed in production
-        let (next_crs, proof) = Prot::contribute(&crs, [0u8; 32]);
+        let (next_crs, proof) = Prot::contribute(&crs, [0u8; 32]).unwrap();
         assert!(Prot::verify_contribution(&crs, &next_crs, &proof));
 
         // WARN: don't use a fixed seed in production
-        let (next_next_crs, proof) = Prot::contribute(&next_crs, [1u8; 32]);
+        let (next_next_crs, proof) = Prot::contribute(&next_crs, [1u8; 32]).unwrap();
         assert!(Prot::verify_contribution(&next_crs, &next_next_crs, &proof));
 
         // serialization test
         assert_eq!(
             next_next_crs,
-            crate::hints::deserialize::<CRS>(&crate::hints::serialize(&next_next_crs))
+            CRS::deserialize_uncompressed(
+                crate::hints::serialize(&next_next_crs).unwrap().as_slice()
+            ).unwrap()
         );
     }
 }

@@ -14,13 +14,12 @@
 // limitations under the License.
 //
 
-use std::any::Any;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ab_rotation_lib::ed25519::{VerifyingKey, ENTROPY_SIZE, PUBLIC_KEY_LENGTH};
 use jni::JNIEnv;
-use jni::objects::{JByteArray, JObject};
-use jni::sys::{jbyte, jbyteArray};
-use crate::errors::HinTSError;
-use crate::hints::{serialize, RANDOM_SIZE};
+use jni::objects::{JByteArray, JLongArray, JObject, JObjectArray};
+use jni::sys::{jbyte, jbyteArray, jlong, jsize};
+
+const RANDOM_SIZE: usize = ENTROPY_SIZE;
 
 /// Creates a jbyteArray out of a Vec<jbyte> object.
 /// # Arguments
@@ -53,19 +52,6 @@ pub fn u8_vec_to_jbyte_array(env: &JNIEnv, vec: &Vec<u8>) -> jbyteArray {
     jbyte_vec_to_jbyte_array(env, &jbyte_vec)
 }
 
-/// Creates a jbyteArray out of a pair of Vec<u8> objects.
-/// # Arguments
-/// * `env` - The JNI environment.
-/// * `vec1` the input vector 1
-/// * `vec2` the input vector 2
-/// # Returns
-/// *   a byte array with all the vectors written one after another, or null on error
-pub fn two_u8_vec_to_jbyte_array(env: &JNIEnv, vec1: &Vec<u8>, vec2: &Vec<u8>) -> jbyteArray {
-    let jbyte_vec = vec1.iter().chain(vec2.iter()).map(|&x| x as jbyte).collect();
-    jbyte_vec_to_jbyte_array(env, &jbyte_vec)
-}
-
-
 /// Creates a `[u8; RANDOM_SIZE]` array out of a given Java byte array,
 /// which must be of size RANDOM_SIZE (currently 32).
 /// # Arguments
@@ -85,23 +71,49 @@ pub fn build_entropy_array(env: &JNIEnv, random_array: &JByteArray) -> Result<[u
     Ok(random_arr)
 }
 
-/// Deserializes a JByteArray into an object, or returns Err.
-pub fn deserialize_jbyte_array<T: CanonicalDeserialize>(env: &JNIEnv, jarray: &JByteArray) -> Result<T, Box<dyn Any>> {
-    let vec = match env.convert_byte_array(&jarray) {
-        Ok(val) => val,
-        Err(err) => return Err(Box::new(err))
+/// Builds a pair of verifying keys and weights arrays as consumed by the RAPS library
+/// to model the address book.
+pub fn build_address_book_arrays(
+    env: &mut JNIEnv,
+    verifying_keys_jarray: JObjectArray,
+    weights_jarray: JLongArray,
+) -> Result<(Vec<VerifyingKey>, Vec<u64>), ()> {
+    let num_of_keys = match env.get_array_length(&verifying_keys_jarray) {
+        Ok(len) => len,
+        Err(_) => return Result::Err(())
     };
-    match T::deserialize_uncompressed(&*vec) {
-        Ok(val) => Ok(val),
-        Err(err) => Err(Box::new(err))
+
+    let mut verifying_keys_array:Vec<VerifyingKey> = Vec::with_capacity(num_of_keys as usize);
+    for i in 0..num_of_keys as usize {
+        let jobj = match env.get_object_array_element(&verifying_keys_jarray, i as jsize) {
+            Ok(val) => val,
+            Err(_) => return Result::Err(())
+        };
+
+        let key_vec = match env.convert_byte_array(&JByteArray::from(jobj)) {
+            Ok(val) => val,
+            Err(_) => return Result::Err(())
+        };
+        let key_arr: [u8; PUBLIC_KEY_LENGTH] = match key_vec.as_slice().try_into() {
+            Ok(val) => val,
+            Err(_) => return Result::Err(())
+        };
+        let key = match VerifyingKey::from_bytes(&key_arr) {
+            Ok(val) => val,
+            Err(_) => return Result::Err(())
+        };
+
+        verifying_keys_array.push(key);
     }
+
+    let mut weights_jlong :Vec<jlong> = vec![0; num_of_keys as usize];
+    match env.get_long_array_region(weights_jarray, 0, weights_jlong.as_mut_slice()) {
+        Ok(()) => {},
+        Err(_) => return Result::Err(())
+    };
+
+    let weights :Vec<u64> = weights_jlong.iter().map(|x| *x as u64).collect();
+
+    Result::Ok((verifying_keys_array, weights))
 }
 
-/// Serializes an object into a jbyteArray.
-pub fn serialize_object<T: CanonicalSerialize>(env: &JNIEnv, obj: &T) -> Result<jbyteArray, HinTSError> {
-    let vec = match serialize(obj) {
-        Ok(val) => val,
-        Err(e) => return Err(e)
-    };
-    Ok(u8_vec_to_jbyte_array(env, &vec))
-}

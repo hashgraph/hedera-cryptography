@@ -29,6 +29,7 @@ env:
   LC_ALL: C.UTF-8
   GRADLE_CACHE_USERNAME: ${{ secrets.GRADLE_CACHE_USERNAME }}
   GRADLE_CACHE_PASSWORD: ${{ secrets.GRADLE_CACHE_PASSWORD }}
+  CG_EXEC: ionice -c 2 -n 2 nice -n 19
 
 jobs:
   build_rust_macos:
@@ -37,7 +38,7 @@ jobs:
     runs-on: macos-14
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
           egress-policy: audit
 
@@ -63,7 +64,7 @@ jobs:
     runs-on: network-node-linux-medium
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
           egress-policy: audit
 
@@ -100,10 +101,10 @@ jobs:
   build:
     name: Build TSS Crypto Library
     needs: [build_rust_macos, build_rust_linux_windows]
-    runs-on: network-node-linux-medium
+    runs-on: network-node-linux-large
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
           egress-policy: audit
 
@@ -130,7 +131,7 @@ jobs:
         run: ./gradlew -PskipInstallRustToolchains=true qualityCheck --continue
 
       - name: Gradle Unit Test
-        run: ./gradlew -PskipInstallRustToolchains=true test :aggregation:testCodeCoverageReport --continue
+        run: ${CG_EXEC} ./gradlew -PskipInstallRustToolchains=true test :aggregation:testCodeCoverageReport --continue
 
       - name: Publish Unit Test Results
         uses: step-security/publish-unit-test-result-action@cc82caac074385ae176d39d2d143ad05e1130b2d # v2.18.0
@@ -142,11 +143,12 @@ jobs:
     needs: build
     strategy:
       matrix:
-        os: [windows-2022, macos-13, macos-14]
+        # removed windows from test as the windows build does not complete due to size of runner (2c/7gb RAM)
+        os: [macos-13, macos-14]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
           egress-policy: audit
 

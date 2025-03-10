@@ -6,11 +6,11 @@ plugins {
     id("org.hiero.gradle.check.spotless-kotlin")
 }
 
-val junit5 = "5.11.4"
+val junit5 = "5.12.0"
 val mockito = "5.15.2"
 
 dependencies.constraints {
-    api("com.github.spotbugs:spotbugs-annotations:4.9.1") {
+    api("com.github.spotbugs:spotbugs-annotations:4.9.2") {
         because("com.github.spotbugs.annotations")
     }
     api("com.google.code.gson:gson:2.12.1") { because("com.google.gson") }
