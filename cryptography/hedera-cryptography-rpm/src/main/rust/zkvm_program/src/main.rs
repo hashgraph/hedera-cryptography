@@ -13,7 +13,6 @@ use ab_rotation_lib::{
     sha256::digest_sha256,
     statement::Statement,
     PublicValuesStruct,
-    errors::RAPSError,
 };
 use alloy_sol_types::SolValue;
 
