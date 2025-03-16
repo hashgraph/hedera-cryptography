@@ -13,6 +13,7 @@ use ab_rotation_lib::{
     sha256::digest_sha256,
     statement::Statement,
     PublicValuesStruct,
+    errors::RAPSError,
 };
 use alloy_sol_types::SolValue;
 
@@ -40,7 +41,9 @@ pub fn main() {
 
     // Get the SHA256 of the current AB (using the provided ECALL)
     println!("cycle-tracker-start: digesting current ab");
-    let ab_curr_hash: [u8; 32] = serialize_and_digest_sha256(&statement.ab_curr);
+    // NOTE: unwrap() should be safe because we always construct AddressBook instances
+    // and serialize them on the host prior to invoking the zkVM on the same AddressBook
+    let ab_curr_hash: [u8; 32] = serialize_and_digest_sha256(&statement.ab_curr).unwrap();
     println!("cycle-tracker-end: digesting current ab");
 
     // Get the SHA256 of the next AB

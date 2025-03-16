@@ -7,6 +7,7 @@ pub mod address_book;
 pub mod ed25519;
 pub mod sha256;
 pub mod statement;
+pub mod errors;
 
 sol! {
     /// The public values encoded as a struct that can be easily deserialized inside Solidity.
