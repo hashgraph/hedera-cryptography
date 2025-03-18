@@ -253,7 +253,7 @@ jobs:
       # Publishes the artifacts to the Maven Central Nexus staging repository.
       # Set publishTestRelease=true for snapshot releases (push to main), and omit for official releases (workflow_dispatch)
       - name: Gradle Publish to Maven Central - common
-        if: ${{ !cancelled() && !failure() }}
+        if: ${{ github.event.inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
@@ -265,7 +265,7 @@ jobs:
           fi
 
       - name: Gradle Publish to Maven Central - cryptography
-        if: ${{ !cancelled() && !failure() }}
+        if: ${{ github.event.inputs.dry-run-enabled != 'true' && !cancelled() && !failure() }}
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
