@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: "Github branch (should always be main unless testing workflow changes) to release from:"
+        description: "Github branch to release from (should always be main unless testing workflow changes):"
         type: string
         required: false
         default: "main"
