@@ -38,10 +38,7 @@ defaults:
     shell: bash
 
 permissions:
-  contents: write
-  packages: write
-  pages: write
-  id-token: write
+  contents: read
 
 env:
   REGISTRY: ghcr.io
@@ -50,55 +47,6 @@ env:
   GRADLE_CACHE_PASSWORD: ${{ secrets.GRADLE_CACHE_PASSWORD }}
 
 jobs:
-  # prepare-release:
-  #   name: Release / Prepare
-  #   runs-on: network-node-linux-medium
-  #   outputs:
-  #     version: ${{ steps.tag.outputs.version }}
-  #   steps:
-  #     - name: Harden Runner
-  #       uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
-  #       with:
-  #         egress-policy: audit
-
-  #     - name: Checkout Code
-  #       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-  #       with:
-  #         token: ${{ secrets.GH_ACCESS_TOKEN }}
-  #         fetch-depth: 0
-  #         ref: ${{ github.event.inputs.branch }}
-
-  #     - name: Setup Node
-  #       uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
-  #       with:
-  #         node-version: 20.18.0
-
-  #     - name: Install Semantic Release
-  #       run: |
-  #         npm install -g semantic-release@21.0.7 @semantic-release/git@10.0.1 @semantic-release/exec@6.0.3 gradle-semantic-release-plugin@1.7.6
-  #         npm install -g conventional-changelog-conventionalcommits@6.1.0 @commitlint/cli@17.6.6 @commitlint/config-conventional@17.6.6
-  #         npm install -g marked-mangle@1.0.1 marked-gfm-heading-id@3.0.4 semantic-release-conventional-commits@3.0.0
-
-  #     - name: Calculate Next Version
-  #       env:
-  #         NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         GIT_AUTHOR_NAME: ${{ secrets.GIT_USER_NAME }}
-  #         GIT_AUTHOR_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
-  #         GIT_COMMITTER_NAME: ${{ secrets.GIT_USER_NAME }}
-  #         GIT_COMMITTER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
-  #       run: |
-  #         npx semantic-release --dry-run
-  #         ls -al
-  #         cat VERSION
-
-  #     - name: Extract Version
-  #       id: tag
-  #       run: |
-  #         cat VERSION
-  #         [[ "${{ github.event.inputs.dry-run-enabled }}" == true && ! -f VERSION ]] && echo -n "0.0.0-latest" > VERSION
-  #         echo "version=$(cat VERSION | tr -d '[:space:]')" | tee -a ${GITHUB_OUTPUT}
-
   create-github-release:
     name: Github / Release
     runs-on: network-node-linux-medium
@@ -138,17 +86,6 @@ jobs:
           git_user_signingkey: true
           git_commit_gpgsign: true
           git_tag_gpgsign: false
-
-      - name: Setup Java
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
-        with:
-          distribution: ${{ inputs.java-distribution || 'temurin' }}
-          java-version: ${{ inputs.java-version || '21.0.4' }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
-        with:
-          gradle-version: wrapper
 
       - name: Setup Node
         uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
