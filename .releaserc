@@ -10,12 +10,6 @@
     "@semantic-release/git",
     "@semantic-release/github"
   ],
-  "verifyRelease": [
-    [
-      "@semantic-release/exec",
-      { "cmd": "echo ${nextRelease.version} > VERSION" }
-    ]
-  ],
   "prepare": [
     [
       "@semantic-release/exec",
@@ -25,7 +19,7 @@
       "@semantic-release/git",
       {
         "assets": [
-          "gradle.properties"
+          "version.txt"
         ]
       }
     ]
@@ -58,6 +52,9 @@
       "name": "rc/*",
       "prerelease": "rc",
       "channel": "rc"
+    },
+    {
+      "name": "193-semantic-release-rework"
     }
   ]
 }
