@@ -202,7 +202,12 @@ pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_has
     };
 
     let ab = AddressBook::new(verifying_keys_array, weights);
-    let hash = ab_rotation_lib::address_book::serialize_and_digest_sha256(&ab);
+    let hash_option = ab_rotation_lib::address_book::serialize_and_digest_sha256(&ab);
+
+    let hash = match hash_option {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
 
     jni_util::u8_vec_to_jbyte_array(&env, &hash.to_vec())
 }
@@ -342,8 +347,8 @@ pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_pro
         &signatures,
     );
     let next_proof = match next_proof_option {
-        Some(val) => val,
-        None => return std::ptr::null_mut()
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
     };
 
     let mut proof_buf: Vec<u8> = Vec::new();

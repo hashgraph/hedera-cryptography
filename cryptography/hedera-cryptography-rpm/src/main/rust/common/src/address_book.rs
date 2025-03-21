@@ -4,6 +4,7 @@ use serde_big_array::Array;
 use smallvec::SmallVec;
 
 use crate::ed25519;
+use crate::errors::*;
 use crate::sha256;
 use crate::sha256::HASH_LENGTH;
 
@@ -92,10 +93,7 @@ pub fn calculate_signers_weight(ab: &AddressBook, signatures: &Signatures, messa
     })
 }
 
-pub fn serialize_and_digest_sha256(data: &impl serde::Serialize) -> [u8; HASH_LENGTH] {
-    // NOTE: uses the same `bincode` as the `sp1_zkvm::io::read` and family
-    // unwrap() should be safe because we always construct AddressBook instances
-    // using jni_util::build_address_book_arrays which handles errors.
-    let data_bytes = bincode::serialize(data).unwrap();
-    sha256::digest_sha256(data_bytes)
+pub fn serialize_and_digest_sha256(data: &impl serde::Serialize) -> Result<[u8; HASH_LENGTH], RAPSError> {
+    let data_bytes = bincode::serialize(data)?;
+    Ok(sha256::digest_sha256(data_bytes))
 }
