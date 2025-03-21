@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 use derive_more::derive::Deref;
 use serde::{Deserialize, Serialize};
 use serde_big_array::Array;

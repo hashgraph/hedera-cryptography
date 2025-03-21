@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::{address_book::AddressBook, address_book::Signatures};
 use serde::{Deserialize, Serialize};
 use crate::sha256::HASH_LENGTH;

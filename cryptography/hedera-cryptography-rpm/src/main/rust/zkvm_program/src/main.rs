@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 // These two lines are necessary for the program to properly compile.
 //
 // Under the hood, we wrap your main function with some extra code so that it behaves properly
