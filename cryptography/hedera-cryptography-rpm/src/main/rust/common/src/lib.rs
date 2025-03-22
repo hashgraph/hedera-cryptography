@@ -1,4 +1,5 @@
-// TODO: better error types
+// SPDX-License-Identifier: Apache-2.0
+
 #![allow(clippy::result_unit_err)]
 
 use alloy_sol_types::sol;

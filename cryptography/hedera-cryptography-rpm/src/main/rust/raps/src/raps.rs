@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 use ab_rotation_lib::{
     address_book::{AddressBook, Signatures},
     ed25519::{Signature, SigningKey, VerifyingKey, ENTROPY_SIZE},
