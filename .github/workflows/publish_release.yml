@@ -50,9 +50,11 @@ jobs:
   create-github-release:
     name: Github / Release
     runs-on: network-node-linux-medium
-    # Only run this job for official releases (workflow_dispatch) and not for snapshot releases (push to main)
-    if: ${{ github.event_name == 'workflow_dispatch' && !cancelled() && !failure() }}
     steps:
+      - name: Skip job if not an official GitHub release
+        if: ${{ github.event_name != 'workflow_dispatch' && !cancelled() && !failure() }}
+        run: exit 0
+
       - name: Harden Runner
         uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
@@ -134,6 +136,7 @@ jobs:
 
   publish-maven-central:
     name: Publish Maven Central
+    needs: create-github-release
     runs-on: network-node-linux-medium
     steps:
       - name: Harden Runner
