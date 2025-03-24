@@ -202,7 +202,7 @@ jobs:
           if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
             ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
           else
-            ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache
+            ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
           fi
 
       - name: Gradle Publish to Maven Central - cryptography
@@ -214,5 +214,5 @@ jobs:
           if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
             ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
           else
-            ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache
+            ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
           fi
