@@ -13,7 +13,7 @@ on:
         required: false
         default: "main"
       dry-run-enabled:
-        description: "Perform Dry Run (Checks new semantic release version and confirms gradle assemble is successful):"
+        description: "Perform Dry Run (Checks new semantic release version and confirms gradle assemble is successful)"
         type: boolean
         required: false
         default: false
@@ -64,6 +64,19 @@ jobs:
           token: ${{ secrets.GH_ACCESS_TOKEN }}
           fetch-depth: 0
           ref: ${{ github.event.inputs.branch }}
+
+      - name: Setup Java
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        if: ${{ !cancelled() && !failure() }}
+        with:
+          distribution: ${{ github.event.inputs.java-distribution || 'temurin' }}
+          java-version: ${{ github.event.inputs.java-version || '21.0.4' }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
+        if: ${{ !cancelled() && !failure() }}
+        with:
+          gradle-version: wrapper
 
       - name: Install GnuPG Tools
         run: |
