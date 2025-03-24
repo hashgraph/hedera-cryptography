@@ -51,16 +51,14 @@ jobs:
     name: Github / Release
     runs-on: network-node-linux-medium
     steps:
-      - name: Skip job if not an official GitHub release
-        if: ${{ github.event_name != 'workflow_dispatch' && !cancelled() && !failure() }}
-        run: exit 0
-
       - name: Harden Runner
+        if: ${{ github.event_name == 'workflow_dispatch' && !cancelled() && !failure() }}
         uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
           egress-policy: audit
 
       - name: Checkout Code
+        if: ${{ github.event_name == 'workflow_dispatch' && !cancelled() && !failure() }}
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           token: ${{ secrets.GH_ACCESS_TOKEN }}
@@ -68,19 +66,20 @@ jobs:
           ref: ${{ github.event.inputs.branch }}
 
       - name: Setup Java
+        if: ${{ github.event_name == 'workflow_dispatch' && !cancelled() && !failure() }}
         uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
-        if: ${{ !cancelled() && !failure() }}
         with:
           distribution: ${{ github.event.inputs.java-distribution || 'temurin' }}
           java-version: ${{ github.event.inputs.java-version || '21.0.4' }}
 
       - name: Setup Gradle
+        if: ${{ github.event_name == 'workflow_dispatch' && !cancelled() && !failure() }}
         uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
-        if: ${{ !cancelled() && !failure() }}
         with:
           gradle-version: wrapper
 
       - name: Install GnuPG Tools
+        if: ${{ github.event_name == 'workflow_dispatch' && !cancelled() && !failure() }}
         run: |
           if ! command -v gpg2 >/dev/null 2>&1; then
             echo "::group::Updating APT Repository Indices"
@@ -92,6 +91,7 @@ jobs:
           fi
 
       - name: Import GPG key
+        if: ${{ github.event_name == 'workflow_dispatch' && !cancelled() && !failure() }}
         id: gpg_key
         uses: step-security/ghaction-import-gpg@6c8fe4d0126a59d57c21f87c9ae5dd3451fa3cca # v.6.1.0
         with:
@@ -103,17 +103,20 @@ jobs:
           git_tag_gpgsign: false
 
       - name: Setup Node
+        if: ${{ github.event_name == 'workflow_dispatch' && !cancelled() && !failure() }}
         uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
         with:
           node-version: 20.18.0
 
       - name: Install Semantic Release
+        if: ${{ github.event_name == 'workflow_dispatch' && !cancelled() && !failure() }}
         run: |
           npm install -g semantic-release@21.0.7 @semantic-release/git@10.0.1 @semantic-release/exec@6.0.3 gradle-semantic-release-plugin@1.7.6
           npm install -g conventional-changelog-conventionalcommits@6.1.0 @commitlint/cli@17.6.6 @commitlint/config-conventional@17.6.6
           npm install -g marked-mangle@1.0.1 marked-gfm-heading-id@3.0.4 semantic-release-conventional-commits@3.0.0
 
       - name: Publish Semantic Release
+        if: ${{ github.event_name == 'workflow_dispatch' && !cancelled() && !failure() }}
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
