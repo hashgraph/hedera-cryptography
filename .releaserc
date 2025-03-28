@@ -21,7 +21,7 @@
         "assets": [
           "version.txt"
         ],
-        "message": "chore(release): ${nextRelease.version} [skip ci]\n\nSigned-off-by: Swirlds Automation <hedera-eng-automation@swirldslabs.com>"
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\nSigned-off-by: swirlds-automation <hedera-eng-automation@swirldslabs.com>"
       }
     ]
   ],
