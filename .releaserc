@@ -53,9 +53,6 @@
       "name": "rc/*",
       "prerelease": "rc",
       "channel": "rc"
-    },
-    {
-      "name": "193-semantic-release-rework"
     }
   ]
 }
