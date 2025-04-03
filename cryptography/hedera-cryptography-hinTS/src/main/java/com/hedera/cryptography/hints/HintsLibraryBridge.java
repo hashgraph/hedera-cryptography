@@ -228,6 +228,45 @@ public class HintsLibraryBridge {
             final int partyId);
 
     /**
+     * Checks that a batch of signatures on a message verifies under a BLS public key.
+     *
+     * @param crs the CRS object
+     * @param message the message
+     * @param aggregationKey the extended public key
+     * @param parties the party ids for the partialSignatures array
+     * @param partialSignatures the partial signatures by party id
+     * @return true if the signature is valid; false otherwise
+     */
+    public boolean verifyBlsBatch(
+            final byte[] crs,
+            final byte[] message,
+            final byte[] aggregationKey,
+            final int[] parties,
+            final byte[][] partialSignatures) {
+        if (crs == null
+                || crs.length == 0
+                || message == null
+                || message.length == 0
+                || aggregationKey == null
+                || aggregationKey.length == 0
+                || parties == null
+                || parties.length == 0
+                || partialSignatures == null
+                || partialSignatures.length == 0
+                || parties.length != partialSignatures.length) {
+            return false;
+        }
+        return verifyBlsBatchImpl(crs, message, aggregationKey, parties, partialSignatures);
+    }
+
+    private native boolean verifyBlsBatchImpl(
+            final byte[] crs,
+            final byte[] message,
+            final byte[] aggregationKey,
+            final int[] parties,
+            final byte[][] partialSignatures);
+
+    /**
      * Aggregates the signatures for party ids using hinTS aggregation and verification keys.
      *
      * @param crs the CRS object

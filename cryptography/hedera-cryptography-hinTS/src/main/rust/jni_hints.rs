@@ -229,6 +229,64 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
     })
 }
 
+/// JNI for HintsLibraryBridge.verifyBlsBatch
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_verifyBlsBatchImpl(
+    mut env: JNIEnv,
+    _instance: JObject,
+    crs_jarray: JByteArray,
+    message_jarray: JByteArray,
+    aggregation_key_jarray: JByteArray,
+    parties_jarray: JIntArray,
+    partial_signatures_jarray: JObjectArray
+) -> jboolean {
+    let crs: CRS = match jni_util::deserialize_jbyte_array(&env, &crs_jarray) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
+    let message = match env.convert_byte_array(&message_jarray) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
+    let aggregation_key: AggregationKey = match jni_util::deserialize_jbyte_array(&env, &aggregation_key_jarray) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
+    let num_of_keys = match env.get_array_length(&parties_jarray) {
+        Ok(len) => len,
+        Err(_) => return jboolean::from(false)
+    };
+    let mut keys :Vec<jint> = vec![0; num_of_keys as usize];
+    match env.get_int_array_region(parties_jarray, 0, keys.as_mut_slice()) {
+        Ok(()) => {},
+        Err(_) => return jboolean::from(false)
+    };
+    let keys_usize: Vec<usize> = keys.iter().map(|&x| x as usize).collect();
+
+    let mut partial_signatures_array:Vec<PartialSignature> = Vec::with_capacity(num_of_keys as usize);
+    for i in 0..num_of_keys as usize {
+        let jobj = match env.get_object_array_element(&partial_signatures_jarray, i as jsize) {
+            Ok(val) => val,
+            Err(_) => return jboolean::from(false)
+        };
+
+        let partial_signature: PartialSignature = match jni_util::deserialize_jbyte_array(&env, &JByteArray::from(jobj)) {
+            Ok(val) => val,
+            Err(_) => return jboolean::from(false)
+        };
+
+        partial_signatures_array.push(partial_signature);
+    }
+
+    jboolean::from(match HinTS::partial_verify_batch(&crs, &message, &aggregation_key, &keys_usize, &partial_signatures_array) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    })
+}
+
 /// JNI for HintsLibraryBridge.aggregateSignatures
 #[no_mangle]
 pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_aggregateSignaturesImpl(
