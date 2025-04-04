@@ -500,6 +500,24 @@ impl HinTS {
         Ok(lhs == rhs)
     }
 
+    /// verifies the list of partial signatures from a list of signers
+    pub fn partial_verify_batch(
+        crs: &CRS,
+        msg: &[u8],
+        ak: &AggregationKey,
+        signer_ids: impl AsRef<[usize]>,
+        signatures: impl AsRef<[PartialSignature]>,
+    ) -> Result<bool, HinTSError> {
+        // compute aggregate public key of all signers
+        let apk = add::<G1AffinePoint>(signer_ids.as_ref().iter().map(|&x| ak.pks[x]));
+        // compute aggregate signature
+        let agg_sig = add::<G2AffinePoint>(signatures.as_ref().iter().map(|sig| sig.clone()));
+
+        let lhs = <Curve as Pairing>::pairing(apk, hash_to_g2(msg)?);
+        let rhs = <Curve as Pairing>::pairing(crs.powers_of_g[0], agg_sig);
+        Ok(lhs == rhs)
+    }
+
     /// aggregates partial signatures to construct a threshold signature
     pub fn aggregate(
         crs: &CRS,
@@ -1019,6 +1037,20 @@ mod tests {
 
         let (crs, ak, vk, sks, _) = sample_universe(universe_n);
         let sigs = sample_signing(num_signers, msg, &sks);
+
+        for (i, sig) in sigs.iter() {
+            assert!(HinTS::partial_verify(&crs, msg, &ak, *i, sig).unwrap());
+        }
+
+        assert!(
+            HinTS::partial_verify_batch(
+                &crs,
+                msg,
+                &ak,
+                sigs.keys().cloned().collect::<Vec<usize>>(),
+                sigs.values().cloned().collect::<Vec<PartialSignature>>()
+            ).unwrap()
+        );
 
         let π = HinTS::aggregate(&crs, &ak, &vk, &sigs).unwrap();
 

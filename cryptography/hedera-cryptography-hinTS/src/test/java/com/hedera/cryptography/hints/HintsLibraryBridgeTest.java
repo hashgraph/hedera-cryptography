@@ -346,6 +346,113 @@ public class HintsLibraryBridgeTest {
     }
 
     @Test
+    void testVerifyBlsBatch() {
+        final byte[] crs = INSTANCE.initCRS(4);
+        assertArrayEquals(CRSConstants.INIT_CRS_4, crs);
+
+        final int partyId0 = 0;
+        final byte[] secretKey0 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_0);
+        final byte[] hints0 = INSTANCE.computeHints(crs, secretKey0, partyId0, 4);
+        final AggregationAndVerificationKeys keys0 =
+                INSTANCE.preprocess(crs, new int[] {partyId0}, new byte[][] {hints0}, new long[] {111}, 4);
+        final byte[] signature0 = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey0);
+
+        final int partyId2 = 2;
+        final byte[] secretKey2 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
+        final byte[] hints2 = INSTANCE.computeHints(crs, secretKey2, partyId2, 4);
+        final byte[] signature2 = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey2);
+
+        final AggregationAndVerificationKeys keys = INSTANCE.preprocess(
+                crs, new int[] {partyId0, partyId2}, new byte[][] {hints0, hints2}, new long[] {111, 222}, 4);
+
+        assertTrue(INSTANCE.verifyBlsBatch(
+                crs, HintsConstants.RANDOM_2, keys.aggregationKey(), new int[] {partyId0, partyId2}, new byte[][] {
+                    signature0, signature2
+                }));
+    }
+
+    @Test
+    void testVerifyBlsBatchConstraints() {
+        final byte[] crs = INSTANCE.initCRS(4);
+
+        // partyId 0
+        final byte[] secretKey0 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_0);
+        final byte[] hints0 = INSTANCE.computeHints(crs, secretKey0, 0, 4);
+        final byte[] signature0 = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey0);
+
+        // partyId 2
+        final byte[] secretKey2 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
+        final byte[] hints2 = INSTANCE.computeHints(crs, secretKey2, 2, 4);
+        final byte[] signature2 = INSTANCE.signBls(HintsConstants.RANDOM_2, secretKey2);
+
+        final AggregationAndVerificationKeys keys =
+                INSTANCE.preprocess(crs, new int[] {0, 2}, new byte[][] {hints0, hints2}, new long[] {111, 222}, 4);
+
+        assertFalse(INSTANCE.verifyBlsBatch(
+                null, HintsConstants.RANDOM_2, keys.aggregationKey(), new int[] {0, 2}, new byte[][] {
+                    signature2, signature0
+                }));
+        assertFalse(INSTANCE.verifyBlsBatch(
+                EMPTY, HintsConstants.RANDOM_2, keys.aggregationKey(), new int[] {0, 2}, new byte[][] {
+                    signature2, signature0
+                }));
+        assertFalse(INSTANCE.verifyBlsBatch(
+                crs, null, keys.aggregationKey(), new int[] {0, 2}, new byte[][] {signature2, signature0}));
+        assertFalse(INSTANCE.verifyBlsBatch(
+                crs, EMPTY, keys.aggregationKey(), new int[] {0, 2}, new byte[][] {signature2, signature0}));
+        assertFalse(INSTANCE.verifyBlsBatch(
+                crs, HintsConstants.RANDOM_2, null, new int[] {0, 2}, new byte[][] {signature2, signature0}));
+        assertFalse(INSTANCE.verifyBlsBatch(
+                crs, HintsConstants.RANDOM_2, EMPTY, new int[] {0, 2}, new byte[][] {signature2, signature0}));
+        assertFalse(INSTANCE.verifyBlsBatch(
+                crs, HintsConstants.RANDOM_2, keys.aggregationKey(), null, new byte[][] {signature2, signature0}));
+        assertFalse(INSTANCE.verifyBlsBatch(
+                crs, HintsConstants.RANDOM_2, keys.aggregationKey(), new int[0], new byte[][] {signature2, signature0
+                }));
+        assertFalse(
+                INSTANCE.verifyBlsBatch(crs, HintsConstants.RANDOM_2, keys.aggregationKey(), new int[] {0, 2}, null));
+        assertFalse(INSTANCE.verifyBlsBatch(
+                crs, HintsConstants.RANDOM_2, keys.aggregationKey(), new int[] {0, 2}, new byte[][] {}));
+        assertFalse(INSTANCE.verifyBlsBatch(
+                crs, HintsConstants.RANDOM_2, keys.aggregationKey(), new int[] {0, 2}, new byte[][] {signature2}));
+
+        // corrupt the CRS
+        crs[27]++;
+        crs[172]--;
+        crs[387]++;
+        assertFalse(INSTANCE.verifyBlsBatch(
+                crs, HintsConstants.RANDOM_2, keys.aggregationKey(), new int[] {0, 2}, new byte[][] {
+                    signature2, signature0
+                }));
+        // uncorrupt the CRS...
+        crs[27]--;
+        crs[172]++;
+        crs[387]--;
+        // and corrupt the aggregationKey
+        keys.aggregationKey()[11]++;
+        assertFalse(INSTANCE.verifyBlsBatch(
+                crs, HintsConstants.RANDOM_2, keys.aggregationKey(), new int[] {0, 2}, new byte[][] {
+                    signature2, signature0
+                }));
+
+        // uncorrupt the aggregationKey...
+        keys.aggregationKey()[11]--;
+        // corrupt a signature instead
+        signature2[17]++;
+        assertFalse(INSTANCE.verifyBlsBatch(
+                crs, HintsConstants.RANDOM_2, keys.aggregationKey(), new int[] {0, 2}, new byte[][] {
+                    signature2, signature0
+                }));
+
+        // undo the damage and run a sanity check
+        signature2[17]--;
+        assertTrue(INSTANCE.verifyBlsBatch(
+                crs, HintsConstants.RANDOM_2, keys.aggregationKey(), new int[] {0, 2}, new byte[][] {
+                    signature2, signature0
+                }));
+    }
+
+    @Test
     void testAggregateSignatures() {
         final byte[] crs = INSTANCE.initCRS(4);
         assertArrayEquals(CRSConstants.INIT_CRS_4, crs);
