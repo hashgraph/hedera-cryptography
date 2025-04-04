@@ -1,0 +1,86 @@
+# SPDX-License-Identifier: Apache-2.0
+name: "Publish Snapshot Release"
+
+on:
+  push:
+    branches:
+      - main
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  LC_ALL: C.UTF-8
+  GRADLE_CACHE_USERNAME: ${{ secrets.GRADLE_CACHE_USERNAME }}
+  GRADLE_CACHE_PASSWORD: ${{ secrets.GRADLE_CACHE_PASSWORD }}
+  GRADLE_VERSION: wrapper
+  JAVA_DISTRIBUTION: temurin
+  JAVA_VERSION: 21.0.4
+
+jobs:
+  publish-maven-central:
+    name: Publish Maven Central
+    runs-on: network-node-linux-medium
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        if: ${{ !cancelled() && !failure() }}
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
+        if: ${{ !cancelled() && !failure() }}
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      # This step updates the version number to a snapshot in version.txt when publishing a snapshot release.
+      - name: Add SNAPSHOT Suffix to Current Version
+        if: ${{ !cancelled() && !failure() }}
+        run: ./gradlew versionAsSnapshot
+
+      # Technically, this step is not required but is executed to provide the end users with a summary of the version
+      # numbers assigned to each published artifact.
+      - name: Version Report
+        if: ${{ !cancelled() && !failure() }}
+        run: ./gradlew githubVersionSummary
+
+      # Technically, this step is not required because the release steps will build what is required; however,
+      # if one or more components fails to build then it could result in a partial publish to Maven Central.
+      # The inclusion of this step ensures the job fails cleanly without publishing to Maven Central if any of the
+      # components fail to build.
+      - name: Gradle Assemble
+        if: ${{ !cancelled() && !failure() }}
+        run: ./gradlew assemble
+
+      # The steps below publish the artifacts to the Maven Central Nexus repository.
+      # Set -publishTestRelease=true when publishing snapshots
+      - name: Gradle Publish to Maven Central - common
+        if: ${{ !cancelled() && !failure() }}
+        env:
+          NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
+          NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
+        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -publishTestRelease=true
+
+      - name: Gradle Publish to Maven Central - cryptography
+        if: ${{ !cancelled() && !failure() }}
+        env:
+          NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
+          NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
+        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache -publishTestRelease=true
