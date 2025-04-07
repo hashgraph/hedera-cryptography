@@ -21,11 +21,11 @@
     ],
     [
       "@semantic-release/exec",
-      { "cmd": "./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -publishTestRelease=true" }
+      { "cmd": "./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true" }
     ],
     [
       "@semantic-release/exec",
-      { "cmd": "./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache -publishTestRelease=true" }
+      { "cmd": "./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true" }
     ],
     [
       "@semantic-release/git",

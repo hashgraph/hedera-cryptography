@@ -70,7 +70,7 @@ jobs:
         run: ./gradlew assemble
 
       # The steps below publish the artifacts to the Maven Central Nexus repository.
-      # Set -publishTestRelease=true when publishing snapshots
+      # Set -PpublishTestRelease=true when publishing snapshots
       - name: Gradle Publish to Maven Central - common
         if: ${{ !cancelled() && !failure() }}
         env:
