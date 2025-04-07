@@ -76,11 +76,11 @@ jobs:
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
-        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -publishTestRelease=true
+        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
 
       - name: Gradle Publish to Maven Central - cryptography
         if: ${{ !cancelled() && !failure() }}
         env:
           NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
           NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
-        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache -publishTestRelease=true
+        run: ./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true
