@@ -21,11 +21,11 @@
     ],
     [
       "@semantic-release/exec",
-      { "cmd": "./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true" }
+      { "cmd": "./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache" }
     ],
     [
       "@semantic-release/exec",
-      { "cmd": "./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache -PpublishTestRelease=true" }
+      { "cmd": "./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache" }
     ],
     [
       "@semantic-release/git",
@@ -65,9 +65,6 @@
       "name": "rc/*",
       "prerelease": "rc",
       "channel": "rc"
-    },
-    {
-      "name": "193-semantic-release-rework"
     }
   ]
 }

@@ -106,6 +106,9 @@ jobs:
           npm install -g conventional-changelog-conventionalcommits@6.1.0 @commitlint/cli@17.6.6 @commitlint/config-conventional@17.6.6
           npm install -g marked-mangle@1.0.1 marked-gfm-heading-id@3.0.4 semantic-release-conventional-commits@3.0.0
 
+      # If this step needs to be modified and tested, it's necessary to add the
+      # -PpublishTestRelease=true flag to the gradle publish commands in .releaserc
+      # in order to publish to the staging MC repo instead of production
       - name: Publish Semantic Release
         if: ${{ !cancelled() && !failure() }}
         env:

@@ -39,6 +39,24 @@ More details on the build setup and project structure can be found in the
 [documentation of the Hiero Gradle Conventions](https://github.com/hiero-ledger/hiero-gradle-conventions#build)
 which this project uses.
 
+## Release Process
+
+There are two release workflows in use by this project. When releasing a new official version, you would use the Publish Release one:
+
+### [Publish Release](.github/workflows/publish_release.yml)
+
+This is the official release workflow. It has to be triggered manually from the Actions page after which, it will do the following:
+  - Calculate the next version by analyzing the commit messages of the commits pushed since the last version and update the version.txt file.
+  - Compile the code to make sure there aren't any issues
+  - Publish to Maven Central using the new version
+  - Create a Tag and Official Release in GitHub
+
+**It can also be run with the `Dry Run` flag enabled which would just calculate the next expected release version by analyzing the commits since the last release and output the version in the workflow run logs.** 
+
+### [Publish Snapshot Release](.github/workflows/publish_snapshot_release.yml)
+
+This workflow runs automatically on a push to main and creates a new `-SNAPSHOT` release of the current version (sourced from the [version.txt](./version.txt) file) and publishes it to Maven Central.
+
 ## Support
 
 If you have a question on how to use the product, please see our
