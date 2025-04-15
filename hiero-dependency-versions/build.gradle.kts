@@ -7,7 +7,7 @@ plugins {
 }
 
 val junit5 = "5.12.0"
-val mockito = "5.15.2"
+val mockito = "5.16.0"
 
 dependencies.constraints {
     api("com.github.spotbugs:spotbugs-annotations:4.9.2") {
