@@ -172,6 +172,8 @@ public class NativeLibrary {
                 + RESOURCE_PATH_DELIMITER
                 + arch.name().toLowerCase(Locale.US)
                 + RESOURCE_PATH_DELIMITER
+                + libraryName
+                + RESOURCE_PATH_DELIMITER
                 + libPrefix
                 + libraryName
                 + libExtension;
