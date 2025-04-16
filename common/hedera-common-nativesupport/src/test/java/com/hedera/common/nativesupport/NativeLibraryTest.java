@@ -46,7 +46,7 @@ class NativeLibraryTest {
             archStatic.when(Architecture::current).thenReturn(architecture);
 
             assertEquals(
-                    "software/%s/%s/custom/%scustom.%s"
+                    "com/hedera/nativelib/custom/%s/%s/%scustom.%s"
                             .formatted(
                                     operatingSystem.name().toLowerCase(),
                                     architecture.name().toLowerCase(),
@@ -76,7 +76,7 @@ class NativeLibraryTest {
             archStatic.when(Architecture::current).thenReturn(architecture);
 
             assertEquals(
-                    "software/%s/%s/custom/custom"
+                    "com/hedera/nativelib/custom/%s/%s/custom"
                             .formatted(
                                     operatingSystem.name().toLowerCase(),
                                     architecture.name().toLowerCase()),
@@ -97,7 +97,7 @@ class NativeLibraryTest {
             archStatic.when(Architecture::current).thenReturn(architecture);
 
             assertEquals(
-                    "software/%s/%s/custom/%scustom"
+                    "com/hedera/nativelib/custom/%s/%s/%scustom"
                             .formatted(
                                     operatingSystem.name().toLowerCase(),
                                     architecture.name().toLowerCase(),
@@ -120,7 +120,7 @@ class NativeLibraryTest {
             archStatic.when(Architecture::current).thenReturn(architecture);
 
             assertEquals(
-                    "software/%s/%s/custom/custom"
+                    "com/hedera/nativelib/custom/%s/%s/custom"
                             .formatted(
                                     operatingSystem.name().toLowerCase(),
                                     architecture.name().toLowerCase()),

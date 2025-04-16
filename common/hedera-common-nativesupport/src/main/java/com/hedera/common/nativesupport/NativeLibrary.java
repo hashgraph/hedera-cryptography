@@ -54,7 +54,7 @@ public class NativeLibrary {
     /**
      * The root resources folder where the software is located.
      */
-    private static final String SOFTWARE_FOLDER_NAME = "software";
+    private static final String SOFTWARE_FOLDER_NAME = "com/hedera/nativelib";
 
     /**
      * The path delimiter used in the JAR file.
@@ -83,7 +83,7 @@ public class NativeLibrary {
     /**
      *
      * @implNote This method expects the executable to be present at the following location in the JAR file:
-     * {@code /software/<os>/<arch>/name}.
+     * {@code /com/hedera/nativelib/name/<os>/<arch>/name}.
      *
      * @param name the library to load.
      * @param libExtensions defaults extensions for each os to use to load the library
@@ -168,11 +168,11 @@ public class NativeLibrary {
         }
         return SOFTWARE_FOLDER_NAME
                 + RESOURCE_PATH_DELIMITER
+                + libraryName
+                + RESOURCE_PATH_DELIMITER
                 + os.name().toLowerCase(Locale.US)
                 + RESOURCE_PATH_DELIMITER
                 + arch.name().toLowerCase(Locale.US)
-                + RESOURCE_PATH_DELIMITER
-                + libraryName
                 + RESOURCE_PATH_DELIMITER
                 + libPrefix
                 + libraryName

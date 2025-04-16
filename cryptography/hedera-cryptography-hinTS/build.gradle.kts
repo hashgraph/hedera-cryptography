@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import org.hiero.gradle.tasks.CargoBuildTask
 
 plugins {
@@ -18,10 +19,19 @@ testModuleInfo {
 // TODO jjohannes: once finalized, move this into Gradle plugins
 tasks.withType<CargoBuildTask> {
     doLast {
-        val baseFolder = destinationDirectory.dir(toolchain.get().folder).get().asFile
-        val destination = baseFolder.toPath().resolve("hints")
-        val lib = baseFolder.listFiles().single()
-        Files.createDirectory(destination)
-        Files.move(lib.toPath(), destination.resolve(lib.name))
+        val originalPath = toolchain.get().folder
+        val adjustedPath = originalPath.replace("software/", "com/hedera/nativelib/hints/")
+        val originalFile =
+            destinationDirectory.dir(originalPath).get().asFile.listFiles()!!.single().toPath()
+        val adjustedFile =
+            destinationDirectory
+                .dir(adjustedPath)
+                .get()
+                .asFile
+                .toPath()
+                .resolve(originalFile.fileName)
+        Files.createDirectories(adjustedFile.parent)
+        Files.move(originalFile, adjustedFile, StandardCopyOption.REPLACE_EXISTING)
+        destinationDirectory.dir("software").get().asFile.delete()
     }
 }
