@@ -1,18 +1,4 @@
-//
-// Copyright (C) 2025 Hedera Hashgraph, LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
+// SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashMap;
 use jni::JNIEnv;
@@ -238,6 +224,64 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
     };
 
     jboolean::from(match HinTS::partial_verify(&crs, &message, &aggregation_key, party_id as usize, &signature) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    })
+}
+
+/// JNI for HintsLibraryBridge.verifyBlsBatch
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_verifyBlsBatchImpl(
+    mut env: JNIEnv,
+    _instance: JObject,
+    crs_jarray: JByteArray,
+    message_jarray: JByteArray,
+    aggregation_key_jarray: JByteArray,
+    parties_jarray: JIntArray,
+    partial_signatures_jarray: JObjectArray
+) -> jboolean {
+    let crs: CRS = match jni_util::deserialize_jbyte_array(&env, &crs_jarray) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
+    let message = match env.convert_byte_array(&message_jarray) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
+    let aggregation_key: AggregationKey = match jni_util::deserialize_jbyte_array(&env, &aggregation_key_jarray) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
+    let num_of_keys = match env.get_array_length(&parties_jarray) {
+        Ok(len) => len,
+        Err(_) => return jboolean::from(false)
+    };
+    let mut keys :Vec<jint> = vec![0; num_of_keys as usize];
+    match env.get_int_array_region(parties_jarray, 0, keys.as_mut_slice()) {
+        Ok(()) => {},
+        Err(_) => return jboolean::from(false)
+    };
+    let keys_usize: Vec<usize> = keys.iter().map(|&x| x as usize).collect();
+
+    let mut partial_signatures_array:Vec<PartialSignature> = Vec::with_capacity(num_of_keys as usize);
+    for i in 0..num_of_keys as usize {
+        let jobj = match env.get_object_array_element(&partial_signatures_jarray, i as jsize) {
+            Ok(val) => val,
+            Err(_) => return jboolean::from(false)
+        };
+
+        let partial_signature: PartialSignature = match jni_util::deserialize_jbyte_array(&env, &JByteArray::from(jobj)) {
+            Ok(val) => val,
+            Err(_) => return jboolean::from(false)
+        };
+
+        partial_signatures_array.push(partial_signature);
+    }
+
+    jboolean::from(match HinTS::partial_verify_batch(&crs, &message, &aggregation_key, &keys_usize, &partial_signatures_array) {
         Ok(val) => val,
         Err(_) => return jboolean::from(false)
     })

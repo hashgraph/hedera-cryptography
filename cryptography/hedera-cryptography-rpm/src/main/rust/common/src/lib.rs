@@ -1,4 +1,5 @@
-// TODO: better error types
+// SPDX-License-Identifier: Apache-2.0
+
 #![allow(clippy::result_unit_err)]
 
 use alloy_sol_types::sol;
@@ -7,6 +8,7 @@ pub mod address_book;
 pub mod ed25519;
 pub mod sha256;
 pub mod statement;
+pub mod errors;
 
 sol! {
     /// The public values encoded as a struct that can be easily deserialized inside Solidity.

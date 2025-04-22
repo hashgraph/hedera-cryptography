@@ -76,12 +76,12 @@ public class HistoryLibraryBridgeTest {
     @Test
     void testSnarkVerificationKey() throws IOException {
         final byte[] elf = HistoryLibraryBridge.loadAddressBookRotationProgram();
-        assertEquals(351132, elf.length);
+        assertEquals(352504, elf.length);
 
         final ProvingAndVerifyingSnarkKeys keys = HISTORY.snarkVerificationKey(elf);
 
         // The pk is 164 MB, so we just check its size for practicality.
-        assertEquals(164193054, keys.provingKey().length);
+        assertEquals(164194426, keys.provingKey().length);
 
         assertArrayEquals(HistoryConstants.SNARK_VERIFYING_KEY, keys.verifyingKey());
     }
@@ -97,7 +97,7 @@ public class HistoryLibraryBridgeTest {
         elf[3579]++;
         final ProvingAndVerifyingSnarkKeys keys = HISTORY.snarkVerificationKey(elf);
         // The pk size is still the same as with a good ELF, but the verifyingKey is different
-        assertEquals(164193054, keys.provingKey().length);
+        assertEquals(164194426, keys.provingKey().length);
         assertFalse(Arrays.equals(HistoryConstants.SNARK_VERIFYING_KEY, keys.verifyingKey()));
 
         // If we corrupt the ELF a lot, then a panic occurs. So this is as far as we can test this.

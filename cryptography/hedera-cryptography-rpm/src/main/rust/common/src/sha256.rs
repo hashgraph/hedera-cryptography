@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 use sha2::{Digest, Sha256};
 
 pub const HASH_LENGTH: usize = 32;

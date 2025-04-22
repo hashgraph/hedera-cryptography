@@ -1,17 +1,4 @@
-//
-// Copyright (C) 2024 Hedera Hashgraph, LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 use ark_bls12_381::{g1::Config as G1Config, g2::Config as G2Config, Bls12_381};
 use ark_ec::hashing::{
@@ -510,6 +497,24 @@ impl HinTS {
     ) -> Result<bool, HinTSError> {
         let lhs = <Curve as Pairing>::pairing(ak.pks[party_id], hash_to_g2(msg)?);
         let rhs = <Curve as Pairing>::pairing(crs.powers_of_g[0], sig);
+        Ok(lhs == rhs)
+    }
+
+    /// verifies the list of partial signatures from a list of signers
+    pub fn partial_verify_batch(
+        crs: &CRS,
+        msg: &[u8],
+        ak: &AggregationKey,
+        signer_ids: impl AsRef<[usize]>,
+        signatures: impl AsRef<[PartialSignature]>,
+    ) -> Result<bool, HinTSError> {
+        // compute aggregate public key of all signers
+        let apk = add::<G1AffinePoint>(signer_ids.as_ref().iter().map(|&x| ak.pks[x]));
+        // compute aggregate signature
+        let agg_sig = add::<G2AffinePoint>(signatures.as_ref().iter().map(|sig| sig.clone()));
+
+        let lhs = <Curve as Pairing>::pairing(apk, hash_to_g2(msg)?);
+        let rhs = <Curve as Pairing>::pairing(crs.powers_of_g[0], agg_sig);
         Ok(lhs == rhs)
     }
 
@@ -1032,6 +1037,20 @@ mod tests {
 
         let (crs, ak, vk, sks, _) = sample_universe(universe_n);
         let sigs = sample_signing(num_signers, msg, &sks);
+
+        for (i, sig) in sigs.iter() {
+            assert!(HinTS::partial_verify(&crs, msg, &ak, *i, sig).unwrap());
+        }
+
+        assert!(
+            HinTS::partial_verify_batch(
+                &crs,
+                msg,
+                &ak,
+                sigs.keys().cloned().collect::<Vec<usize>>(),
+                sigs.values().cloned().collect::<Vec<PartialSignature>>()
+            ).unwrap()
+        );
 
         let π = HinTS::aggregate(&crs, &ak, &vk, &sigs).unwrap();
 
