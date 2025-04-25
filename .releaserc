@@ -10,23 +10,30 @@
     "@semantic-release/git",
     "@semantic-release/github"
   ],
-  "verifyRelease": [
-    [
-      "@semantic-release/exec",
-      { "cmd": "echo ${nextRelease.version} > VERSION" }
-    ]
-  ],
   "prepare": [
     [
       "@semantic-release/exec",
       { "cmd": "./gradlew versionAsSpecified -PnewVersion=${nextRelease.version}" }
     ],
     [
+      "@semantic-release/exec",
+      { "cmd": "./gradlew assemble" }
+    ],
+    [
+      "@semantic-release/exec",
+      { "cmd": "./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.common -PpublishSigningEnabled=true --no-configuration-cache" }
+    ],
+    [
+      "@semantic-release/exec",
+      { "cmd": "./gradlew releaseMavenCentral -PpublishingPackageGroup=com.hedera.cryptography -PpublishSigningEnabled=true --no-configuration-cache" }
+    ],
+    [
       "@semantic-release/git",
       {
         "assets": [
-          "gradle.properties"
-        ]
+          "version.txt"
+        ],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\nSigned-off-by: Hedera Automation <hedera-eng-automation@swirldslabs.com>"
       }
     ]
   ],
