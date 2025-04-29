@@ -489,20 +489,18 @@ impl HinTS {
 
     /// verifies the partial signature under the signer's public key
     pub fn partial_verify(
-        crs: &CRS,
         msg: &[u8],
         ak: &AggregationKey,
         party_id: usize,
         sig: &PartialSignature
     ) -> Result<bool, HinTSError> {
         let lhs = <Curve as Pairing>::pairing(ak.pks[party_id], hash_to_g2(msg)?);
-        let rhs = <Curve as Pairing>::pairing(crs.powers_of_g[0], sig);
+        let rhs = <Curve as Pairing>::pairing(G1AffinePoint::generator(), sig);
         Ok(lhs == rhs)
     }
 
     /// verifies the list of partial signatures from a list of signers
     pub fn partial_verify_batch(
-        crs: &CRS,
         msg: &[u8],
         ak: &AggregationKey,
         signer_ids: impl AsRef<[usize]>,
@@ -514,7 +512,7 @@ impl HinTS {
         let agg_sig = add::<G2AffinePoint>(signatures.as_ref().iter().map(|sig| sig.clone()));
 
         let lhs = <Curve as Pairing>::pairing(apk, hash_to_g2(msg)?);
-        let rhs = <Curve as Pairing>::pairing(crs.powers_of_g[0], agg_sig);
+        let rhs = <Curve as Pairing>::pairing(G1AffinePoint::generator(), agg_sig);
         Ok(lhs == rhs)
     }
 
@@ -1039,12 +1037,11 @@ mod tests {
         let sigs = sample_signing(num_signers, msg, &sks);
 
         for (i, sig) in sigs.iter() {
-            assert!(HinTS::partial_verify(&crs, msg, &ak, *i, sig).unwrap());
+            assert!(HinTS::partial_verify(msg, &ak, *i, sig).unwrap());
         }
 
         assert!(
             HinTS::partial_verify_batch(
-                &crs,
                 msg,
                 &ak,
                 sigs.keys().cloned().collect::<Vec<usize>>(),
