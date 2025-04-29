@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 bincode = { workspace = true }
 crunchy = "=0.2.2" # downgrade to 0.2.2 due to https://github.com/eira-fransham/crunchy/issues/13
 sp1-sdk = { workspace = true }
+sp1-verifier = { workspace = true }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 serde = { version = "1.0.200", default-features = false, features = ["derive"] }
 serde-big-array = { workspace = true }

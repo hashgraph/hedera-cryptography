@@ -15,3 +15,12 @@ pub struct Statement {
     pub tss_vk_next_hash: [u8; HASH_LENGTH],
     pub signatures: Signatures,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CompressedStatement {
+    pub vk_digest: [u32; 8],
+    pub ab_genesis_hash: [u8; HASH_LENGTH],
+    pub ab_current_hash: [u8; HASH_LENGTH],
+    pub ab_next_hash: [u8; HASH_LENGTH],
+    pub tss_vk_current_hash: [u8; HASH_LENGTH],
+}
