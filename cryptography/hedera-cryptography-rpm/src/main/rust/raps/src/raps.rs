@@ -12,7 +12,7 @@ use alloy_sol_types::SolType;
 use sp1_sdk::{
     HashableKey, Prover, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin, SP1VerifyingKey,
 };
-use sp1_verifier::PlonkVerifier;
+use sp1_verifier::Groth16Verifier;
 
 pub struct RAPS {}
 
@@ -163,7 +163,7 @@ impl RAPS {
         // Generate the proofs
         let compressed_proof: SP1ProofWithPublicValues = prover
             .prove(compression_pk, &stdin)
-            .plonk()
+            .groth16()
             .run()
             .map_err(|_| RAPSError::ProverError)?;
 
@@ -171,11 +171,11 @@ impl RAPS {
     }
 
     pub fn verify_compressed_proof(compression_vk_digest: &str, compressed_proof: &SP1ProofWithPublicValues) -> bool {
-        let result = PlonkVerifier::verify(
+        let result = Groth16Verifier::verify(
             &compressed_proof.bytes(),
             &compressed_proof.public_values.to_vec(),
             compression_vk_digest,
-            &sp1_verifier::PLONK_VK_BYTES
+            &sp1_verifier::GROTH16_VK_BYTES
         );
 
         result.is_ok()
