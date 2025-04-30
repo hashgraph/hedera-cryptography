@@ -311,8 +311,8 @@ public class HintsLibraryBridgeTest {
         assertFalse(INSTANCE.verifyBls(signature, EMPTY, keys.aggregationKey(), partyId));
         assertFalse(INSTANCE.verifyBls(signature, HintsConstants.RANDOM_2, null, partyId));
         assertFalse(INSTANCE.verifyBls(signature, HintsConstants.RANDOM_2, EMPTY, partyId));
-        // assertFalse(INSTANCE.verifyBls(signature, HintsConstants.RANDOM_2, keys.aggregationKey(), -1));
-        // assertFalse(INSTANCE.verifyBls(signature, HintsConstants.RANDOM_2, keys.aggregationKey(), 666));
+        assertFalse(INSTANCE.verifyBls(signature, HintsConstants.RANDOM_2, keys.aggregationKey(), -1));
+        assertFalse(INSTANCE.verifyBls(signature, HintsConstants.RANDOM_2, keys.aggregationKey(), 666));
 
         // Corrupt the signature
         signature[23]++;
