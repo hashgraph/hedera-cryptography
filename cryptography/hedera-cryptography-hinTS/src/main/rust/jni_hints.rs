@@ -197,17 +197,11 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_sig
 pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_verifyBlsImpl(
     env: JNIEnv,
     _instance: JObject,
-    crs_jarray: JByteArray,
     signature_jarray: JByteArray,
     message_jarray: JByteArray,
     aggregation_key_jarray: JByteArray,
     party_id: jint
 ) -> jboolean {
-    let crs: CRS = match jni_util::deserialize_jbyte_array(&env, &crs_jarray) {
-        Ok(val) => val,
-        Err(_) => return jboolean::from(false)
-    };
-
     let message = match env.convert_byte_array(&message_jarray) {
         Ok(val) => val,
         Err(_) => return jboolean::from(false)
@@ -223,7 +217,7 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
         Err(_) => return jboolean::from(false)
     };
 
-    jboolean::from(match HinTS::partial_verify(&crs, &message, &aggregation_key, party_id as usize, &signature) {
+    jboolean::from(match HinTS::partial_verify(&message, &aggregation_key, party_id as usize, &signature) {
         Ok(val) => val,
         Err(_) => return jboolean::from(false)
     })
@@ -234,17 +228,11 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
 pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_verifyBlsBatchImpl(
     mut env: JNIEnv,
     _instance: JObject,
-    crs_jarray: JByteArray,
     message_jarray: JByteArray,
     aggregation_key_jarray: JByteArray,
     parties_jarray: JIntArray,
     partial_signatures_jarray: JObjectArray
 ) -> jboolean {
-    let crs: CRS = match jni_util::deserialize_jbyte_array(&env, &crs_jarray) {
-        Ok(val) => val,
-        Err(_) => return jboolean::from(false)
-    };
-
     let message = match env.convert_byte_array(&message_jarray) {
         Ok(val) => val,
         Err(_) => return jboolean::from(false)
@@ -281,7 +269,7 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
         partial_signatures_array.push(partial_signature);
     }
 
-    jboolean::from(match HinTS::partial_verify_batch(&crs, &message, &aggregation_key, &keys_usize, &partial_signatures_array) {
+    jboolean::from(match HinTS::partial_verify_batch(&message, &aggregation_key, &keys_usize, &partial_signatures_array) {
         Ok(val) => val,
         Err(_) => return jboolean::from(false)
     })
