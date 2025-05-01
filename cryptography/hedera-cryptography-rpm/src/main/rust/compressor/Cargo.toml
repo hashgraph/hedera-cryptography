@@ -1,0 +1,13 @@
+[package]
+version = "0.1.0"
+name = "compressor"
+edition = "2021"
+
+[dependencies]
+raps = { path = "../raps" }
+sp1-sdk = { workspace = true }
+byteorder = "1.4"
+bincode = { workspace = true }
+
+[features]
+default = []

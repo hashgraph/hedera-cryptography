@@ -6,7 +6,7 @@ edition = "2021"
 [lib]
 name = "raps"
 path = "src/lib.rs"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 bincode = { workspace = true }
