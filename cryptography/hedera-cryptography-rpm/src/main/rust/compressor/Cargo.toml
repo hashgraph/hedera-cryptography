@@ -4,9 +4,10 @@ name = "compressor"
 edition = "2021"
 
 [dependencies]
-raps = { path = "../raps" }
+ab-rotation-lib = { path = "../common" }
 sp1-sdk = { workspace = true }
 byteorder = "1.4"
+alloy-sol-types = { workspace = true }
 bincode = { workspace = true }
 
 [features]
