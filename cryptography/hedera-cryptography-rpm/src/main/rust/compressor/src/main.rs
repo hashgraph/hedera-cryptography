@@ -23,6 +23,17 @@ fn read_byte_array<R: Read>(reader: &mut R) -> io::Result<Vec<u8>> {
     Ok(buf)
 }
 
+fn write_byte_array<W: Write>(writer: &mut W, data: &[u8]) -> io::Result<()> {
+    // let us first write the length of the compressed proof
+    let len_bytes = (data.len() as u32).to_be_bytes();
+    writer.write_all(&len_bytes)?;
+
+    writer.write_all(&data)?; // Writes the bytes
+    writer.flush()?;          // Ensures the data is written immediately
+
+    Ok(())
+}
+
 fn compress_rotation_proof(
     compression_pk: &SP1ProvingKey,               // proving key output by sp1 setup for compression zkVM
     raps_vk: &SP1VerifyingKey,                    // verifying key output by sp1 setup for RAPS zkVM
@@ -63,14 +74,13 @@ fn compress_rotation_proof(
 }
 
 fn main() -> io::Result<()> {
-    let stdin = io::stdin();
-    let mut handle = stdin.lock();
+    let mut stdin_handle = io::stdin().lock();
 
     // let us grab the inputs first from stdin
     // we expect the ordering to be compression_pk, raps_vk, proof
-    let compression_pk = read_byte_array(&mut handle)?;
-    let raps_vk = read_byte_array(&mut handle)?;
-    let proof = read_byte_array(&mut handle)?;
+    let compression_pk = read_byte_array(&mut stdin_handle)?;
+    let raps_vk = read_byte_array(&mut stdin_handle)?;
+    let proof = read_byte_array(&mut stdin_handle)?;
 
     let compression_pk: SP1ProvingKey = bincode::deserialize(compression_pk.as_ref()).expect("failed to deserialize pk");
     let raps_vk: SP1VerifyingKey = bincode::deserialize(raps_vk.as_ref()).expect("failed to deserialize vk");
@@ -87,15 +97,8 @@ fn main() -> io::Result<()> {
     let mut compressed_proof_buf: Vec<u8> = Vec::new();
     bincode::serialize_into(&mut compressed_proof_buf, &compressed_proof).expect("failed to serialize proof");
 
-    let stdout = io::stdout();
-    let mut handle = stdout.lock();
-
-    // let us first write the length of the compressed proof
-    let len_bytes = (compressed_proof_buf.len() as u32).to_be_bytes();
-    handle.write_all(&len_bytes)?;
-
-    handle.write_all(&compressed_proof_buf)?; // Writes the bytes
-    handle.flush()?;          // Ensures the data is written immediately
+    let mut stdout_handle = io::stdout().lock();
+    write_byte_array(&mut stdout_handle, &compressed_proof_buf)?;
 
     Ok(())
 }
