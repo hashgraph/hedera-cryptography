@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use jni::objects::{JByteArray, JObject};
-use jni::sys::{jlong, jbyteArray, jboolean};
+use jni::sys::{jbyteArray, jboolean, jshort};
 use jni::JNIEnv;
 use crate::setup::{ContributionProof, PowersOfTauProtocol};
 use crate::hints::{serialize, CRS};
@@ -18,7 +18,7 @@ use crate::jni_util;
 pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_initCRSImpl(
     env: JNIEnv,
     _instance: JObject,
-    signers_num: jlong,
+    signers_num: jshort,
 ) -> jbyteArray {
     let crs = PowersOfTauProtocol::init(signers_num as usize);
     match jni_util::serialize_object(&env, &crs) {

@@ -50,7 +50,7 @@ public class HintsLibraryBridge {
      * @param signersNum the number of signers plus 1
      * @return the CRS object
      */
-    public byte[] initCRS(long signersNum) {
+    public byte[] initCRS(short signersNum) {
         // Support a degenerate case of 0 signers, or a normal case with more signers. Otherwise, error out.
         if (signersNum < 1) {
             return null;
@@ -58,7 +58,7 @@ public class HintsLibraryBridge {
         return initCRSImpl(signersNum);
     }
 
-    private native byte[] initCRSImpl(long signersNum);
+    private native byte[] initCRSImpl(short signersNum);
 
     /**
      * Update a previous CRS object with a new contribution.

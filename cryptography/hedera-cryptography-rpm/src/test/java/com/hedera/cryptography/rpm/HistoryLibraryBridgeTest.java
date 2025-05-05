@@ -225,7 +225,7 @@ public class HistoryLibraryBridgeTest {
         final byte[] nextAddressBookHash =
                 HISTORY.hashAddressBook(nextAddressBook.verifyingKeys(), nextAddressBook.weights());
 
-        final byte[] crs = HINTS.initCRS(SIGNERS_NUM);
+        final byte[] crs = HINTS.initCRS((short) SIGNERS_NUM);
 
         // partyId 0
         final byte[] secretKey0 = HINTS.generateSecretKey(HistoryConstants.RANDOM_0);
@@ -525,7 +525,7 @@ public class HistoryLibraryBridgeTest {
         final byte[] nextAddressBookHash =
                 HISTORY.hashAddressBook(nextAddressBook.verifyingKeys(), nextAddressBook.weights());
 
-        final byte[] crs = HINTS.initCRS(SIGNERS_NUM);
+        final byte[] crs = HINTS.initCRS((short) SIGNERS_NUM);
 
         // partyId 0
         final byte[] secretKey0 = HINTS.generateSecretKey(HistoryConstants.RANDOM_0);
