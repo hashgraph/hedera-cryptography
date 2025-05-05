@@ -98,7 +98,12 @@ pub fn build_address_book_arrays(
         Err(_) => return Result::Err(())
     };
 
-    let weights :Vec<u64> = weights_jlong.iter().map(|x| *x as u64).collect();
+    let mut weights :Vec<u64> = vec![0; num_of_keys as usize];
+    for i in 0..num_of_keys as usize {
+        let x: jlong = weights_jlong[i];
+        if x < 0 { return Result::Err(()); }
+        weights[i as usize] = x as u64;
+    }
 
     Result::Ok((verifying_keys_array, weights))
 }
