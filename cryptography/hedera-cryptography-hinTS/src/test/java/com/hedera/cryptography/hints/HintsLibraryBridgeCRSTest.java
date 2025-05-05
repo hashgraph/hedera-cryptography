@@ -21,7 +21,7 @@ public class HintsLibraryBridgeCRSTest {
     private static final int CONTRIBUTION_PROOF_LENGTH = 128;
 
     private byte[] initAndVerifyCRS() {
-        final byte[] crs = INSTANCE.initCRS(4);
+        final byte[] crs = INSTANCE.initCRS((short) 4);
 
         assertNotNull(crs);
         assertEquals(CRS_4_LENGTH, crs.length);
@@ -37,15 +37,15 @@ public class HintsLibraryBridgeCRSTest {
 
     @Test
     void testInitCRSConstraints() {
-        assertNull(INSTANCE.initCRS(0));
-        assertNull(INSTANCE.initCRS(-2));
-        assertNull(INSTANCE.initCRS(Long.MIN_VALUE));
+        assertNull(INSTANCE.initCRS((short) 0));
+        assertNull(INSTANCE.initCRS((short) -2));
+        assertNull(INSTANCE.initCRS(Short.MIN_VALUE));
     }
 
     @ParameterizedTest
     @ValueSource(ints = {1, 2, 11, 101, 1024})
     void testInitCRSLength(final int n) {
-        assertEquals(304 + n * 288, INSTANCE.initCRS(n).length);
+        assertEquals(304 + n * 288, INSTANCE.initCRS((short) n).length);
     }
 
     private byte[] updateAndVerifyCRS(final byte[] prevCRS) {
