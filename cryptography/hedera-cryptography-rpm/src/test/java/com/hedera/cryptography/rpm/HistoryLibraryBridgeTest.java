@@ -188,6 +188,8 @@ public class HistoryLibraryBridgeTest {
         assertNull(HISTORY.hashAddressBook(new byte[0][], addressBook.weights()));
         assertNull(HISTORY.hashAddressBook(addressBook.verifyingKeys(), null));
         assertNull(HISTORY.hashAddressBook(addressBook.verifyingKeys(), new long[0]));
+        // Check negative weight:
+        assertNull(HISTORY.hashAddressBook(addressBook.verifyingKeys(), new long[] {1, 0, -1, 2}));
         assertNull(HISTORY.hashAddressBook(
                 Arrays.copyOf(addressBook.verifyingKeys(), addressBook.verifyingKeys().length - 1),
                 addressBook.weights()));
