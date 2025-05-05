@@ -2,7 +2,7 @@
 members = [
     "src/main/rust/common",
     "src/main/rust/raps",
-    "src/main/rust/compressor"
+    #"src/main/rust/compressor"
 ]
 resolver = "2"
 
@@ -19,7 +19,7 @@ serde-big-array = "0.5.1"
 serde-hex = "0.1.0"
 sha2 = "0.10.8"
 smallvec = { version = "1.13", features = ["const_generics", "serde"] }
-sp1-sdk = { version = "4.1.0", default-features = false, features = ["native-gnark"] }
+sp1-sdk = { version = "4.1.0", default-features = false }
 sp1-zkvm = { version = "4.1.0" }
 sp1-verifier = { version = "4.1.0" }
 
