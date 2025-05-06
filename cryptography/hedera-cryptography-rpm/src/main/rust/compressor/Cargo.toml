@@ -1,0 +1,14 @@
+[package]
+version = "0.1.0"
+name = "compressor"
+edition = "2021"
+
+[dependencies]
+ab-rotation-lib = { path = "../common" }
+sp1-sdk = { version = "4.1.0", default-features = false, features = ["native-gnark"] }
+byteorder = "1.4"
+alloy-sol-types = { workspace = true }
+bincode = { workspace = true }
+
+[features]
+default = []

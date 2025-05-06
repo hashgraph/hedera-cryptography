@@ -2,6 +2,7 @@
 members = [
     "src/main/rust/common",
     "src/main/rust/raps",
+    #"src/main/rust/compressor"
 ]
 resolver = "2"
 
@@ -18,10 +19,12 @@ serde-big-array = "0.5.1"
 serde-hex = "0.1.0"
 sha2 = "0.10.8"
 smallvec = { version = "1.13", features = ["const_generics", "serde"] }
-sp1-sdk = { git = "https://github.com/succinctlabs/sp1.git", rev = "a4e023df60a43cc00ba54469966b257801732421", default-features = false }
-sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git", rev = "a4e023df60a43cc00ba54469966b257801732421" }
+sp1-sdk = { version = "4.1.0", default-features = false }
+sp1-zkvm = { version = "4.1.0" }
+sp1-verifier = { version = "4.1.0" }
 
 ab-rotation-lib = { path = "src/main/rust/common" }
+raps = { path = "src/main/rust/raps" }
 
 [patch.crates-io]
 sha2-v0-10-8 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", tag = "sha2-v0.10.8-patch-v1" }

@@ -20,4 +20,12 @@ sol! {
         bytes32 tss_vk_hash;
         bytes32 vk_digest;
     }
+
+    #[derive(Debug)]
+    struct CompressedPublicValuesStruct {
+        bytes32 ab_genesis_hash;
+        bytes32 ab_hash;
+        bytes32 tss_vk_hash;
+        bytes32 vk_digest;
+    }
 }

@@ -12,6 +12,7 @@ use alloy_sol_types::SolType;
 use sp1_sdk::{
     HashableKey, Prover, ProverClient, SP1ProofWithPublicValues, SP1ProvingKey, SP1Stdin, SP1VerifyingKey,
 };
+use sp1_verifier::Groth16Verifier;
 
 pub struct RAPS {}
 
@@ -51,6 +52,10 @@ impl RAPS {
         let (pk, vk) = prover.setup(zkvm_elf);
 
         (pk, vk)
+    }
+
+    pub fn extract_vk_digest(vk: &SP1VerifyingKey) -> String {
+        vk.bytes32()
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -112,7 +117,10 @@ impl RAPS {
 
         //parse the proof and check whether vk_digest matches
         let parsed_vk_digest = {
-            let parsed_prev_proof= match PublicValuesStruct::abi_decode(&proof.public_values.to_vec(), true) {
+            let parsed_prev_proof= match PublicValuesStruct::abi_decode(
+                &proof.public_values.to_vec(),
+                true
+            ) {
                 Ok(val) => val,
                 Err(_) => return false
             };
@@ -124,6 +132,21 @@ impl RAPS {
         }
 
         verification.is_ok()
+    }
+
+    /// verify_compressed_proof is used to verify the output of the proof compressor
+    pub fn verify_compressed_proof(
+        compression_vk_digest: &str,
+        compressed_proof: &SP1ProofWithPublicValues
+    ) -> bool {
+        let result = Groth16Verifier::verify(
+            &compressed_proof.bytes(),
+            &compressed_proof.public_values.to_vec(),
+            compression_vk_digest,
+            &sp1_verifier::GROTH16_VK_BYTES
+        );
+
+        result.is_ok()
     }
 }
 
