@@ -4,7 +4,7 @@ use ab_rotation_lib::{
     address_book::{AddressBook, Signatures},
     ed25519::{Signature, SigningKey, VerifyingKey, ENTROPY_SIZE},
     sha256::*,
-    statement::{Statement, CompressedStatement},
+    statement::Statement,
     PublicValuesStruct,
     errors::*,
 };
@@ -117,7 +117,10 @@ impl RAPS {
 
         //parse the proof and check whether vk_digest matches
         let parsed_vk_digest = {
-            let parsed_prev_proof= match PublicValuesStruct::abi_decode(&proof.public_values.to_vec(), true) {
+            let parsed_prev_proof= match PublicValuesStruct::abi_decode(
+                &proof.public_values.to_vec(),
+                true
+            ) {
                 Ok(val) => val,
                 Err(_) => return false
             };
@@ -131,46 +134,11 @@ impl RAPS {
         verification.is_ok()
     }
 
-    pub fn compress_rotation_proof(
-        compression_pk: &SP1ProvingKey,               // proving key output by sp1 setup for compression zkVM
-        raps_vk: &SP1VerifyingKey,                    // verifying key output by sp1 setup for RAPS zkVM
-        proof: SP1ProofWithPublicValues,              // the proof to compress
-    ) -> Result<SP1ProofWithPublicValues, RAPSError>{
-        let prover = ProverClient::builder().cpu().build();
-
-        let parsed_proof = PublicValuesStruct::abi_decode(&proof.public_values.to_vec(), true)
-            .map_err(|_| RAPSError::InvalidInput(("error decoding previous proof").to_string()))?;
-
-        let statement = CompressedStatement {
-            vk_digest: raps_vk.hash_u32(),
-            ab_genesis_hash: parsed_proof.ab_genesis_hash.0,
-            ab_current_hash: parsed_proof.ab_curr_hash.0,
-            ab_next_hash: parsed_proof.ab_next_hash.0,
-            tss_vk_current_hash: parsed_proof.tss_vk_hash.0,
-        };
-
-        // Supply the statement and (optional) prev proof to the zkVM
-        let mut stdin = SP1Stdin::new();
-        stdin.write(&statement);
-
-        let box_proof_inner = proof
-            .proof
-            .try_as_compressed()
-            .ok_or(RAPSError::InvalidInput("expected valid proof to compress".to_string()))?;
-
-        stdin.write_proof(*box_proof_inner, raps_vk.vk.clone());
-
-        // Generate the proofs
-        let compressed_proof: SP1ProofWithPublicValues = prover
-            .prove(compression_pk, &stdin)
-            .groth16()
-            .run()
-            .map_err(|_| RAPSError::ProverError)?;
-
-        Ok(compressed_proof)
-    }
-
-    pub fn verify_compressed_proof(compression_vk_digest: &str, compressed_proof: &SP1ProofWithPublicValues) -> bool {
+    /// verify_compressed_proof is used to verify the output of the proof compressor
+    pub fn verify_compressed_proof(
+        compression_vk_digest: &str,
+        compressed_proof: &SP1ProofWithPublicValues
+    ) -> bool {
         let result = Groth16Verifier::verify(
             &compressed_proof.bytes(),
             &compressed_proof.public_values.to_vec(),
