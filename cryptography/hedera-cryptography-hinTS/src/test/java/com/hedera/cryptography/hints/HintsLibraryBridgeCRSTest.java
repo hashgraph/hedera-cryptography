@@ -40,6 +40,9 @@ public class HintsLibraryBridgeCRSTest {
         assertNull(INSTANCE.initCRS((short) 0));
         assertNull(INSTANCE.initCRS((short) -2));
         assertNull(INSTANCE.initCRS(Short.MIN_VALUE));
+
+        // Below relies on HintsLibraryBridge.MAX_SIGNERS_NUM = 1024:
+        assertNull(INSTANCE.initCRS((short) 1025));
     }
 
     @ParameterizedTest

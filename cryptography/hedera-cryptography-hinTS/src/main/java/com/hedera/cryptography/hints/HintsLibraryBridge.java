@@ -12,6 +12,9 @@ public class HintsLibraryBridge {
     private static final SingletonLoader<HintsLibraryBridge> INSTANCE_HOLDER =
             new SingletonLoader<>("hints", new HintsLibraryBridge());
 
+    /** The max number of signers that we can support w/o running into OutOfMemory as the memory usage is quadratic. */
+    private static final short MAX_SIGNERS_NUM = (short) 1024;
+
     static {
         // Open the package to allow access to the native library
         // This can be done in module-info.java as well, but by default the compiler complains since there are no
@@ -52,7 +55,7 @@ public class HintsLibraryBridge {
      */
     public byte[] initCRS(short signersNum) {
         // Support a degenerate case of 0 signers, or a normal case with more signers. Otherwise, error out.
-        if (signersNum < 1) {
+        if (signersNum < 1 || signersNum > MAX_SIGNERS_NUM) {
             return null;
         }
         return initCRSImpl(signersNum);
@@ -206,7 +209,8 @@ public class HintsLibraryBridge {
                 || message == null
                 || message.length == 0
                 || aggregationKey == null
-                || aggregationKey.length == 0) {
+                || aggregationKey.length == 0
+                || partyId >= MAX_SIGNERS_NUM) {
             return false;
         }
         return verifyBlsImpl(signature, message, aggregationKey, partyId);
@@ -236,6 +240,11 @@ public class HintsLibraryBridge {
                 || partialSignatures.length == 0
                 || parties.length != partialSignatures.length) {
             return false;
+        }
+        for (int i = 0; i < parties.length; i++) {
+            if (parties[i] >= MAX_SIGNERS_NUM) {
+                return false;
+            }
         }
         return verifyBlsBatchImpl(message, aggregationKey, parties, partialSignatures);
     }
@@ -271,6 +280,11 @@ public class HintsLibraryBridge {
                 || partialSignatures.length == 0
                 || parties.length != partialSignatures.length) {
             return null;
+        }
+        for (int i = 0; i < parties.length; i++) {
+            if (parties[i] >= MAX_SIGNERS_NUM) {
+                return null;
+            }
         }
         return aggregateSignaturesImpl(crs, aggregationKey, verificationKey, parties, partialSignatures);
     }
@@ -333,8 +347,8 @@ public class HintsLibraryBridge {
         return (crs.length - 304) / 288;
     }
 
-    // Returns true if 0 <= partiyId < n.
+    // Returns true if 0 <= partiyId < n && n <= MAX_SIGNERS_NUM.
     private static boolean validatePartyId(final int partyId, final int n) {
-        return partyId >= 0 && partyId < n;
+        return n <= MAX_SIGNERS_NUM && partyId >= 0 && partyId < n;
     }
 }
