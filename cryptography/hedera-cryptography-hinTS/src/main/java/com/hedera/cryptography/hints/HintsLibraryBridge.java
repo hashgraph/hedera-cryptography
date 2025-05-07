@@ -13,7 +13,7 @@ public class HintsLibraryBridge {
             new SingletonLoader<>("hints", new HintsLibraryBridge());
 
     /** The max number of signers that we can support w/o running into OutOfMemory as the memory usage is quadratic. */
-    private static final short MAX_SIGNERS_NUM = (short) 1024;
+    private static final short MAX_SIGNERS_NUM = (short) 1023;
 
     static {
         // Open the package to allow access to the native library
