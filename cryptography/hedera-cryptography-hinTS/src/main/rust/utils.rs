@@ -86,11 +86,11 @@ pub fn poly_domain_mult_ω<F: PrimeField>(f: &DensePolynomial<F>, ω: &F) -> Den
 
 /// computes polynomial c . f(x), for some constant c and input polynomial f(x)
 pub fn poly_eval_mult_c<F: PrimeField>(f: &DensePolynomial<F>, c: &F) -> DensePolynomial<F> {
-    let mut new_poly = f.clone();
-    for i in 0..(f.degree() + 1) {
-        new_poly.coeffs[i] = new_poly.coeffs[i] * c.clone();
+    if f.coeffs.is_empty() {
+        return f.clone();
     }
-    new_poly
+
+    DensePolynomial { coeffs: f.coeffs.iter().map(|a| a.clone() * c.clone()).collect() }
 }
 
 /// outputs a generator of the multiplicative subgroup of input size n
@@ -101,4 +101,33 @@ pub fn nth_root_of_unity<F: PrimeField>(n: usize) -> Option<F> {
 /// checks whether n is at least 2 and a power of 2
 pub fn is_n_valid(n: usize) -> bool {
     n > 1 && (n & (n - 1)) == 0
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ark_bls12_381::Fr as F;
+
+    #[test]
+    fn test_poly_eval_mult_c() {
+        let empty_poly = DensePolynomial::<F> { coeffs: vec![] };
+        let c = F::from(2u64);
+
+        let result = super::poly_eval_mult_c(&empty_poly, &c);
+        assert!(result.coeffs.is_empty());
+        assert_eq!(result.degree(), 0);
+
+        let poly = DensePolynomial::<F> { coeffs: vec![F::from(1u64)] };
+        let result = super::poly_eval_mult_c(&poly, &c);
+        assert_eq!(result.coeffs.len(), 1);
+        assert_eq!(result.coeffs[0], F::from(2u64));
+
+        let poly = DensePolynomial::<F> { coeffs: vec![F::from(1u64), F::from(2u64)] };
+        let result = super::poly_eval_mult_c(&poly, &c);
+        assert_eq!(result.coeffs.len(), 2);
+        assert_eq!(result.coeffs[0], F::from(2u64));
+        assert_eq!(result.coeffs[1], F::from(4u64));
+    }
+
 }
