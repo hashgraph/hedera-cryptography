@@ -518,6 +518,13 @@ impl HinTS {
         signer_ids: impl AsRef<[usize]>,
         signatures: impl AsRef<[PartialSignature]>,
     ) -> Result<bool, HinTSError> {
+        // check that the two lists are of the same size
+        if signer_ids.as_ref().len() != signatures.as_ref().len() {
+            return Err(HinTSError::InvalidInput(
+                "signer_ids and signatures must be of the same size".to_string(),
+            ));
+        }
+
         // ensure all signer_ids are within the valid range
         if signer_ids.as_ref().iter().any(|&id| id >= ak.n - 1) {
             return Err(HinTSError::InvalidInput(
