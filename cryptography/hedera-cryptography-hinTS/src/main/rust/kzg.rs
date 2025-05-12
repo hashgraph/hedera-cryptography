@@ -13,6 +13,8 @@ use ark_std::{format, marker::PhantomData, ops::*, vec};
 
 use ark_std::rand::RngCore;
 
+use crate::errors::HinTSError;
+
 pub struct KZG10<E: Pairing, P: DenseUVPolynomial<E::ScalarField>> {
     _engine: PhantomData<E>,
     _poly: PhantomData<P>,
@@ -68,19 +70,25 @@ where
         pp
     }
 
-    pub fn commit_g1(params: &UniversalParams<E>, polynomial: &P) -> E::G1Affine {
+    pub fn commit_g1(params: &UniversalParams<E>, polynomial: &P) -> Result<E::G1Affine, HinTSError> {
         let d = polynomial.degree();
+        if d >= params.powers_of_g.len() {
+            return Err(HinTSError::InsufficientCRS(d));
+        }
 
         let plain_coeffs: Vec<<<E as Pairing>::ScalarField as PrimeField>::BigInt> =
             convert_to_bigints(&polynomial.coeffs());
 
         let powers_of_g = &params.powers_of_g[..=d].to_vec();
         let commitment = <E::G1 as VariableBaseMSM>::msm_bigint(&powers_of_g[..], plain_coeffs.as_slice());
-        commitment.into_affine()
+        Ok(commitment.into_affine())
     }
 
-    pub fn commit_g2(params: &UniversalParams<E>, polynomial: &P) -> E::G2Affine {
+    pub fn commit_g2(params: &UniversalParams<E>, polynomial: &P) -> Result<E::G2Affine, HinTSError> {
         let d = polynomial.degree();
+        if d >= params.powers_of_h.len() {
+            return Err(HinTSError::InsufficientCRS(d));
+        }
 
         let plain_coeffs: Vec<<<E as Pairing>::ScalarField as PrimeField>::BigInt> =
             convert_to_bigints(&polynomial.coeffs());
@@ -88,14 +96,14 @@ where
         let powers_of_h = &params.powers_of_h[..=d].to_vec();
         let commitment = <E::G2 as VariableBaseMSM>::msm_bigint(&powers_of_h[..], plain_coeffs.as_slice());
 
-        commitment.into_affine()
+        Ok(commitment.into_affine())
     }
 
     pub fn compute_opening_proof(
         params: &UniversalParams<E>,
         polynomial: &P,
         point: &E::ScalarField,
-    ) -> E::G1Affine {
+    ) -> Result<E::G1Affine, HinTSError> {
         let eval = polynomial.evaluate(point);
         let eval_as_poly = P::from_coefficients_vec(vec![eval]);
         let numerator = polynomial.clone().sub(&eval_as_poly);
