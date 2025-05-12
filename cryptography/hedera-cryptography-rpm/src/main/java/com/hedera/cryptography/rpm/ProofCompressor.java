@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.hedera.cryptography.rpm;
 
-import com.hedera.common.nativesupport.ProcessAPI;
+import com.hedera.common.nativesupport.api.ProcessAPI;
 
 /**
  * A WRAPS proof compressor.
