@@ -419,6 +419,11 @@ impl HinTS {
                         format!("Invalid hint: got hint.n = {}, expected n = {}", hint.n, n))
                     );
                 }
+                if ! Self::verify_hint(crs, n, i, hint)? {
+                    return Err(HinTSError::InvalidInput(
+                        format!("Invalid hint: hint verification failed for i = {}", i))
+                    );
+                }
                 weights.push(weight.clone());
                 epks.push(hint.clone());
             } else {
