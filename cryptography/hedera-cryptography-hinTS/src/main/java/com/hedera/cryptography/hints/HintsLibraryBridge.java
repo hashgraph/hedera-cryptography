@@ -15,6 +15,9 @@ public class HintsLibraryBridge {
     /** The max number of signers that we can support w/o running into OutOfMemory as the memory usage is quadratic. */
     private static final short MAX_SIGNERS_NUM = (short) 1023;
 
+    /** The max theoretical sum of weights all nodes together can have, which is 2^63 because we use signed long. */
+    private static final long MAX_SUM_OF_WEIGHTS = Long.MAX_VALUE;
+
     static {
         // Open the package to allow access to the native library
         // This can be done in module-info.java as well, but by default the compiler complains since there are no
@@ -155,7 +158,11 @@ public class HintsLibraryBridge {
     public AggregationAndVerificationKeys preprocess(
             final byte[] crs, final int[] parties, final byte[][] hintsPublicKeys, final long[] weights, int n) {
         // Basic sanity
-        if (!validateCRS(crs, n) || parties == null || hintsPublicKeys == null || weights == null) {
+        if (!validateCRS(crs, n)
+                || parties == null
+                || hintsPublicKeys == null
+                || weights == null
+                || !validateWeightsSum(weights)) {
             return null;
         }
         // ensure the arrays modeling the map are good and satisfy the maximum size constraint
@@ -350,5 +357,18 @@ public class HintsLibraryBridge {
     // Returns true if 0 <= partiyId < n && n <= MAX_SIGNERS_NUM.
     private static boolean validatePartyId(final int partyId, final int n) {
         return n <= MAX_SIGNERS_NUM && partyId >= 0 && partyId < n;
+    }
+
+    /** Check if the sum of weights doesn't exceed MAX_SUM_OF_WEIGHTS. */
+    public static boolean validateWeightsSum(final long weights[]) {
+        try {
+            long sum = 0;
+            for (int i = 0; i < weights.length; i++) {
+                sum = Math.addExact(sum, weights[i]);
+            }
+            return sum >= 0L && sum <= MAX_SUM_OF_WEIGHTS;
+        } catch (final ArithmeticException e) {
+            return false;
+        }
     }
 }

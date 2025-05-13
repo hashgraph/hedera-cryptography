@@ -2,6 +2,7 @@
 package com.hedera.cryptography.rpm;
 
 import com.hedera.common.nativesupport.SingletonLoader;
+import com.hedera.cryptography.hints.HintsLibraryBridge;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -122,7 +123,10 @@ public class HistoryLibraryBridge {
      * @return the hash of the address book
      */
     public byte[] hashAddressBook(final byte[][] verifyingKeys, final long[] weights) {
-        if (verifyingKeys == null || weights == null || verifyingKeys.length != weights.length) {
+        if (verifyingKeys == null
+                || weights == null
+                || verifyingKeys.length != weights.length
+                || !HintsLibraryBridge.validateWeightsSum(weights)) {
             return null;
         }
         return hashAddressBookImpl(verifyingKeys, weights);
@@ -185,7 +189,9 @@ public class HistoryLibraryBridge {
                 || nextAddressBookHintsVerificationKeyHash == null
                 || nextAddressBookHintsVerificationKeyHash.length == 0
                 || signatures == null
-                || signatures.length == 0) {
+                || signatures.length == 0
+                || !HintsLibraryBridge.validateWeightsSum(currentAddressBookWeights)
+                || !HintsLibraryBridge.validateWeightsSum(nextAddressBookWeights)) {
             return null;
         }
         if (currentAddressBookVerifyingKeys.length != currentAddressBookWeights.length

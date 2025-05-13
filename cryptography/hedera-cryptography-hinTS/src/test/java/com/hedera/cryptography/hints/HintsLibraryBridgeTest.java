@@ -241,10 +241,19 @@ public class HintsLibraryBridgeTest {
         assertNull(INSTANCE.preprocess(
                 crs, new int[] {0, 1, 2}, new byte[][] {hints0, hints1, hints2}, new long[] {111, 1, 222}, 4));
 
-        // uncorrupt the hints and do a sanity check
+        // uncorrupt the hints
         hints1[17]--;
         hints1[111]++;
         hints1[302]--;
+        // and check if weights cannot overflow `long`:
+        assertNull(INSTANCE.preprocess(
+                crs,
+                new int[] {0, 1, 2},
+                new byte[][] {hints0, hints1, hints2},
+                new long[] {Long.MAX_VALUE - 1L, 1, 222},
+                4));
+
+        // and finally do a sanity check:
         assertNotNull(INSTANCE.preprocess(
                 crs, new int[] {0, 1, 2}, new byte[][] {hints0, hints1, hints2}, new long[] {111, 1, 222}, 4));
     }
