@@ -15,7 +15,7 @@ public class HintsLibraryBridge {
     /** The max number of signers that we can support w/o running into OutOfMemory as the memory usage is quadratic. */
     private static final short MAX_SIGNERS_NUM = (short) 1023;
 
-    /** The max theoretical sum of weights all nodes together can have, which is 2^63 because we use signed long. */
+    /** The max theoretical sum of weights all nodes together can have, which is 2^63-1 because we use signed long. */
     private static final long MAX_SUM_OF_WEIGHTS = Long.MAX_VALUE;
 
     static {
@@ -364,6 +364,7 @@ public class HintsLibraryBridge {
         try {
             long sum = 0;
             for (int i = 0; i < weights.length; i++) {
+                // Math.addExact() throws ArithmeticException if the sum overflows
                 sum = Math.addExact(sum, weights[i]);
             }
             return sum >= 0L && sum <= MAX_SUM_OF_WEIGHTS;
