@@ -247,7 +247,7 @@ impl HinTS {
             let f = num.div(&z_of_x);
             let sk_times_f = utils::poly_eval_mult_c(&f, &sk);
 
-            let com = KZG::commit_g1(&crs, &sk_times_f);
+            let com = KZG::commit_g1(&crs, &sk_times_f)?;
 
             qz_terms.push(com);
         }
@@ -264,17 +264,17 @@ impl HinTS {
         //qx_term_mul_tau = sk_i * (l_i(x) - l_i(0)) / x
         let qx_term_mul_tau = utils::poly_eval_mult_c(&num, &sk);
         //qx_term_com = [ sk_i * (l_i(τ) - l_i(0)) / τ ]_1
-        let qx_term_com = KZG::commit_g1(&crs, &qx_term);
+        let qx_term_com = KZG::commit_g1(&crs, &qx_term)?;
         //qx_term_mul_tau_com = [ sk_i * (l_i(τ) - l_i(0)) ]_1
-        let qx_term_mul_tau_com = KZG::commit_g1(&crs, &qx_term_mul_tau);
+        let qx_term_mul_tau_com = KZG::commit_g1(&crs, &qx_term_mul_tau)?;
 
         //release my public key
         let sk_as_poly = utils::compute_constant_poly(sk);
-        let pk = KZG::commit_g1(&crs, &sk_as_poly);
+        let pk = KZG::commit_g1(&crs, &sk_as_poly)?;
 
         let sk_times_l_i_of_x = utils::poly_eval_mult_c(&l_i_of_x, &sk);
-        let com_sk_l_i_g1 = KZG::commit_g1(&crs, &sk_times_l_i_of_x);
-        let com_sk_l_i_g2 = KZG::commit_g2(&crs, &sk_times_l_i_of_x);
+        let com_sk_l_i_g1 = KZG::commit_g1(&crs, &sk_times_l_i_of_x)?;
+        let com_sk_l_i_g2 = KZG::commit_g2(&crs, &sk_times_l_i_of_x)?;
 
         Ok(ExtendedPublicKey {
             i: i,
@@ -330,7 +330,7 @@ impl HinTS {
         )?;
         let z_of_x = utils::compute_vanishing_poly(n);
 
-        let l_i_of_tau_com = KZG::commit_g2(&crs, &l_i_of_x);
+        let l_i_of_tau_com = KZG::commit_g2(&crs, &l_i_of_x)?;
         let lhs = <Curve as Pairing>::pairing(hint.sk_i_l_i_of_tau_com_1, crs.powers_of_h[0]);
         let rhs = <Curve as Pairing>::pairing(hint.pk_i, l_i_of_tau_com);
         check_or_return_false!(lhs == rhs);
@@ -351,7 +351,7 @@ impl HinTS {
             let f = num.div(&z_of_x);
 
             //f = li^2 - l_i / z or li lj / z
-            let f_com = KZG::commit_g2(&crs, &f);
+            let f_com = KZG::commit_g2(&crs, &f)?;
 
             let lhs = <Curve as Pairing>::pairing(hint.qz_i_terms[j], crs.powers_of_h[0]);
             let rhs = <Curve as Pairing>::pairing(hint.pk_i, f_com);
@@ -369,7 +369,7 @@ impl HinTS {
         //qx_term = (l_i(x) - l_i(0)) / x
         let qx_term = &num.div(&den);
         //qx_term_com = [ sk_i * (l_i(τ) - l_i(0)) / τ ]_1
-        let qx_term_com = KZG::commit_g2(&crs, &qx_term);
+        let qx_term_com = KZG::commit_g2(&crs, &qx_term)?;
         let lhs = <Curve as Pairing>::pairing(hint.qx_i_term, crs.powers_of_h[0]);
         let rhs = <Curve as Pairing>::pairing(hint.pk_i, qx_term_com);
         check_or_return_false!(lhs == rhs);
@@ -377,7 +377,7 @@ impl HinTS {
         //qx_term_mul_tau = (l_i(x) - l_i(0))
         let qx_term_mul_tau = &num;
         //qx_term_mul_tau_com = [ (l_i(τ) - l_i(0)) ]_1
-        let qx_term_mul_tau_com = KZG::commit_g2(&crs, &qx_term_mul_tau);
+        let qx_term_mul_tau_com = KZG::commit_g2(&crs, &qx_term_mul_tau)?;
         let lhs = <Curve as Pairing>::pairing(hint.qx_i_term_mul_tau, crs.powers_of_h[0]);
         let rhs = <Curve as Pairing>::pairing(hint.pk_i, qx_term_mul_tau_com);
         check_or_return_false!(lhs == rhs);
@@ -417,6 +417,11 @@ impl HinTS {
                 if hint.n != n {
                     return Err(HinTSError::InvalidInput(
                         format!("Invalid hint: got hint.n = {}, expected n = {}", hint.n, n))
+                    );
+                }
+                if ! Self::verify_hint(crs, n, i, hint)? {
+                    return Err(HinTSError::InvalidInput(
+                        format!("Invalid hint: hint verification failed for i = {}", i))
                     );
                 }
                 weights.push(weight.clone());
@@ -465,11 +470,11 @@ impl HinTS {
             g_0: crs.powers_of_g[0],
             h_0: crs.powers_of_h[0],
             h_1: crs.powers_of_h[1],
-            l_n_minus_1_of_tau_com: KZG::commit_g1(&crs, &l_n_minus_1_of_x),
-            w_of_tau_com: KZG::commit_g1(&crs, &w_of_x),
+            l_n_minus_1_of_tau_com: KZG::commit_g1(&crs, &l_n_minus_1_of_x)?,
+            w_of_tau_com: KZG::commit_g1(&crs, &w_of_x)?,
             sk_of_tau_com: add::<G2AffinePoint>(sk_l_of_tau_coms),
-            z_of_tau_com: KZG::commit_g2(&crs, &z_of_x),
-            tau_com: KZG::commit_g2(&crs, &x_monomial),
+            z_of_tau_com: KZG::commit_g2(&crs, &z_of_x)?,
+            tau_com: KZG::commit_g2(&crs, &x_monomial)?,
         };
 
         let ak = AggregationKey {
@@ -518,6 +523,13 @@ impl HinTS {
         signer_ids: impl AsRef<[usize]>,
         signatures: impl AsRef<[PartialSignature]>,
     ) -> Result<bool, HinTSError> {
+        // check that the two lists are of the same size
+        if signer_ids.as_ref().len() != signatures.as_ref().len() {
+            return Err(HinTSError::InvalidInput(
+                "signer_ids and signatures must be of the same size".to_string(),
+            ));
+        }
+
         // ensure all signer_ids are within the valid range
         if signer_ids.as_ref().iter().any(|&id| id >= ak.n - 1) {
             return Err(HinTSError::InvalidInput(
@@ -637,12 +649,12 @@ impl HinTS {
             .collect::<Vec<PartialSignature>>();
         let agg_sig = add::<G2AffinePoint>(partial_sigs).mul(n_inv).into_affine();
 
-        let parsum_of_tau_com = KZG::commit_g1(&crs, &psw_of_x);
-        let b_of_tau_com = KZG::commit_g1(&crs, &b_of_x);
-        let q1_of_tau_com = KZG::commit_g1(&crs, &psw_wff_q_of_x);
-        let q2_of_tau_com = KZG::commit_g1(&crs, &b_wff_q_of_x);
-        let q3_of_tau_com = KZG::commit_g1(&crs, &psw_check_q_of_x);
-        let q4_of_tau_com = KZG::commit_g1(&crs, &b_check_q_of_x);
+        let parsum_of_tau_com = KZG::commit_g1(&crs, &psw_of_x)?;
+        let b_of_tau_com = KZG::commit_g1(&crs, &b_of_x)?;
+        let q1_of_tau_com = KZG::commit_g1(&crs, &psw_wff_q_of_x)?;
+        let q2_of_tau_com = KZG::commit_g1(&crs, &b_wff_q_of_x)?;
+        let q3_of_tau_com = KZG::commit_g1(&crs, &psw_check_q_of_x)?;
+        let q4_of_tau_com = KZG::commit_g1(&crs, &b_check_q_of_x)?;
 
         // RO(SK, W, B, ParSum, Qx, Qz, Qx(τ ) · τ, Q1, Q2, Q3, Q4)
         let r = random_oracle(
@@ -660,13 +672,13 @@ impl HinTS {
         )?;
         let r_div_ω: F = r / ω;
 
-        let psw_of_r_proof = KZG::compute_opening_proof(&crs, &psw_of_x, &r);
-        let w_of_r_proof = KZG::compute_opening_proof(&crs, &w_of_x, &r);
-        let b_of_r_proof = KZG::compute_opening_proof(&crs, &b_of_x, &r);
-        let psw_wff_q_of_r_proof = KZG::compute_opening_proof(&crs, &psw_wff_q_of_x, &r);
-        let psw_check_q_of_r_proof = KZG::compute_opening_proof(&crs, &psw_check_q_of_x, &r);
-        let b_wff_q_of_r_proof = KZG::compute_opening_proof(&crs, &b_wff_q_of_x, &r);
-        let b_check_q_of_r_proof = KZG::compute_opening_proof(&crs, &b_check_q_of_x, &r);
+        let psw_of_r_proof = KZG::compute_opening_proof(&crs, &psw_of_x, &r)?;
+        let w_of_r_proof = KZG::compute_opening_proof(&crs, &w_of_x, &r)?;
+        let b_of_r_proof = KZG::compute_opening_proof(&crs, &b_of_x, &r)?;
+        let psw_wff_q_of_r_proof = KZG::compute_opening_proof(&crs, &psw_wff_q_of_x, &r)?;
+        let psw_check_q_of_r_proof = KZG::compute_opening_proof(&crs, &psw_check_q_of_x, &r)?;
+        let b_wff_q_of_r_proof = KZG::compute_opening_proof(&crs, &b_wff_q_of_x, &r)?;
+        let b_check_q_of_r_proof = KZG::compute_opening_proof(&crs, &b_check_q_of_x, &r)?;
 
         // batched opening argument as it is for the same point r
         let merged_proof: G1AffinePoint = (psw_of_r_proof
@@ -684,7 +696,7 @@ impl HinTS {
             agg_weight: total_active_weight,
 
             parsum_of_r_div_ω: psw_of_x.evaluate(&r_div_ω),
-            opening_proof_r_div_ω: KZG::compute_opening_proof(&crs, &psw_of_x, &r_div_ω),
+            opening_proof_r_div_ω: KZG::compute_opening_proof(&crs, &psw_of_x, &r_div_ω)?,
 
             parsum_of_r: psw_of_x.evaluate(&r),
             w_of_r: w_of_x.evaluate(&r),
