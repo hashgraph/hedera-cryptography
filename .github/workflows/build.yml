@@ -193,7 +193,7 @@ jobs:
     needs:
       - build
       - test-cross-platform
-    if: ${{ !failure() && !cancelled() }}
+    if: ${{ (github.event_name == 'push') && !failure() && !cancelled() }}
     with:
       custom-job-label: Source Code
       enable-snyk-scan: true
