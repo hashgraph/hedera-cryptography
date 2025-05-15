@@ -9,7 +9,3 @@ dependencies {
     implementation(project(":hedera-cryptography-hinTS"))
     implementation(project(":hedera-cryptography-rpm"))
 }
-
-tasks.named("snykResolvedDepsJson") {
-    dependsOn(":cryptography:hedera-cryptography-hinTS:build")
-}
