@@ -82,6 +82,7 @@ jobs:
         id: snyk
         env:
           SNYK_TOKEN: ${{ secrets.snyk-token }}
+          DEBUG: "*snyk*"
         if: ${{ inputs.enable-snyk-scan && !cancelled() && !failure() }}
         run: snyk test --org=${{ inputs.snyk-org-identifier }} --all-projects --severity-threshold=high --json-file-output=snyk-test.json
 
