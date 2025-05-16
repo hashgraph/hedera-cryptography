@@ -10,7 +10,6 @@ cargo { libname = "raps" }
 testModuleInfo {
     requires("org.junit.jupiter.api")
     requires("org.junit.jupiter.params")
-    runtimeOnly("com.hedera.cryptography.hints")
 }
 
 tasks.test { environment(mapOf("TSS_LIB_NUM_OF_CORES" to "10")) }
