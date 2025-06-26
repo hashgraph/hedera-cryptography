@@ -90,6 +90,6 @@ jobs:
       # TODO remove -PpublishTestRelease=true for fully automated (non-snapshot) releases
       - name: Gradle Publish to Maven Central
         env:
-          NEXUS_USERNAME: ${{ secrets.SVCS_OSSRH_USER_NAME }}
-          NEXUS_PASSWORD: ${{ secrets.SVCS_OSSRH_USER_PASSWORD }}
+          NEXUS_USERNAME: ${{ secrets.CENTRAL_PUBLISHING_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.CENTRAL_PUBLISHING_PASSWORD }}
         run: ./gradlew publishAggregationToCentralPortal -PpublishSigningEnabled=true -PpublishTestRelease=true
