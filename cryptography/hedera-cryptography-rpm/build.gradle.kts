@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-import org.gradle.api.internal.file.FileOperations
 import java.net.URI
+import org.gradle.api.internal.file.FileOperations
 import org.gradle.kotlin.dsl.withType
 import org.hiero.gradle.environment.EnvAccess
 import org.hiero.gradle.extensions.CargoToolchain
@@ -22,7 +22,8 @@ interface Injected {
 tasks.withType<CargoBuildTask> {
     val injected = project.objects.newInstance<Injected>()
 
-    val goDstDir = layout.buildDirectory.dir("go-sdk").get()
+    // Add the cargo build task platform so that parallel downloads don't clash:
+    val goDstDir = layout.buildDirectory.dir("go-sdk/${toolchain.get().platform}").get()
     val goSdkDir = goDstDir.dir("go").asFile.absolutePath
     val hostOperatingSystem =
         System.getProperty("os.name").lowercase().let {
@@ -69,7 +70,6 @@ tasks.withType<CargoBuildTask> {
         println("Go SDK has been installed at ${goSdkDir}")
     }
 
-
     // Define the binary name and the sources.
     // Assume the sources are already in the parent CargoBuildTask inputs,
     // so we don't need to add any additional inputs for our doLast{} actions here
@@ -80,7 +80,6 @@ tasks.withType<CargoBuildTask> {
     val outDir = layout.buildDirectory.dir("target/${toolchain.get().platform}").get()
 
     doLast {
-
         val osArchArray = toolchain.get().folder.split("/")
 
         println(
