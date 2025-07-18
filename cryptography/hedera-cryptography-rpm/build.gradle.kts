@@ -77,7 +77,45 @@ tasks.withType<CargoBuildTask> {
                 outDir.toString()
         )
 
-        val includePath = "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include"
+        println("Determining include path...")
+        val includePath =
+            StringBuilder()
+                .apply {
+                    val timoutInMinutes = 1L
+                    val processBuilder =
+                        ProcessBuilder()
+                            .command("xcrun", "--show-sdk-path")
+                            .redirectErrorStream(true)
+                    val process = processBuilder.start()
+                    val hasExited = process.waitFor(timoutInMinutes, TimeUnit.MINUTES)
+
+                    while (true) {
+                        val c = process.inputStream.read()
+                        if (c == -1) break
+                        if (c < 20) continue // skip control characters like new line
+                        append(c.toChar())
+                    }
+
+                    if (!hasExited) {
+                        println(toString())
+                        throw GradleException(
+                            "Determining include path hasn't finished in " +
+                                timoutInMinutes +
+                                " minutes"
+                        )
+                    } else if (process.exitValue() != 0) {
+                        println(toString())
+                        throw GradleException(
+                            "Determining include path exited with non-zero exit code: " +
+                                process.exitValue()
+                        )
+                    }
+
+                    append("/usr/include")
+                }
+                .toString()
+
+        // val includePath = "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include"
         println("Using C include path: " + includePath)
         println("Using Go SDK path: " + goSdkDir)
 
