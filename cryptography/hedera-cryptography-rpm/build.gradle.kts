@@ -139,6 +139,7 @@ tasks.withType<CargoBuildTask> {
                     File(cargoHome, "bin/cargo").absolutePath,
                     "build",
                     "--release",
+                    "--target=${toolchain.get().target}",
                     "--target-dir",
                     outDir.toString(),
                 )
