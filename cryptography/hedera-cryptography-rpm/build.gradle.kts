@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import org.gradle.api.internal.file.FileOperations
 import java.net.URI
 import org.gradle.kotlin.dsl.withType
 import org.hiero.gradle.environment.EnvAccess
@@ -14,7 +15,13 @@ plugins {
 
 cargo { libname = "raps" }
 
+interface Injected {
+    @get:Inject val files: FileOperations
+}
+
 tasks.withType<CargoBuildTask> {
+    val injected = project.objects.newInstance<Injected>()
+
     val goDstDir = layout.buildDirectory.dir("go-sdk").get()
     val goSdkDir = goDstDir.dir("go").asFile.absolutePath
     val hostOperatingSystem =
@@ -27,12 +34,13 @@ tasks.withType<CargoBuildTask> {
                 "linux"
             }
         }
+    val versions =
+        EnvAccess.toolchainVersions(rootProject.layout.projectDirectory, providers, objects)
 
     doFirst {
         println("Installing Go SDK...")
-        mkdir(goDstDir)
-        val versions =
-            EnvAccess.toolchainVersions(rootProject.layout.projectDirectory, providers, objects)
+        injected.files.mkdir(goDstDir)
+
         val goVersion = versions.getting("go").get()
 
         val hostArchitecture =
@@ -54,22 +62,27 @@ tasks.withType<CargoBuildTask> {
         println("Downloading ${goSrcUri} to ${goArchive.absolutePath}")
         goArchive.writeBytes(goSrcUrl.readBytes())
         println("Extracting ${goArchive.absolutePath}")
-        copy {
-            from(tarTree(goArchive))
+        injected.files.sync {
+            from(injected.files.tarTree(goArchive))
             into(goDstDir)
         }
         println("Go SDK has been installed at ${goSdkDir}")
     }
 
-    doLast {
-        // Define the binary name and the sources.
-        // Assume the sources are already in the parent CargoBuildTask inputs,
-        // so we don't need to add any additional inputs for our doLast{} actions here
-        val executableName = "compressor"
-        val srcPath = "src/main/rust/compressor"
 
-        val srcDir = layout.projectDirectory.dir(srcPath)
-        val outDir = layout.buildDirectory.dir("target/${toolchain.get().platform}").get()
+    // Define the binary name and the sources.
+    // Assume the sources are already in the parent CargoBuildTask inputs,
+    // so we don't need to add any additional inputs for our doLast{} actions here
+    val executableName = "compressor"
+    val srcPath = "src/main/rust/compressor"
+
+    val srcDir = layout.projectDirectory.dir(srcPath)
+    val outDir = layout.buildDirectory.dir("target/${toolchain.get().platform}").get()
+
+    doLast {
+
+        val osArchArray = toolchain.get().folder.split("/")
+
         println(
             "Start building ${executableName} from " +
                 srcDir.toString() +
@@ -115,7 +128,6 @@ tasks.withType<CargoBuildTask> {
                 }
                 .toString()
 
-        // val includePath = "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include"
         println("Using C include path: " + includePath)
         println("Using Go SDK path: " + goSdkDir)
 
@@ -158,6 +170,8 @@ tasks.withType<CargoBuildTask> {
                     "CPATH" to includePath,
                     "CARGO_HOME" to cargoHome.absolutePath,
                     "GOROOT" to goSdkDir,
+                    "GOOS" to osArchArray[0],
+                    "GOARCH" to osArchArray[1],
                 )
             )
 
@@ -193,10 +207,8 @@ tasks.withType<CargoBuildTask> {
         // Note: the resourcesDir is already an output of the parent CargoBuildTask,
         // so we don't need to declare any additional outputs for our doLast{} actions here.
 
-        println(
-            "Copying ${executableName} to resources at ${fullExecutablePath.asFile.absolutePath}..."
-        )
-        copy {
+        println("Copying ${executableName} to ${fullExecutablePath.asFile.absolutePath}")
+        injected.files.sync {
             from(outDir.dir("release"))
             into(resourcesDir)
 
