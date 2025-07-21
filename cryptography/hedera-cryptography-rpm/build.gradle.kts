@@ -134,25 +134,14 @@ tasks.withType<CargoBuildTask> {
         val cargoHome = rustInstallFolder.dir("cargo").get().asFile
         val rustupHome = rustInstallFolder.dir("rustup").get().asFile.absolutePath
 
-        println("Building for target: ${toolchain.get().target}")
-        println("All supported targets");
-
-        {
-            val processBuilder =
-                ProcessBuilder()
-                    .command("${rustupHome}/bin/rustc", "--print", "target-list")
-                    .redirectErrorStream(true)
-            val process = processBuilder.start()
-            val hasExited = process.waitFor(2L, TimeUnit.MINUTES)
-
-            while (true) {
-                val c = process.inputStream.read()
-                if (c == -1) break
-                // if (c < 20) continue // skip control characters like new line
-                print(c.toChar())
-            }
-            println("Now will be actually building...")
-        }
+        // Sanitize the target. The toolchain may look like "aarch64-unknown-linux-gnu.2.18",
+        // but the ".2.18" part is "wrong" - as in, the toolchain doesn't know about such a target.
+        // Chop it off:
+        val periodIndex = toolchain.get().target.indexOf('.')
+        val target =
+            if (periodIndex == -1) toolchain.get().target
+            else toolchain.get().target.substring(0, periodIndex)
+        println("Building for target: ${target}")
 
         val timoutInMinutes = 15L
         val processBuilder =
@@ -161,7 +150,7 @@ tasks.withType<CargoBuildTask> {
                     File(cargoHome, "bin/cargo").absolutePath,
                     "build",
                     "--release",
-                    "--target=${toolchain.get().target}",
+                    "--target=${target}",
                     "--target-dir",
                     outDir.toString(),
                 )
