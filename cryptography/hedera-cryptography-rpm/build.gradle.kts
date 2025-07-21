@@ -190,9 +190,23 @@ tasks.withType<CargoBuildTask> {
                     "GOARCH" to osArchArray[1],
                 )
             )
+
         if (hostOperatingSystem == "darwin") {
             println("Using C include path: " + includePath)
             processBuilder.environment().put("CPATH", includePath)
+        }
+
+        if (hostOperatingSystem == "linux") {
+            if (osArchArray[0] == "linux") {
+                if (osArchArray[1] == "arm64") {
+                    println("Configuring cross-compilation for linux-aarch64...")
+                    // processBuilder.environment().put("CC_FOR_TARGET", "gcc-aarch64-linux-gnu")
+                    processBuilder.environment().put("CC", "aarch64-linux-gnu-gcc")
+                    processBuilder.environment().put("CC_FOR_TARGET", "aarch64-linux-gnu-gcc")
+                    processBuilder.environment().put("CXX", "aarch64-linux-gnu-g++")
+                    processBuilder.environment().put("CXX_FOR_TARGET", "aarch64-linux-gnu-g++")
+                }
+            }
         }
 
         val process = processBuilder.start()
