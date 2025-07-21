@@ -108,7 +108,8 @@ jobs:
           sudo apt-get -y install g++-aarch64-linux-gnu
 
       - name: Build Cargo Linux / Windows
-        run: ./gradlew cargoBuildX86Linux cargoBuildAarch64Linux cargoBuildX86Windows
+        #run: ./gradlew cargoBuildX86Linux cargoBuildAarch64Linux cargoBuildX86Windows
+        run: ./gradlew cargoBuildX86Linux
 
   build:
     name: Build TSS Crypto Library
