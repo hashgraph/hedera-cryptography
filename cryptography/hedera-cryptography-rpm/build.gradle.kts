@@ -89,12 +89,14 @@ tasks.withType<CargoBuildTask> {
                 outDir.toString()
         )
 
-        println("Determining include path...")
+        println("Using Go SDK path: " + goSdkDir)
+
         val includePath =
             if (hostOperatingSystem != "darwin") null
             else
                 StringBuilder()
                     .apply {
+                        println("Determining include path...")
                         val timoutInMinutes = 1L
                         val processBuilder =
                             ProcessBuilder()
@@ -129,9 +131,8 @@ tasks.withType<CargoBuildTask> {
                     }
                     .toString()
 
-        println("Using Go SDK path: " + goSdkDir)
-
         val cargoHome = rustInstallFolder.dir("cargo").get().asFile
+        val rustupHome = rustInstallFolder.dir("rustup").get().asFile.absolutePath
 
         val timoutInMinutes = 15L
         val processBuilder =
@@ -155,11 +156,16 @@ tasks.withType<CargoBuildTask> {
         // Need to ensure we use the SDK we downloaded, rather than a random Go SDK installed on the
         // system.
         val pathSeparator = if (hostOperatingSystem.equals("windows")) ";" else ":"
+
         processBuilder
             .environment()
             .put(
                 "PATH",
                 "${goSdkDir}/bin" +
+                    pathSeparator +
+                    "${rustupHome}/bin" +
+                    pathSeparator +
+                    "${cargoHome.absolutePath}/bin" +
                     (if (processBuilder.environment().containsKey("PATH"))
                         pathSeparator + processBuilder.environment().get("PATH")
                     else ""),
@@ -169,6 +175,7 @@ tasks.withType<CargoBuildTask> {
             .putAll(
                 mapOf(
                     "CARGO_HOME" to cargoHome.absolutePath,
+                    "RUSTUP_HOME" to rustupHome,
                     "GOROOT" to goSdkDir,
                     "GOOS" to osArchArray[0],
                     "GOARCH" to osArchArray[1],
