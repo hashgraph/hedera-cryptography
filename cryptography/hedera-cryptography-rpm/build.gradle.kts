@@ -134,6 +134,26 @@ tasks.withType<CargoBuildTask> {
         val cargoHome = rustInstallFolder.dir("cargo").get().asFile
         val rustupHome = rustInstallFolder.dir("rustup").get().asFile.absolutePath
 
+        println("Building for target: ${toolchain.get().target}")
+        println("All supported targets");
+
+        {
+            val processBuilder =
+                ProcessBuilder()
+                    .command("${rustupHome}/bin/rustc", "--print", "target-list")
+                    .redirectErrorStream(true)
+            val process = processBuilder.start()
+            val hasExited = process.waitFor(2L, TimeUnit.MINUTES)
+
+            while (true) {
+                val c = process.inputStream.read()
+                if (c == -1) break
+                // if (c < 20) continue // skip control characters like new line
+                print(c.toChar())
+            }
+            println("Now will be actually building...")
+        }
+
         val timoutInMinutes = 15L
         val processBuilder =
             ProcessBuilder()
