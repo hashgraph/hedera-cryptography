@@ -91,43 +91,44 @@ tasks.withType<CargoBuildTask> {
 
         println("Determining include path...")
         val includePath =
-            StringBuilder()
-                .apply {
-                    val timoutInMinutes = 1L
-                    val processBuilder =
-                        ProcessBuilder()
-                            .command("xcrun", "--show-sdk-path")
-                            .redirectErrorStream(true)
-                    val process = processBuilder.start()
-                    val hasExited = process.waitFor(timoutInMinutes, TimeUnit.MINUTES)
+            if (hostOperatingSystem != "darwin") null
+            else
+                StringBuilder()
+                    .apply {
+                        val timoutInMinutes = 1L
+                        val processBuilder =
+                            ProcessBuilder()
+                                .command("xcrun", "--show-sdk-path")
+                                .redirectErrorStream(true)
+                        val process = processBuilder.start()
+                        val hasExited = process.waitFor(timoutInMinutes, TimeUnit.MINUTES)
 
-                    while (true) {
-                        val c = process.inputStream.read()
-                        if (c == -1) break
-                        if (c < 20) continue // skip control characters like new line
-                        append(c.toChar())
+                        while (true) {
+                            val c = process.inputStream.read()
+                            if (c == -1) break
+                            if (c < 20) continue // skip control characters like new line
+                            append(c.toChar())
+                        }
+
+                        if (!hasExited) {
+                            println(toString())
+                            throw GradleException(
+                                "Determining include path hasn't finished in " +
+                                    timoutInMinutes +
+                                    " minutes"
+                            )
+                        } else if (process.exitValue() != 0) {
+                            println(toString())
+                            throw GradleException(
+                                "Determining include path exited with non-zero exit code: " +
+                                    process.exitValue()
+                            )
+                        }
+
+                        append("/usr/include")
                     }
+                    .toString()
 
-                    if (!hasExited) {
-                        println(toString())
-                        throw GradleException(
-                            "Determining include path hasn't finished in " +
-                                timoutInMinutes +
-                                " minutes"
-                        )
-                    } else if (process.exitValue() != 0) {
-                        println(toString())
-                        throw GradleException(
-                            "Determining include path exited with non-zero exit code: " +
-                                process.exitValue()
-                        )
-                    }
-
-                    append("/usr/include")
-                }
-                .toString()
-
-        println("Using C include path: " + includePath)
         println("Using Go SDK path: " + goSdkDir)
 
         val cargoHome = rustInstallFolder.dir("cargo").get().asFile
@@ -167,13 +168,16 @@ tasks.withType<CargoBuildTask> {
             .environment()
             .putAll(
                 mapOf(
-                    "CPATH" to includePath,
                     "CARGO_HOME" to cargoHome.absolutePath,
                     "GOROOT" to goSdkDir,
                     "GOOS" to osArchArray[0],
                     "GOARCH" to osArchArray[1],
                 )
             )
+        if (hostOperatingSystem == "darwin") {
+            println("Using C include path: " + includePath)
+            processBuilder.environment().put("CPATH", includePath)
+        }
 
         val process = processBuilder.start()
 
