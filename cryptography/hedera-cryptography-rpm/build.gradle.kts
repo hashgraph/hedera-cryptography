@@ -201,7 +201,7 @@ tasks.withType<CargoBuildTask> {
             if (target.contains("linux")) {
                 if (target.startsWith("aarch64-")) {
                     println("Configuring cross-compilation for ${target}...")
-                    // processBuilder.environment().put("CC_FOR_TARGET", "gcc-aarch64-linux-gnu")
+                    processBuilder.environment().put("CC_FOR_TARGET", "gcc-aarch64-linux-gnu")
                     //                    processBuilder.environment().put("CC",
                     // "aarch64-linux-gnu-gcc")
                     //                    processBuilder.environment().put("CC_FOR_TARGET",
@@ -210,7 +210,7 @@ tasks.withType<CargoBuildTask> {
                     // "aarch64-linux-gnu-g++")
                     //                    processBuilder.environment().put("CXX_FOR_TARGET",
                     // "aarch64-linux-gnu-g++")
-                    processBuilder.environment().put("TARGET", target)
+                    // processBuilder.environment().put("TARGET", target)
                     processBuilder.environment().put("CARGO_BUILD_TARGET", target)
                 }
             }
