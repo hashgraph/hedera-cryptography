@@ -211,6 +211,11 @@ tasks.withType<CargoBuildTask> {
             }
         }
 
+        println("Build environment:")
+        processBuilder.environment().forEach { key, value -> println("$key: $value") }
+        println("Build command:")
+        println(processBuilder.command().joinToString(" "))
+
         val process = processBuilder.start()
 
         val hasExited = process.waitFor(timoutInMinutes, TimeUnit.MINUTES)
