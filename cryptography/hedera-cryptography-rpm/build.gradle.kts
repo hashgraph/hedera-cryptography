@@ -149,6 +149,7 @@ tasks.withType<CargoBuildTask> {
                 .command(
                     File(cargoHome, "bin/cargo").absolutePath,
                     "build",
+                    "-vv",
                     "--release",
                     "--target=${target}",
                     "--target-dir",
