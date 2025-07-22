@@ -197,15 +197,16 @@ tasks.withType<CargoBuildTask> {
         }
 
         if (hostOperatingSystem == "linux") {
-            if (osArchArray[0] == "linux") {
-                if (osArchArray[1] == "arm64") {
-                    println("Configuring cross-compilation for linux-aarch64...")
+            if (target.contains("linux")) {
+                if (target.startsWith("aarch64-")) {
+                    println("Configuring cross-compilation for ${target}...")
                     // processBuilder.environment().put("CC_FOR_TARGET", "gcc-aarch64-linux-gnu")
                     processBuilder.environment().put("CC", "aarch64-linux-gnu-gcc")
                     processBuilder.environment().put("CC_FOR_TARGET", "aarch64-linux-gnu-gcc")
                     processBuilder.environment().put("CXX", "aarch64-linux-gnu-g++")
                     processBuilder.environment().put("CXX_FOR_TARGET", "aarch64-linux-gnu-g++")
                     processBuilder.environment().put("TARGET", target)
+                    processBuilder.environment().put("CARGO_BUILD_TARGET", target)
                 }
             }
         }
