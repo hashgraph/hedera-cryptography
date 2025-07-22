@@ -143,13 +143,13 @@ tasks.withType<CargoBuildTask> {
             else toolchain.get().target.substring(0, periodIndex)
         println("Building for target: ${target}")
 
-        val timoutInMinutes = 15L
+        val timoutInMinutes = 30L
         val processBuilder =
             ProcessBuilder()
                 .command(
                     File(cargoHome, "bin/cargo").absolutePath,
                     "build",
-                    "-vv",
+                    "-v",
                     "--release",
                     "--target=${target}",
                     "--target-dir",
@@ -202,10 +202,14 @@ tasks.withType<CargoBuildTask> {
                 if (target.startsWith("aarch64-")) {
                     println("Configuring cross-compilation for ${target}...")
                     // processBuilder.environment().put("CC_FOR_TARGET", "gcc-aarch64-linux-gnu")
-                    processBuilder.environment().put("CC", "aarch64-linux-gnu-gcc")
-                    processBuilder.environment().put("CC_FOR_TARGET", "aarch64-linux-gnu-gcc")
-                    processBuilder.environment().put("CXX", "aarch64-linux-gnu-g++")
-                    processBuilder.environment().put("CXX_FOR_TARGET", "aarch64-linux-gnu-g++")
+                    //                    processBuilder.environment().put("CC",
+                    // "aarch64-linux-gnu-gcc")
+                    //                    processBuilder.environment().put("CC_FOR_TARGET",
+                    // "aarch64-linux-gnu-gcc")
+                    //                    processBuilder.environment().put("CXX",
+                    // "aarch64-linux-gnu-g++")
+                    //                    processBuilder.environment().put("CXX_FOR_TARGET",
+                    // "aarch64-linux-gnu-g++")
                     processBuilder.environment().put("TARGET", target)
                     processBuilder.environment().put("CARGO_BUILD_TARGET", target)
                 }
