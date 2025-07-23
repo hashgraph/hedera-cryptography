@@ -201,6 +201,7 @@ tasks.withType<CargoBuildTask> {
             if (target.contains("linux")) {
                 if (target.startsWith("aarch64-")) {
                     println("Configuring cross-compilation for ${target}...")
+
                     // processBuilder.environment().put("CC_FOR_TARGET", "gcc-aarch64-linux-gnu")
                     processBuilder.environment().put("CC", "aarch64-linux-gnu-gcc")
                     // processBuilder.environment().put("CC_FOR_TARGET", "aarch64-linux-gnu-gcc")
@@ -211,6 +212,35 @@ tasks.withType<CargoBuildTask> {
                     processBuilder.environment().put("GOFLAGS", "-v -x")
                 }
             }
+        }
+
+        if (target.contains("windows")) {
+            println("Configuring cross-compilation for ${target}...")
+
+            // See https://github.com/Jake-Shadle/xwin/blob/main/xwin.dockerfile
+            val xwinFolder = rustInstallFolder.dir("xwin").get().asFile.absolutePath
+            val rustupToolchains = rustInstallFolder.dir("rustup/toolchains").get().asFile
+            val rustLld = rustupToolchains.walk().filter { it.name == "rust-lld" }.single()
+
+            val clFlags =
+                "-Wno-unused-command-line-argument -fuse-ld=lld-link /vctoolsdir $xwinFolder/crt /winsdkdir $xwinFolder/sdk"
+            processBuilder.environment().put("CC_x86_64_pc_windows_msvc", "clang-cl")
+            processBuilder.environment().put("CXX_x86_64_pc_windows_msvc", "clang-cl")
+            processBuilder.environment().put("AR_x86_64_pc_windows_msvc", "llvm-lib")
+            processBuilder.environment().put("WINEDEBUG", "-all")
+            processBuilder.environment().put("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUNNER", "wine")
+            processBuilder.environment().put("CL_FLAGS", clFlags)
+            processBuilder.environment().put("CFLAGS_x86_64_pc_windows_msvc", clFlags)
+            processBuilder.environment().put("CXXFLAGS_x86_64_pc_windows_msvc", clFlags)
+            processBuilder
+                .environment()
+                .put("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER", rustLld.absolutePath)
+            processBuilder
+                .environment()
+                .put(
+                    "RUSTFLAGS",
+                    "-Lnative=$xwinFolder/crt/lib/x86_64 -Lnative=$xwinFolder/sdk/lib/um/x86_64 -Lnative=$xwinFolder/sdk/lib/ucrt/x86_64",
+                )
         }
 
         println("Build environment:")
