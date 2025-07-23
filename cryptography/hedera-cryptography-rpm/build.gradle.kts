@@ -241,6 +241,8 @@ tasks.withType<CargoBuildTask> {
                     "RUSTFLAGS",
                     "-Lnative=$xwinFolder/crt/lib/x86_64 -Lnative=$xwinFolder/sdk/lib/um/x86_64 -Lnative=$xwinFolder/sdk/lib/ucrt/x86_64",
                 )
+
+            processBuilder.environment().put("CC", "clang-cl")
         }
 
         println("Build environment:")
