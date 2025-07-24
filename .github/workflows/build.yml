@@ -109,7 +109,7 @@ jobs:
 
       - name: Build Cargo Linux / Windows
         #run: ./gradlew cargoBuildX86Linux cargoBuildAarch64Linux cargoBuildX86Windows
-        run: ./gradlew cargoBuildX86Windows
+        run: ./gradlew cargoBuildAarch64Linux
 
   build:
     name: Build TSS Crypto Library

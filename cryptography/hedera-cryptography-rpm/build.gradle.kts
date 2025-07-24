@@ -203,7 +203,8 @@ tasks.withType<CargoBuildTask> {
                     println("Configuring cross-compilation for ${target}...")
 
                     // processBuilder.environment().put("CC_FOR_TARGET", "gcc-aarch64-linux-gnu")
-                    processBuilder.environment().put("CC", "aarch64-linux-gnu-gcc")
+                    //processBuilder.environment().put("CC", "aarch64-linux-gnu-gcc")
+                    processBuilder.environment().put("CC", "clang-cl")
                     // processBuilder.environment().put("CC_FOR_TARGET", "aarch64-linux-gnu-gcc")
                     // processBuilder.environment().put("CXX", "aarch64-linux-gnu-g++")
                     // processBuilder.environment().put("CXX_FOR_TARGET", "aarch64-linux-gnu-g++")
