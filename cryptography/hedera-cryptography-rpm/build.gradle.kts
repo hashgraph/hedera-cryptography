@@ -143,7 +143,7 @@ tasks.withType<CargoBuildTask> {
             else toolchain.get().target.substring(0, periodIndex)
         println("Building for target: ${target}")
 
-        val timoutInMinutes = 30L
+        val timoutInMinutes = 240L
         val processBuilder =
             ProcessBuilder()
                 .command(
