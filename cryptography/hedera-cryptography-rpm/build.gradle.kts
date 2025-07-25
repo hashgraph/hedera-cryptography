@@ -210,7 +210,7 @@ tasks.withType<CargoBuildTask> {
                     // processBuilder.environment().put("CXX_FOR_TARGET", "aarch64-linux-gnu-g++")
                     // processBuilder.environment().put("TARGET", target)
                     processBuilder.environment().put("CARGO_BUILD_TARGET", target)
-                    processBuilder.environment().put("GOFLAGS", "-v -x")
+                    processBuilder.environment().put("GOFLAGS", "-v -x -gcflags=\"-target aarch64-linux-gnu\" -asmflags=\"-target aarch64-linux-gnu\"")
                 }
             }
         }
