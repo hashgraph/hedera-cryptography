@@ -15,7 +15,7 @@ dependencies.constraints {
     }
     api("com.google.code.gson:gson:2.13.0") { because("com.google.gson") }
     api("jakarta.inject:jakarta.inject-api:2.0.1") { because("jakarta.inject") }
-    api("org.bouncycastle:bcprov-jdk18on:1.80") { because("org.bouncycastle.provider") }
+    api("org.bouncycastle:bcprov-jdk18on:1.81") { because("org.bouncycastle.provider") }
     api("org.junit.jupiter:junit-jupiter-api:$junit5") { because("org.junit.jupiter.api") }
     api("org.junit.jupiter:junit-jupiter-engine:$junit5") { because("org.junit.jupiter.engine") }
     api("org.mockito:mockito-core:$mockito") { because("org.mockito") }
