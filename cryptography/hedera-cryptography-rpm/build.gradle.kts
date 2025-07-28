@@ -254,6 +254,8 @@ tasks.withType<CargoBuildTask> {
 
             //processBuilder.environment().put("CC", "clang-cl")
             processBuilder.environment().put("SP1_FFI_ENV_FOR_GO", "CC=clang-cl")
+            //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=${clFlags}")
+            processBuilder.environment().put("GOFLAGS", "-v -x")
         }
 
         println("Build environment:")
