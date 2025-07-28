@@ -215,6 +215,8 @@ tasks.withType<CargoBuildTask> {
                     // processBuilder.environment().put("CXX_FOR_TARGET", "aarch64-linux-gnu-g++")
                     // processBuilder.environment().put("TARGET", target)
                     processBuilder.environment().put("CARGO_BUILD_TARGET", target)
+                    processBuilder.environment().put("CARGO_TARGET_AARCH64_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc")
+                    processBuilder.environment().put("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc")
                     //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=--target=${clangTarget}")
                     processBuilder.environment().put("GOFLAGS", "-v -x")
                     //processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "^--target=${clangTarget}")
