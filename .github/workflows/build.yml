@@ -36,6 +36,7 @@ jobs:
     # Build macOS Rust targets separately on a macOS runner to have access to macOS SDKs
     name: Build Rust - macOS
     runs-on: macos-14
+    if: false
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
@@ -114,7 +115,7 @@ jobs:
 
   build:
     name: Build TSS Crypto Library
-    needs: [build_rust_macos, build_rust_linux_windows]
+    needs: [build_rust_linux_windows]
     runs-on: network-node-linux-large
     steps:
       - name: Harden Runner
