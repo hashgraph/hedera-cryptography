@@ -203,7 +203,7 @@ tasks.withType<CargoBuildTask> {
                     println("Configuring cross-compilation for ${target}...")
 
                     //val clangTarget = "arch64-linux-gnu"
-                    val clangTarget = "arch64-linux-libc"
+                    val clangTarget = "arch64-linux-glibc"
 
                     // processBuilder.environment().put("CC_FOR_TARGET", "gcc-aarch64-linux-gnu")
                     //processBuilder.environment().put("CC", "aarch64-linux-gnu-gcc")
