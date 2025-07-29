@@ -209,7 +209,7 @@ tasks.withType<CargoBuildTask> {
                     //processBuilder.environment().put("CC", "aarch64-linux-gnu-gcc")
                     //processBuilder.environment().put("CC", "clang-19")
                     // Apply the CC to the inner Go build, but not the outer Cargo build:
-                    processBuilder.environment().put("SP1_FFI_ENV_FOR_GO", "CC=aarch64-linux-gnu-gcc")
+                    processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=aarch64-linux-gnu-gcc")
                     // processBuilder.environment().put("CC_FOR_TARGET", "aarch64-linux-gnu-gcc")
                     // processBuilder.environment().put("CXX", "aarch64-linux-gnu-g++")
                     // processBuilder.environment().put("CXX_FOR_TARGET", "aarch64-linux-gnu-g++")
@@ -253,10 +253,10 @@ tasks.withType<CargoBuildTask> {
                 )
 
             //processBuilder.environment().put("CC", "clang-cl")
-            processBuilder.environment().put("SP1_FFI_ENV_FOR_GO", "CC=clang-cl")
+            processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=clang-cl;CCC_OVERRIDE_OPTIONS=x-dM x-fno-stack-protector +-Wno-unused-macros")
             //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=${clFlags}")
             processBuilder.environment().put("GOFLAGS", "-v -x")
-            processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "x-dM x-fno-stack-protector +-Wno-unused-macros")
+            //processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "x-dM x-fno-stack-protector +-Wno-unused-macros")
         }
 
         println("Build environment:")
