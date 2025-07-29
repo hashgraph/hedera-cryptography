@@ -272,7 +272,7 @@ tasks.withType<CargoBuildTask> {
                 "+-Wno-missing-variable-declarations",
                 "+-fuse-ld=lld-link",
                 "+/vctoolsdir", "+$xwinFolder/crt",
-                "+/winsdkdir", "$xwinFolder/sdk"
+                "+/winsdkdir", "+$xwinFolder/sdk"
             ).joinToString(separator = " ")
 
             processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=clang-cl;CCC_OVERRIDE_OPTIONS=$ccc_override_options")
