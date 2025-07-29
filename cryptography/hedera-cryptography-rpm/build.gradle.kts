@@ -256,7 +256,7 @@ tasks.withType<CargoBuildTask> {
             processBuilder.environment().put("SP1_FFI_ENV_FOR_GO", "CC=clang-cl")
             //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=${clFlags}")
             processBuilder.environment().put("GOFLAGS", "-v -x")
-            processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "x-dM x-fno-stack-protector x-Wunused-macros")
+            processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "x-dM x-fno-stack-protector +-Wno-unused-macros")
         }
 
         println("Build environment:")
