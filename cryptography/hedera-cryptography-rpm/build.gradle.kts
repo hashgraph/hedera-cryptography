@@ -253,7 +253,7 @@ tasks.withType<CargoBuildTask> {
                 )
 
             //processBuilder.environment().put("CC", "clang-cl")
-            processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=clang-cl;CCC_OVERRIDE_OPTIONS=x-dM x-fno-stack-protector x-fmessage-length=0 +-Wno-unused-macros")
+            processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=clang-cl;CCC_OVERRIDE_OPTIONS=x-dM x-fno-stack-protector x-fmessage-length=0 +-Wno-unused-macros +-Wno-unused-command-line-argument +-fuse-ld=lld-link +/vctoolsdir +$xwinFolder/crt +/winsdkdir +$xwinFolder/sdk")
             //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=${clFlags}")
             processBuilder.environment().put("GOFLAGS", "-v -x")
             //processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "x-dM x-fno-stack-protector +-Wno-unused-macros")
