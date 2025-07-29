@@ -253,7 +253,29 @@ tasks.withType<CargoBuildTask> {
                 )
 
             //processBuilder.environment().put("CC", "clang-cl")
-            processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=clang-cl;CCC_OVERRIDE_OPTIONS=x-dM x-fno-stack-protector x-fmessage-length=0 +-Wno-unused-macros +-Wno-unused-command-line-argument +-Wno-reserved-identifier +-Wno-missing-prototypes +-fuse-ld=lld-link +/vctoolsdir +$xwinFolder/crt +/winsdkdir +$xwinFolder/sdk")
+
+            val ccc_override_options = listOf(
+                "x-dM",
+                "x-fno-stack-protector",
+                "x-fmessage-length=0",
+                "+-Wno-unused-macros",
+                "+-Wno-unused-command-line-argument",
+                "+-Wno-reserved-identifier",
+                "+-Wno-missing-prototypes",
+                "+-Wno-nonportable-system-include-path",
+                "+-Wno-strict-prototypes",
+                "+-Wno-unused-parameter",
+                "+-Wno-missing-noreturn",
+                "+-Wno-sign-conversion",
+                "+-Wno-newline-eof",
+                "+-Wno-sign-compare",
+                "+-Wno-missing-variable-declarations",
+                "+-fuse-ld=lld-link",
+                "+/vctoolsdir", "+$xwinFolder/crt",
+                "+/winsdkdir", "$xwinFolder/sdk"
+            ).joinToString(separator = " ")
+
+            processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=clang-cl;CCC_OVERRIDE_OPTIONS=$ccc_override_options")
             //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=${clFlags}")
             processBuilder.environment().put("GOFLAGS", "-v -x")
             //processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "x-dM x-fno-stack-protector +-Wno-unused-macros")
