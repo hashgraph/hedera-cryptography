@@ -272,12 +272,13 @@ tasks.withType<CargoBuildTask> {
 //                "+-Wno-sign-compare",
 //                "+-Wno-missing-variable-declarations",
 //                "+-Wno-language-extension-token",
-                "+-fuse-ld=lld-link",
-                "+/vctoolsdir", "+$xwinFolder/crt",
-                "+/winsdkdir", "+$xwinFolder/sdk"
+                "+-fuse-ld=lld-link"
+                //"+-I$xwinFolder/crt/include:$xwinFolder/sdk/include"
+                //"+/vctoolsdir", "+$xwinFolder/crt",
+                //"+/winsdkdir", "+$xwinFolder/sdk"
             ).joinToString(separator = " ")
 
-            processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=clang-cl;CCC_OVERRIDE_OPTIONS=$ccc_override_options")
+            processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=clang19;CCC_OVERRIDE_OPTIONS=$ccc_override_options")
             //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=${clFlags}")
             processBuilder.environment().put("GOFLAGS", "-v -x")
             //processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "x-dM x-fno-stack-protector +-Wno-unused-macros")
