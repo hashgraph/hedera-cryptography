@@ -256,11 +256,11 @@ tasks.withType<CargoBuildTask> {
 
             val ccc_override_options = listOf(
 //                "x-dM",
-                "x-fno-stack-protector",
-                "x-fmessage-length=0",
+                "+-Wno-unused-command-line-argument",
+//                "x-fno-stack-protector",
+//                "x-fmessage-length=0",
                 "x-Werror",
 //                "+-Wno-unused-macros",
-//                "+-Wno-unused-command-line-argument",
 //                "+-Wno-reserved-identifier",
 //                "+-Wno-missing-prototypes",
 //                "+-Wno-nonportable-system-include-path",
