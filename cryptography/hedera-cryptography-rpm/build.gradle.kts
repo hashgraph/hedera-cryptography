@@ -270,6 +270,7 @@ tasks.withType<CargoBuildTask> {
                 "+-Wno-newline-eof",
                 "+-Wno-sign-compare",
                 "+-Wno-missing-variable-declarations",
+                "+-Wno-language-extension-token",
                 "+-fuse-ld=lld-link",
                 "+/vctoolsdir", "+$xwinFolder/crt",
                 "+/winsdkdir", "+$xwinFolder/sdk"
