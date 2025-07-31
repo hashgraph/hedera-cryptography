@@ -254,33 +254,33 @@ tasks.withType<CargoBuildTask> {
 
             //processBuilder.environment().put("CC", "clang-cl")
 
-            val ccc_override_options = listOf(
-//                "x-dM",
-                "+-Wno-unused-command-line-argument",
-//                "x-fno-stack-protector",
-//                "x-fmessage-length=0",
-                "x-Werror",
-//                "+-Wno-unused-macros",
-//                "+-Wno-reserved-identifier",
-//                "+-Wno-missing-prototypes",
-//                "+-Wno-nonportable-system-include-path",
-//                "+-Wno-strict-prototypes",
-//                "+-Wno-unused-parameter",
-//                "+-Wno-missing-noreturn",
-//                "+-Wno-sign-conversion",
-//                "+-Wno-newline-eof",
-//                "+-Wno-sign-compare",
-//                "+-Wno-missing-variable-declarations",
-//                "+-Wno-language-extension-token",
-                "+-fuse-ld=lld-link",
-                "+-I$xwinFolder/crt/include",
-                "+-I$xwinFolder/sdk/include",
-                "+-fms-extensions"
-                //"+/vctoolsdir", "+$xwinFolder/crt",
-                //"+/winsdkdir", "+$xwinFolder/sdk"
-            ).joinToString(separator = " ")
+//            val ccc_override_options = listOf(
+////                "x-dM",
+////                "+-Wno-unused-command-line-argument",
+////                "x-fno-stack-protector",
+////                "x-fmessage-length=0",
+//                "x-Werror",
+////                "+-Wno-unused-macros",
+////                "+-Wno-reserved-identifier",
+////                "+-Wno-missing-prototypes",
+////                "+-Wno-nonportable-system-include-path",
+////                "+-Wno-strict-prototypes",
+////                "+-Wno-unused-parameter",
+////                "+-Wno-missing-noreturn",
+////                "+-Wno-sign-conversion",
+////                "+-Wno-newline-eof",
+////                "+-Wno-sign-compare",
+////                "+-Wno-missing-variable-declarations",
+////                "+-Wno-language-extension-token",
+////                "+-fuse-ld=lld-link",
+////                "+-I$xwinFolder/crt/include",
+////                "+-I$xwinFolder/sdk/include",
+////                "+-fms-extensions"
+//                //"+/vctoolsdir", "+$xwinFolder/crt",
+//                //"+/winsdkdir", "+$xwinFolder/sdk"
+//            ).joinToString(separator = " ")
 
-            processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=clang-19;CCC_OVERRIDE_OPTIONS=$ccc_override_options")
+            processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=x86_64-w64-mingw32-gcc")
             //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=${clFlags}")
             processBuilder.environment().put("GOFLAGS", "-v -x")
             //processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "x-dM x-fno-stack-protector +-Wno-unused-macros")
