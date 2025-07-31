@@ -274,7 +274,8 @@ tasks.withType<CargoBuildTask> {
 //                "+-Wno-language-extension-token",
                 "+-fuse-ld=lld-link",
                 "+-I$xwinFolder/crt/include",
-                "+-I$xwinFolder/sdk/include"
+                "+-I$xwinFolder/sdk/include",
+                "+-fms-extensions"
                 //"+/vctoolsdir", "+$xwinFolder/crt",
                 //"+/winsdkdir", "+$xwinFolder/sdk"
             ).joinToString(separator = " ")
