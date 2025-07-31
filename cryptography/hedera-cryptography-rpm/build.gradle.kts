@@ -272,7 +272,7 @@ tasks.withType<CargoBuildTask> {
 //                "+-Wno-sign-compare",
 //                "+-Wno-missing-variable-declarations",
 //                "+-Wno-language-extension-token",
-                "+-fuse-ld=lld-link"
+                "+-fuse-ld=lld-link",
                 "+-I$xwinFolder/crt/include",
                 "+-I$xwinFolder/sdk/include"
                 //"+/vctoolsdir", "+$xwinFolder/crt",
