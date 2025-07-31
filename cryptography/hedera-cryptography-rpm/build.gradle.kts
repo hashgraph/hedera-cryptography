@@ -278,7 +278,7 @@ tasks.withType<CargoBuildTask> {
                 //"+/winsdkdir", "+$xwinFolder/sdk"
             ).joinToString(separator = " ")
 
-            processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=clang19;CCC_OVERRIDE_OPTIONS=$ccc_override_options")
+            processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=clang-19;CCC_OVERRIDE_OPTIONS=$ccc_override_options")
             //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=${clFlags}")
             processBuilder.environment().put("GOFLAGS", "-v -x")
             //processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "x-dM x-fno-stack-protector +-Wno-unused-macros")
