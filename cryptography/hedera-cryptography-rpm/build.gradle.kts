@@ -285,7 +285,7 @@ tasks.withType<CargoBuildTask> {
             //processBuilder.environment().put("BINDGEN_EXTRA_CLANG_ARGS", "-I/usr/x86_64-w64-mingw32/include")
             // BindGen appears to be using the Rust CC, which is clang-cl per the above.
             // If this doesn't work, we might try switching the entire build to mingw and abandon clang-cl altogether.
-            processBuilder.environment().put("BINDGEN_EXTRA_CLANG_ARGS", clFlags)
+            processBuilder.environment().put("BINDGEN_EXTRA_CLANG_ARGS", clFlags + " -I$xwinFolder/sdk/include/ucrt")
             processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=x86_64-w64-mingw32-gcc;CPATH=/usr/x86_64-w64-mingw32/include")
             //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=${clFlags}")
             processBuilder.environment().put("GOFLAGS", "-v -x")
