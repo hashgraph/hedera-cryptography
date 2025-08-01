@@ -138,10 +138,13 @@ tasks.withType<CargoBuildTask> {
         // but the ".2.18" part is "wrong" - as in, the toolchain doesn't know about such a target.
         // Chop it off:
         val periodIndex = toolchain.get().target.indexOf('.')
-        val target =
+        val origTarget =
             if (periodIndex == -1) toolchain.get().target
             else toolchain.get().target.substring(0, periodIndex)
-        println("Building for target: ${target}")
+        val target =
+            if (origTarget.contains("windows")) "x86_64-pc-windows-gnu"
+            else origTarget
+        println("Building for target: ${target} (original ${toolchain.get().target})")
 
         val timoutInMinutes = 7L
         val processBuilder =
