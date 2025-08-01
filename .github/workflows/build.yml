@@ -109,6 +109,10 @@ jobs:
           sudo apt-get -y install g++-aarch64-linux-gnu
           sudo apt-get -y install binutils-aarch64-linux-gnu
           sudo apt-get -y install mingw-w64
+          echo "/usr/x86_64-w64-mingw32/include/stdlib.h :"
+          cat -n /usr/x86_64-w64-mingw32/include/stdlib.h
+          echo "/usr/x86_64-w64-mingw32/include/_mingw.h :"
+          cat -n /usr/x86_64-w64-mingw32/include/_mingw.h
 
       - name: Build Cargo Linux / Windows
         #run: ./gradlew cargoBuildX86Linux cargoBuildAarch64Linux cargoBuildX86Windows
