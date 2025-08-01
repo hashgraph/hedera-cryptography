@@ -280,8 +280,9 @@ tasks.withType<CargoBuildTask> {
 //                //"+/winsdkdir", "+$xwinFolder/sdk"
 //            ).joinToString(separator = " ")
 
+            // This would interfer with cargo build unless we switch it to mingw too.
             //processBuilder.environment().put("CPATH", "/usr/x86_64-w64-mingw32/include")
-            processBuilder.environment().put("BINDGEN_EXTRA_CLANG_ARGS", "-I/usr/x86_64-w64-mingw32/include")
+            processBuilder.environment().put("BINDGEN_EXTRA_CLANG_ARGS", "-I/usr/x86_64-w64-mingw32/include -fdiagnostics-show-caret -fdiagnostics-show-labels")
             processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=x86_64-w64-mingw32-gcc;CPATH=/usr/x86_64-w64-mingw32/include")
             //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=${clFlags}")
             processBuilder.environment().put("GOFLAGS", "-v -x")
