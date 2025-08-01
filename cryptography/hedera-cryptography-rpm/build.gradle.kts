@@ -258,7 +258,7 @@ tasks.withType<CargoBuildTask> {
 //                    "RUSTFLAGS",
 //                    "-Lnative=$xwinFolder/crt/lib/x86_64 -Lnative=$xwinFolder/sdk/lib/um/x86_64 -Lnative=$xwinFolder/sdk/lib/ucrt/x86_64 -Lnative=/usr/x86_64-w64-mingw32/lib -C link-args=-lmingwex",
                     "RUSTFLAGS",
-                    "-C liner=/usr/bin/x86_64-w64-mingw32-ld -C link-args=-lmingwex",
+                    "-C linker=/usr/bin/x86_64-w64-mingw32-ld -C link-args=-lmingwex",
                 )
 
             //processBuilder.environment().put("CC", "clang-cl")
