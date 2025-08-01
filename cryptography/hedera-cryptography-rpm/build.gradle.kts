@@ -232,8 +232,10 @@ tasks.withType<CargoBuildTask> {
             val rustupToolchains = rustInstallFolder.dir("rustup/toolchains").get().asFile
             val rustLld = rustupToolchains.walk().filter { it.name == "rust-lld" }.single()
 
+//            val clFlags =
+//                "-Wno-unused-command-line-argument -fuse-ld=lld-link /vctoolsdir $xwinFolder/crt /winsdkdir $xwinFolder/sdk"
             val clFlags =
-                "-Wno-unused-command-line-argument -fuse-ld=lld-link /vctoolsdir $xwinFolder/crt /winsdkdir $xwinFolder/sdk"
+                "-Wno-unused-command-line-argument -fuse-ld=x86_64-w64-mingw32-ld /vctoolsdir $xwinFolder/crt /winsdkdir $xwinFolder/sdk"
             processBuilder.environment().put("CC_x86_64_pc_windows_msvc", "clang-cl")
             processBuilder.environment().put("CXX_x86_64_pc_windows_msvc", "clang-cl")
             processBuilder.environment().put("AR_x86_64_pc_windows_msvc", "llvm-lib")
@@ -242,14 +244,17 @@ tasks.withType<CargoBuildTask> {
             processBuilder.environment().put("CL_FLAGS", clFlags)
             processBuilder.environment().put("CFLAGS_x86_64_pc_windows_msvc", clFlags)
             processBuilder.environment().put("CXXFLAGS_x86_64_pc_windows_msvc", clFlags)
+//            processBuilder
+//                .environment()
+//                .put("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER", rustLld.absolutePath)
             processBuilder
                 .environment()
-                .put("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER", rustLld.absolutePath)
+                .put("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER", "/usr/bin/x86_64-w64-mingw32-ld")
             processBuilder
                 .environment()
                 .put(
                     "RUSTFLAGS",
-                    "-Lnative=$xwinFolder/crt/lib/x86_64 -Lnative=$xwinFolder/sdk/lib/um/x86_64 -Lnative=$xwinFolder/sdk/lib/ucrt/x86_64 -Lnative=/usr/x86_64-w64-mingw32/lib -C link-args=/usr/x86_64-w64-mingw32/lib/*.a",
+                    "-Lnative=$xwinFolder/crt/lib/x86_64 -Lnative=$xwinFolder/sdk/lib/um/x86_64 -Lnative=$xwinFolder/sdk/lib/ucrt/x86_64 -Lnative=/usr/x86_64-w64-mingw32/lib -C link-args=-lmingwex",
                 )
 
             //processBuilder.environment().put("CC", "clang-cl")
