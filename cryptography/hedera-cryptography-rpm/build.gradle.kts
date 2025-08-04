@@ -152,7 +152,7 @@ tasks.withType<CargoBuildTask> {
                 .command(
                     File(cargoHome, "bin/cargo").absolutePath,
                     "build",
-                    "-v",
+                    "-v -v",
                     "--release",
                     "--target=${target}",
                     "--target-dir",
@@ -242,11 +242,14 @@ tasks.withType<CargoBuildTask> {
             processBuilder.environment().put("CC", "x86_64-w64-mingw32-gcc")
             processBuilder.environment().put("AR", "x86_64-w64-mingw32-ar")
             processBuilder.environment().put("CARGO_BUILD_TARGET", target)
+
+            processBuilder.environment().put("CC_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-gcc")
+            processBuilder.environment().put("CXX_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-g++")
+            processBuilder.environment().put("AR_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-ar")
+            processBuilder.environment().put("WINEDEBUG", "-all")
+            processBuilder.environment().put("CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUNNER", "wine")
             processBuilder.environment().put("CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER", "x86_64-w64-mingw32-ld")
-            processBuilder.environment().put("CARGO_TARGET_X86_64_UNKNOWN_WINDOWS_GNU_LINKER", "x86_64-w64-mingw32-ld")
-            processBuilder.environment().put("CARGO_TARGET_X86_64_WINDOWS_GNU_LINKER", "x86_64-w64-mingw32-ld")
-            processBuilder.environment().put("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER", "x86_64-w64-mingw32-ld")
-            processBuilder.environment().put("CARGO_TARGET_X86_64_UNKNOWN_WINDOWS_MSVC_LINKER", "x86_64-w64-mingw32-ld")
+
 //            processBuilder.environment().put("CC_x86_64_pc_windows_msvc", "clang-cl")
 //            processBuilder.environment().put("CXX_x86_64_pc_windows_msvc", "clang-cl")
 //            processBuilder.environment().put("AR_x86_64_pc_windows_msvc", "llvm-lib")
