@@ -3,7 +3,6 @@ import java.net.URI
 import org.gradle.api.internal.file.FileOperations
 import org.gradle.kotlin.dsl.withType
 import org.hiero.gradle.environment.EnvAccess
-import org.hiero.gradle.extensions.CargoToolchain
 import org.hiero.gradle.tasks.CargoBuildTask
 
 // SPDX-License-Identifier: Apache-2.0
@@ -141,9 +140,7 @@ tasks.withType<CargoBuildTask> {
         val origTarget =
             if (periodIndex == -1) toolchain.get().target
             else toolchain.get().target.substring(0, periodIndex)
-        val target =
-            if (origTarget.contains("windows")) "x86_64-pc-windows-gnu"
-            else origTarget
+        val target = if (origTarget.contains("windows")) "x86_64-pc-windows-gnu" else origTarget
         println("Building for target: ${target} (original ${toolchain.get().target})")
 
         val timoutInMinutes = 7L
@@ -152,8 +149,6 @@ tasks.withType<CargoBuildTask> {
                 .command(
                     File(cargoHome, "bin/cargo").absolutePath,
                     "build",
-                    //"-v",
-                    //"-v",
                     "--release",
                     "--target=${target}",
                     "--target-dir",
@@ -206,24 +201,20 @@ tasks.withType<CargoBuildTask> {
                 if (target.startsWith("aarch64-")) {
                     println("Configuring cross-compilation for ${target}...")
 
-                    val clangTarget = "arch64-linux-gnu"
-                    //val clangTarget = "arch64-linux-glibc"
-
-                    // processBuilder.environment().put("CC_FOR_TARGET", "gcc-aarch64-linux-gnu")
-                    //processBuilder.environment().put("CC", "aarch64-linux-gnu-gcc")
-                    //processBuilder.environment().put("CC", "clang-19")
-                    // Apply the CC to the inner Go build, but not the outer Cargo build:
-                    processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=aarch64-linux-gnu-gcc")
-                    // processBuilder.environment().put("CC_FOR_TARGET", "aarch64-linux-gnu-gcc")
-                    // processBuilder.environment().put("CXX", "aarch64-linux-gnu-g++")
-                    // processBuilder.environment().put("CXX_FOR_TARGET", "aarch64-linux-gnu-g++")
-                    // processBuilder.environment().put("TARGET", target)
                     processBuilder.environment().put("CARGO_BUILD_TARGET", target)
-                    processBuilder.environment().put("CARGO_TARGET_AARCH64_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc")
-                    processBuilder.environment().put("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc")
-                    //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=--target=${clangTarget}")
+                    processBuilder
+                        .environment()
+                        .put("SP1_GNARK_FFI_GO_ENVS", "CC=aarch64-linux-gnu-gcc")
+                    processBuilder
+                        .environment()
+                        .put("CARGO_TARGET_AARCH64_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc")
+                    processBuilder
+                        .environment()
+                        .put(
+                            "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER",
+                            "aarch64-linux-gnu-gcc",
+                        )
                     processBuilder.environment().put("GOFLAGS", "-v -x")
-                    //processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "^--target=${clangTarget}")
                 }
             }
         }
@@ -231,89 +222,22 @@ tasks.withType<CargoBuildTask> {
         if (target.contains("windows")) {
             println("Configuring cross-compilation for ${target}...")
 
-            // See https://github.com/Jake-Shadle/xwin/blob/main/xwin.dockerfile
-            //val xwinFolder = rustInstallFolder.dir("xwin").get().asFile.absolutePath
-//            val rustupToolchains = rustInstallFolder.dir("rustup/toolchains").get().asFile
-//            val rustLld = rustupToolchains.walk().filter { it.name == "rust-lld" }.single()
-
-//            val clFlags =
-//                "-Wno-unused-command-line-argument -fuse-ld=lld-link /vctoolsdir $xwinFolder/crt /winsdkdir $xwinFolder/sdk"
-//            val clFlags =
-//                "-Wno-unused-command-line-argument -fuse-ld=x86_64-w64-mingw32-ld /vctoolsdir $xwinFolder/crt /winsdkdir $xwinFolder/sdk"
-//            processBuilder.environment().put("CC", "x86_64-w64-mingw32-gcc")
-//            processBuilder.environment().put("AR", "x86_64-w64-mingw32-ar")
             processBuilder.environment().put("CARGO_BUILD_TARGET", target)
-
             processBuilder.environment().put("CC_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-gcc")
-//            processBuilder.environment().put("CXX_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-g++")
-//            processBuilder.environment().put("AR_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-ar")
-//            processBuilder.environment().put("WINEDEBUG", "-all")
-//            processBuilder.environment().put("CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUNNER", "wine")
-//            processBuilder.environment().put("CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER", "x86_64-w64-mingw32-ld")
-
-//            processBuilder.environment().put("CC_x86_64_pc_windows_msvc", "clang-cl")
-//            processBuilder.environment().put("CXX_x86_64_pc_windows_msvc", "clang-cl")
-//            processBuilder.environment().put("AR_x86_64_pc_windows_msvc", "llvm-lib")
-//            processBuilder.environment().put("WINEDEBUG", "-all")
-//            processBuilder.environment().put("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUNNER", "wine")
-//            processBuilder.environment().put("CL_FLAGS", clFlags)
-//            processBuilder.environment().put("CFLAGS_x86_64_pc_windows_msvc", clFlags)
-//            processBuilder.environment().put("CXXFLAGS_x86_64_pc_windows_msvc", clFlags)
-//            processBuilder
-//                .environment()
-//                .put("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER", rustLld.absolutePath)
-//            processBuilder
-//                .environment()
-//                .put("CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER", "x86_64-w64-mingw32-ld")
-//            processBuilder
-//                .environment()
-//                .put(
-////                    "RUSTFLAGS",
-////                    "-Lnative=$xwinFolder/crt/lib/x86_64 -Lnative=$xwinFolder/sdk/lib/um/x86_64 -Lnative=$xwinFolder/sdk/lib/ucrt/x86_64 -Lnative=/usr/x86_64-w64-mingw32/lib -C link-args=-lmingwex",
-//                    "RUSTFLAGS",
-//                    "-C linker=/usr/bin/x86_64-w64-mingw32-ld -C link-args=-lmingwex",
-//                )
-
-            //processBuilder.environment().put("CC", "clang-cl")
-
-//            val ccc_override_options = listOf(
-////                "x-dM",
-////                "+-Wno-unused-command-line-argument",
-////                "x-fno-stack-protector",
-////                "x-fmessage-length=0",
-//                "x-Werror",
-////                "+-Wno-unused-macros",
-////                "+-Wno-reserved-identifier",
-////                "+-Wno-missing-prototypes",
-////                "+-Wno-nonportable-system-include-path",
-////                "+-Wno-strict-prototypes",
-////                "+-Wno-unused-parameter",
-////                "+-Wno-missing-noreturn",
-////                "+-Wno-sign-conversion",
-////                "+-Wno-newline-eof",
-////                "+-Wno-sign-compare",
-////                "+-Wno-missing-variable-declarations",
-////                "+-Wno-language-extension-token",
-////                "+-fuse-ld=lld-link",
-////                "+-I$xwinFolder/crt/include",
-////                "+-I$xwinFolder/sdk/include",
-////                "+-fms-extensions"
-//                //"+/vctoolsdir", "+$xwinFolder/crt",
-//                //"+/winsdkdir", "+$xwinFolder/sdk"
-//            ).joinToString(separator = " ")
-
-            // This would interfere with cargo build unless we switch it to mingw too.
-            //processBuilder.environment().put("CPATH", "/usr/x86_64-w64-mingw32/include")
-            processBuilder.environment().put("CFLAGS_x86_64_pc_windows_gnu", "-I/usr/x86_64-w64-mingw32/include")
-            //processBuilder.environment().put("BINDGEN_EXTRA_CLANG_ARGS", "-I/usr/x86_64-w64-mingw32/include")
-            // BindGen appears to be using the Rust CC, which is clang-cl per the above.
-            // If this doesn't work, we might try switching the entire build to mingw and abandon clang-cl altogether.
-            processBuilder.environment().put("BINDGEN_EXTRA_CLANG_ARGS", "-I/usr/x86_64-w64-mingw32/include")
-            processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=x86_64-w64-mingw32-gcc;CPATH=/usr/x86_64-w64-mingw32/include")
+            processBuilder
+                .environment()
+                .put("CFLAGS_x86_64_pc_windows_gnu", "-I/usr/x86_64-w64-mingw32/include")
+            processBuilder
+                .environment()
+                .put("BINDGEN_EXTRA_CLANG_ARGS", "-I/usr/x86_64-w64-mingw32/include")
+            processBuilder
+                .environment()
+                .put(
+                    "SP1_GNARK_FFI_GO_ENVS",
+                    "CC=x86_64-w64-mingw32-gcc;CPATH=/usr/x86_64-w64-mingw32/include",
+                )
             processBuilder.environment().put("SP1_GNARK_FFI_SKIP_MAC_FRAMEWORKS", "true")
-            //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=${clFlags}")
             processBuilder.environment().put("GOFLAGS", "-v -x")
-            //processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "x-dM x-fno-stack-protector +-Wno-unused-macros")
         }
 
         println("Build environment:")
@@ -346,7 +270,7 @@ tasks.withType<CargoBuildTask> {
         val baseFolder = javaPackage.get().replace('.', '/')
         val targetFolder = baseFolder + "/" + executableName + "/" + toolchain.get().folder
         val resourcesDir = destinationDirectory.dir(targetFolder)
-        val buildsForWindows = toolchain.get() == CargoToolchain.x86Windows
+        val buildsForWindows = target.contains("windows")
         val fileExtension = if (buildsForWindows) ".exe" else ""
         val fullExecutableName = "${executableName}${fileExtension}"
         val fullExecutablePath = resourcesDir.get().file(fullExecutableName)
