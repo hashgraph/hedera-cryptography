@@ -240,16 +240,16 @@ tasks.withType<CargoBuildTask> {
 //                "-Wno-unused-command-line-argument -fuse-ld=lld-link /vctoolsdir $xwinFolder/crt /winsdkdir $xwinFolder/sdk"
 //            val clFlags =
 //                "-Wno-unused-command-line-argument -fuse-ld=x86_64-w64-mingw32-ld /vctoolsdir $xwinFolder/crt /winsdkdir $xwinFolder/sdk"
-            processBuilder.environment().put("CC", "x86_64-w64-mingw32-gcc")
-            processBuilder.environment().put("AR", "x86_64-w64-mingw32-ar")
+//            processBuilder.environment().put("CC", "x86_64-w64-mingw32-gcc")
+//            processBuilder.environment().put("AR", "x86_64-w64-mingw32-ar")
             processBuilder.environment().put("CARGO_BUILD_TARGET", target)
 
             processBuilder.environment().put("CC_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-gcc")
-            processBuilder.environment().put("CXX_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-g++")
-            processBuilder.environment().put("AR_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-ar")
-            processBuilder.environment().put("WINEDEBUG", "-all")
-            processBuilder.environment().put("CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUNNER", "wine")
-            processBuilder.environment().put("CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER", "x86_64-w64-mingw32-ld")
+//            processBuilder.environment().put("CXX_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-g++")
+//            processBuilder.environment().put("AR_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-ar")
+//            processBuilder.environment().put("WINEDEBUG", "-all")
+//            processBuilder.environment().put("CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUNNER", "wine")
+//            processBuilder.environment().put("CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER", "x86_64-w64-mingw32-ld")
 
 //            processBuilder.environment().put("CC_x86_64_pc_windows_msvc", "clang-cl")
 //            processBuilder.environment().put("CXX_x86_64_pc_windows_msvc", "clang-cl")
@@ -303,12 +303,14 @@ tasks.withType<CargoBuildTask> {
 //            ).joinToString(separator = " ")
 
             // This would interfere with cargo build unless we switch it to mingw too.
-            processBuilder.environment().put("CPATH", "/usr/x86_64-w64-mingw32/include")
+            //processBuilder.environment().put("CPATH", "/usr/x86_64-w64-mingw32/include")
+            processBuilder.environment().put("CFLAGS_x86_64_pc_windows_gnu", "-I/usr/x86_64-w64-mingw32/include")
             //processBuilder.environment().put("BINDGEN_EXTRA_CLANG_ARGS", "-I/usr/x86_64-w64-mingw32/include")
             // BindGen appears to be using the Rust CC, which is clang-cl per the above.
             // If this doesn't work, we might try switching the entire build to mingw and abandon clang-cl altogether.
-            //processBuilder.environment().put("BINDGEN_EXTRA_CLANG_ARGS", clFlags + " -I$xwinFolder/sdk/include/ucrt -I$xwinFolder/crt/include")
+            processBuilder.environment().put("BINDGEN_EXTRA_CLANG_ARGS", "-I/usr/x86_64-w64-mingw32/include")
             processBuilder.environment().put("SP1_GNARK_FFI_GO_ENVS", "CC=x86_64-w64-mingw32-gcc;CPATH=/usr/x86_64-w64-mingw32/include")
+            processBuilder.environment().put("SP1_GNARK_FFI_SKIP_MAC_FRAMEWORKS", "true")
             //processBuilder.environment().put("GOFLAGS", "-v -x -gccgoflags=all=${clFlags}")
             processBuilder.environment().put("GOFLAGS", "-v -x")
             //processBuilder.environment().put("CCC_OVERRIDE_OPTIONS", "x-dM x-fno-stack-protector +-Wno-unused-macros")
