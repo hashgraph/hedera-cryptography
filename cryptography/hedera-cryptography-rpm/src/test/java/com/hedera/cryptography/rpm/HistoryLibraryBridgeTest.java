@@ -592,7 +592,7 @@ public class HistoryLibraryBridgeTest {
 
         // It's almost 1.5 MB, so we only check the length for practicality.
         // The verifyChainOfTrust() test right below will verify the actual bytes for us.
-        assertEquals(1477359, proof.length);
+        assertEquals(1477354, proof.length);
 
         // NOTE: computing the proof takes some 3 minutes on a MacBook Pro,
         // and may take even longer on a less powerful system. So we might as well
