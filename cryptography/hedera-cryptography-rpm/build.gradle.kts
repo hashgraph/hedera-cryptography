@@ -96,13 +96,13 @@ tasks.withType<CargoBuildTask> {
                 StringBuilder()
                     .apply {
                         println("Determining include path...")
-                        val timoutInMinutes = 1L
+                        val timeoutInMinutes = 1L
                         val processBuilder =
                             ProcessBuilder()
                                 .command("xcrun", "--show-sdk-path")
                                 .redirectErrorStream(true)
                         val process = processBuilder.start()
-                        val hasExited = process.waitFor(timoutInMinutes, TimeUnit.MINUTES)
+                        val hasExited = process.waitFor(timeoutInMinutes, TimeUnit.MINUTES)
 
                         while (true) {
                             val c = process.inputStream.read()
@@ -115,7 +115,7 @@ tasks.withType<CargoBuildTask> {
                             println(toString())
                             throw GradleException(
                                 "Determining include path hasn't finished in " +
-                                    timoutInMinutes +
+                                    timeoutInMinutes +
                                     " minutes"
                             )
                         } else if (process.exitValue() != 0) {
@@ -143,7 +143,7 @@ tasks.withType<CargoBuildTask> {
         val target = if (origTarget.contains("windows")) "x86_64-pc-windows-gnu" else origTarget
         println("Building for target: ${target} (original ${toolchain.get().target})")
 
-        val timoutInMinutes = 7L
+        val timeoutInMinutes = 20L
         val processBuilder =
             ProcessBuilder()
                 .command(
@@ -247,7 +247,7 @@ tasks.withType<CargoBuildTask> {
 
         val process = processBuilder.start()
 
-        val hasExited = process.waitFor(timoutInMinutes, TimeUnit.MINUTES)
+        val hasExited = process.waitFor(timeoutInMinutes, TimeUnit.MINUTES)
         println("${executableName} build output:")
         while (true) {
             val c = process.inputStream.read()
@@ -256,7 +256,7 @@ tasks.withType<CargoBuildTask> {
         }
         if (!hasExited) {
             throw GradleException(
-                "${executableName} build hasn't finished in " + timoutInMinutes + " minutes"
+                "${executableName} build hasn't finished in " + timeoutInMinutes + " minutes"
             )
         } else if (process.exitValue() != 0) {
             throw GradleException(
