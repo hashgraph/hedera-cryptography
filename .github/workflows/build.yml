@@ -96,6 +96,7 @@ jobs:
         # Make sure 'clang-cl' and 'llvm-lib' are installed for compiling crates with C++ code for Windows
         # https://github.com/hiero-ledger/hiero-gradle-conventions/issues/97
         # Also install g++-aarch64-linux-gnu because the compressor build via Rust/Go needs it.
+        # Finally, install mingw that we use to build for Windows target.
         run: |
           sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 15CF4D18AF4F7421
           sudo add-apt-repository deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-19 main
