@@ -22,9 +22,9 @@ serde-big-array = "0.5.1"
 serde-hex = "0.1.0"
 sha2 = "0.10.8"
 smallvec = { version = "1.13", features = ["const_generics", "serde"] }
-sp1-sdk = { version = "5.0.8", git = "https://github.com/anthony-swirldslabs/sp1", branch = "go-build-config", default-features = false }
-sp1-zkvm = { version = "4.1.0" }
-sp1-verifier = { version = "4.1.0" }
+sp1-sdk = { version = "5.1.0", git = "https://github.com/anthony-swirldslabs/sp1", branch = "go-build-config-5.1.0", default-features = false }
+sp1-zkvm = { version = "5.1.0" }
+sp1-verifier = { version = "5.1.0" }
 
 ab-rotation-lib = { path = "src/main/rust/common" }
 raps = { path = "src/main/rust/raps" }
@@ -33,7 +33,7 @@ raps = { path = "src/main/rust/raps" }
 ab-rotation-lib = { path = "../common" }
 #sp1-sdk = { version = "4.1.0", default-features = false, features = ["native-gnark"] }
 #sp1-sdk = { path = "/Users/anthony/ws/61-crypto/sp1/crates/sdk", default-features = false, features = ["native-gnark"] }
-sp1-sdk = { version = "5.0.8", git = "https://github.com/anthony-swirldslabs/sp1", branch = "go-build-config", default-features = false, features = ["native-gnark"] }
+sp1-sdk = { version = "5.1.0", git = "https://github.com/anthony-swirldslabs/sp1", branch = "go-build-config-5.1.0", default-features = false, features = ["native-gnark"] }
 byteorder = "1.4"
 alloy-sol-types = { workspace = true }
 bincode = { workspace = true }

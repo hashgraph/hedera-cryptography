@@ -270,6 +270,7 @@ tasks.withType<CargoBuildTask> {
         val baseFolder = javaPackage.get().replace('.', '/')
         val targetFolder = baseFolder + "/" + executableName + "/" + toolchain.get().folder
         val resourcesDir = destinationDirectory.dir(targetFolder)
+        injected.files.mkdir(resourcesDir)
         val buildsForWindows = target.contains("windows")
         val fileExtension = if (buildsForWindows) ".exe" else ""
         val fullExecutableName = "${executableName}${fileExtension}"
@@ -279,7 +280,7 @@ tasks.withType<CargoBuildTask> {
 
         println("Copying ${executableName} to ${fullExecutablePath.asFile.absolutePath}")
         injected.files.sync {
-            from(outDir.dir("release"))
+            from(outDir.dir(target).dir("release"))
             into(resourcesDir)
 
             include("${executableName}${fileExtension}")
