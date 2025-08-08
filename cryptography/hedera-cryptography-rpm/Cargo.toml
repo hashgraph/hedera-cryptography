@@ -26,7 +26,7 @@ smallvec = { version = "1.13", features = ["const_generics", "serde"] }
 # Also, we use our custom fork with https://github.com/succinctlabs/sp1/pull/2418 applied.
 # Once the PR is merged into sp1 and released officially, and the build issues of the sp1 dependencies are resolved,
 # then we can switch back to using official sp1 releases:
-sp1-sdk = { version = "5.1.0", git = "https://github.com/anthony-swirldslabs/sp1", branch = "go-build-config-5.1.0", default-features = false }
+sp1-sdk = { version = "5.1.0", git = "https://github.com/swirldslabs/sp1", branch = "go-build-config-5.1.0", default-features = false }
 sp1-zkvm = { version = "5.1.0" }
 sp1-verifier = { version = "5.1.0" }
 
