@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.hedera.common.nativesupport.api;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,10 +47,13 @@ public abstract class StreamAPI implements ExternalAPI {
         final InputStream is = getInputStream();
 
         final byte[] lenBytes = is.readNBytes(4);
+        if (lenBytes.length != 4) {
+            throw new EOFException("Expected 4 bytes in length array, got " + lenBytes.length);
+        }
         final int len = arrayToInt(lenBytes);
         final byte[] output = is.readNBytes(len);
         if (output.length != len) {
-            return null;
+            throw new EOFException("Expected " + len + " bytes in data array, got " + output.length);
         }
 
         return output;

@@ -61,6 +61,28 @@ public class HistoryLibraryBridge {
     }
 
     /**
+     * Loads the Succinct RISC-V zkVM implementing the RAPS Compression Program,
+     * which is in the ELF (executable and linkable) format.
+     *
+     * @return a byte array with the ELF
+     * @throws IOException if I/O errors occur
+     */
+    public static byte[] loadRapsCompressionProgram() throws IOException {
+        try (final InputStream is = HistoryLibraryBridge.class.getResourceAsStream("/raps-compression-program");
+                final ByteArrayOutputStream baos = new ByteArrayOutputStream(); ) {
+            // The current program is about 350KB, so try to read it in one go
+            byte[] buffer = new byte[400 * 1024];
+            int bytesRead;
+
+            while ((bytesRead = is.read(buffer)) != -1) {
+                baos.write(buffer, 0, bytesRead);
+            }
+
+            return baos.toByteArray();
+        }
+    }
+
+    /**
      * Returns the SNARK verification key in use by this library.
      * <p>
      * <b>Important:</b> If this changes, the ledger id must also change.
@@ -235,4 +257,13 @@ public class HistoryLibraryBridge {
      * @return true if the proof is valid; false otherwise
      */
     public native boolean verifyChainOfTrust(final byte[] snarkVerifyingKey, final byte[] proof);
+
+    /**
+     * Verifies the given compressed SNARK proves the given address book hash and associated metadata belong to the given
+     * ledger id's chain of trust
+     * @param snarkVerifyingKey the SNARK verifying key
+     * @param compressedProof the compressed SNARK proving the address book hash and metadata belong to the ledger id's chain of trust
+     * @return true if the proof is valid; false otherwise
+     */
+    public native boolean verifyCompressedChainOfTrust(final byte[] snarkVerifyingKey, final byte[] compressedProof);
 }
