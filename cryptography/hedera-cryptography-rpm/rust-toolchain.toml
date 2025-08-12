@@ -1,5 +1,5 @@
 [toolchain]
-channel = "1.83.0"
+channel = "1.85.0"
 components = [ "rustfmt", "rustc-dev", "llvm-tools" ]
 targets = [ "x86_64-apple-darwin", "aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-gnu" ]
 profile = "minimal"
