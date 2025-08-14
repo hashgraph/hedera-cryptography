@@ -136,9 +136,12 @@ impl RAPS {
 
     /// verify_compressed_proof is used to verify the output of the proof compressor
     pub fn verify_compressed_proof(
-        compression_vk_digest: &str,
+        vk: &SP1VerifyingKey,
         compressed_proof: &SP1ProofWithPublicValues
     ) -> bool {
+        let vk_string: String = Self::extract_vk_digest(vk);
+        let compression_vk_digest: &str = vk_string.as_str();
+
         let result = Groth16Verifier::verify(
             &compressed_proof.bytes(),
             &compressed_proof.public_values.to_vec(),

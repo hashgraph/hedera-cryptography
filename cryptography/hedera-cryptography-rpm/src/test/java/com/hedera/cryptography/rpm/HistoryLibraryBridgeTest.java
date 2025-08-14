@@ -52,7 +52,7 @@ public class HistoryLibraryBridgeTest {
      * @param num the number of addresses in the address book
      * @return an address book
      */
-    private AddressBook buildAddressBook(final int num) {
+    private static AddressBook buildAddressBook(final int num) {
         return new AddressBook(List.of(
                         Address.fromRandom(HistoryConstants.RANDOM_0, 111),
                         Address.fromRandom(HistoryConstants.RANDOM_1, 222),
@@ -66,7 +66,7 @@ public class HistoryLibraryBridgeTest {
     // ------------------------------------------------------------------------
 
     // A helper assertion that also prints entire arrays in addition to the default first mismatching index only
-    private void assertArrayEquals(byte[] expected, byte[] actual) {
+    public static void assertArrayEquals(byte[] expected, byte[] actual) {
         Assertions.assertArrayEquals(
                 expected,
                 actual,
@@ -76,12 +76,12 @@ public class HistoryLibraryBridgeTest {
     @Test
     void testSnarkVerificationKey() throws IOException {
         final byte[] elf = HistoryLibraryBridge.loadAddressBookRotationProgram();
-        assertEquals(365896, elf.length);
+        assertEquals(376148, elf.length);
 
         final ProvingAndVerifyingSnarkKeys keys = HISTORY.snarkVerificationKey(elf);
 
         // The pk is 164 MB, so we just check its size for practicality.
-        assertEquals(164207818, keys.provingKey().length);
+        assertEquals(164218070, keys.provingKey().length);
 
         assertArrayEquals(HistoryConstants.SNARK_VERIFYING_KEY, keys.verifyingKey());
     }
@@ -94,10 +94,10 @@ public class HistoryLibraryBridgeTest {
 
         // Corrupt the ELF a bit at a random location. Note that if the binary elf is replaced,
         // the location index may or may not need changing.
-        elf[3579]++;
+        elf[12730]++;
         final ProvingAndVerifyingSnarkKeys keys = HISTORY.snarkVerificationKey(elf);
         // The pk size is still the same as with a good ELF, but the verifyingKey is different
-        assertEquals(164207818, keys.provingKey().length);
+        assertEquals(164218070, keys.provingKey().length);
         assertFalse(Arrays.equals(HistoryConstants.SNARK_VERIFYING_KEY, keys.verifyingKey()));
 
         // If we corrupt the ELF a lot, then a panic occurs. So this is as far as we can test this.
@@ -518,7 +518,7 @@ public class HistoryLibraryBridgeTest {
     // This method is extracted to allow us to enhance it in the future to support computing
     // proofs for subsequent address books. For now, it only covers the basic case where
     // a genesis address book endorses a single next address book.
-    private byte[] computeProof(ProvingAndVerifyingSnarkKeys snarkKeys) throws IOException {
+    public static byte[] computeProof(ProvingAndVerifyingSnarkKeys snarkKeys) throws IOException {
         final AddressBook genesisAddressBook = buildAddressBook(4);
         final byte[] genesisAddressBookHash =
                 HISTORY.hashAddressBook(genesisAddressBook.verifyingKeys(), genesisAddressBook.weights());

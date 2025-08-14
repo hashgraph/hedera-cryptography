@@ -374,3 +374,32 @@ pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_ver
 
     jboolean::from(RAPS::verify_proof(&vk, &proof))
 }
+
+/// JNI for HistoryLibraryBridge.verifyChainOfTrust
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_rpm_HistoryLibraryBridge_verifyCompressedChainOfTrust(
+    env: JNIEnv,
+    _instance: JObject,
+    snark_verifying_key_jarray: JByteArray,
+    proof_jarray: JByteArray,
+) -> jboolean {
+    let snark_verifying_key_vec = match env.convert_byte_array(&snark_verifying_key_jarray) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+    let vk: SP1VerifyingKey = match bincode::deserialize(&snark_verifying_key_vec) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
+    let proof_vec = match env.convert_byte_array(&proof_jarray) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+    let proof: SP1ProofWithPublicValues = match bincode::deserialize(&proof_vec) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
+    jboolean::from(RAPS::verify_compressed_proof(&vk, &proof))
+}

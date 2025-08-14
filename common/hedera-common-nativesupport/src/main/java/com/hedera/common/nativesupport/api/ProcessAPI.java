@@ -2,12 +2,10 @@
 package com.hedera.common.nativesupport.api;
 
 import com.hedera.common.nativesupport.NativeBinary;
-import com.hedera.common.nativesupport.OperatingSystem;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.Map;
 
 /**
  * An implementation of the ExternalAPI that extends the abstract StreamAPI, runs a native process,
@@ -24,12 +22,10 @@ public class ProcessAPI extends StreamAPI {
      * `Process.destroy()` the underlying process.
      *
      * @param clz a class that is in the Java module where the executable belongs to
-     * @param executableName a name of the executable file as present in the JAR file
+     * @param executableBinary a NativeBinary for the executable file as present in the JAR file
      * @throws IOException if any errors occur when extracting the executable or starting the process
      */
-    public ProcessAPI(final Class<?> clz, final String executableName) throws IOException {
-        final NativeBinary executableBinary =
-                new NativeBinary(executableName, Map.of(), Map.of(OperatingSystem.WINDOWS, "exe"));
+    public ProcessAPI(final Class<?> clz, final NativeBinary executableBinary) throws IOException {
         final Path path = executableBinary.extract(clz);
         final ProcessBuilder pb =
                 new ProcessBuilder().command(path.toAbsolutePath().toString());
@@ -51,7 +47,11 @@ public class ProcessAPI extends StreamAPI {
     }
 
     @Override
-    protected InputStream getInputStream() {
+    public InputStream getInputStream() {
         return process.getInputStream();
+    }
+
+    public InputStream getErrorStream() {
+        return process.getErrorStream();
     }
 }

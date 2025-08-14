@@ -98,6 +98,12 @@ fn main() -> io::Result<()> {
     bincode::serialize_into(&mut compressed_proof_buf, &compressed_proof).expect("failed to serialize proof");
 
     let mut stdout_handle = io::stdout().lock();
+
+    // sp1 emits debugging output to stdout prior to our own output,
+    // so we emit this marker to indicate that our output follows:
+    stdout_handle.write(b"<TSS OUTPUT BEGIN>");
+    stdout_handle.flush();
+
     write_byte_array(&mut stdout_handle, &compressed_proof_buf)?;
 
     Ok(())

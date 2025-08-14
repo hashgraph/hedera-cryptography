@@ -366,4 +366,13 @@ testModuleInfo {
     requires("org.junit.jupiter.params")
 }
 
-tasks.test { environment(mapOf("TSS_LIB_NUM_OF_CORES" to "10")) }
+tasks.test {
+    environment(
+        mapOf(
+            // For the TSS lib:
+            "TSS_LIB_NUM_OF_CORES" to "10",
+            // For the compressor that runs Go:
+            "GOMAXPROCS" to "10",
+        )
+    )
+}
