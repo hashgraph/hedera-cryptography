@@ -74,7 +74,7 @@ public class HistoryLibraryBridgeTest {
     }
 
     @Test
-    void testSnarkVerificationKey() throws IOException {
+    void testSnarkVerificationKeyWithAddressBookRotationProgram() throws IOException {
         final byte[] elf = HistoryLibraryBridge.loadAddressBookRotationProgram();
         assertEquals(376148, elf.length);
 
@@ -83,11 +83,11 @@ public class HistoryLibraryBridgeTest {
         // The pk is 164 MB, so we just check its size for practicality.
         assertEquals(164218070, keys.provingKey().length);
 
-        assertArrayEquals(HistoryConstants.SNARK_VERIFYING_KEY, keys.verifyingKey());
+        assertArrayEquals(HistoryConstants.SNARK_VERIFYING_KEY_WITH_ADDRESS_BOOK_ROTATION_PROGRAM, keys.verifyingKey());
     }
 
     @Test
-    void testSnarkVerificationKeyConstraints() throws IOException {
+    void testSnarkVerificationKeyConstraintsWithAddressBookRotationProgram() throws IOException {
         assertNull(HISTORY.snarkVerificationKey(null));
 
         final byte[] elf = HistoryLibraryBridge.loadAddressBookRotationProgram();
@@ -98,7 +98,39 @@ public class HistoryLibraryBridgeTest {
         final ProvingAndVerifyingSnarkKeys keys = HISTORY.snarkVerificationKey(elf);
         // The pk size is still the same as with a good ELF, but the verifyingKey is different
         assertEquals(164218070, keys.provingKey().length);
-        assertFalse(Arrays.equals(HistoryConstants.SNARK_VERIFYING_KEY, keys.verifyingKey()));
+        assertFalse(Arrays.equals(
+                HistoryConstants.SNARK_VERIFYING_KEY_WITH_ADDRESS_BOOK_ROTATION_PROGRAM, keys.verifyingKey()));
+
+        // If we corrupt the ELF a lot, then a panic occurs. So this is as far as we can test this.
+    }
+
+    @Test
+    void testSnarkVerificationKeyWithRapsCompressionProgram() throws IOException {
+        final byte[] elf = HistoryLibraryBridge.loadRapsCompressionProgram();
+        assertEquals(182812, elf.length);
+
+        final ProvingAndVerifyingSnarkKeys keys = HISTORY.snarkVerificationKey(elf);
+
+        // The pk is 164 MB, so we just check its size for practicality.
+        assertEquals(164024734, keys.provingKey().length);
+
+        assertArrayEquals(HistoryConstants.SNARK_VERIFYING_KEY_WITH_RAPS_COMPRESSION_PROGRAM, keys.verifyingKey());
+    }
+
+    @Test
+    void testSnarkVerificationKeyConstraintsWithRapsCompressionProgram() throws IOException {
+        assertNull(HISTORY.snarkVerificationKey(null));
+
+        final byte[] elf = HistoryLibraryBridge.loadRapsCompressionProgram();
+
+        // Corrupt the ELF a bit at a random location. Note that if the binary elf is replaced,
+        // the location index may or may not need changing.
+        elf[12730]++;
+        final ProvingAndVerifyingSnarkKeys keys = HISTORY.snarkVerificationKey(elf);
+        // The pk size is still the same as with a good ELF, but the verifyingKey is different
+        assertEquals(164024734, keys.provingKey().length);
+        assertFalse(
+                Arrays.equals(HistoryConstants.SNARK_VERIFYING_KEY_WITH_RAPS_COMPRESSION_PROGRAM, keys.verifyingKey()));
 
         // If we corrupt the ELF a lot, then a panic occurs. So this is as far as we can test this.
     }

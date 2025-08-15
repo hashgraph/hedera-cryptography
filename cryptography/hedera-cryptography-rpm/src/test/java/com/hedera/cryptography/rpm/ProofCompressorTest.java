@@ -26,6 +26,8 @@ public class ProofCompressorTest {
         final byte[] compressedProof = ProofCompressor.compressProof(
                 snarkKeysFromRapsCompressionProgram.provingKey(), snarkKeysFromABRotationProgram.verifyingKey(), proof);
 
+        // NOTE: the compressed proof is non-deterministic by design, so we cannot assert equality with a constant.
+        // But we can and should verify it, so:
         assertTrue(HISTORY.verifyCompressedChainOfTrust(
                 snarkKeysFromRapsCompressionProgram.verifyingKey(), compressedProof));
     }
