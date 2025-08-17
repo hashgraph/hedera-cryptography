@@ -95,6 +95,48 @@ pub fn calculate_signers_weight(ab: &AddressBook, signatures: &Signatures, messa
     })
 }
 
+pub fn trim_signatures_to_threshold(
+    ab: &AddressBook,
+    signatures: &Signatures,
+    message: &[u8],
+) -> Signatures {
+    //let enough_signatures = 3 * signers_weight >= total_weight;
+    // what is the total weight of the address book?
+    let total_weight: u64 = calculate_total_weight(ab);
+    // we want to be at least a third of that weight, rounded up to the next integer
+    let threshold_weight: u64 = total_weight / 3 + ((total_weight % 3) != 0) as u64;
+
+    // let us sort the address book weights, so we can trim them in order of increasing weight.
+    let mut weights: Vec<u64> = ab.iter().map(|abe| abe.weight).collect();
+    weights.sort_unstable();
+
+    let mut output_signatures = signatures.clone();
+    for &weight in weights.iter() {
+        let mut tmp_signatures = output_signatures.clone();
+        // find the first present signature with that weight and remove it
+        for index in 0..ab.len() {
+            if ab[index].weight == weight && tmp_signatures.0[index].is_some() {
+                tmp_signatures.0[index] = None;
+                break;
+            }
+        }
+
+        // break if we have removed enough signatures
+        let new_weight = calculate_signers_weight(ab, &tmp_signatures, message);
+        if new_weight <= threshold_weight {
+            // we have pruned too much, so tmp_signatures is now invalid
+            // let's ignore tmp_signatures, and output what we have computed
+            // any further iterations of this loop will also be invalid
+            return output_signatures;
+        } else {
+            // new weight still above the minimum, so let us proceed to next iteration
+            output_signatures = tmp_signatures;
+        }
+    }
+
+    return output_signatures;
+}
+
 pub fn serialize_and_digest_sha256(data: &impl serde::Serialize) -> Result<[u8; HASH_LENGTH], RAPSError> {
     let data_bytes = bincode::serialize(data)?;
     Ok(sha256::digest_sha256(data_bytes))

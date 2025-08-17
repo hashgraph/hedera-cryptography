@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use ab_rotation_lib::{
-    address_book::{AddressBook, Signatures},
+    address_book::{AddressBook, Signatures, trim_signatures_to_threshold},
     ed25519::{Signature, SigningKey, VerifyingKey, ENTROPY_SIZE},
     sha256::*,
     statement::Statement,
@@ -73,7 +73,7 @@ impl RAPS {
         // Setup the prover client.
         let prover = ProverClient::builder().cpu().build();
 
-        let (ab_curr_hash, _ab_next_hash, stmt) = generate_statement(
+        let (ab_curr_hash, ab_next_hash, mut stmt) = generate_statement(
             *ab_genesis_hash,
             prev_proof.as_ref(),
             vk.hash_u32(),
@@ -82,6 +82,15 @@ impl RAPS {
             signatures,
             *tss_vk_hash,
         )?;
+
+        let message = [ab_next_hash.as_slice(), tss_vk_hash.as_slice()]
+            .into_iter()
+            .flatten()
+            .copied()
+            .collect::<Vec<_>>();
+
+        let trimmed_signatures = trim_signatures_to_threshold(ab_curr, &signatures, &message);
+        stmt.signatures = trimmed_signatures;
 
         // Supply the statement and (optional) prev proof to the zkVM
         let mut stdin = SP1Stdin::new();
