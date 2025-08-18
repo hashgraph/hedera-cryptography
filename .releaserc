@@ -18,8 +18,8 @@
     [
       "@semantic-release/exec",
       { "cmd": "./gradlew assemble" }
-    ],
-  ]
+    ]
+  ],
   "publish": [
     [
       "@semantic-release/exec",
