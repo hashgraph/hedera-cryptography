@@ -42,7 +42,7 @@
   ],
   "branches":[
     {
-      "name": "main"
+      "name": "main",
       "name": "401-fix-issue-with-dry-run-publishing"
     },
     {
