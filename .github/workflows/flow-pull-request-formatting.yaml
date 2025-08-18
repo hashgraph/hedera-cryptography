@@ -2,21 +2,6 @@
 name: "PR Formatting"
 on:
   pull_request_target:
-    types:
-      - assigned
-      - unassigned
-      - labeled
-      - unlabeled
-      - opened
-      - reopened
-      - edited
-      - converted_to_draft
-      - ready_for_review
-      - review_requested
-      - review_request_removed
-      - locked
-      - unlocked
-      - synchronize
 
 defaults:
   run:
