@@ -18,16 +18,6 @@
     [
       "@semantic-release/exec",
       { "cmd": "./gradlew assemble" }
-    ]
-  ],
-  "publish": [
-    [
-      "@semantic-release/exec",
-      { "cmd": "./gradlew publishAggregationToCentralPortal -PpublishSigningEnabled=true --no-configuration-cache" }
-    ],
-    [
-      "@semantic-release/exec",
-      { "cmd": "./gradlew publishAggregationToCentralPortal -PpublishSigningEnabled=true --no-configuration-cache" }
     ],
     [
       "@semantic-release/git",
@@ -37,7 +27,14 @@
         ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\nSigned-off-by: Hedera Automation <hedera-eng-automation@swirldslabs.com>"
       }
+    ]
+  ],
+  "publish": [
+    [
+      "@semantic-release/exec",
+      { "cmd": "./gradlew publishAggregationToCentralPortal -PpublishSigningEnabled=true --no-configuration-cache" }
     ],
+
     "@semantic-release/github"
   ],
   "branches":[
