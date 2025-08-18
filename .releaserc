@@ -24,10 +24,6 @@
       { "cmd": "./gradlew publishAggregationToCentralPortal -PpublishSigningEnabled=true --no-configuration-cache" }
     ],
     [
-      "@semantic-release/exec",
-      { "cmd": "./gradlew publishAggregationToCentralPortal -PpublishSigningEnabled=true --no-configuration-cache" }
-    ],
-    [
       "@semantic-release/git",
       {
         "assets": [
