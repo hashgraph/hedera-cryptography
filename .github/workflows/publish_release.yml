@@ -101,6 +101,7 @@ jobs:
       # If this step needs to be modified and tested, it's necessary to add the
       # -PpublishTestRelease=true flag to the gradle publish commands in .releaserc
       # in order to publish to the staging MC repo instead of production
+      # The publish to Maven Central step happens in the .releaserc file
       - name: Publish Semantic Release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
