@@ -93,9 +93,9 @@ tasks.withType<CargoBuildTask> {
 
             println(
                 "Start building ${executableName} from " +
-                        srcDir.toString() +
-                        " to " +
-                        outDir.toString()
+                    srcDir.toString() +
+                    " to " +
+                    outDir.toString()
             )
 
             println("Using Go SDK path: " + goSdkDir)
@@ -104,15 +104,19 @@ tasks.withType<CargoBuildTask> {
             val rustupHome = rustInstallFolder.dir("rustup").get().asFile.absolutePath
 
             // Sanitize the target. The toolchain may look like "aarch64-unknown-linux-gnu.2.18",
-            // but the ".2.18" part is "wrong" - as in, the toolchain doesn't know about such a target.
+            // but the ".2.18" part is "wrong" - as in, the toolchain doesn't know about such a
+            // target.
             // Chop it off:
             val periodIndex = toolchain.get().target.indexOf('.')
             val origTarget =
                 if (periodIndex == -1) toolchain.get().target
                 else toolchain.get().target.substring(0, periodIndex)
-            // This is a bit of a hack, but the outer CargoBuildTask builds for x86_64-pc-windows-msvc.
-            // So far we were unable to build the compressor for the msvc env, so we build it for the
-            // gnu env instead. This executable is separate from the raps library, so a different env
+            // This is a bit of a hack, but the outer CargoBuildTask builds for
+            // x86_64-pc-windows-msvc.
+            // So far we were unable to build the compressor for the msvc env, so we build it for
+            // the
+            // gnu env instead. This executable is separate from the raps library, so a different
+            // env
             // doesn't really matter:
             val target = if (origTarget.contains("windows")) "x86_64-pc-windows-gnu" else origTarget
 
@@ -139,7 +143,8 @@ tasks.withType<CargoBuildTask> {
             // .redirectError(ProcessBuilder.Redirect.INHERIT)
 
             // Must add Go SDK bin/ to PATH as the first path because Rust simply calls "go".
-            // Need to ensure we use the SDK we downloaded, rather than a random Go SDK installed on the
+            // Need to ensure we use the SDK we downloaded, rather than a random Go SDK installed on
+            // the
             // system. Also add our toolchain's Rust/Cargo bin/ to PATH as well:
             val pathSeparator = if (hostOperatingSystem.equals("windows")) ";" else ":"
             processBuilder
@@ -147,13 +152,13 @@ tasks.withType<CargoBuildTask> {
                 .put(
                     "PATH",
                     "${goSdkDir}/bin" +
-                            pathSeparator +
-                            "${rustupHome}/bin" +
-                            pathSeparator +
-                            "${cargoHome.absolutePath}/bin" +
-                            (if (processBuilder.environment().containsKey("PATH"))
-                                pathSeparator + processBuilder.environment().get("PATH")
-                            else ""),
+                        pathSeparator +
+                        "${rustupHome}/bin" +
+                        pathSeparator +
+                        "${cargoHome.absolutePath}/bin" +
+                        (if (processBuilder.environment().containsKey("PATH"))
+                            pathSeparator + processBuilder.environment().get("PATH")
+                        else ""),
                 )
 
             // Also set SDK homes and Go target:
@@ -190,9 +195,12 @@ tasks.withType<CargoBuildTask> {
             // gradle build -x cargoBuildX86Windows -x cargoBuildX86Darwin -x cargoBuildX86Linux -x
             // cargoBuildAarch64Linux
             //
-            // Ideally, we should modify our Gradle scripts so that by default, they only build for the
-            // host target. There's no need to spend time or set up a complex environment to build for
-            // other targets because the produced binaries are unusable on the host directly, and the
+            // Ideally, we should modify our Gradle scripts so that by default, they only build for
+            // the
+            // host target. There's no need to spend time or set up a complex environment to build
+            // for
+            // other targets because the produced binaries are unusable on the host directly, and
+            // the
             // build would still likely differ from what's happening in GitHub anyway. So a local
             // success won't guarantee a GitHub success.
 
@@ -224,14 +232,14 @@ tasks.withType<CargoBuildTask> {
                                 println(toString())
                                 throw GradleException(
                                     "Determining include path hasn't finished in " +
-                                            xcrunTimeoutInMinutes +
-                                            " minutes"
+                                        xcrunTimeoutInMinutes +
+                                        " minutes"
                                 )
                             } else if (process.exitValue() != 0) {
                                 println(toString())
                                 throw GradleException(
                                     "Determining include path exited with non-zero exit code: " +
-                                            process.exitValue()
+                                        process.exitValue()
                                 )
                             }
 
@@ -244,7 +252,8 @@ tasks.withType<CargoBuildTask> {
             }
 
             if (hostOperatingSystem == "linux") {
-                // Assume we're running on linux-x86_64 natively because that's what we do in GitHub.
+                // Assume we're running on linux-x86_64 natively because that's what we do in
+                // GitHub.
                 // More complexity would be required below to support building natively on
                 // linux-aarch64, or cross-building for linux-x86_64 target on a linux-aarch64 host:
 
@@ -261,12 +270,16 @@ tasks.withType<CargoBuildTask> {
                         .put("CARGO_TARGET_AARCH64_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc")
                     processBuilder
                         .environment()
-                        .put("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc")
+                        .put(
+                            "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER",
+                            "aarch64-linux-gnu-gcc",
+                        )
                 }
             }
 
             if (target.contains("windows")) {
-                // Assume we're running on linux-x86_64 natively because that's what we do in GitHub.
+                // Assume we're running on linux-x86_64 natively because that's what we do in
+                // GitHub.
                 // It's possible to build for windows on mac with:
                 //
                 // SP1_GNARK_FFI_SKIP_MAC_FRAMEWORKS=true
@@ -280,7 +293,8 @@ tasks.withType<CargoBuildTask> {
                 // CFLAGS_x86_64_pc_windows_gnu="-I/opt/homebrew/Cellar/mingw-w64/13.0.0/toolchain-x86_64/x86_64-w64-mingw32/include"
                 // cargo build --release  --target=x86_64-pc-windows-gnu --target-dir ...
                 //
-                // However, we don't support this here for now because this requires installing mingw
+                // However, we don't support this here for now because this requires installing
+                // mingw
                 // from brew.
                 // Similarly, we don't support native windows builds on windows hosts currently.
 
@@ -288,7 +302,9 @@ tasks.withType<CargoBuildTask> {
                     "Configuring cross-compilation for ${target} on $hostOperatingSystem-$hostArchitecture..."
                 )
 
-                processBuilder.environment().put("CC_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-gcc")
+                processBuilder
+                    .environment()
+                    .put("CC_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-gcc")
                 processBuilder
                     .environment()
                     .put("CFLAGS_x86_64_pc_windows_gnu", "-I/usr/x86_64-w64-mingw32/include")
