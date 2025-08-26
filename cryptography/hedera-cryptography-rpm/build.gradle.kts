@@ -165,8 +165,11 @@ tasks.withType<CargoBuildTask> {
             )
 
         // Generate more output for the inner Go build. It's not too very noisy in the logs,
-        // but it helps spot and debug build issues for this most complex native build here:
-        processBuilder.environment().put("GOFLAGS", "-v -x")
+        // but it helps spot and debug build issues for this most complex native build here.
+        // Also, strip debug information.
+        processBuilder.environment().put("GOFLAGS", "-v -x -ldflags=-s -ldflags=-w")
+        processBuilder.environment().put("CFLAGS", "-Os")
+        processBuilder.environment().put("LDFLAGS", "-s")
 
         // Set the Cargo target:
         processBuilder.environment().put("CARGO_BUILD_TARGET", target)
@@ -257,6 +260,8 @@ tasks.withType<CargoBuildTask> {
                 processBuilder
                     .environment()
                     .put("CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER", "aarch64-linux-gnu-gcc")
+                processBuilder.environment().put("CFLAGS_aarch64_linux_gnu", "-Os")
+                processBuilder.environment().put("CFLAGS_aarch64_linux_unknown_gnu", "-Os")
             }
         }
 
@@ -286,10 +291,10 @@ tasks.withType<CargoBuildTask> {
             processBuilder.environment().put("CC_x86_64_pc_windows_gnu", "x86_64-w64-mingw32-gcc")
             processBuilder
                 .environment()
-                .put("CFLAGS_x86_64_pc_windows_gnu", "-I/usr/x86_64-w64-mingw32/include")
+                .put("CFLAGS_x86_64_pc_windows_gnu", "-I/usr/x86_64-w64-mingw32/include -Os")
             processBuilder
                 .environment()
-                .put("BINDGEN_EXTRA_CLANG_ARGS", "-I/usr/x86_64-w64-mingw32/include")
+                .put("BINDGEN_EXTRA_CLANG_ARGS", "-I/usr/x86_64-w64-mingw32/include -Os")
             processBuilder
                 .environment()
                 .put(
