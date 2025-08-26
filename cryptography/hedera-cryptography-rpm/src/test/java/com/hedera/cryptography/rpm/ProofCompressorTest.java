@@ -3,14 +3,12 @@ package com.hedera.cryptography.rpm;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class ProofCompressorTest {
     private static final HistoryLibraryBridge HISTORY = HistoryLibraryBridge.getInstance();
 
     @Test
-    @Disabled("The compressor is disabled for release 0.65")
     public void compressorTest() throws Exception {
         if (!ProofCompressor.isSupported()) {
             // This test is only relevant if compression is supported.
