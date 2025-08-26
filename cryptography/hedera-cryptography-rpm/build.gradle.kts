@@ -5,11 +5,11 @@ import org.gradle.kotlin.dsl.withType
 import org.hiero.gradle.environment.EnvAccess
 import org.hiero.gradle.tasks.CargoBuildTask
 
-// SPDX-License-Identifier: Apache-2.0
 plugins {
     id("org.hiero.gradle.module.library")
     id("org.hiero.gradle.feature.rust")
     id("org.hiero.gradle.feature.test-multios")
+    id("DownloadGroth16ArtifactTask")
 }
 
 cargo { libname = "raps" }
@@ -372,12 +372,20 @@ testModuleInfo {
 }
 
 tasks.test {
+    dependsOn("downloadGroth16ArtifactTask")
     environment(
         mapOf(
             // For the TSS lib:
             "TSS_LIB_NUM_OF_CORES" to "10",
             // For the compressor that runs Go:
             "GOMAXPROCS" to "10",
+            // Path to Groth16 artifacts:
+            "SP1_GROTH16_CIRCUIT_PATH" to
+                (tasks.named("downloadGroth16ArtifactTask").get().property("groth16Dir")
+                        as DirectoryProperty)
+                    .get()
+                    .asFile
+                    .absolutePath,
         )
     )
 }
