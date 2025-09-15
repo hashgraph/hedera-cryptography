@@ -10,7 +10,7 @@ val junit5 = "5.13.3"
 val mockito = "5.18.0"
 
 dependencies.constraints {
-    api("com.github.spotbugs:spotbugs-annotations:4.9.3") {
+    api("com.github.spotbugs:spotbugs-annotations:4.9.5") {
         because("com.github.spotbugs.annotations")
     }
     api("com.google.code.gson:gson:2.13.0") { because("com.google.gson") }
