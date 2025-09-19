@@ -112,10 +112,6 @@ jobs:
           GIT_COMMITTER_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
           NEXUS_USERNAME: ${{ secrets.CENTRAL_PUBLISHING_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.CENTRAL_PUBLISHING_PASSWORD }}
-          # The EDITOR var is required to ensure the tag is signed with the GPG key
-          # as semantic-release doesn't support headless annotated signed tags and
-          # the process hangs indefinitely awaiting input in the dialogue
-          EDITOR: 'bash -c "echo \"Created-by: semantic-release\" > $1"'
         run: |
           if [[ "${{ github.event.inputs.dry-run-enabled }}" == "true" ]]; then
             echo "Running semantic-release in dry-run mode"
