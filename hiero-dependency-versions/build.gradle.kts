@@ -6,7 +6,7 @@ plugins {
     id("org.hiero.gradle.check.spotless-kotlin")
 }
 
-val junit5 = "5.13.3"
+val junit5 = "6.0.0"
 val mockito = "5.20.0"
 
 dependencies.constraints {
