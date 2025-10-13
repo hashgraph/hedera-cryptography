@@ -66,3 +66,17 @@ ark-vesta = { version = "^0.5.0", default-features = false }
 
 # Local crates
 folding-schemes = { path = "src/main/rust/folding-schemes", default-features = false }
+
+[profile.bench]
+opt-level = 3
+
+[profile.test]
+opt-level = 3
+
+[profile.release]
+panic = "abort"
+lto = "fat"
+strip = true
+debug = false
+opt-level = 3
+codegen-units = 1
