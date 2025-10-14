@@ -1,4 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.hedera.cryptography.wraps;
 
-public class WRAPSLibraryBridgeTest {}
+import org.junit.jupiter.api.Test;
+
+public class WRAPSLibraryBridgeTest {
+    @Test
+    public void dummyTestToPleaseGradleBuild() {
+        // must succeed
+    }
+}
