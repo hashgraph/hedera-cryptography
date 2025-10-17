@@ -122,12 +122,10 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
-    eprintln!("Schnorr public keys: {:?}", public_keys);
     let round1messages: Vec<SigningProtocolMessage> = match jni_util::build_vector(&mut env, &round1messages_jarray) {
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
-    eprintln!("round1 messages: {:?}", round1messages);
     let round2messages: Vec<SigningProtocolMessage> = match jni_util::build_vector(&mut env, &round2messages_jarray) {
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
@@ -137,14 +135,13 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
         Err(_) => return std::ptr::null_mut()
     };
 
-    eprintln!("do call WRAPS!!!!!!!!!");
     let obj: SigningProtocolObject = match WRAPS::signing_protocol(phase, random_arr, message, signing_key.as_ref(), &public_keys, &round1messages, &round2messages, &round3messages) {
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
 
     let serialized_obj = match obj {
-        SigningProtocolObject::ProtocolMessage(msg_encoded) => msg_encoded,
+        SigningProtocolObject::ProtocolMessage(msg_encoded) => utils::serialize(&msg_encoded),
         SigningProtocolObject::ProtocolOutput(signature) => utils::serialize(&signature)
     };
 

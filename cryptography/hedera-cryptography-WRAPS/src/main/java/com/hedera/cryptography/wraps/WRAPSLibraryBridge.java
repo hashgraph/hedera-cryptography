@@ -141,10 +141,6 @@ public class WRAPSLibraryBridge {
             throw new IllegalArgumentException("Unknown phase: " + phase);
         }
 
-        System.err.println("do call");
-        System.err.println("pub keys in Java: " + Arrays.deepToString(schnorrPublicKeys));
-        System.err.println("round1 in Java: " + Arrays.deepToString(round1Messages));
-
         return runSigningProtocolPhaseImpl(
                 phase.ordinal(),
                 instanceEntropy,

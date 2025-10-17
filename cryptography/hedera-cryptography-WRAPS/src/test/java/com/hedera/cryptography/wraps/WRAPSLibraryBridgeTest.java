@@ -53,9 +53,6 @@ public class WRAPSLibraryBridgeTest {
 
     @Test
     public void testRunSigningProtocolPhase() {
-        if (true) {
-            return;
-        }
         record SeedAndKey(byte[] seed, SchnorrKeys keys) {}
         final List<SeedAndKey> seedsAndKeys = List.of(Constants.SEED_0, Constants.SEED_1, Constants.SEED_2).stream()
                 .map(seed -> new SeedAndKey(seed, WRAPS.generateSchnorrKeys(seed)))
@@ -74,8 +71,10 @@ public class WRAPSLibraryBridgeTest {
                         EMPTY_BYTE_ARRAY_2,
                         EMPTY_BYTE_ARRAY_2,
                         EMPTY_BYTE_ARRAY_2))
-                .peek(ba -> System.err.println(Arrays.toString(ba)))
                 .toList();
+        for (int i = 0; i < round1.size(); i++) {
+            assertArrayEquals(Constants.ROUND_MESSAGES[0][i], round1.get(i));
+        }
         final byte[][] round1Array = listToArray(round1);
 
         final List<byte[]> round2 = seedsAndKeys.stream()
@@ -88,8 +87,10 @@ public class WRAPSLibraryBridgeTest {
                         round1Array,
                         EMPTY_BYTE_ARRAY_2,
                         EMPTY_BYTE_ARRAY_2))
-                .peek(ba -> System.err.println(Arrays.toString(ba)))
                 .toList();
+        for (int i = 0; i < round2.size(); i++) {
+            assertArrayEquals(Constants.ROUND_MESSAGES[1][i], round2.get(i));
+        }
         final byte[][] round2Array = listToArray(round2);
 
         final List<byte[]> round3 = seedsAndKeys.stream()
@@ -102,8 +103,10 @@ public class WRAPSLibraryBridgeTest {
                         round1Array,
                         round2Array,
                         EMPTY_BYTE_ARRAY_2))
-                .peek(ba -> System.err.println(Arrays.toString(ba)))
                 .toList();
+        for (int i = 0; i < round3.size(); i++) {
+            assertArrayEquals(Constants.ROUND_MESSAGES[2][i], round3.get(i));
+        }
         final byte[][] round3Array = listToArray(round3);
 
         final byte[] signature = WRAPS.runSigningProtocolPhase(
@@ -116,6 +119,6 @@ public class WRAPSLibraryBridgeTest {
                 round2Array,
                 round3Array);
 
-        System.err.println(Arrays.toString(signature));
+        assertArrayEquals(Constants.SIGNATURE, signature);
     }
 }
