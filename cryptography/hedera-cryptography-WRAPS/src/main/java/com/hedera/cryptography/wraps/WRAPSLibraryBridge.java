@@ -295,7 +295,7 @@ public class WRAPSLibraryBridge {
             byte[] aggregateSignature,
             boolean[] signers) {
         if (!isProofSupported()) {
-            // return null;
+            return null;
         }
         // Note: prevProof may be null
         if (genesisAddressBookHash == null
