@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use jni::JNIEnv;
-use jni::objects::{JByteArray, JObject, JObjectArray};
+use jni::objects::{JByteArray, JObject, JObjectArray, JLongArray};
 use jni::sys::{jbyte, jbyteArray, jlong, jsize};
 use ark_serialize::CanonicalDeserialize;
 
-use crate::ENTROPY_SIZE;
+use crate::{ENTROPY_SIZE, AddressBook, AddressBookEntry, SchnorrPubKey, Weight};
 
 /// Creates a jbyteArray out of a Vec<jbyte> object.
 /// # Arguments
@@ -90,3 +90,44 @@ pub fn build_vector<T: CanonicalDeserialize>(env: &mut JNIEnv, java_array: &JObj
 
     Ok(vec)
 }
+
+/// Builds an AddressBook out of a pair of public keys and weights arrays
+pub fn build_address_book(
+    env: &mut JNIEnv,
+    schnorr_public_keys_jarray: JObjectArray,
+    weights_jarray: JLongArray,
+) -> Result<AddressBook, ()> {
+    let num_of_keys = match env.get_array_length(&schnorr_public_keys_jarray) {
+        Ok(len) => len,
+        Err(_) => return Result::Err(())
+    };
+
+    let mut weights_jlong: Vec<jlong> = vec![0; num_of_keys as usize];
+    match env.get_long_array_region(weights_jarray, 0, weights_jlong.as_mut_slice()) {
+        Ok(()) => {},
+        Err(_) => return Result::Err(())
+    };
+
+    let mut entries: Vec<AddressBookEntry> = Vec::with_capacity(num_of_keys as usize);
+    for i in 0..num_of_keys as usize {
+        if weights_jlong[i] < 0 { return Result::Err(()); }
+
+        let jobj = match env.get_object_array_element(&schnorr_public_keys_jarray, i as jsize) {
+            Ok(val) => val,
+            Err(_) => return Result::Err(())
+        };
+        let key_vec = match env.convert_byte_array(&JByteArray::from(jobj)) {
+            Ok(val) => val,
+            Err(_) => return Result::Err(())
+        };
+        let key = match SchnorrPubKey::deserialize_uncompressed(key_vec.as_slice()) {
+            Ok(val) => val,
+            Err(_) => return Result::Err(())
+        };
+
+        entries.push((key, Weight::from(weights_jlong[i] as u64)) as AddressBookEntry);
+    }
+
+    Result::Ok(entries as AddressBook)
+}
+

@@ -12,6 +12,9 @@ public class WRAPSLibraryBridge {
     private static final SingletonLoader<WRAPSLibraryBridge> INSTANCE_HOLDER =
             new SingletonLoader<>("wraps", new WRAPSLibraryBridge());
 
+    /** The max theoretical sum of weights all nodes together can have, which is 2^63-1 because we use signed long. */
+    private static final long MAX_SUM_OF_WEIGHTS = Long.MAX_VALUE;
+
     static {
         // Open the package to allow access to the native library
         // This can be done in module-info.java as well, but by default the compiler complains since there are no
@@ -32,6 +35,22 @@ public class WRAPSLibraryBridge {
      */
     public static WRAPSLibraryBridge getInstance() {
         return INSTANCE_HOLDER.getInstance();
+    }
+
+    /**
+     * Checks if proof construction and verification is potentially supported.
+     * Both the operations build crypto keys from binary artifacts read from disk
+     * at the path specified by the TSS_LIB_WRAPS_ARTIFACTS_PATH environment variable.
+     * If the variable is unset or empty, then this method returns false.
+     * Note that this is a shallow check because the artifacts themselves may be missing
+     * or corrupt. But it's a good, quick sanity check that is sufficient for our purposes.
+     * If the artifacts indeed cannot be read, then the corresponding methods should return
+     * an error status anyway.
+     * @return true if `constructWrapsProof` and `verifyCompressedProof` are operational
+     */
+    public static boolean isProofSupported() {
+        final String path = System.getenv("TSS_LIB_WRAPS_ARTIFACTS_PATH");
+        return path != null && !path.isBlank();
     }
 
     // ------------------------------------------------------------------------------------------------------
@@ -69,6 +88,18 @@ public class WRAPSLibraryBridge {
 
     private static final byte[][] EMPTY_BYTE_ARRAY_2 = new byte[0][];
 
+    /**
+     * Executes a single phase of the threshold Schnorr signing protocol.
+     * @param phase Which protocol phase to execute (R1, R2, R3, or Aggregate).
+     * @param instanceEntropy Participant-specific randomness reused across rounds.
+     * @param messageToSign Byte message that rounds R3/Aggregate must attest.
+     * @param schnorrPrivateKey Optional private key required only during phases R1-R3. null in Aggregate.
+     * @param schnorrPublicKeys Participants' public keys; must be present for phases beyond R1.
+     * @param round1Messages Messages collected from prior rounds.
+     * @param round2Messages Messages collected from prior rounds.
+     * @param round3Messages Messages collected from prior rounds.
+     * @return either a round message for R1...R3, or a signature for Aggregate
+     */
     public byte[] runSigningProtocolPhase(
             final SigningProtocolPhase phase,
             final byte[] instanceEntropy,
@@ -114,7 +145,9 @@ public class WRAPSLibraryBridge {
                     || !Arrays.equals(round3Messages, EMPTY_BYTE_ARRAY_2)) {
                 return null;
             }
-            if (schnorrPublicKeys.length == 0 || schnorrPublicKeys.length != round1Messages.length) {
+            if (schnorrPublicKeys.length == 0
+                    || schnorrPublicKeys.length != round1Messages.length
+                    || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
                 return null;
             }
         } else if (phase == SigningProtocolPhase.R3) {
@@ -123,7 +156,8 @@ public class WRAPSLibraryBridge {
             }
             if (schnorrPublicKeys.length == 0
                     || schnorrPublicKeys.length != round1Messages.length
-                    || schnorrPublicKeys.length != round2Messages.length) {
+                    || schnorrPublicKeys.length != round2Messages.length
+                    || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
                 return null;
             }
         } else if (phase == SigningProtocolPhase.Aggregate) {
@@ -133,7 +167,8 @@ public class WRAPSLibraryBridge {
             if (schnorrPublicKeys.length == 0
                     || schnorrPublicKeys.length != round1Messages.length
                     || schnorrPublicKeys.length != round2Messages.length
-                    || schnorrPublicKeys.length != round3Messages.length) {
+                    || schnorrPublicKeys.length != round3Messages.length
+                    || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
                 return null;
             }
         } else {
@@ -161,4 +196,197 @@ public class WRAPSLibraryBridge {
             byte[][] round1Messages,
             byte[][] round2Messages,
             byte[][] round3Messages);
+
+    /**
+     * Verifies an aggregated Schnorr signature against the supplied public keys.
+     * @param schnorrPublicKeys Subset of participant public keys who collectively signed the message
+     * @param messageToSign Message bytes that were signed
+     * @param signature Aggregated Schnorr signature to validate
+     * @return true if verified successfully, false otherwise or if errors occur
+     */
+    public boolean verifySignature(byte[][] schnorrPublicKeys, final byte[] messageToSign, final byte[] signature) {
+        if (schnorrPublicKeys == null
+                || messageToSign == null
+                || signature == null
+                || schnorrPublicKeys.length == 0
+                || messageToSign.length == 0
+                || signature.length == 0
+                || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
+            return false;
+        }
+
+        return verifySignatureImpl(schnorrPublicKeys, messageToSign, signature);
+    }
+
+    private native boolean verifySignatureImpl(
+            byte[][] schnorrPublicKeys, final byte[] messageToSign, final byte[] signature);
+
+    /**
+     * Computes the Poseidon hash of an address book. This is expected to only be used to compute the ledger ID.
+     * As of 10/20/2025, the address book size is limited to 128 nodes (see MAX_AB_SIZE in Rust code.)
+     * @param schnorrPublicKeys Schnorr public keys for nodes in the address book
+     * @param weights corresponding non-negative weights of the nodes in the address book
+     * @return a hash of the address book, or null if errors occur
+     */
+    public byte[] hashAddressBook(final byte[][] schnorrPublicKeys, final long[] weights) {
+        if (schnorrPublicKeys == null
+                || weights == null
+                || schnorrPublicKeys.length != weights.length
+                || !WRAPSLibraryBridge.validateWeightsSum(weights)
+                || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
+            return null;
+        }
+        return hashAddressBookImpl(schnorrPublicKeys, weights);
+    }
+
+    private native byte[] hashAddressBookImpl(byte[][] schnorrPublicKeys, long[] weights);
+
+    /**
+     * Constructs a rotation message by concatenating the hash of the next address book with the hash
+     * of the hinTS VerificationKey.
+     * @param schnorrPublicKeys Schnorr public keys for nodes in the next address book
+     * @param weights corresponding non-negative weights of the nodes in the address book
+     * @param hintsVerificationKey the hinTS VerificationKey
+     * @return
+     */
+    public byte[] formatRotationMessage(byte[][] schnorrPublicKeys, long[] weights, byte[] hintsVerificationKey) {
+        if (schnorrPublicKeys == null
+                || weights == null
+                || schnorrPublicKeys.length != weights.length
+                || !WRAPSLibraryBridge.validateWeightsSum(weights)
+                || hintsVerificationKey == null
+                || hintsVerificationKey.length == 0
+                || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
+            return null;
+        }
+        return formatRotationMessageImpl(schnorrPublicKeys, weights, hintsVerificationKey);
+    }
+
+    private native byte[] formatRotationMessageImpl(
+            byte[][] schnorrPublicKeys, long[] weights, byte[] hintsVerificationKey);
+
+    /**
+     * Creates the first proof for the genesis AddressBook when both prev and next AddressBooks are the same
+     * and the tssVerificationKey is 1280 zeros, and prevProof is null.
+     * Produces both the incremental Nova proof and the compressed decider proof when the AddressBooks differ
+     * and the tssVerificationKey is real, and the prevProof is present.
+     * <p>
+     * Note: Nova and Decider keys are managed internally in the native code for performance reasons.
+     *
+     * @param genesisAddressBookHash genesis AddressBook hash
+     * @param prevSchnorrPublicKeys keys for the previous (aka current) AB
+     * @param prevWeights weights for the previous (aka current) AB
+     * @param nextSchnorrPublicKeys keys for the next AB, or the current AB to generate initial proof
+     * @param nextWeights weights for the next AB, or the current AB to generate initial proof
+     * @param prevProof previous proof, or null to generate the initial proof
+     * @param tssVerificationKey hinTS VerificationKey, or 1280 zeros to generate the initial proof
+     * @param aggregateSignature aggregate Schnorr signature on the rotation message
+     * @param signers a boolean mask to mark signers of the aggregate signature from the current AB
+     * @return a Proof in both uncompressed and compressed forms as byte arrays
+     */
+    public Proof constructWrapsProof(
+            byte[] genesisAddressBookHash,
+            byte[][] prevSchnorrPublicKeys,
+            long[] prevWeights,
+            byte[][] nextSchnorrPublicKeys,
+            long[] nextWeights,
+            byte[] prevProof,
+            byte[] tssVerificationKey,
+            byte[] aggregateSignature,
+            boolean[] signers) {
+        if (!isProofSupported()) {
+            // return null;
+        }
+        // Note: prevProof may be null
+        if (genesisAddressBookHash == null
+                || genesisAddressBookHash.length == 0
+                || prevSchnorrPublicKeys == null
+                || prevWeights == null
+                || prevSchnorrPublicKeys.length == 0
+                || prevSchnorrPublicKeys.length != prevWeights.length
+                || !WRAPSLibraryBridge.validateWeightsSum(prevWeights)
+                || nextSchnorrPublicKeys == null
+                || nextWeights == null
+                || nextSchnorrPublicKeys.length == 0
+                || nextSchnorrPublicKeys.length != nextWeights.length
+                || !WRAPSLibraryBridge.validateWeightsSum(nextWeights)
+                || tssVerificationKey == null
+                || tssVerificationKey.length == 0
+                || aggregateSignature == null
+                || aggregateSignature.length == 0
+                || signers == null
+                || signers.length != prevSchnorrPublicKeys.length
+                || !WRAPSLibraryBridge.validateSchnorrPublicKeys(prevSchnorrPublicKeys)
+                || !WRAPSLibraryBridge.validateSchnorrPublicKeys(nextSchnorrPublicKeys)) {
+            return null;
+        }
+
+        return constructWrapsProofImpl(
+                genesisAddressBookHash,
+                prevSchnorrPublicKeys,
+                prevWeights,
+                nextSchnorrPublicKeys,
+                nextWeights,
+                prevProof,
+                tssVerificationKey,
+                aggregateSignature,
+                signers);
+    }
+
+    private native Proof constructWrapsProofImpl(
+            byte[] genesisAddressBookHash,
+            byte[][] prevSchnorrPublicKeys,
+            long[] prevWeights,
+            byte[][] nextSchnorrPublicKeys,
+            long[] nextWeights,
+            byte[] prevProof,
+            byte[] tssVerificationKey,
+            byte[] aggregateSignature,
+            boolean[] signers);
+
+    /**
+     * Checks a compressed WRAPS proof against a compressed verification key.
+     * <p>
+     * Note: Nova and Decider keys are managed internally in the native code for performance reasons.
+     *
+     * @param compressedProof Compressed proof bundle returned by `constructWrapsProof()`
+     * @return true if the decider successfully verifies the proof, false if not or if errors occur
+     */
+    public boolean verifyCompressedProof(byte[] compressedProof) {
+        if (!isProofSupported()) {
+            return false;
+        }
+        if (compressedProof == null || compressedProof.length == 0) {
+            return false;
+        }
+        return verifyCompressedProofImpl(compressedProof);
+    }
+
+    private native boolean verifyCompressedProofImpl(byte[] compressedProof);
+
+    /** Check if the sum of weights doesn't exceed MAX_SUM_OF_WEIGHTS. */
+    private static boolean validateWeightsSum(final long weights[]) {
+        try {
+            long sum = 0;
+            for (int i = 0; i < weights.length; i++) {
+                if (weights[i] < 0) {
+                    return false;
+                }
+                // Math.addExact() throws ArithmeticException if the sum overflows
+                sum = Math.addExact(sum, weights[i]);
+            }
+            return sum <= MAX_SUM_OF_WEIGHTS;
+        } catch (final ArithmeticException e) {
+            return false;
+        }
+    }
+
+    private static boolean validateSchnorrPublicKeys(final byte[][] schnorrPublicKeys) {
+        for (int i = 0; i < schnorrPublicKeys.length; i++) {
+            if (schnorrPublicKeys[i] == null || schnorrPublicKeys[i].length == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

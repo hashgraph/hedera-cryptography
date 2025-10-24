@@ -71,6 +71,8 @@ pub enum WRAPSError {
     CryptographyError,
     /// Error indicating address book size exceeded maximum allowed
     AddressBookSizeExceeded,
+    /// TSS_LIB_WRAPS_ARTIFACTS_PATH is undefined or artifacts are unreadable
+    BinaryArtifactMissing
 }
 
 /// Phases of the signing protocol: 3 rounds followed by aggregation
@@ -154,9 +156,9 @@ type GrothVerifierKey = <Groth16<PairingCurve> as ark_snark::SNARK<Fr>>::Verifyi
 type Weight = Fr;
 type AddressBookHash = Fr;
 type TSSVKHash = Fr;
-type AddressBookEntry = (schnorr::PublicKey<JubJub>, Weight);
+type AddressBookEntry = (SchnorrPubKey, Weight);
 type AddressBook = Vec<AddressBookEntry>;
-type Keys = Vec<schnorr::SecretKey<JubJub>>;
+type Keys = Vec<SchnorrPrivKey>;
 
 type Circuit = TSSFCircuit<MAX_AB_SIZE>;
 type N = Nova<G1, G2, Circuit, KZG<'static, PairingCurve>, Pedersen<G2>, false>;
@@ -508,6 +510,7 @@ impl std::fmt::Display for WRAPSError {
             WRAPSError::InvalidInput(ref s) => write!(f, "Invalid input: {s}"),
             WRAPSError::CryptographyError => write!(f, "CryptographyError error"),
             WRAPSError::AddressBookSizeExceeded => write!(f, "Address book size exceeded maximum allowed"),
+            WRAPSError::BinaryArtifactMissing => write!(f, "TSS_LIB_WRAPS_ARTIFACTS_PATH is undefined or the binary artifacts are missing"),
         }
     }
 }

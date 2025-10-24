@@ -1,10 +1,25 @@
 use jni::sys::{jbyteArray, jboolean, jobject, jsize, jint, JNI_VERSION_1_2};
 use jni::{JNIEnv, JavaVM};
-use jni::objects::{JByteArray, JObject, JObjectArray, JValue};
+use jni::objects::{JByteArray, JObject, JObjectArray, JValue, JLongArray, JBooleanArray};
 use std::env;
 use ark_serialize::CanonicalDeserialize;
 
-use crate::{jni_util, utils, WRAPS, SigningProtocolPhase, ENTROPY_SIZE, SchnorrPrivKey, SchnorrPubKey, SigningProtocolMessage, SigningProtocolObject};
+use crate::{
+    jni_util,
+    utils,
+    WRAPS,
+    SigningProtocolPhase,
+    ENTROPY_SIZE,
+    SchnorrPrivKey,
+    SchnorrPubKey,
+    SigningProtocolMessage,
+    SigningProtocolObject,
+    SchnorrSignature,
+    AddressBook,
+    AddressBookHash,
+    UncompressedProofSerialized,
+    CompressedProofSerialized
+};
 
 const SECRET_KEY_LENGTH: usize = 32;
 
@@ -146,4 +161,229 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     };
 
     jni_util::u8_vec_to_jbyte_array(&env, &serialized_obj)
+}
+
+/// JNI for WRAPSLibraryBridge.verifySignatureImpl
+#[no_mangle]
+pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBridge_verifySignatureImpl(
+    mut env: JNIEnv,
+    _instance: JObject,
+    schnorr_public_keys_jarray: JObjectArray,
+    message_jarray: JByteArray,
+    signature_jarray: JByteArray,
+) -> jboolean {
+    let public_keys: Vec<SchnorrPubKey> = match jni_util::build_vector(&mut env, &schnorr_public_keys_jarray) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
+    let message = match env.convert_byte_array(&message_jarray) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
+    let signature: SchnorrSignature = {
+        let signature_vec: Vec<u8> = match env.convert_byte_array(&signature_jarray) {
+            Ok(val) => val,
+            Err(_) => return jboolean::from(false)
+        };
+        match SchnorrSignature::deserialize_uncompressed(signature_vec.as_slice()) {
+            Ok(val) => val,
+            Err(_) => return jboolean::from(false)
+        }
+    };
+
+    match WRAPS::verify_signature(public_keys.as_slice(), message, &signature) {
+        Ok(val) => jboolean::from(val),
+        Err(_) => return jboolean::from(false)
+    }
+}
+
+/// JNI for WRAPSLibraryBridge.hashAddressBookImpl
+#[no_mangle]
+pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBridge_hashAddressBookImpl(
+    mut env: JNIEnv,
+    _instance: JObject,
+    schnorr_public_keys_jarray: JObjectArray,
+    weights_jarray: JLongArray,
+) -> jbyteArray {
+    let ab: AddressBook = match jni_util::build_address_book(&mut env, schnorr_public_keys_jarray, weights_jarray) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    let hash: AddressBookHash = match WRAPS::compute_addressbook_hash(&ab) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    let serialized_hash = utils::serialize(&hash);
+
+    jni_util::u8_vec_to_jbyte_array(&env, &serialized_hash)
+}
+
+/// JNI for WRAPSLibraryBridge.formatRotationMessageImpl
+#[no_mangle]
+pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBridge_formatRotationMessageImpl(
+    mut env: JNIEnv,
+    _instance: JObject,
+    schnorr_public_keys_jarray: JObjectArray,
+    weights_jarray: JLongArray,
+    tss_vk_jarray: JByteArray,
+) -> jbyteArray {
+    let ab: AddressBook = match jni_util::build_address_book(&mut env, schnorr_public_keys_jarray, weights_jarray) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    let tss_vk_vec: Vec<u8> = match env.convert_byte_array(&tss_vk_jarray) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    let msg = match WRAPS::compute_rotation_message(&ab, &tss_vk_vec) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    jni_util::u8_vec_to_jbyte_array(&env, &msg)
+}
+
+/// JNI for WRAPSLibraryBridge.constructWrapsProofImpl
+#[no_mangle]
+pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBridge_constructWrapsProofImpl(
+    mut env: JNIEnv,
+    _instance: JObject,
+    ab_genesis_hash_jarray: JByteArray,
+    prev_schnorr_public_keys_jarray: JObjectArray,
+    prev_weights_jarray: JLongArray,
+    next_schnorr_public_keys_jarray: JObjectArray,
+    next_weights_jarray: JLongArray,
+    prev_proof_jarray: JByteArray,
+    tss_vk_jarray: JByteArray,
+    signature_jarray: JByteArray,
+    signers_jarray: JBooleanArray,
+) -> jbyteArray {
+    let ab_genesis_hash: AddressBookHash = {
+        let ab_genesis_hash_vec: Vec<u8> = match env.convert_byte_array(&ab_genesis_hash_jarray) {
+            Ok(val) => val,
+            Err(_) => return std::ptr::null_mut()
+        };
+        match AddressBookHash::deserialize_uncompressed(ab_genesis_hash_vec.as_slice()) {
+            Ok(val) => val,
+            Err(_) => return std::ptr::null_mut()
+        }
+    };
+
+    let prev_ab: AddressBook = match jni_util::build_address_book(&mut env, prev_schnorr_public_keys_jarray, prev_weights_jarray) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    let next_ab: AddressBook = match jni_util::build_address_book(&mut env, next_schnorr_public_keys_jarray, next_weights_jarray) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    let prev_proof: Option<UncompressedProofSerialized> = if prev_proof_jarray.is_null() { None } else {
+        match env.convert_byte_array(&prev_proof_jarray) {
+            Ok(val) => Some(val as UncompressedProofSerialized),
+            Err(_) => return std::ptr::null_mut()
+        }
+    };
+
+    let tss_vk_vec: Vec<u8> = match env.convert_byte_array(&tss_vk_jarray) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    let signature: SchnorrSignature = {
+        let signature_vec: Vec<u8> = match env.convert_byte_array(&signature_jarray) {
+            Ok(val) => val,
+            Err(_) => return std::ptr::null_mut()
+        };
+        match SchnorrSignature::deserialize_uncompressed(signature_vec.as_slice()) {
+            Ok(val) => val,
+            Err(_) => return std::ptr::null_mut()
+        }
+    };
+
+    let num_of_signers = match env.get_array_length(&signers_jarray) {
+        Ok(len) => len as usize,
+        Err(_) => return std::ptr::null_mut()
+    };
+    let mut signers_jboolean: Vec<jboolean> = vec![0; num_of_signers];
+    match env.get_boolean_array_region(signers_jarray, 0, signers_jboolean.as_mut_slice()) {
+        Ok(()) => {},
+        Err(_) => return std::ptr::null_mut()
+    };
+    let mut signers: Vec<bool> = vec![];
+    for i in 0..num_of_signers {
+        signers.push(signers_jboolean[i] != 0);
+    }
+
+    let pk = match utils::get_proving_key() {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+    let vk = match utils::get_verification_key() {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    let (uncompressed_proof, compressed_proof): (UncompressedProofSerialized, CompressedProofSerialized) = match WRAPS::construct_wraps_proof(
+            &pk,
+            &vk,
+            &ab_genesis_hash,
+            &prev_ab,
+            &next_ab,
+            prev_proof,
+            tss_vk_vec,
+            &signature,
+            &signers) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    let uncompressed_proof_jarray = jni_util::u8_vec_to_jbyte_array(&env, &uncompressed_proof);
+    let compressed_proof_jarray = jni_util::u8_vec_to_jbyte_array(&env, &compressed_proof);
+
+    let proof_clz = match env.find_class("com/hedera/cryptography/wraps/Proof") {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+    let proof_obj = match env.new_object(proof_clz, "([B[B)V", &[JValue::from(&JObject::from_raw(uncompressed_proof_jarray)), JValue::from(&JObject::from_raw(compressed_proof_jarray))]) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    proof_obj.into_raw()
+}
+
+/// JNI for WRAPSLibraryBridge.verifyCompressedProofImpl
+#[no_mangle]
+pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBridge_verifyCompressedProofImpl(
+    env: JNIEnv,
+    _instance: JObject,
+    compressed_proof_jarray: JByteArray,
+) -> jboolean {
+    let compressed_proof = match env.convert_byte_array(&compressed_proof_jarray) {
+        Ok(val) => val as CompressedProofSerialized,
+        Err(_) => return jboolean::from(false)
+    };
+
+    let vk = match utils::get_verification_key() {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
+    let decider_vp_serialized = match WRAPS::get_compressed_verification_key_bytes(&vk) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
+    match WRAPS::verify_compressed_wraps_proof(&decider_vp_serialized, &compressed_proof) {
+        Ok(val) => jboolean::from(val),
+        Err(_) => return jboolean::from(false)
+    }
 }
