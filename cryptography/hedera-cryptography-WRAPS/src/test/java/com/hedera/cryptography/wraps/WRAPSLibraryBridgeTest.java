@@ -647,6 +647,7 @@ public class WRAPSLibraryBridgeTest {
 
         assertEquals(30331352, proof0.uncompressed().length);
         assertEquals(704, proof0.compressed().length);
+
         // Note: the compressed proof is non-deterministic, so we can only check the size, and then verify it:
         assertTrue(WRAPS.verifyCompressedProof(proof0.compressed()));
 
