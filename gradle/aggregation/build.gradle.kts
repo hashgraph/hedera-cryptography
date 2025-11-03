@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-    published(project(":hedera-cryptography-hinTS"))
+    published(project(":hedera-cryptography-hints"))
     published(project(":hedera-cryptography-rpm"))
-    published(project(":hedera-cryptography-WRAPS"))
+    published(project(":hedera-cryptography-wraps"))
 }
