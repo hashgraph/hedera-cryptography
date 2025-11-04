@@ -9,9 +9,9 @@
 This section is a work in progress.
 
 The repository includes the following projects:
-* **cryptography/hedera-cryptography-hinTS**: HinTS API that allows participants to calculate their hints, generate keys, and produce and verify aggregate signatures.
+* **cryptography/hedera-cryptography-hints**: HinTS API that allows participants to calculate their hints, generate keys, and produce and verify aggregate signatures.
 * **cryptography/hedera-cryptography-rpm**: History API, aka RAPS or WRAPS, that allows participants to generate and verify recursive proofs for AddressBooks.
-* **cryptography/hedera-cryptography-WRAPS**: WRAPS 2.0 library that allows participants to generate and verify recursive proofs for AddressBooks.
+* **cryptography/hedera-cryptography-wraps**: WRAPS 2.0 library that allows participants to generate and verify recursive proofs for AddressBooks.
 * **common/hedera-common-nativesupport**: A Helper library providing support for working with jni and external libraries.
 
 For the proposal that originated the work in this repository see:
