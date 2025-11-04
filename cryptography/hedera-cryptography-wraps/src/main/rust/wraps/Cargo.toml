@@ -24,6 +24,7 @@ ark-bn254 = { workspace = true, features = ["r1cs"] }
 ark-ed-on-bn254 = { workspace = true, features = ["r1cs"] }
 ark-grumpkin = { workspace = true, features = ["r1cs"] }
 jni = "0.21.1"
+memmap2 = "0.9.9"
 rayon = { version = "1.10.0" }
 sha3 = { workspace = true }
 blake2 = { workspace = true }
