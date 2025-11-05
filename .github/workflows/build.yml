@@ -161,7 +161,7 @@ jobs:
     strategy:
       matrix:
         # removed windows from test as the windows build does not complete due to size of runner (2c/7gb RAM)
-        os: [ macos-14 ]
+        os: [macos-14]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Harden Runner
