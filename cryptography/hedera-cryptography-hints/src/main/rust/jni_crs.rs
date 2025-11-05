@@ -103,3 +103,27 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
 
     jboolean::from(PowersOfTauProtocol::verify_contribution(&prev_crs, &next_crs, &contribution_proof))
 }
+
+/// JNI for HintsLibraryBridge.pruneCRSImpl
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_pruneCRSImpl(
+    env: JNIEnv,
+    _instance: JObject,
+    prev_crs_array: JByteArray,
+    signers_num: jshort,
+) -> jbyteArray {
+    let prev_crs :CRS = match jni_util::deserialize_jbyte_array(&env, &prev_crs_array) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    let crs :CRS = match PowersOfTauProtocol::prune_crs(&prev_crs, signers_num as usize) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    match jni_util::serialize_object(&env, &crs) {
+        Ok(val) => val,
+        Err(_) => std::ptr::null_mut()
+    }
+}

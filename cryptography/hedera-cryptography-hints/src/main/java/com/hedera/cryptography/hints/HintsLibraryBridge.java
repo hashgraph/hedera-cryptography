@@ -83,6 +83,22 @@ public class HintsLibraryBridge {
      */
     public native boolean verifyCRS(final byte[] prevCRS, final byte[] nextCRS, final byte[] contributionProof);
 
+    /**
+     * Prunes the CRS to a smaller degree by removing the higher degree elements.
+     * @param prevCRS original CRS
+     * @param signersNum a new signersNum smaller or equal to the original signersNum
+     * @return a pruned CRS, or null if errors occur
+     */
+    public byte[] pruneCRS(final byte[] prevCRS, final short signersNum) {
+        // Support a degenerate case of 0 signers, or a normal case with more signers. Otherwise, error out.
+        if (prevCRS == null || signersNum < 1 || signersNum > MAX_SIGNERS_NUM) {
+            return null;
+        }
+        return pruneCRSImpl(prevCRS, signersNum);
+    }
+
+    private native byte[] pruneCRSImpl(final byte[] prevCRS, final short signersNum);
+
     ///////////////////////////////////////////////////////////////////////////
     //                          HinTS APIs
     ///////////////////////////////////////////////////////////////////////////

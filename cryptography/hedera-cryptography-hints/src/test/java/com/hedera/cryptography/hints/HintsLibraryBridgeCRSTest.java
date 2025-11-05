@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package com.hedera.cryptography.hints;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -9,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -19,6 +19,14 @@ public class HintsLibraryBridgeCRSTest {
     private static final int CRS_4_LENGTH = 1456;
 
     private static final int CONTRIBUTION_PROOF_LENGTH = 128;
+
+    // A helper assertion that also prints entire arrays in addition to the default first mismatching index only
+    public static void assertArrayEquals(byte[] expected, byte[] actual) {
+        Assertions.assertArrayEquals(
+                expected,
+                actual,
+                () -> "Expected:\n" + Arrays.toString(expected) + "\nbut got:\n" + Arrays.toString(actual) + "\n");
+    }
 
     private byte[] initAndVerifyCRS() {
         final byte[] crs = INSTANCE.initCRS((short) 4);
@@ -43,6 +51,27 @@ public class HintsLibraryBridgeCRSTest {
 
         // Below relies on HintsLibraryBridge.MAX_SIGNERS_NUM = 1023:
         assertNull(INSTANCE.initCRS((short) 1024));
+    }
+
+    @Test
+    void testPruneCRS() {
+        final byte[] origCRS = INSTANCE.initCRS((short) 4);
+        final byte[] crs = INSTANCE.pruneCRS(origCRS, (short) 2);
+        assertArrayEquals(CRSConstants.PRUNE_CRS_2, crs);
+    }
+
+    @Test
+    void testPruneCRSConstraints() {
+        final byte[] crs = INSTANCE.initCRS((short) 4);
+
+        assertNull(INSTANCE.pruneCRS(null, (short) 4));
+
+        assertNull(INSTANCE.pruneCRS(crs, (short) 0));
+        assertNull(INSTANCE.pruneCRS(crs, (short) -2));
+        assertNull(INSTANCE.pruneCRS(crs, Short.MIN_VALUE));
+
+        // Below relies on HintsLibraryBridge.MAX_SIGNERS_NUM = 1023:
+        assertNull(INSTANCE.pruneCRS(crs, (short) 1024));
     }
 
     @ParameterizedTest
