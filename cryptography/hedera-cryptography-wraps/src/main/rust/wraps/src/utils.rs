@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use std::env;
-use std::sync::Mutex;
+use std::fs::File;
+use memmap2::Mmap;
 use crate::{WRAPS, ProvingKey, VerificationKey, WRAPSError};
 
 pub fn serialize<T: ark_serialize::CanonicalSerialize>(
@@ -33,18 +34,16 @@ pub fn get_proving_key() -> Result<ProvingKey, WRAPSError> {
     };
 
     let nova_pp_path = artifacts_path.clone() + "/nova_pp.bin";
-    let nova_pp_bytes = match std::fs::read(nova_pp_path) {
-        Ok(val) => val,
-        Err(_) => return Err(WRAPSError::BinaryArtifactMissing)
-    };
+    let nova_pp_map = unsafe {
+        Mmap::map(&File::open(&nova_pp_path).map_err(|_| WRAPSError::BinaryArtifactMissing)?)
+    }.map_err(|_| WRAPSError::BinaryArtifactMissing)?;
 
     let decider_pp_path = artifacts_path.clone() + "/decider_pp.bin";
-    let decider_pp_bytes = match std::fs::read(decider_pp_path) {
-        Ok(val) => val,
-        Err(_) => return Err(WRAPSError::BinaryArtifactMissing)
-    };
+    let decider_pp_map = unsafe {
+        Mmap::map(&File::open(&decider_pp_path).map_err(|_| WRAPSError::BinaryArtifactMissing)?)
+    }.map_err(|_| WRAPSError::BinaryArtifactMissing)?;
 
-    WRAPS::setup_prover(nova_pp_bytes, decider_pp_bytes)
+    WRAPS::setup_prover(nova_pp_map, decider_pp_map)
 }
 
 /// Gets a VerificationKey.
@@ -55,16 +54,14 @@ pub fn get_verification_key() -> Result<VerificationKey, WRAPSError> {
     };
 
     let nova_vp_path = artifacts_path.clone() + "/nova_vp.bin";
-    let nova_vp_bytes = match std::fs::read(nova_vp_path) {
-        Ok(val) => val,
-        Err(_) => return Err(WRAPSError::BinaryArtifactMissing)
-    };
+    let nova_vp_map = unsafe {
+        Mmap::map(&File::open(&nova_vp_path).map_err(|_| WRAPSError::BinaryArtifactMissing)?)
+    }.map_err(|_| WRAPSError::BinaryArtifactMissing)?;
 
     let decider_vp_path = artifacts_path.clone() + "/decider_vp.bin";
-    let decider_vp_bytes = match std::fs::read(decider_vp_path) {
-        Ok(val) => val,
-        Err(_) => return Err(WRAPSError::BinaryArtifactMissing)
-    };
+    let decider_vp_map = unsafe {
+        Mmap::map(&File::open(&decider_vp_path).map_err(|_| WRAPSError::BinaryArtifactMissing)?)
+    }.map_err(|_| WRAPSError::BinaryArtifactMissing)?;
 
-    WRAPS::setup_verifier(nova_vp_bytes, decider_vp_bytes)
+    WRAPS::setup_verifier(nova_vp_map, decider_vp_map)
 }
