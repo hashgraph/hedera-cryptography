@@ -35,6 +35,20 @@ impl PowersOfTauProtocol {
         }
     }
 
+    /// prunes the CRS to a smaller degree by removing the higher degree elements;
+    /// returns an error if new_degree is larger than current degree
+    pub fn prune_crs(crs: &CRS, new_degree: usize) -> Result<CRS, HinTSError> {
+        // we obviously cannot prune to a degree larger than current degree
+        if new_degree + 1 > crs.powers_of_g.len() {
+            return Err(HinTSError::InsufficientCRS(new_degree));
+        }
+
+        Ok(kzg::UniversalParams {
+            powers_of_g: crs.powers_of_g[..=new_degree].to_vec(),
+            powers_of_h: crs.powers_of_h[..=new_degree].to_vec(),
+        })
+    }
+
     /// contributes to the CRS ceremony by adding key material to the existing CRS;
     /// the participant's material is derived from a random scalar r.
     /// returns the updated CRS and the proof of validity of the contribution.
@@ -222,7 +236,7 @@ fn check3(crs: &CRS) -> bool {
 // takes a list of byte slices and computes the sha256 hash
 // warning: this can lead to collisions if used unproperly.
 // this is just meant for use within check2
-pub fn compute_sha256(inputs: &[impl AsRef<[u8]>]) -> [u8; 32] {
+fn compute_sha256(inputs: &[impl AsRef<[u8]>]) -> [u8; 32] {
     let mut hasher = sha2::Sha256::new();
     // just concatenate all the byte slices
     for input in inputs {
