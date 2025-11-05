@@ -115,7 +115,9 @@ jobs:
 
   build:
     name: Build TSS Crypto Library
-    needs: [build_rust_macos, build_rust_linux_windows]
+    needs:
+      - build_rust_macos
+      - build_rust_linux_windows
     runs-on: network-node-linux-large
     steps:
       - name: Harden Runner
@@ -159,7 +161,7 @@ jobs:
     strategy:
       matrix:
         # removed windows from test as the windows build does not complete due to size of runner (2c/7gb RAM)
-        os: [macos-13, macos-14]
+        os: [macos-14]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Harden Runner
