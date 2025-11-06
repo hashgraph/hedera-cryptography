@@ -41,7 +41,8 @@
   ],
   "branches":[
     {
-      "name": "main"
+      "name": "main",
+      "name": "452-semantic-release-workflow-does-not-identify-bang-as-breaking-change"
     },
     {
       "name": "release/([0-9]+).([0-9]+)",
