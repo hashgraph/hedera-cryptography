@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 defaults:
   run:
@@ -87,9 +88,8 @@ jobs:
         run: ./gradlew assemble
 
       # The steps below publish the artifacts to the Maven Central Nexus repository.
-      # TODO remove -PpublishTestRelease=true for fully automated (non-snapshot) releases
       - name: Gradle Publish to Maven Central
         env:
           NEXUS_USERNAME: ${{ secrets.CENTRAL_PUBLISHING_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.CENTRAL_PUBLISHING_PASSWORD }}
-        run: ./gradlew publishAggregationToCentralPortal -PpublishSigningEnabled=true -PpublishTestRelease=true
+        run: ./gradlew publishAggregationToCentralPortal -PpublishSigningEnabled=true
