@@ -30,7 +30,7 @@ defaults:
     shell: bash
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   REGISTRY: ghcr.io
