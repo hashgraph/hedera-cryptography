@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pluginManagement { includeBuild("gradle/plugins") }
 
-plugins { id("org.hiero.gradle.build") version "0.5.0" }
+plugins { id("org.hiero.gradle.build") version "0.6.1" }
 
 rootProject.name = "hedera-cryptography"
 
