@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-val junit5 = "6.0.0"
+val junit5 = "6.0.1"
 val mockito = "5.20.0"
 
 dependencies.constraints {
