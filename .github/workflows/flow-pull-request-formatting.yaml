@@ -17,6 +17,12 @@ on:
       - locked
       - unlocked
       - synchronize
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
 
 defaults:
   run:
