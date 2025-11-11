@@ -30,6 +30,13 @@ public class WRAPSLibraryBridge {
 
     /**
      * Returns the singleton instance of this library adapter.
+     * <p>
+     * An optional TSS_LIB_WRAPS_SWAP_FILE environment variable may be defined to point to a file name
+     * that will be used as a memory-on-disk for the WRAPS 2.0 native code.
+     * The size of the file is hard-coded in the native code as a static constant due to Rust language specifics.
+     * See src/main/rust/wraps/src/alloc.rs for the definitions.
+     * If the env var is undefined, or the file cannot be open/created/resized, or any other errors occur,
+     * then the library will use the system RAM only.
      *
      * @return the singleton instance of this library adapter.
      */

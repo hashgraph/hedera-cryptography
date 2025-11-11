@@ -28,6 +28,10 @@ tasks.test {
                     .dir("v0.1.0")
                     .asFile
                     .absolutePath,
+
+            // Commented-out just to provide an example of how to enable swap for WRAPS 2.0.
+            // When not set, the proof construction may require up to ~20GB of RAM.
+            // "TSS_LIB_WRAPS_SWAP_FILE" to "/tmp/MemoryMapFile",
         )
     )
 }
