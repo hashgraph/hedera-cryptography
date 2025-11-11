@@ -38,7 +38,7 @@ jobs:
       - name: Check PR Title
         uses: step-security/action-semantic-pull-request@bc0cf74f5be4ce34accdec1ae908dff38dc5def1 # v6.1.1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
 
   assignee-check:
     name: Assignee Check
