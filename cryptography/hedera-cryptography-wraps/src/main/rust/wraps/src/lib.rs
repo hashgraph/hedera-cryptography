@@ -1013,7 +1013,6 @@ impl WRAPS {
         )?;
         Ok(verified)
     }
-
 }
 
 #[cfg(test)]
