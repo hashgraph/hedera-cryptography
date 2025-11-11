@@ -6,7 +6,9 @@ mod bitmap;
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::cell::UnsafeCell;
 use std::sync::Mutex;
-use memmap2::{MmapMut, UncheckedAdvice};
+
+// Commented out on purpose. See a comment below where it's used.
+use memmap2::{MmapMut /*, UncheckedAdvice*/};
 
 use filemap::FileMap;
 use bitmap::BitMap;
@@ -77,7 +79,9 @@ unsafe impl GlobalAlloc for MemmapAllocator {
                 // The below operation is only supported on Linux currently, so we ignore any errors.
                 // Any OS will eventually free this range anyway. This is just a hint:
                 // unwrap() is safe because we checked is_some() above:
-                let _ = self.file_map.get_map().unwrap().unchecked_advise_range(UncheckedAdvice::DontNeed, offset, layout.size());
+                // However, memmap actually doesn't export the UncheckedAdvice and this method on MS Windows,
+                // and we happen to build this code on Windows. So unfortunately, we cannot use this:
+                // let _ = self.file_map.get_map().unwrap().unchecked_advise_range(UncheckedAdvice::DontNeed, offset, layout.size());
 
                 // lock() will block until the mutex is available, so it's safe to unwrap().
                 // If the lock indeed fails and the Result is an Err then we're already in a bigger trouble.
