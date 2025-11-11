@@ -17,7 +17,6 @@ on:
       - locked
       - unlocked
       - synchronize
-  workflow_dispatch:
 
 defaults:
   run:
