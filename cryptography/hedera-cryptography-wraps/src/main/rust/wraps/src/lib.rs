@@ -12,6 +12,7 @@ mod random_oracle;
 mod utils;
 mod jni_util;
 mod jni_wraps;
+mod alloc;
 
 use digest::typenum::bit;
 use signature::{*};
@@ -178,6 +179,10 @@ struct ProofData {
     pub u_i_commitments: Vec<G1>,
     pub proof: EthProof<G1, KZG<'static, PairingCurve>, Groth16<PairingCurve>>,
 }
+
+/********************************* Custom GlobalAlloc *********************************/
+#[global_allocator]
+static ALLOCATOR: crate::alloc::MemmapAllocator = crate::alloc::MemmapAllocator::new();
 
 /********************************* Useful Definitions *********************************/
 
@@ -1008,7 +1013,6 @@ impl WRAPS {
         )?;
         Ok(verified)
     }
-        
 }
 
 #[cfg(test)]
