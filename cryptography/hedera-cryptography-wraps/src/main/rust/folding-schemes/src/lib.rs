@@ -265,7 +265,7 @@ pub trait Decider<
 
     fn prove(
         rng: impl RngCore + CryptoRng,
-        pp: Self::ProverParam,
+        pp: &Self::ProverParam,
         folding_scheme: FS,
     ) -> Result<Self::Proof, Error>;
 

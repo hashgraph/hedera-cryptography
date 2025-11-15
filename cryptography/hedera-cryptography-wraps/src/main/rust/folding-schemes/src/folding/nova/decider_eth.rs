@@ -164,10 +164,10 @@ where
 
     fn prove(
         mut rng: impl RngCore + CryptoRng,
-        pp: Self::ProverParam,
+        pp: &Self::ProverParam,
         folding_scheme: FS,
     ) -> Result<Self::Proof, Error> {
-        let (snark_pk, cs_pk): (S::ProvingKey, CS1::ProverParams) = pp;
+        let (snark_pk, cs_pk): &(S::ProvingKey, CS1::ProverParams) = pp;
 
         let circuit = DeciderEthCircuit::<C1, C2>::try_from(Nova::from(folding_scheme))?;
 
@@ -323,7 +323,7 @@ pub mod tests {
 
         // decider proof generation
         let start = Instant::now();
-        let proof = D::prove(rng, decider_pp, nova.clone())?;
+        let proof = D::prove(rng, &decider_pp, nova.clone())?;
         println!("Decider prove, {:?}", start.elapsed());
 
         // decider proof verification
@@ -432,7 +432,7 @@ pub mod tests {
 
         // decider proof generation
         let start = Instant::now();
-        let proof = D::prove(rng, decider_pp, nova.clone())?;
+        let proof = D::prove(rng, &decider_pp, nova.clone())?;
         println!("Decider prove, {:?}", start.elapsed());
 
         // decider proof verification
