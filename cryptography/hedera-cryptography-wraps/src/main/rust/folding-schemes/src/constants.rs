@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 // used for the RO challenges.
 // From [Srinath Setty](https://microsoft.com/en-us/research/people/srinath/): In Nova, soundness
 // error ≤ 2/|S|, where S is the subset of the field F from which the challenges are drawn. In this

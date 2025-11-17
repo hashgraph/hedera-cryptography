@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// This file implements the offchain decider. For ethereum use cases, use the
 /// DeciderEth from decider_eth.rs file.
 /// More details can be found at the documentation page:

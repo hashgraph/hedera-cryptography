@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// This file implements the Nova's onchain (Ethereum's EVM) decider. For non-ethereum use cases,
 /// the Decider from decider.rs file will be more efficient.
 /// More details can be found at the documentation page:

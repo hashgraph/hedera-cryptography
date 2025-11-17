@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// This module contains the implementation the NIFSTrait for the
 /// [Nova](https://eprint.iacr.org/2021/370.pdf) NIFS (Non-Interactive Folding Scheme).
 use ark_crypto_primitives::sponge::{constraints::AbsorbGadget, Absorb, CryptographicSponge};

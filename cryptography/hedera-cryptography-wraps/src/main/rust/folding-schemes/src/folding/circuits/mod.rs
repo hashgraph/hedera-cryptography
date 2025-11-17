@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// Circuits and gadgets shared across the different folding schemes.
 use ark_ec::{CurveGroup, PrimeGroup};
 use ark_ff::Field;

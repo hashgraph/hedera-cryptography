@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// This file implements the onchain (Ethereum's EVM) decider circuit. For non-ethereum use cases,
 /// other more efficient approaches can be used.
 /// More details can be found at the documentation page:

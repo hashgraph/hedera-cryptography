@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// This module defines the traits related to the NIFS (Non-Interactive Folding Scheme).
 /// - NIFSTrait, which implements the NIFS interface
 /// - NIFSGadget, which implements the NIFS in-circuit

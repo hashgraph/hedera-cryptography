@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// contains [Nova](https://eprint.iacr.org/2021/370.pdf) related circuits
 use ark_crypto_primitives::sponge::poseidon::{
     constraints::PoseidonSpongeVar, PoseidonConfig, PoseidonSponge,

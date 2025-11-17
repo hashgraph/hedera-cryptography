@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use ark_ec::{
     short_weierstrass::{Projective, SWCurveConfig, SWFlags},
     AffineRepr, CurveGroup,

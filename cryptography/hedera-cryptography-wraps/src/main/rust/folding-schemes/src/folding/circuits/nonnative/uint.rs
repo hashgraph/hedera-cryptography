@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use std::{
     borrow::Borrow,
     cmp::{max, min},

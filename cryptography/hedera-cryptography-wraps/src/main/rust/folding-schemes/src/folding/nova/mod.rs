@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// Implements the scheme described in [Nova](https://eprint.iacr.org/2021/370.pdf) and
 /// [CycleFold](https://eprint.iacr.org/2023/1192.pdf).
 ///

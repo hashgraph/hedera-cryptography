@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use ark_r1cs_std::fields::fp::FpVar;
 use ark_relations::gr1cs::SynthesisError;
 use ark_std::{rand::RngCore, UniformRand};

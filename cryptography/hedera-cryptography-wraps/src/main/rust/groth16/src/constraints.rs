@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use crate::{
     r1cs_to_qap::{LibsnarkReduction, R1CSToQAP},
     Groth16, PreparedVerifyingKey, Proof, VerifyingKey,

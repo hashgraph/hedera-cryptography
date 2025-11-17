@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 use jni::sys::{jbyteArray, jboolean, jobject, jsize, jint, JNI_VERSION_1_2};
 use jni::{JNIEnv, JavaVM};
 use jni::objects::{JByteArray, JObject, JObjectArray, JValue, JLongArray, JBooleanArray};

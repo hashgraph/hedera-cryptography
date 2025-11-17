@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use ark_ff::PrimeField;
 use ark_poly::EvaluationDomain;
 use ark_std::{cfg_iter_mut, vec};

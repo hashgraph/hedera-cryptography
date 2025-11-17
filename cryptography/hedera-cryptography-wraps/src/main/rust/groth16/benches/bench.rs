@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 // For benchmark, run:
 //     RAYON_NUM_THREADS=N cargo bench --no-default-features --features "std
 // parallel" -- --nocapture where N is the number of threads you want to use (N

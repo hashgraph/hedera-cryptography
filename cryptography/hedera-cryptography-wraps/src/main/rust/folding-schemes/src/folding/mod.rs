@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pub mod circuits;
 pub mod nova;
 pub mod traits;

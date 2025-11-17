@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use crate::{r1cs_to_qap::R1CSToQAP, Groth16, ProvingKey, Vec, VerifyingKey};
 use ark_ec::{pairing::Pairing, scalar_mul::BatchMulPreprocessing, CurveGroup};
 use ark_ff::{Field, UniformRand, Zero};

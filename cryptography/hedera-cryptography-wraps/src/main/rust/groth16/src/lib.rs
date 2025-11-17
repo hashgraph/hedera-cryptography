@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 //! An implementation of the [`Groth16`] zkSNARK.
 //!
 //! [`Groth16`]: https://eprint.iacr.org/2016/260.pdf

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// Adaptation of the prover methods and structs from arkworks/poly-commit's KZG10 implementation
 /// into the CommitmentScheme trait.
 ///

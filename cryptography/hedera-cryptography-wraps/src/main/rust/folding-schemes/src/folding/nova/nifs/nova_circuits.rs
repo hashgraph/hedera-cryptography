@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// contains [Nova](https://eprint.iacr.org/2021/370.pdf) NIFS related circuits
 use ark_crypto_primitives::sponge::{constraints::AbsorbGadget, CryptographicSponge};
 use ark_r1cs_std::{
