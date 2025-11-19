@@ -17,7 +17,7 @@ use bitmap::BitMap;
 const SIZE_THRESHOLD_BYTES: usize = 64 * 1024;
 
 /// Disk file size in bytes. Unfortunately, this must be a compile-time constant.
-const HEAP_SIZE_BYTES: u64 = 20 * 1024 * 1024 * 1024;
+const HEAP_SIZE_BYTES: u64 = 16 * 1024 * 1024 * 1024;
 
 /// Allocation unit size in bytes. Heap size must be divisible by the block size.
 const BLOCK_SIZE_BYTES: usize = SIZE_THRESHOLD_BYTES;
