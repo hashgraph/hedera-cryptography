@@ -8,7 +8,7 @@ resolver = "2"
 
 [patch.crates-io]
 # Update ark-groth16 to latest git version
-ark-groth16 = { git = "https://github.com/arkworks-rs/groth16", rev = "b3b4a15" }
+ark-groth16 = { path = "src/main/rust/groth16" }
 
 # Required dependencies for latest ark-groth16
 ark-ff = { git = "https://github.com/arkworks-rs/algebra" }

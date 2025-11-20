@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use ark_ff::PrimeField;
 use ark_poly::{
     univariate::DensePolynomial, EvaluationDomain, Evaluations, GeneralEvaluationDomain,

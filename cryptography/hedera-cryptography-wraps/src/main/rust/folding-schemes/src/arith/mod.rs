@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use ark_ff::PrimeField;
 use ark_relations::gr1cs::SynthesisError;
 use ark_std::rand::RngCore;

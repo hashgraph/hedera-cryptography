@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use ark_ff::PrimeField;
 use ark_r1cs_std::fields::{fp::FpVar, FieldVar};
 use ark_relations::gr1cs::SynthesisError;

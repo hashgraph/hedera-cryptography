@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
@@ -265,7 +267,7 @@ pub trait Decider<
 
     fn prove(
         rng: impl RngCore + CryptoRng,
-        pp: Self::ProverParam,
+        pp: &Self::ProverParam,
         folding_scheme: FS,
     ) -> Result<Self::Proof, Error>;
 

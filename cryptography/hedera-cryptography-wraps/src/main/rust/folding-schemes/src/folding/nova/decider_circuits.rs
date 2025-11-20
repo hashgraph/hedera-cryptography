@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// This file implements the offchain decider circuit. For ethereum use cases, use the
 /// DeciderEthCircuit.
 /// More details can be found at the documentation page:

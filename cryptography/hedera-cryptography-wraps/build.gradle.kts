@@ -13,6 +13,9 @@ testModuleInfo {
     requires("com.hedera.cryptography.hints")
 }
 
+// remove license header check for rust files
+spotless { format("rust") { clearSteps() } }
+
 tasks.test {
     dependsOn("downloadWrapsArtifactTask")
     environment(
@@ -30,7 +33,7 @@ tasks.test {
                     .absolutePath,
 
             // Commented-out just to provide an example of how to enable swap for WRAPS 2.0.
-            // When not set, the proof construction may require up to ~20GB of RAM.
+            // When not set, the proof construction may require up to ~16GB of RAM.
             // "TSS_LIB_WRAPS_SWAP_FILE" to "/tmp/MemoryMapFile",
         )
     )

@@ -935,7 +935,7 @@ impl WRAPS {
         ivc_instance.ivc_proof().serialize_compressed(&mut next_ivc_proof_encoded).unwrap();
 
         // Produce the succinct decider proof for the current state transition.
-        let proof = D::prove(thread_rng(), pk.decider_pp.clone(), ivc_instance.clone())
+        let proof = D::prove(thread_rng(), &pk.decider_pp, ivc_instance.clone())
             .map_err(|_| WRAPSError::CryptographyError)?;
 
         // Double-check the decider proof before returning to catch internal inconsistencies.

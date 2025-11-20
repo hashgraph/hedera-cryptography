@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// This file implements the offchain decider. For ethereum use cases, use the
 /// DeciderEth from decider_eth.rs file.
 /// More details can be found at the documentation page:
@@ -201,7 +203,7 @@ where
 
     fn prove(
         mut rng: impl RngCore + CryptoRng,
-        pp: Self::ProverParam,
+        pp: &Self::ProverParam,
         fs: FS,
     ) -> Result<Self::Proof, Error> {
         let circuit1 = DeciderCircuit1::<C1, C2>::try_from(Nova::from(fs.clone()))?;
@@ -408,7 +410,7 @@ pub mod tests {
 
         // decider proof generation
         let start = Instant::now();
-        let proof = D::prove(rng, decider_pp, nova.clone())?;
+        let proof = D::prove(rng, &decider_pp, nova.clone())?;
         println!("Decider prove, {:?}", start.elapsed());
 
         // decider proof verification

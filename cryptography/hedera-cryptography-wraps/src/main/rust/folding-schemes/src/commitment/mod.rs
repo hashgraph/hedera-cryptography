@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::fmt::Debug;
 use ark_std::rand::RngCore;

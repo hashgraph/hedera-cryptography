@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use ark_r1cs_std::{boolean::Boolean, convert::ToBitsGadget, groups::CurveVar};
 use ark_relations::gr1cs::SynthesisError;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};

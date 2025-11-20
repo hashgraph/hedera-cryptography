@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use ark_crypto_primitives::sponge::{
     poseidon::constraints::PoseidonSpongeVar, CryptographicSponge,
 };

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 //! Implements Nova's zero-knowledge layer, as described in https://eprint.iacr.org/2023/573.pdf.
 //!
 //! Remark: this zk layer implementation only covers a subset of the use cases:

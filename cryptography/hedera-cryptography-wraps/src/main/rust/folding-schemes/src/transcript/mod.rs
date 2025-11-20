@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use ark_crypto_primitives::sponge::{constraints::CryptographicSpongeVar, CryptographicSponge};
 use ark_ec::CurveGroup;
 use ark_ff::PrimeField;

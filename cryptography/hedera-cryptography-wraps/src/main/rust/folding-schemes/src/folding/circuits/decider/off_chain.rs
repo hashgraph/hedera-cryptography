@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 /// This file implements a generic offchain decider circuit.
 /// For ethereum use cases, use the `GenericOnchainDeciderCircuit`.
 /// More details can be found at the documentation page:

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 use crate::{
     arith::ArithRelationGadget,
     utils::gadgets::{EquivalenceGadget, MatrixGadget, SparseMatrixVar, VectorGadget},
