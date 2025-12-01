@@ -38,9 +38,14 @@ use ark_crypto_primitives::crh::{
     CRHSchemeGadget, CRHScheme
 };
 use ark_groth16::{Groth16};
-use ark_relations::gr1cs::{Namespace, ConstraintSystemRef, SynthesisError};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{rand::Rng, test_rng, rand::thread_rng, fmt::Debug};
+use ark_poly::{GeneralEvaluationDomain, EvaluationDomain};
+use ark_relations::gr1cs::{
+    ConstraintSynthesizer, ConstraintSystem, ConstraintSystemRef,
+    OptimizationGoal, Result as R1CSResult,
+    SynthesisError, SynthesisMode, Namespace
+};
 
 use core::borrow::Borrow;
 use core::{marker::PhantomData};
@@ -567,11 +572,6 @@ impl WRAPSPreprocessing {
             &nova_preprocess_params
         ).map_err(|_| WRAPSError::CryptographyError)?;
 
-        // let (decider_pp, decider_vp) = D::preprocess(
-        //     &mut rng,
-        //     ((nova_pp.clone(), nova_vp.clone()), F_circuit.state_len())
-        // ).map_err(|_| WRAPSError::CryptographyError)?;
-
         let pp_hash = nova_vp.pp_hash().map_err(|_| WRAPSError::CryptographyError)?;
 
         let circuit = DeciderEthCircuit::<G1, G2>::dummy((
@@ -601,6 +601,15 @@ impl WRAPSPreprocessing {
             ProvingKey { nova_pp, decider_pp },
             VerificationKey { nova_vp, decider_vp }
         ))
+    }
+
+    fn circuit_to_cs<C: ConstraintSynthesizer<Fr>>(circuit: C) -> Result<ConstraintSystemRef<Fr>, WRAPSError> {
+        let cs = ConstraintSystem::new_ref();
+        cs.set_optimization_goal(OptimizationGoal::Constraints);
+        cs.set_mode(SynthesisMode::Setup);
+        circuit.generate_constraints(cs.clone()).map_err(|_| WRAPSError::CryptographyError)?;
+        cs.finalize();
+        Ok(cs)
     }
 }
 
@@ -1203,10 +1212,10 @@ mod tests {
         let (nova_vp_serialized, decider_vp_serialized) = vk.serialize().unwrap();
 
         let cwd = env::current_dir().unwrap();
-        std::fs::write(cwd.join("resources/nova_pp.bin"), &nova_pp_serialized).unwrap();
-        std::fs::write(cwd.join("resources/nova_vp.bin"), &nova_vp_serialized).unwrap();
-        std::fs::write(cwd.join("resources/decider_pp.bin"), &decider_pp_serialized).unwrap();
-        std::fs::write(cwd.join("resources/decider_vp.bin"), &decider_vp_serialized).unwrap();
+        std::fs::write(cwd.join("resources/mpc_nova_pp.bin"), &nova_pp_serialized).unwrap();
+        std::fs::write(cwd.join("resources/mpc_nova_vp.bin"), &nova_vp_serialized).unwrap();
+        std::fs::write(cwd.join("resources/mpc_decider_pp.bin"), &decider_pp_serialized).unwrap();
+        std::fs::write(cwd.join("resources/mpc_decider_vp.bin"), &decider_vp_serialized).unwrap();
     }
 
     #[test]
