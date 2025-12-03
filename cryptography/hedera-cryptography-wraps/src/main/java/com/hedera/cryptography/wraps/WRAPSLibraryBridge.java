@@ -2,7 +2,6 @@
 package com.hedera.cryptography.wraps;
 
 import com.hedera.common.nativesupport.SingletonLoader;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Set;
@@ -71,12 +70,7 @@ public class WRAPSLibraryBridge {
             return false;
         }
         final Set<String> files = Set.of(dir.list());
-        if (!files.equals(Set.of(
-                "decider_pp.bin",
-                "decider_vp.bin",
-                "nova_pp.bin",
-                "nova_vp.bin"
-        ))) {
+        if (!files.equals(Set.of("decider_pp.bin", "decider_vp.bin", "nova_pp.bin", "nova_vp.bin"))) {
             return false;
         }
         return true;
