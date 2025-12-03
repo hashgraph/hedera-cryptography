@@ -233,6 +233,7 @@ public class HintsLibraryBridge {
                 || message.length == 0
                 || aggregationKey == null
                 || aggregationKey.length == 0
+                || partyId < 0
                 || partyId >= MAX_SIGNERS_NUM) {
             return false;
         }
@@ -259,13 +260,11 @@ public class HintsLibraryBridge {
                 || aggregationKey.length == 0
                 || parties == null
                 || parties.length == 0
-                || partialSignatures == null
-                || partialSignatures.length == 0
-                || parties.length != partialSignatures.length) {
+                || !validatePartialSignatures(parties, partialSignatures)) {
             return false;
         }
         for (int i = 0; i < parties.length; i++) {
-            if (parties[i] >= MAX_SIGNERS_NUM) {
+            if (!validatePartyId(parties[i], MAX_SIGNERS_NUM)) {
                 return false;
             }
         }
@@ -299,13 +298,11 @@ public class HintsLibraryBridge {
                 || verificationKey.length == 0
                 || parties == null
                 || parties.length == 0
-                || partialSignatures == null
-                || partialSignatures.length == 0
-                || parties.length != partialSignatures.length) {
+                || !validatePartialSignatures(parties, partialSignatures)) {
             return null;
         }
         for (int i = 0; i < parties.length; i++) {
-            if (parties[i] >= MAX_SIGNERS_NUM) {
+            if (!validatePartyId(parties[i], inferNFromCRSLength(crs))) {
                 return null;
             }
         }
@@ -373,6 +370,18 @@ public class HintsLibraryBridge {
     // Returns true if 0 <= partiyId < n && n <= MAX_SIGNERS_NUM.
     private static boolean validatePartyId(final int partyId, final int n) {
         return n <= MAX_SIGNERS_NUM && partyId >= 0 && partyId < n;
+    }
+
+    private static boolean validatePartialSignatures(final int[] parties, final byte[][] partialSignatures) {
+        if (partialSignatures == null || partialSignatures.length == 0 || parties.length != partialSignatures.length) {
+            return false;
+        }
+        for (int i = 0; i < partialSignatures.length; i++) {
+            if (partialSignatures[i] == null || partialSignatures[i].length == 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** Check if the sum of weights doesn't exceed MAX_SUM_OF_WEIGHTS. */

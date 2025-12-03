@@ -2,7 +2,10 @@
 package com.hedera.cryptography.wraps;
 
 import com.hedera.common.nativesupport.SingletonLoader;
+
+import java.io.File;
 import java.util.Arrays;
+import java.util.Set;
 
 /**
  * A JNI bridge for the WRAPS 2.0 library APIs that allow participants to generate and verify recursive proofs for AddressBooks.
@@ -48,16 +51,35 @@ public class WRAPSLibraryBridge {
      * Checks if proof construction and verification is potentially supported.
      * Both the operations build crypto keys from binary artifacts read from disk
      * at the path specified by the TSS_LIB_WRAPS_ARTIFACTS_PATH environment variable.
-     * If the variable is unset or empty, then this method returns false.
-     * Note that this is a shallow check because the artifacts themselves may be missing
-     * or corrupt. But it's a good, quick sanity check that is sufficient for our purposes.
-     * If the artifacts indeed cannot be read, then the corresponding methods should return
-     * an error status anyway.
+     * If the variable is unset or empty, or the specified path doesn't contain
+     * the expected files, then this method returns false.
+     * Note that only absolute paths are supported. The path MUST NOT contain double periods at all.
      * @return true if `constructWrapsProof` and `verifyCompressedProof` are operational
      */
     public static boolean isProofSupported() {
         final String path = System.getenv("TSS_LIB_WRAPS_ARTIFACTS_PATH");
-        return path != null && !path.isBlank();
+        if (path == null || path.isBlank()) {
+            return false;
+        }
+        // Don't support relative paths because absolute paths are safer.
+        // In fact, we don't support unusual file or dir names with double periods at all:
+        if (path.contains("..")) {
+            return false;
+        }
+        File dir = new File(path);
+        if (!dir.exists() || !dir.isDirectory()) {
+            return false;
+        }
+        final Set<String> files = Set.of(dir.list());
+        if (!files.equals(Set.of(
+                "decider_pp.bin",
+                "decider_vp.bin",
+                "nova_pp.bin",
+                "nova_vp.bin"
+        ))) {
+            return false;
+        }
+        return true;
     }
 
     // ------------------------------------------------------------------------------------------------------
@@ -78,6 +100,10 @@ public class WRAPSLibraryBridge {
     // ------------------------------------------------------------------------------------------------------
     // END OF DEFINITIONS MATCHING THE NATIVE CODE.
     // ------------------------------------------------------------------------------------------------------
+
+    // The following constants aren't explicitly defined in native code, but these are the sizes that we see:
+    private static final int ROUND1_MESSAGE_SIZE = 40;
+    private static final int ROUND2_3_MESSAGE_SIZE = 72;
 
     /**
      * Derives a Schnorr keypair deterministically from the provided entropy.
@@ -148,7 +174,8 @@ public class WRAPSLibraryBridge {
                 return null;
             }
         } else if (phase == SigningProtocolPhase.R2) {
-            if (!Arrays.equals(round2Messages, EMPTY_BYTE_ARRAY_2)
+            if (!validateRoundMessages(round1Messages, ROUND1_MESSAGE_SIZE)
+                    || !Arrays.equals(round2Messages, EMPTY_BYTE_ARRAY_2)
                     || !Arrays.equals(round3Messages, EMPTY_BYTE_ARRAY_2)) {
                 return null;
             }
@@ -158,7 +185,9 @@ public class WRAPSLibraryBridge {
                 return null;
             }
         } else if (phase == SigningProtocolPhase.R3) {
-            if (!Arrays.equals(round3Messages, EMPTY_BYTE_ARRAY_2)) {
+            if (!validateRoundMessages(round1Messages, ROUND1_MESSAGE_SIZE)
+                    || !validateRoundMessages(round2Messages, ROUND2_3_MESSAGE_SIZE)
+                    || !Arrays.equals(round3Messages, EMPTY_BYTE_ARRAY_2)) {
                 return null;
             }
             if (schnorrPublicKeys.length == 0
@@ -169,6 +198,11 @@ public class WRAPSLibraryBridge {
             }
         } else if (phase == SigningProtocolPhase.Aggregate) {
             if (schnorrPrivateKey != null || instanceEntropy != null) {
+                return null;
+            }
+            if (!validateRoundMessages(round1Messages, ROUND1_MESSAGE_SIZE)
+                    || !validateRoundMessages(round2Messages, ROUND2_3_MESSAGE_SIZE)
+                    || !validateRoundMessages(round3Messages, ROUND2_3_MESSAGE_SIZE)) {
                 return null;
             }
             if (schnorrPublicKeys.length == 0
@@ -390,7 +424,16 @@ public class WRAPSLibraryBridge {
 
     private static boolean validateSchnorrPublicKeys(final byte[][] schnorrPublicKeys) {
         for (int i = 0; i < schnorrPublicKeys.length; i++) {
-            if (schnorrPublicKeys[i] == null || schnorrPublicKeys[i].length == 0) {
+            if (schnorrPublicKeys[i] == null || schnorrPublicKeys[i].length != 64) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean validateRoundMessages(final byte[][] roundMessages, final int size) {
+        for (int i = 0; i < roundMessages.length; i++) {
+            if (roundMessages[i] == null || roundMessages[i].length != size) {
                 return false;
             }
         }
