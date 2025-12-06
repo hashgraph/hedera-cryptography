@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use ark_bn254::{G1Affine, G2Affine};
-use ark_ec::AffineRepr;
+use ark_bn254::{G1Affine, G2Affine, g1};
+use ark_ec::{CurveGroup, AffineRepr};
+use ark_ff::Field;
+use ark_poly::{EvaluationDomain, GeneralEvaluationDomain, domain};
+use ark_std::{Zero, ops::*};
 use folding_schemes::folding::nova::decider_eth_circuit::DeciderEthCircuit;
 use folding_schemes::folding::traits::Dummy;
 use folding_schemes::commitment::{kzg::KZG, pedersen::Pedersen, CommitmentScheme};
@@ -43,6 +46,8 @@ use super::{
     Fr, N, D, G1, G2
 };
 
+use crate::utils::{FFTUtils, ECFFTUtils};
+
 pub struct Phase1SRS {
     powers_of_tau_g1: Vec<G1Affine>,
     powers_of_tau_g2: Vec<G2Affine>,
@@ -50,6 +55,12 @@ pub struct Phase1SRS {
     powers_of_alpha_tau_g2: Vec<G2Affine>,
     powers_of_beta_tau_g1: Vec<G1Affine>,
     powers_of_beta_tau_g2: Vec<G2Affine>,
+}
+
+pub struct Phase1Output {
+    a_query: Vec<G1Affine>,
+    b_g1_query: Vec<G1Affine>,
+    b_g2_query: Vec<G2Affine>,
 }
 
 pub struct Phase2SRS {
@@ -119,16 +130,37 @@ impl WRAPSPreprocessing {
         Ok((g16_pk, g16_vk))
     }
 
+    fn dummy_ceremony_groth_setup<C: ConstraintSynthesizer<Fr>>(circuit: C)
+        -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
+        let cs = Self::circuit_to_cs(circuit)?;
+        let srs_phase1 = Self::create_init_srs_phase1(cs.clone());
+        let srs_phase1 = Self::update_srs_phase1(cs.clone(), &srs_phase1);
+        let (phase1_output, srs_phase2) = Self::specialize_srs(&srs_phase1, cs.clone());
+        let (g16_pk, g16_vk) = Self::finish_groth_setup(
+            &srs_phase1,
+            &phase1_output,
+            &srs_phase2,
+            cs.clone()
+        )?;
+
+        Ok((g16_pk, g16_vk))
+    }
+
     /// creates an initial SRS for Groth16, using tau = 1, and alpha, beta = 1
-    fn create_init_srs_phase1(n: usize) -> Phase1SRS {
-        let powers_of_tau_g1: Vec<G1Affine> = vec![G1Affine::zero(); 2*n - 1]; // {Gx:i} | i=0..2n-2}
-        let powers_of_tau_g2: Vec<G2Affine> = vec![G2Affine::zero(); 2*n - 1]; // {Hx:i} | i=0..2n-2}
+    fn create_init_srs_phase1(cs: ConstraintSystemRef<Fr>) -> Phase1SRS {
+        // domain_size is computed the same way (and then padded to the next power of 2)
+        let n = cs.num_constraints() + cs.num_instance_variables();
+        let domain = GeneralEvaluationDomain::<Fr>::new(n).ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
+        let domain_size = domain.size();
 
-        let powers_of_alpha_tau_g1: Vec<G1Affine> = vec![G1Affine::zero(); n]; // {Gαx:i} | i=0..n-1}
-        let powers_of_alpha_tau_g2: Vec<G2Affine> = vec![G2Affine::zero(); n]; // {Hαx:i} | i=0..n-1}
+        let powers_of_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); 2*domain_size]; // {Gx:i} | i=0..2n-2}
+        let powers_of_tau_g2: Vec<G2Affine> = vec![G2Affine::generator(); 2*domain_size]; // {Hx:i} | i=0..2n-2}
 
-        let powers_of_beta_tau_g1: Vec<G1Affine> = vec![G1Affine::zero(); n]; // {Gβx:i} | i=0..n-1}
-        let powers_of_beta_tau_g2: Vec<G2Affine> = vec![G2Affine::zero(); n]; // {Hβx:i} | i=0..n-1}
+        let powers_of_alpha_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); domain_size]; // {Gαx:i} | i=0..n-1}
+        let powers_of_alpha_tau_g2: Vec<G2Affine> = vec![G2Affine::generator(); domain_size]; // {Hαx:i} | i=0..n-1}
+
+        let powers_of_beta_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); domain_size]; // {Gβx:i} | i=0..n-1}
+        let powers_of_beta_tau_g2: Vec<G2Affine> = vec![G2Affine::generator(); domain_size]; // {Hβx:i} | i=0..n-1}
 
         Phase1SRS {
             powers_of_tau_g1,
@@ -138,6 +170,204 @@ impl WRAPSPreprocessing {
             powers_of_beta_tau_g1,
             powers_of_beta_tau_g2,
         }
+    }
+
+    fn update_srs_phase1(cs: ConstraintSystemRef<Fr>, prev_srs: &Phase1SRS) -> Phase1SRS {
+        type D<F> = GeneralEvaluationDomain<F>;
+        let n = cs.num_constraints() + cs.num_instance_variables();
+        let domain = D::new(n)
+            .ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
+
+        let mut rng = ark_std::rand::rngs::OsRng;
+        let tau: Fr = domain.sample_element_outside_domain(&mut rng);
+        let alpha = Fr::rand(&mut rng);
+        let beta = Fr::rand(&mut rng);
+
+        // multiply all existing SRS elements by the new random scalars
+        let new_powers_of_tau_g1 = prev_srs.powers_of_tau_g1
+            .iter()
+            .enumerate()
+            .map(|(i, g)| {
+                let tau_pow_i = tau.pow([i as u64]);
+                g.mul(tau_pow_i).into_affine()
+            })
+            .collect::<Vec<G1Affine>>();
+
+        let new_powers_of_tau_g2 = prev_srs.powers_of_tau_g2
+            .iter()
+            .enumerate()
+            .map(|(i, h)| {
+                let tau_pow_i = tau.pow([i as u64]);
+                h.mul(tau_pow_i).into_affine()
+            })
+            .collect::<Vec<G2Affine>>();
+
+        let new_powers_of_alpha_tau_g1 = prev_srs.powers_of_alpha_tau_g1
+            .iter()
+            .enumerate()
+            .map(|(i, g)| {
+                let alpha_tau_pow_i = alpha * tau.pow([i as u64]);
+                g.mul(alpha_tau_pow_i).into_affine()
+            })
+            .collect::<Vec<G1Affine>>();
+
+        let new_powers_of_alpha_tau_g2 = prev_srs.powers_of_alpha_tau_g2
+            .iter()
+            .enumerate()
+            .map(|(i, h)| {
+                let alpha_tau_pow_i = alpha * tau.pow([i as u64]);
+                h.mul(alpha_tau_pow_i).into_affine()
+            })
+            .collect::<Vec<G2Affine>>();
+
+        let new_powers_of_beta_tau_g1 = prev_srs.powers_of_beta_tau_g1
+            .iter()
+            .enumerate()
+            .map(|(i, g)| {
+                let beta_tau_pow_i = beta * tau.pow([i as u64]);
+                g.mul(beta_tau_pow_i).into_affine()
+            })
+            .collect::<Vec<G1Affine>>();
+
+        let new_powers_of_beta_tau_g2 = prev_srs.powers_of_beta_tau_g2
+            .iter()
+            .enumerate()
+            .map(|(i, h)| {
+                let beta_tau_pow_i = beta * tau.pow([i as u64]);
+                h.mul(beta_tau_pow_i).into_affine()
+            })
+            .collect::<Vec<G2Affine>>();
+
+        Phase1SRS {
+            powers_of_tau_g1: new_powers_of_tau_g1,
+            powers_of_tau_g2: new_powers_of_tau_g2,
+            powers_of_alpha_tau_g1: new_powers_of_alpha_tau_g1,
+            powers_of_alpha_tau_g2: new_powers_of_alpha_tau_g2,
+            powers_of_beta_tau_g1: new_powers_of_beta_tau_g1,
+            powers_of_beta_tau_g2: new_powers_of_beta_tau_g2,
+        }
+    }
+
+    fn specialize_srs(srs: &Phase1SRS, cs: ConstraintSystemRef<Fr>) -> (Phase1Output, Phase2SRS) {
+        let matrices = &cs.to_matrices().unwrap()["R1CS"];
+        let domain = GeneralEvaluationDomain::<Fr>::new(cs.num_constraints() + cs.num_instance_variables())
+            .ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
+        let ds = domain.size();
+
+        let ifft_of_powers_of_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&srs.powers_of_tau_g1[..ds]);
+        let ifft_of_powers_of_tau_g2 = ECFFTUtils::ifft::<ark_bn254::G2Projective>(&srs.powers_of_tau_g2[..ds]);
+        let ifft_of_powers_of_alpha_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&srs.powers_of_alpha_tau_g1);
+        let ifft_of_powers_of_beta_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&srs.powers_of_beta_tau_g1);
+
+        let qap_num_variables = (cs.num_instance_variables() - 1) + cs.num_witness_variables();
+
+        let mut abc_g1 = vec![G1Affine::zero(); qap_num_variables + 1];
+        let mut a_g1 = vec![G1Affine::zero(); qap_num_variables + 1];
+        let mut b_g1 = vec![G1Affine::zero(); qap_num_variables + 1];
+        let mut b_g2 = vec![G2Affine::zero(); qap_num_variables + 1];
+
+        // this handles the dummy constraints x * 0 = 0 for non-malleability
+        {
+            let start = 0;
+            let end = cs.num_instance_variables();
+            let num_constraints = cs.num_constraints();
+            abc_g1[start..end].copy_from_slice(&ifft_of_powers_of_beta_tau_g1[(start + num_constraints)..(end + num_constraints)]);
+            a_g1[start..end].copy_from_slice(&ifft_of_powers_of_tau_g1[(start + num_constraints)..(end + num_constraints)]);
+        }
+
+        for (i, u_i) in ifft_of_powers_of_beta_tau_g1.iter().enumerate().take(cs.num_constraints()) {
+            for &(ref coeff, index) in &matrices[0][i] {
+                abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
+            }
+        }
+
+        for (i, u_i) in ifft_of_powers_of_alpha_tau_g1.iter().enumerate().take(cs.num_constraints()) {
+            for &(ref coeff, index) in &matrices[1][i] {
+                abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
+            }
+        }
+
+        for (i, u_i) in ifft_of_powers_of_tau_g1.iter().enumerate().take(cs.num_constraints()) {
+            for &(ref coeff, index) in &matrices[2][i] {
+                abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
+            }
+
+            for &(ref coeff, index) in &matrices[0][i] {
+                a_g1[index] = (a_g1[index] + (*u_i * coeff)).into_affine();
+            }
+
+            for &(ref coeff, index) in &matrices[1][i] {
+                b_g1[index] = (b_g1[index] + (*u_i * coeff)).into_affine();
+            }
+        }
+
+        for (i, u_i) in ifft_of_powers_of_tau_g2.iter().enumerate().take(cs.num_constraints()) {
+            for &(ref coeff, index) in &matrices[1][i] {
+                b_g2[index] = (b_g2[index] + (*u_i * coeff)).into_affine();
+            }
+        }
+
+        // compute h_g1
+        let n = cs.num_constraints() + cs.num_instance_variables();
+        let mut h_g1 = vec![G1Affine::zero(); domain.size() - 1];
+        for i in 0..=(domain.size()-2) {
+            h_g1[i] = (srs.powers_of_tau_g1[i + domain.size()] - srs.powers_of_tau_g1[i]).into_affine();
+        }
+
+        // we use delta and gamma as 1 for this step
+        let gamma_abc_g1 = abc_g1.clone();
+        let delta_abc_g1 = abc_g1.clone();
+
+        let delta_g1 = G1Affine::generator();
+        let delta_g2 = G2Affine::generator();
+        let gamma_g2 = G2Affine::generator();
+
+        let phase1_output = Phase1Output {
+            a_query: a_g1,
+            b_g1_query: b_g1,
+            b_g2_query: b_g2,
+        };
+
+        let phase2_srs = Phase2SRS {
+            delta_g1,
+            delta_g2,
+            gamma_g2,
+            gamma_abc_g1,
+            delta_abc_g1,
+            h_g1,
+        };
+
+        (phase1_output, phase2_srs)
+    }
+
+    pub fn finish_groth_setup(
+        srs1: &Phase1SRS,
+        phase1out: &Phase1Output,
+        srs2: &Phase2SRS,
+        cs: ConstraintSystemRef<Fr>
+    ) -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
+        let num_instance_variables = cs.num_instance_variables();
+
+        let g16_vk = Groth16VerifyingKey {
+            alpha_g1: srs1.powers_of_alpha_tau_g1[0],
+            beta_g2: srs1.powers_of_beta_tau_g2[0],
+            gamma_g2: srs2.gamma_g2,
+            delta_g2: srs2.delta_g2,
+            gamma_abc_g1: srs2.gamma_abc_g1[..num_instance_variables].to_vec(),
+        };
+
+        let g16_pk = Groth16ProvingKey {
+            vk: g16_vk.clone(),
+            beta_g1: srs1.powers_of_beta_tau_g1[0],
+            delta_g1: srs2.delta_g1,
+            a_query: phase1out.a_query.clone(),
+            b_g1_query: phase1out.b_g1_query.clone(),
+            b_g2_query: phase1out.b_g2_query.clone(),
+            h_query: srs2.h_g1.clone(),
+            l_query: srs2.delta_abc_g1[num_instance_variables..].to_vec(),
+        };
+
+        Ok((g16_pk, g16_vk))
     }
 
     fn circuit_to_cs<C: ConstraintSynthesizer<Fr>>(circuit: C) -> Result<ConstraintSystemRef<Fr>, WRAPSError> {
@@ -188,7 +418,8 @@ mod tests {
     };
     use ark_std::test_rng;
 
-    const MIMC_ROUNDS: usize = 3222;
+    const MIMC_ROUNDS: usize = 322;
+    const USE_MPC_CEREMONY: bool = true;
 
     /// This is an implementation of MiMC, specifically a
     /// variant named `LongsightF322p3` for BLS12-377.
@@ -297,7 +528,12 @@ mod tests {
 
             let cs = WRAPSPreprocessing::circuit_to_cs(c).unwrap();
             println!("Number of constraints: {}", cs.num_constraints());
-            WRAPSPreprocessing::trusted_groth_setup(c).unwrap()
+
+            if USE_MPC_CEREMONY {
+                WRAPSPreprocessing::dummy_ceremony_groth_setup(c).unwrap()
+            } else {
+                WRAPSPreprocessing::trusted_groth_setup(c).unwrap()
+            }
         };
 
         // Prepare the verification key (for proof verification)
@@ -345,7 +581,8 @@ mod tests {
                 // Create a groth16 proof with our parameters.
                 let proof = Groth16::<Bn254>::prove(&pk, c, &mut rng).unwrap();
                 assert!(
-                    Groth16::<Bn254>::verify_with_processed_vk(&pvk, &[image], &proof).unwrap()
+                    Groth16::<Bn254>::verify_with_processed_vk(&pvk, &[image], &proof).unwrap() &&
+                    Groth16::<Bn254>::verify(&vk, &[image], &proof).unwrap()
                 );
             }
 
