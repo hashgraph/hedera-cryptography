@@ -134,8 +134,15 @@ impl WRAPSPreprocessing {
         -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
         let cs = Self::circuit_to_cs(circuit)?;
         let srs_phase1 = Self::create_init_srs_phase1(cs.clone());
+
         let srs_phase1 = Self::update_srs_phase1(cs.clone(), &srs_phase1);
+        let srs_phase1 = Self::update_srs_phase1(cs.clone(), &srs_phase1);
+
         let (phase1_output, srs_phase2) = Self::specialize_srs(&srs_phase1, cs.clone());
+
+        let srs_phase2 = Self::update_srs_phase2(&srs_phase2);
+        let srs_phase2 = Self::update_srs_phase2(&srs_phase2);
+
         let (g16_pk, g16_vk) = Self::finish_groth_setup(
             &srs_phase1,
             &phase1_output,
@@ -150,7 +157,8 @@ impl WRAPSPreprocessing {
     fn create_init_srs_phase1(cs: ConstraintSystemRef<Fr>) -> Phase1SRS {
         // domain_size is computed the same way (and then padded to the next power of 2)
         let n = cs.num_constraints() + cs.num_instance_variables();
-        let domain = GeneralEvaluationDomain::<Fr>::new(n).ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
+        let domain = GeneralEvaluationDomain::<Fr>::new(n)
+            .ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
         let domain_size = domain.size();
 
         let powers_of_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); 2*domain_size]; // {Gx:i} | i=0..2n-2}
@@ -307,8 +315,6 @@ impl WRAPSPreprocessing {
             }
         }
 
-        // compute h_g1
-        let n = cs.num_constraints() + cs.num_instance_variables();
         let mut h_g1 = vec![G1Affine::zero(); domain.size() - 1];
         for i in 0..=(domain.size()-2) {
             h_g1[i] = (srs.powers_of_tau_g1[i + domain.size()] - srs.powers_of_tau_g1[i]).into_affine();
@@ -338,6 +344,42 @@ impl WRAPSPreprocessing {
         };
 
         (phase1_output, phase2_srs)
+    }
+
+    pub fn update_srs_phase2(
+        prev_srs: &Phase2SRS,
+    ) -> Phase2SRS {
+        let mut rng = ark_std::rand::rngs::OsRng;
+        let delta = Fr::rand(&mut rng);
+        let gamma = Fr::rand(&mut rng);
+
+        let delta_inverse = delta.inverse().unwrap();
+        let gamma_inverse = gamma.inverse().unwrap();
+
+        let new_delta_g1 = prev_srs.delta_g1.mul(delta).into_affine();
+        let new_delta_g2 = prev_srs.delta_g2.mul(delta).into_affine();
+        let new_gamma_g2 = prev_srs.gamma_g2.mul(gamma).into_affine();
+        let new_gamma_abc_g1 = prev_srs.gamma_abc_g1
+            .iter()
+            .map(|g| g.mul(gamma_inverse).into_affine())
+            .collect::<Vec<G1Affine>>();
+        let new_delta_abc_g1 = prev_srs.delta_abc_g1
+            .iter()
+            .map(|g| g.mul(delta_inverse).into_affine())
+            .collect::<Vec<G1Affine>>();
+        let new_h_g1 = prev_srs.h_g1
+            .iter()
+            .map(|g| g.mul(delta_inverse).into_affine())
+            .collect::<Vec<G1Affine>>();
+
+        Phase2SRS {
+            delta_g1: new_delta_g1,
+            delta_g2: new_delta_g2,
+            gamma_g2: new_gamma_g2,
+            gamma_abc_g1: new_gamma_abc_g1,
+            delta_abc_g1: new_delta_abc_g1,
+            h_g1: new_h_g1,
+        }
     }
 
     pub fn finish_groth_setup(
