@@ -13,7 +13,7 @@ mod utils;
 mod jni_util;
 mod jni_wraps;
 mod alloc;
-mod preprocessing;
+pub mod preprocessing;
 
 use signature::{*};
 
@@ -1130,7 +1130,7 @@ mod tests {
             (wraps_pk, wraps_vk)
         } else {
             let start = std::time::Instant::now();
-            let (wraps_pk, wraps_vk) = WRAPSPreprocessing::trusted_setup().unwrap();
+            let (wraps_pk, wraps_vk) = WRAPSPreprocessing::trusted_wraps_setup().unwrap();
             println!("Generated all parameters: {:?}", start.elapsed());
             (wraps_pk, wraps_vk)
         };
