@@ -210,14 +210,7 @@ public class NativeBinary {
         final Path tempFile = tempDirectory.resolve(fileName);
 
         Files.copy(resourceStream, tempFile);
-        if (isPosixCompliant()) {
-            Files.setPosixFilePermissions(tempFile, PosixFilePermissions.fromString("rwxrwxrwx"));
-        } else {
-            final File f = tempFile.toFile();
-            f.setExecutable(true, false);
-            f.setReadable(true, false);
-            f.setWritable(true, false);
-        }
+        setPermissions(tempFile, "r-x------");
 
         return tempFile;
     }
@@ -230,10 +223,54 @@ public class NativeBinary {
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private Path createTempDirectory() throws IOException {
+        // Unfortunately, we cannot set permissions on the createTempDirectory call atomically
+        // because Windows doesn't support posix permissions. So we set permissions below instead:
         final Path tempDirectory = Files.createTempDirectory(name);
         tempDirectory.toFile().mkdir();
+        setPermissions(tempDirectory, "rwx------");
         tempDirectory.toFile().deleteOnExit();
         return tempDirectory;
+    }
+
+    private record WindowsPermission(boolean enabled, boolean ownerOnly) {
+        // posixPermissions MUST be 9 characters long. It's caller's responsibility to ensure that.
+        static WindowsPermission of(final String posixPermissions, final char c) {
+            final int pos =
+                    switch (c) {
+                        case 'r' -> 0;
+                        case 'w' -> 1;
+                        case 'x' -> 2;
+                        default -> throw new IllegalArgumentException("Unknown permission character: " + c);
+                    };
+
+            final boolean enabled = posixPermissions.charAt(pos) == c
+                    || posixPermissions.charAt(pos + 3) == c
+                    || posixPermissions.charAt(pos + 6) == c;
+
+            final boolean ownerOnly = posixPermissions.charAt(pos) == c
+                    && posixPermissions.charAt(pos + 3) != c
+                    && posixPermissions.charAt(pos + 6) != c;
+
+            return new WindowsPermission(enabled, ownerOnly);
+        }
+    }
+
+    private void setPermissions(final Path path, final String posixPermissions) throws IOException {
+        if (path == null || posixPermissions == null || posixPermissions.length() != 9) {
+            throw new IllegalArgumentException(
+                    "Null path/posixPermissions, or posixPermissions is not 9 characters long");
+        }
+        if (isPosixCompliant()) {
+            Files.setPosixFilePermissions(path, PosixFilePermissions.fromString(posixPermissions));
+        } else {
+            final WindowsPermission executable = WindowsPermission.of(posixPermissions, 'x');
+            final WindowsPermission readable = WindowsPermission.of(posixPermissions, 'r');
+            final WindowsPermission writable = WindowsPermission.of(posixPermissions, 'w');
+            final File f = path.toFile();
+            f.setExecutable(executable.enabled, executable.ownerOnly);
+            f.setReadable(readable.enabled, readable.ownerOnly);
+            f.setWritable(writable.enabled, writable.ownerOnly);
+        }
     }
 
     /**
