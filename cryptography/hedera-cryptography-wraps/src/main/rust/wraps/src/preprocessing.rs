@@ -52,9 +52,8 @@ pub struct Phase1SRS {
     powers_of_tau_g1: Vec<G1Affine>,
     powers_of_tau_g2: Vec<G2Affine>,
     powers_of_alpha_tau_g1: Vec<G1Affine>,
-    powers_of_alpha_tau_g2: Vec<G2Affine>,
     powers_of_beta_tau_g1: Vec<G1Affine>,
-    powers_of_beta_tau_g2: Vec<G2Affine>,
+    beta_g2: G2Affine,
 }
 
 pub struct Phase1Output {
@@ -162,21 +161,20 @@ impl WRAPSPreprocessing {
         let domain_size = domain.size();
 
         let powers_of_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); 2*domain_size]; // {Gx:i} | i=0..2n-2}
-        let powers_of_tau_g2: Vec<G2Affine> = vec![G2Affine::generator(); 2*domain_size]; // {Hx:i} | i=0..2n-2}
+        let powers_of_tau_g2: Vec<G2Affine> = vec![G2Affine::generator(); domain_size]; // {Hx:i} | i=0..2n-2}
 
         let powers_of_alpha_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); domain_size]; // {Gαx:i} | i=0..n-1}
-        let powers_of_alpha_tau_g2: Vec<G2Affine> = vec![G2Affine::generator(); domain_size]; // {Hαx:i} | i=0..n-1}
 
         let powers_of_beta_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); domain_size]; // {Gβx:i} | i=0..n-1}
-        let powers_of_beta_tau_g2: Vec<G2Affine> = vec![G2Affine::generator(); domain_size]; // {Hβx:i} | i=0..n-1}
+
+        let beta_g2: G2Affine = G2Affine::generator();
 
         Phase1SRS {
             powers_of_tau_g1,
             powers_of_tau_g2,
             powers_of_alpha_tau_g1,
-            powers_of_alpha_tau_g2,
             powers_of_beta_tau_g1,
-            powers_of_beta_tau_g2,
+            beta_g2
         }
     }
 
@@ -219,15 +217,6 @@ impl WRAPSPreprocessing {
             })
             .collect::<Vec<G1Affine>>();
 
-        let new_powers_of_alpha_tau_g2 = prev_srs.powers_of_alpha_tau_g2
-            .iter()
-            .enumerate()
-            .map(|(i, h)| {
-                let alpha_tau_pow_i = alpha * tau.pow([i as u64]);
-                h.mul(alpha_tau_pow_i).into_affine()
-            })
-            .collect::<Vec<G2Affine>>();
-
         let new_powers_of_beta_tau_g1 = prev_srs.powers_of_beta_tau_g1
             .iter()
             .enumerate()
@@ -237,22 +226,14 @@ impl WRAPSPreprocessing {
             })
             .collect::<Vec<G1Affine>>();
 
-        let new_powers_of_beta_tau_g2 = prev_srs.powers_of_beta_tau_g2
-            .iter()
-            .enumerate()
-            .map(|(i, h)| {
-                let beta_tau_pow_i = beta * tau.pow([i as u64]);
-                h.mul(beta_tau_pow_i).into_affine()
-            })
-            .collect::<Vec<G2Affine>>();
+        let new_power_of_beta_tau_g2 = prev_srs.beta_g2.mul(beta).into_affine();
 
         Phase1SRS {
             powers_of_tau_g1: new_powers_of_tau_g1,
             powers_of_tau_g2: new_powers_of_tau_g2,
             powers_of_alpha_tau_g1: new_powers_of_alpha_tau_g1,
-            powers_of_alpha_tau_g2: new_powers_of_alpha_tau_g2,
             powers_of_beta_tau_g1: new_powers_of_beta_tau_g1,
-            powers_of_beta_tau_g2: new_powers_of_beta_tau_g2,
+            beta_g2: new_power_of_beta_tau_g2,
         }
     }
 
@@ -392,7 +373,7 @@ impl WRAPSPreprocessing {
 
         let g16_vk = Groth16VerifyingKey {
             alpha_g1: srs1.powers_of_alpha_tau_g1[0],
-            beta_g2: srs1.powers_of_beta_tau_g2[0],
+            beta_g2: srs1.beta_g2,
             gamma_g2: srs2.gamma_g2,
             delta_g2: srs2.delta_g2,
             gamma_abc_g1: srs2.gamma_abc_g1[..num_instance_variables].to_vec(),
