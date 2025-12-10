@@ -76,7 +76,7 @@ pub struct WRAPSPreprocessing {}
 impl WRAPSPreprocessing {
 
     /// Performs the trusted setup for WRAPS, producing the WRAPSProvingKey and WRAPSVerificationKey.
-    pub fn trusted_setup() -> Result<(WRAPSProvingKey, WRAPSVerificationKey), WRAPSError> {
+    pub fn trusted_wraps_setup() -> Result<(WRAPSProvingKey, WRAPSVerificationKey), WRAPSError> {
         let mut rng = ark_std::rand::rngs::OsRng;
         let F_circuit = Circuit::new(())
             .map_err(|_| WRAPSError::CryptographyError)?;
@@ -132,21 +132,28 @@ impl WRAPSPreprocessing {
     fn dummy_ceremony_groth_setup<C: ConstraintSynthesizer<Fr>>(circuit: C)
         -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
         let cs = Self::circuit_to_cs(circuit)?;
+
+        // coordinator must create the initial SRS
         let srs_phase1 = Self::create_init_srs_phase1(cs.clone());
 
+        // two parties take turns updating the SRS
+        let srs_phase1 = Self::update_srs_phase1(cs.clone(), &srs_phase1);
         let srs_phase1 = Self::update_srs_phase1(cs.clone(), &srs_phase1);
         let srs_phase1 = Self::update_srs_phase1(cs.clone(), &srs_phase1);
 
+        // coordianator specialzes the SRS to the circuit
         let (phase1_output, srs_phase2) = Self::specialize_srs(&srs_phase1, cs.clone());
 
+        // two parties take turns updating the phase 2 SRS
+        let srs_phase2 = Self::update_srs_phase2(&srs_phase2);
         let srs_phase2 = Self::update_srs_phase2(&srs_phase2);
         let srs_phase2 = Self::update_srs_phase2(&srs_phase2);
 
+        // finalize the Groth16 keys
         let (g16_pk, g16_vk) = Self::finish_groth_setup(
             &srs_phase1,
             &phase1_output,
-            &srs_phase2,
-            cs.clone()
+            &srs_phase2
         )?;
 
         Ok((g16_pk, g16_vk))
@@ -302,8 +309,8 @@ impl WRAPSPreprocessing {
         }
 
         // we use delta and gamma as 1 for this step
-        let gamma_abc_g1 = abc_g1.clone();
-        let delta_abc_g1 = abc_g1.clone();
+        let mut gamma_abc_g1 = abc_g1;
+        let delta_abc_g1 = gamma_abc_g1.split_off(cs.num_instance_variables());
 
         let delta_g1 = G1Affine::generator();
         let delta_g2 = G2Affine::generator();
@@ -367,16 +374,14 @@ impl WRAPSPreprocessing {
         srs1: &Phase1SRS,
         phase1out: &Phase1Output,
         srs2: &Phase2SRS,
-        cs: ConstraintSystemRef<Fr>
     ) -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
-        let num_instance_variables = cs.num_instance_variables();
 
         let g16_vk = Groth16VerifyingKey {
             alpha_g1: srs1.powers_of_alpha_tau_g1[0],
             beta_g2: srs1.beta_g2,
             gamma_g2: srs2.gamma_g2,
             delta_g2: srs2.delta_g2,
-            gamma_abc_g1: srs2.gamma_abc_g1[..num_instance_variables].to_vec(),
+            gamma_abc_g1: srs2.gamma_abc_g1.to_vec(),
         };
 
         let g16_pk = Groth16ProvingKey {
@@ -387,7 +392,7 @@ impl WRAPSPreprocessing {
             b_g1_query: phase1out.b_g1_query.clone(),
             b_g2_query: phase1out.b_g2_query.clone(),
             h_query: srs2.h_g1.clone(),
-            l_query: srs2.delta_abc_g1[num_instance_variables..].to_vec(),
+            l_query: srs2.delta_abc_g1.to_vec(),
         };
 
         Ok((g16_pk, g16_vk))
@@ -410,7 +415,7 @@ mod end_to_end_tests {
 
     #[test]
     fn wraps_trusted_setup() {
-        let (pk, vk) = WRAPSPreprocessing::trusted_setup().unwrap();
+        let (pk, vk) = WRAPSPreprocessing::trusted_wraps_setup().unwrap();
         let (nova_pp_serialized, decider_pp_serialized) = pk.serialize().unwrap();
         let (nova_vp_serialized, decider_vp_serialized) = vk.serialize().unwrap();
 
