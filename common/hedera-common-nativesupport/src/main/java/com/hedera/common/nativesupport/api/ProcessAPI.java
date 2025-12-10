@@ -34,6 +34,11 @@ public class ProcessAPI extends StreamAPI {
 
     @Override
     public void close() throws Exception {
+        // Release all resources
+        getOutputStream().close();
+        getInputStream().close();
+        getErrorStream().close();
+
         // The process is supposed to exit on its own once it emits the reply, so this will likely be a no-op.
         // But it's here in case we catch an exception before the process had a chance to receive any input.
         // This should help prevent a memory leak in case we keep spawning new processes and erroring out
