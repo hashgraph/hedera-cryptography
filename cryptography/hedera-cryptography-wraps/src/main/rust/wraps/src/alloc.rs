@@ -13,11 +13,39 @@ use memmap2::{MmapMut /*, UncheckedAdvice*/};
 use filemap::FileMap;
 use bitmap::BitMap;
 
-/// Allocate small objects in RAM, larger objects on disk
-const SIZE_THRESHOLD_BYTES: usize = 64 * 1024;
+// As of 2025-12-10, RAM usage in GB with various parameters:
+//
+// Threshold \ Swap, GB |     16     |     20     |     24     |     30     |     40
+// --------------------------------------------------------------------------------------
+//    64 KB             |    7       |            |            |            |
+//    32 KB             |    5.7     |            |            |            |
+//    16 KB             |    5.6     |            |            |            |
+//     8 KB             |    4.3     |            |            |            |
+//     4 KB             |    3       |            |            |            |
+//     2 KB             |    3.64    |    2.64    |            |            |
+//     1 KB             |    4.9     |    2.59    |    1.73    |    1.86    |    1.86
+//   512 B              |            |            |            |            |    1.83
+//   256 B              |            |            |            |            |    1.79
+//   128 B              |    5       |    2.69    |            |            |    1.73
+//
+// Note that the code doesn't really use more than about 16 GB of memory in total. However,
+// a larger swap reduces the effect of fragmentation which normally results in allocating RAM
+// instead of a space in the swap file. Hence the reason for testing with swap sizes >16 GB.
+//
+// Note that the system wouldn't run with a threshold of 64 bytes for unknown reason - likely
+// because the bitmap boolean array becomes too large. We could consider switching from bool
+// to u64 and using actual bits, but that would add unwanted complexity.
+//
+// Note that if the WRAPS implementation, or the memory allocator implementation change,
+// some of the numbers may change too.
+//
+// As of now, 24 GB swap with a threshold of 1 KB seems the most reasonable combination:
 
-/// Disk file size in bytes. Unfortunately, this must be a compile-time constant.
-const HEAP_SIZE_BYTES: u64 = 16 * 1024 * 1024 * 1024;
+/// Allocate small objects in RAM, larger objects on disk
+const SIZE_THRESHOLD_BYTES: usize = 1024;
+
+/// Disk file size in bytes, aka swap size. Unfortunately, this must be a compile-time constant.
+const HEAP_SIZE_BYTES: u64 = 24 * 1024 * 1024 * 1024;
 
 /// Allocation unit size in bytes. Heap size must be divisible by the block size.
 const BLOCK_SIZE_BYTES: usize = SIZE_THRESHOLD_BYTES;
