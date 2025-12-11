@@ -46,7 +46,7 @@ use super::{
     Fr, N, D, G1, G2
 };
 
-use crate::utils::{FFTUtils, ECFFTUtils};
+use crate::utils::ECFFTUtils;
 
 pub struct Phase1SRS {
     powers_of_tau_g1: Vec<G1Affine>,
@@ -125,36 +125,6 @@ impl WRAPSPreprocessing {
         let (g16_pk, g16_vk) = Groth16::<PairingCurve>::circuit_specific_setup(circuit, &mut rng)
             .map_err(|e| Error::SNARKSetupFail(e.to_string()))
             .map_err(|_| WRAPSError::CryptographyError)?;
-
-        Ok((g16_pk, g16_vk))
-    }
-
-    fn dummy_ceremony_groth_setup<C: ConstraintSynthesizer<Fr>>(circuit: C)
-        -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
-        let cs = Self::circuit_to_cs(circuit)?;
-
-        // coordinator must create the initial SRS
-        let srs_phase1 = Self::create_init_srs_phase1(cs.clone());
-
-        // two parties take turns updating the SRS
-        let srs_phase1 = Self::update_srs_phase1(cs.clone(), &srs_phase1);
-        let srs_phase1 = Self::update_srs_phase1(cs.clone(), &srs_phase1);
-        let srs_phase1 = Self::update_srs_phase1(cs.clone(), &srs_phase1);
-
-        // coordianator specialzes the SRS to the circuit
-        let (phase1_output, srs_phase2) = Self::specialize_srs(&srs_phase1, cs.clone());
-
-        // two parties take turns updating the phase 2 SRS
-        let srs_phase2 = Self::update_srs_phase2(&srs_phase2);
-        let srs_phase2 = Self::update_srs_phase2(&srs_phase2);
-        let srs_phase2 = Self::update_srs_phase2(&srs_phase2);
-
-        // finalize the Groth16 keys
-        let (g16_pk, g16_vk) = Self::finish_groth_setup(
-            &srs_phase1,
-            &phase1_output,
-            &srs_phase2
-        )?;
 
         Ok((g16_pk, g16_vk))
     }
@@ -449,6 +419,36 @@ mod tests {
     const MIMC_ROUNDS: usize = 322;
     const USE_MPC_CEREMONY: bool = true;
 
+    fn sample_ceremony_groth_setup<C: ConstraintSynthesizer<Fr>>(circuit: C)
+        -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
+        let cs = WRAPSPreprocessing::circuit_to_cs(circuit)?;
+
+        // coordinator must create the initial SRS
+        let srs_phase1 = WRAPSPreprocessing::create_init_srs_phase1(cs.clone());
+
+        // two parties take turns updating the SRS
+        let srs_phase1 = WRAPSPreprocessing::update_srs_phase1(cs.clone(), &srs_phase1);
+        let srs_phase1 = WRAPSPreprocessing::update_srs_phase1(cs.clone(), &srs_phase1);
+        let srs_phase1 = WRAPSPreprocessing::update_srs_phase1(cs.clone(), &srs_phase1);
+
+        // coordianator specialzes the SRS to the circuit
+        let (phase1_output, srs_phase2) = WRAPSPreprocessing::specialize_srs(&srs_phase1, cs.clone());
+
+        // two parties take turns updating the phase 2 SRS
+        let srs_phase2 = WRAPSPreprocessing::update_srs_phase2(&srs_phase2);
+        let srs_phase2 = WRAPSPreprocessing::update_srs_phase2(&srs_phase2);
+        let srs_phase2 = WRAPSPreprocessing::update_srs_phase2(&srs_phase2);
+
+        // finalize the Groth16 keys
+        let (g16_pk, g16_vk) = WRAPSPreprocessing::finish_groth_setup(
+            &srs_phase1,
+            &phase1_output,
+            &srs_phase2
+        )?;
+
+        Ok((g16_pk, g16_vk))
+    }
+
     /// This is an implementation of MiMC, specifically a
     /// variant named `LongsightF322p3` for BLS12-377.
     /// See http://eprint.iacr.org/2016/492 for more
@@ -558,7 +558,7 @@ mod tests {
             println!("Number of constraints: {}", cs.num_constraints());
 
             if USE_MPC_CEREMONY {
-                WRAPSPreprocessing::dummy_ceremony_groth_setup(c).unwrap()
+                sample_ceremony_groth_setup(c).unwrap()
             } else {
                 WRAPSPreprocessing::trusted_groth_setup(c).unwrap()
             }
