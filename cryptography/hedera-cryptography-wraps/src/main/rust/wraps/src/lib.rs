@@ -13,8 +13,8 @@ mod utils;
 mod jni_util;
 mod jni_wraps;
 mod alloc;
+pub mod preprocessing;
 
-use digest::typenum::bit;
 use signature::{*};
 
 /********************************* Imports *********************************/
@@ -30,6 +30,7 @@ use ark_r1cs_std::{
     uint::UInt,
     GR1CSVar
 };
+use ark_snark::SNARK;
 use ark_crypto_primitives::crh::{
     sha256::Sha256,
     poseidon::constraints::{CRHGadget as PoseidonCRHGadget, CRHParametersVar as PoseidonCRHParametersVar},
@@ -37,9 +38,14 @@ use ark_crypto_primitives::crh::{
     CRHSchemeGadget, CRHScheme
 };
 use ark_groth16::{Groth16};
-use ark_relations::gr1cs::{Namespace, ConstraintSystemRef, SynthesisError};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{rand::Rng, test_rng, rand::thread_rng, fmt::Debug};
+use ark_poly::{GeneralEvaluationDomain, EvaluationDomain};
+use ark_relations::gr1cs::{
+    ConstraintSynthesizer, ConstraintSystem, ConstraintSystemRef,
+    OptimizationGoal, Result as R1CSResult,
+    SynthesisError, SynthesisMode, Namespace
+};
 
 use core::borrow::Borrow;
 use core::{marker::PhantomData};
@@ -59,6 +65,8 @@ use folding_schemes::frontend::FCircuit;
 use folding_schemes::transcript::poseidon::poseidon_canonical_config;
 use folding_schemes::{Decider, Error, FoldingScheme};
 use folding_schemes::folding::traits::CommittedInstanceOps;
+use folding_schemes::folding::nova::decider_eth_circuit::DeciderEthCircuit;
+use folding_schemes::folding::traits::Dummy;
 
 /********************************* Publicly Exposed Types *********************************/
 
@@ -517,36 +525,6 @@ impl std::fmt::Display for WRAPSError {
             WRAPSError::AddressBookSizeExceeded => write!(f, "Address book size exceeded maximum allowed"),
             WRAPSError::BinaryArtifactMissing => write!(f, "TSS_LIB_WRAPS_ARTIFACTS_PATH is undefined or the binary artifacts are missing"),
         }
-    }
-}
-
-pub struct WRAPSTrustedSetup {}
-
-impl WRAPSTrustedSetup {
-    /// Runs the trusted setup to produce matching proving and verification keys for WRAPS.
-    pub fn setup() -> Result<(ProvingKey, VerificationKey), WRAPSError> {
-        let mut rng = ark_std::rand::rngs::OsRng;
-        let F_circuit = Circuit::new(())
-            .map_err(|_| WRAPSError::CryptographyError)?;
-
-        let poseidon_config = poseidon_canonical_config::<Fr>();
-
-        let nova_preprocess_params = PreprocessorParam::new(poseidon_config, F_circuit);
-        // Generate Nova parameters for the WRAPS folding circuit.
-        let (nova_pp, nova_vp) = N::preprocess(
-            &mut rng,
-            &nova_preprocess_params
-        ).map_err(|_| WRAPSError::CryptographyError)?;
-
-        let (decider_pp, decider_vp) = D::preprocess(
-            &mut rng,
-            ((nova_pp.clone(), nova_vp.clone()), F_circuit.state_len())
-        ).map_err(|_| WRAPSError::CryptographyError)?;
-
-        Ok((
-            ProvingKey { nova_pp, decider_pp },
-            VerificationKey { nova_vp, decider_vp }
-        ))
     }
 }
 
@@ -1017,6 +995,8 @@ impl WRAPS {
 
 #[cfg(test)]
 mod tests {
+    use crate::preprocessing::WRAPSPreprocessing;
+
     use super::*;
     use std::{env, path::PathBuf};
 
@@ -1130,34 +1110,30 @@ mod tests {
     }
 
     #[test]
-    fn wraps_trusted_setup() {
-        let (pk, vk) = WRAPSTrustedSetup::setup().unwrap();
-        let (nova_pp_serialized, decider_pp_serialized) = pk.serialize().unwrap();
-        let (nova_vp_serialized, decider_vp_serialized) = vk.serialize().unwrap();
-
-        let cwd = env::current_dir().unwrap();
-        std::fs::write(cwd.join("resources/nova_pp.bin"), &nova_pp_serialized).unwrap();
-        std::fs::write(cwd.join("resources/nova_vp.bin"), &nova_vp_serialized).unwrap();
-        std::fs::write(cwd.join("resources/decider_pp.bin"), &decider_pp_serialized).unwrap();
-        std::fs::write(cwd.join("resources/decider_vp.bin"), &decider_vp_serialized).unwrap();
-    }
-
-    #[test]
     fn wraps_simulation() {
         let num_steps = 10;
+        let load_params_from_disk = false;
 
-        let start = std::time::Instant::now();
-        let cwd = env::current_dir().unwrap();
-        let nova_pp_bytes = std::fs::read(cwd.join("resources/nova_pp.bin")).unwrap();
-        let nova_vp_bytes = std::fs::read(cwd.join("resources/nova_vp.bin")).unwrap();
-        let decider_pp_bytes = std::fs::read(cwd.join("resources/decider_pp.bin")).unwrap();
-        let decider_vp_bytes = std::fs::read(cwd.join("resources/decider_vp.bin")).unwrap();
-        println!("Read all parameters from disk: {:?}", start.elapsed());
+        let (wraps_pk, wraps_vk) = if load_params_from_disk {
+            let start = std::time::Instant::now();
+            let cwd = env::current_dir().unwrap();
+            let nova_pp_bytes = std::fs::read(cwd.join("resources/nova_pp.bin")).unwrap();
+            let nova_vp_bytes = std::fs::read(cwd.join("resources/nova_vp.bin")).unwrap();
+            let decider_pp_bytes = std::fs::read(cwd.join("resources/decider_pp.bin")).unwrap();
+            let decider_vp_bytes = std::fs::read(cwd.join("resources/decider_vp.bin")).unwrap();
+            println!("Read all parameters from disk: {:?}", start.elapsed());
 
-        let start = std::time::Instant::now();
-        let wraps_pk = WRAPS::setup_prover(nova_pp_bytes, decider_pp_bytes).unwrap();
-        let wraps_vk = WRAPS::setup_verifier(nova_vp_bytes, decider_vp_bytes).unwrap();
-        println!("Parsed all parameters: {:?}", start.elapsed());
+            let start = std::time::Instant::now();
+            let wraps_pk = WRAPS::setup_prover(nova_pp_bytes, decider_pp_bytes).unwrap();
+            let wraps_vk = WRAPS::setup_verifier(nova_vp_bytes, decider_vp_bytes).unwrap();
+            println!("Parsed all parameters: {:?}", start.elapsed());
+            (wraps_pk, wraps_vk)
+        } else {
+            let start = std::time::Instant::now();
+            let (wraps_pk, wraps_vk) = WRAPSPreprocessing::trusted_wraps_setup().unwrap();
+            println!("Generated all parameters: {:?}", start.elapsed());
+            (wraps_pk, wraps_vk)
+        };
 
         let schnorr_parameters = Schnorr::setup([0u8; 32]).unwrap();
         // Build genesis address book and keys
