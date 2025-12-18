@@ -385,19 +385,28 @@ public class WRAPSLibraryBridge {
      * Note: Nova and Decider keys are managed internally in the native code for performance reasons.
      *
      * @param compressedProof Compressed proof bundle returned by `constructWrapsProof()`
+     * @param genesisAddressBookHash genesis AddressBook hash
+     * @param tssVerificationKey hinTS VerificationKey, or 1280 zeros for the initial proof
      * @return true if the decider successfully verifies the proof, false if not or if errors occur
      */
-    public boolean verifyCompressedProof(byte[] compressedProof) {
+    public boolean verifyCompressedProof(
+            byte[] compressedProof, byte[] genesisAddressBookHash, byte[] tssVerificationKey) {
         if (!isProofSupported()) {
             return false;
         }
-        if (compressedProof == null || compressedProof.length == 0) {
+        if (genesisAddressBookHash == null
+                || genesisAddressBookHash.length == 0
+                || tssVerificationKey == null
+                || tssVerificationKey.length == 0
+                || compressedProof == null
+                || compressedProof.length == 0) {
             return false;
         }
-        return verifyCompressedProofImpl(compressedProof);
+        return verifyCompressedProofImpl(compressedProof, genesisAddressBookHash, tssVerificationKey);
     }
 
-    private native boolean verifyCompressedProofImpl(byte[] compressedProof);
+    private native boolean verifyCompressedProofImpl(
+            byte[] compressedProof, byte[] genesisAddressBookHash, byte[] tssVerificationKey);
 
     /** Check if the sum of weights doesn't exceed MAX_SUM_OF_WEIGHTS. */
     private static boolean validateWeightsSum(final long weights[]) {

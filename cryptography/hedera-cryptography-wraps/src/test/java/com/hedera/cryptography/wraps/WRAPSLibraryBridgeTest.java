@@ -649,7 +649,7 @@ public class WRAPSLibraryBridgeTest {
         assertEquals(704, proof0.compressed().length);
 
         // Note: the compressed proof is non-deterministic, so we can only check the size, and then verify it:
-        assertTrue(WRAPS.verifyCompressedProof(proof0.compressed()));
+        assertTrue(WRAPS.verifyCompressedProof(proof0.compressed(), genesisAddressBookHash, dummyHintsKey));
 
         if (true) {
             // The above test takes ~30 minutes to run.
@@ -694,7 +694,8 @@ public class WRAPSLibraryBridgeTest {
 
         assertEquals(30331352, proof1.uncompressed().length);
         assertEquals(704, proof1.compressed().length);
-        assertTrue(WRAPS.verifyCompressedProof(proof1.compressed()));
+        assertTrue(
+                WRAPS.verifyCompressedProof(proof1.compressed(), genesisAddressBookHash, hintsKeys.verificationKey()));
     }
 
     @Test
@@ -977,7 +978,11 @@ public class WRAPSLibraryBridgeTest {
 
     @Test
     public void testVerifyCompressedProofConstraints() {
-        assertFalse(WRAPS.verifyCompressedProof(null));
-        assertFalse(WRAPS.verifyCompressedProof(new byte[0]));
+        assertFalse(WRAPS.verifyCompressedProof(null, new byte[] {0}, new byte[] {0}));
+        assertFalse(WRAPS.verifyCompressedProof(new byte[0], new byte[] {0}, new byte[] {0}));
+        assertFalse(WRAPS.verifyCompressedProof(new byte[] {0}, null, new byte[] {0}));
+        assertFalse(WRAPS.verifyCompressedProof(new byte[] {0}, new byte[0], new byte[] {0}));
+        assertFalse(WRAPS.verifyCompressedProof(new byte[] {0}, new byte[] {0}, null));
+        assertFalse(WRAPS.verifyCompressedProof(new byte[] {0}, new byte[] {0}, new byte[0]));
     }
 }
