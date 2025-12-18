@@ -435,7 +435,7 @@ fn prepare_external_inputs(
     aggregate_signature: &SchnorrSignature,
     prev_ab: &AddressBook,
     next_ab: &AddressBook,
-    next_tss_vk: &[u8],
+    next_hints_vk: &[u8],
     bitvector: &[bool; MAX_AB_SIZE],
 ) -> Result<Vec<Fr>, WRAPSError> {
     // assumes prev_ab and next_ab are already padded to MAX_AB_SIZE
@@ -471,7 +471,7 @@ fn prepare_external_inputs(
     external_inputs_at_step.push(prover_response);
 
     external_inputs_at_step.push(hash_addressbook(&next_ab)?);
-    external_inputs_at_step.push(hash_hints_vk(next_tss_vk)?);
+    external_inputs_at_step.push(hash_hints_vk(next_hints_vk)?);
 
     Ok(external_inputs_at_step)
 }
@@ -480,7 +480,12 @@ fn prepare_external_inputs(
 impl ProvingKey {
     /// Recreates a proving key from serialized Nova and decider artifacts.
     pub fn deserialize(nova_pp: impl AsRef<[u8]>, decider_pp: impl AsRef<[u8]>) -> Result<Self, Error> {
-        let nova_pp: NPP = N::pp_deserialize_with_mode(nova_pp.as_ref(), ark_serialize::Compress::Yes, ark_serialize::Validate::Yes, ())?;
+        let nova_pp: NPP = N::pp_deserialize_with_mode(
+            nova_pp.as_ref(),
+            ark_serialize::Compress::Yes,
+            ark_serialize::Validate::Yes,
+            ()
+        )?;
         let decider_pp = DPP::deserialize_compressed(decider_pp.as_ref())?;
         Ok(Self { nova_pp, decider_pp })
     }
@@ -687,7 +692,8 @@ impl WRAPS {
         message: impl AsRef<[u8]>,
         signature: &SchnorrSignature
     ) -> Result<bool, WRAPSError> {
-        let pp = Schnorr::setup([0u8; 32]).unwrap(); // dummy entropy for dummy parameters
+        // dummy entropy [0u8; 32] for dummy parameters, since we don't need salting here
+        let pp = Schnorr::setup([0u8; 32]).unwrap();
         // Aggregate the provided public keys to obtain the threshold public key.
         let aggregate_pk = public_keys
             .iter()
@@ -731,7 +737,7 @@ impl WRAPS {
     /// * `Err(WRAPSError::CryptographyError)` if hashing fails.
     pub fn compute_rotation_message(
         ab_next: &AddressBook,
-        tss_vk: impl AsRef<[u8]>
+        hints_vk: impl AsRef<[u8]>
     ) -> Result<Vec<u8>, WRAPSError> {
         if ab_next.len() > MAX_AB_SIZE {
             return Err(WRAPSError::AddressBookSizeExceeded);
@@ -742,7 +748,7 @@ impl WRAPS {
         // Concatenate the address book hash and hashed TSS verification key to form the message.
         let msg = [
             hash_addressbook(&padded_ab_next)?.into_bigint().to_bytes_le(),
-            hash_hints_vk(tss_vk.as_ref())?.into_bigint().to_bytes_le()
+            hash_hints_vk(hints_vk.as_ref())?.into_bigint().to_bytes_le()
         ].concat();
         Ok(msg)
     }
@@ -831,7 +837,7 @@ impl WRAPS {
         prev_ab: &AddressBook,                               // current AddressBook
         next_ab: &AddressBook,                               // next AddressBook
         prev_proof: Option<UncompressedProofSerialized>,     // the previous proof
-        tss_vk: impl AsRef<[u8]>,                            // TSS verification key for the next AddressBook
+        hints_vk: impl AsRef<[u8]>,                          // TSS verification key for the next AddressBook
         aggregate_signature: &SchnorrSignature,              // threshold Schnorr signature attesting the next AddressBook
         bitvector: impl AsRef<[bool]>,                       // bitvector indicating which members signed the signature
     ) -> Result<(UncompressedProofSerialized, CompressedProofSerialized), WRAPSError> {
@@ -864,7 +870,7 @@ impl WRAPS {
         }
 
         // Build the message the committee signed to authorize the rotation.
-        let ab_rotation_message: Vec<u8> = Self::compute_rotation_message(&padded_next_ab, tss_vk.as_ref())?;
+        let ab_rotation_message: Vec<u8> = Self::compute_rotation_message(&padded_next_ab, hints_vk.as_ref())?;
 
         // compute aggregate public key
         let aggregate_pubkey: ark_ec::twisted_edwards::Affine<ark_ed_on_bn254::EdwardsConfig> = (0..prev_ab.len())
@@ -878,7 +884,7 @@ impl WRAPS {
             &aggregate_signature,
             &padded_prev_ab,
             &padded_next_ab,
-            tss_vk.as_ref(),
+            hints_vk.as_ref(),
             &padded_bitvector,
         )?;
 
@@ -887,7 +893,7 @@ impl WRAPS {
             // Seed the Nova instance with the initial ledger state.
             let initial_state = vec![
                 hash_addressbook(&padded_prev_ab)?,
-                hash_hints_vk(tss_vk.as_ref())?
+                hash_hints_vk(hints_vk.as_ref())?
             ];
             let mut instance = N::init(&(pk.nova_pp.clone(), vk.nova_vp.clone()), F_circuit, initial_state.clone())
                 .map_err(|_| WRAPSError::CryptographyError)?;
@@ -945,7 +951,9 @@ impl WRAPS {
 
         assert!(Self::verify_compressed_wraps_proof(
             &decider_vp_serialized,
-            &compressed_proof_serialized
+            &compressed_proof_serialized,
+            ab_genesis_hash,
+            hints_vk.as_ref(),
         ).map_err(|_| WRAPSError::CryptographyError)?);
 
         Ok((next_ivc_proof_encoded, compressed_proof_serialized))
@@ -964,7 +972,9 @@ impl WRAPS {
     pub fn verify_compressed_wraps_proof(
         compressed_vk_serialized: &CompressedVerificationKeySerialized,
         proof_serialized: &CompressedProofSerialized,
-    ) -> Result<bool, Error> {
+        ab_genesis_hash: &AddressBookHash,
+        hints_vk: impl AsRef<[u8]>
+    ) -> Result<bool, WRAPSError> {
         type N = Nova<G1, G2, Circuit, KZG<'static, PairingCurve>, Pedersen<G2>, false>;
         type D = DeciderEth<G1, G2, Circuit, KZG<'static, PairingCurve>, Pedersen<G2>, Groth16<PairingCurve>, N>;
 
@@ -974,13 +984,18 @@ impl WRAPS {
                 G1,
                 <KZG<'static, PairingCurve> as CommitmentScheme<G1>>::VerifierParams,
                 <Groth16<PairingCurve> as ark_snark::SNARK<Fr>>::VerifyingKey,
-            >::deserialize_compressed(compressed_vk_serialized.as_slice())?;
+            >::deserialize_compressed(compressed_vk_serialized.as_slice())
+            .map_err(|_| WRAPSError::CryptographyError)?;
 
         // Decode the proof bundle emitted during `construct_wraps_proof`.
-        let compressed_proof = ProofData::deserialize_compressed(proof_serialized.as_slice())?;
+        let compressed_proof = ProofData::deserialize_compressed(proof_serialized.as_slice())
+            .map_err(|_| WRAPSError::CryptographyError)?;
+
+        let hints_vk_verified = compressed_proof.z_0[1] == hash_hints_vk(hints_vk.as_ref())?;
+        let ledger_id_verified = compressed_proof.z_0[0] == *ab_genesis_hash;
 
         // Delegate verification to the decider gadget and return its verdict.
-        let verified = D::verify(
+        let proof_verified = D::verify(
             decider_vp,
             compressed_proof.i,
             compressed_proof.z_0,
@@ -988,8 +1003,9 @@ impl WRAPS {
             &compressed_proof.U_i_commitments,
             &compressed_proof.u_i_commitments,
             &compressed_proof.proof,
-        )?;
-        Ok(verified)
+        ).map_err(|_| WRAPSError::CryptographyError)?;
+
+        Ok(proof_verified && hints_vk_verified && ledger_id_verified)
     }
 }
 
@@ -1187,7 +1203,9 @@ mod tests {
             let compressed_vk_bytes = WRAPS::get_compressed_verification_key_bytes(&wraps_vk).unwrap();
             let verified = WRAPS::verify_compressed_wraps_proof(
                 &compressed_vk_bytes,
-                &next_compressed
+                &next_compressed,
+                &ab_genesis_hash,
+                &next_tss_vk
             ).unwrap();
             assert!(verified);
 
