@@ -569,6 +569,8 @@ public class HintsLibraryBridgeTest {
         assertArrayEquals(HintsConstants.AGGREGATE_SIGNATURE_2, result);
 
         assertTrue(INSTANCE.verifyAggregate(result, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        // Also verify if it meets the 1/2 threshold, because it does:
+        assertTrue(INSTANCE.verifyAggregate(result, HintsConstants.RANDOM_2, keys.verificationKey()));
     }
 
     @Test
@@ -605,6 +607,8 @@ public class HintsLibraryBridgeTest {
         assertArrayEquals(HintsConstants.AGGREGATE_SIGNATURE_3, result);
 
         assertFalse(INSTANCE.verifyAggregate(result, HintsConstants.RANDOM_2, keys.verificationKey(), 1, 3));
+        // Also verify if it doesn't meet the 1/2 threshold, because it doesn't:
+        assertFalse(INSTANCE.verifyAggregate(result, HintsConstants.RANDOM_2, keys.verificationKey()));
     }
 
     @Test

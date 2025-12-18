@@ -288,7 +288,7 @@ impl HinTS {
         })
     }
 
-    /// verifies whether the extended public key (a.k.a. hint) is well-formed for the 
+    /// verifies whether the extended public key (a.k.a. hint) is well-formed for the
     /// given universe size n and index i; note that errors indicate incorrect inputs
     /// while a return value of false indicates that the hint is maliciously crafted
     pub fn verify_hint(
@@ -731,7 +731,11 @@ impl HinTS {
     ) -> Result<bool, HinTSError> {
         // check that the threshold is satisfied
         let (numerator, denominator) = fraction;
-        check_or_return_false!(denominator * π.agg_weight >= numerator * vk.total_weight);
+
+        // The threshold verification uses a strict comparison "greater than" to prevent network
+        // partition where two halves of a disconnected network could both produce valid signatures
+        // with a threshold of 1/2 if verified via a non-strict "greater than or equal to":
+        check_or_return_false!(denominator * π.agg_weight > numerator * vk.total_weight);
 
         // verify the signature first
         let lhs = <Curve as Pairing>::pairing(&π.agg_pk, hash_to_g2(msg)?);

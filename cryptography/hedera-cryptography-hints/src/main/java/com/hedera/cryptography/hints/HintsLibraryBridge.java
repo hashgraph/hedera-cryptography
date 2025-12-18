@@ -319,7 +319,8 @@ public class HintsLibraryBridge {
     /**
      * Checks an aggregate signature on a message verifies under a hinTS verification key, where
      * this is only true if the aggregate signature has weight exceeding the specified threshold
-     * or total weight stipulated in the verification key.
+     * of total weight stipulated in the verification key.
+     * It is recommended to use the overloaded version of this method that hard-codes the threshold to 1/2.
      *
      * @param signature the aggregate signature
      * @param message the message
@@ -345,6 +346,21 @@ public class HintsLibraryBridge {
             return false;
         }
         return verifyAggregateImpl(signature, message, verificationKey, thresholdNumerator, thresholdDenominator);
+    }
+
+    /**
+     * Checks an aggregate signature on a message verifies under a hinTS verification key, where
+     * this is only true if the aggregate signature has weight exceeding the 1/2 threshold
+     * of total weight stipulated in the verification key.
+     * This version of the method is recommended over the more generic version that accepts an arbitrary threshold.
+     *
+     * @param signature the aggregate signature
+     * @param message the message
+     * @param verificationKey the verification key
+     * @return true if the signature is valid; false otherwise
+     */
+    public boolean verifyAggregate(final byte[] signature, final byte[] message, final byte[] verificationKey) {
+        return verifyAggregate(signature, message, verificationKey, 1, 2);
     }
 
     private native boolean verifyAggregateImpl(
