@@ -368,7 +368,25 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     env: JNIEnv,
     _instance: JObject,
     compressed_proof_jarray: JByteArray,
+    ab_genesis_hash_jarray: JByteArray,
+    tss_vk_jarray: JByteArray,
 ) -> jboolean {
+    let ab_genesis_hash: AddressBookHash = {
+        let ab_genesis_hash_vec: Vec<u8> = match env.convert_byte_array(&ab_genesis_hash_jarray) {
+            Ok(val) => val,
+            Err(_) => return jboolean::from(false)
+        };
+        match AddressBookHash::deserialize_uncompressed(ab_genesis_hash_vec.as_slice()) {
+            Ok(val) => val,
+            Err(_) => return jboolean::from(false)
+        }
+    };
+
+    let tss_vk_vec: Vec<u8> = match env.convert_byte_array(&tss_vk_jarray) {
+        Ok(val) => val,
+        Err(_) => return jboolean::from(false)
+    };
+
     let compressed_proof = match env.convert_byte_array(&compressed_proof_jarray) {
         Ok(val) => val as CompressedProofSerialized,
         Err(_) => return jboolean::from(false)
@@ -384,7 +402,7 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
         Err(_) => return jboolean::from(false)
     };
 
-    match WRAPS::verify_compressed_wraps_proof(&decider_vp_serialized, &compressed_proof) {
+    match WRAPS::verify_compressed_wraps_proof(&decider_vp_serialized, &compressed_proof, &ab_genesis_hash, tss_vk_vec) {
         Ok(val) => jboolean::from(val),
         Err(_) => return jboolean::from(false)
     }
