@@ -10,7 +10,6 @@ cargo { libname = "wraps" }
 
 testModuleInfo {
     requires("org.junit.jupiter.api")
-    requires("com.hedera.cryptography.hints")
 }
 
 // remove license header check for rust files
