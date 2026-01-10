@@ -598,7 +598,7 @@ public class WRAPSLibraryBridgeTest {
     public void testFormatRotationMessageConstraints() {
         final byte[][] keys = new byte[][] {new byte[] {1}, new byte[] {2}, new byte[] {3}};
         final long[] weights = new long[] {1, 2, 3};
-        final byte[] hintsKey = new byte[1280];
+        final byte[] hintsKey = new byte[1288];
 
         assertNull(WRAPS.formatRotationMessage(null, weights, hintsKey));
         assertNull(WRAPS.formatRotationMessage(new byte[0][], weights, hintsKey));
@@ -627,7 +627,7 @@ public class WRAPSLibraryBridgeTest {
         final byte[] genesisAddressBookHash =
                 WRAPS.hashAddressBook(genesisNetwork.publicKeys(), genesisNetwork.weights());
 
-        final byte[] dummyHintsKey = new byte[1280];
+        final byte[] dummyHintsKey = new byte[1288];
 
         final byte[] message0 =
                 WRAPS.formatRotationMessage(genesisNetwork.publicKeys(), genesisNetwork.weights(), dummyHintsKey);
@@ -708,7 +708,7 @@ public class WRAPSLibraryBridgeTest {
         final byte[] genesisAddressBookHash =
                 WRAPS.hashAddressBook(genesisNetwork.publicKeys(), genesisNetwork.weights());
 
-        final byte[] dummyHintsKey = new byte[1280];
+        final byte[] dummyHintsKey = new byte[1288];
 
         final byte[] message0 =
                 WRAPS.formatRotationMessage(genesisNetwork.publicKeys(), genesisNetwork.weights(), dummyHintsKey);

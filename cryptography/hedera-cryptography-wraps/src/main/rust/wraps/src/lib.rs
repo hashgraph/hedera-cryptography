@@ -388,7 +388,7 @@ fn pad_addressbook(ab: &AddressBook) -> AddressBook {
 }
 
 /// Hashes the serialized TSS verification key using SHA-256 followed by Poseidon.
-fn hash_hints_vk(vk_bytes: &[u8]) -> Result<Fr, WRAPSError> {
+pub fn hash_hints_vk(vk_bytes: &[u8]) -> Result<Fr, WRAPSError> {
     let mut tss_vk_hash_elements = Vec::new();
     let mut i = 0;
     while i < vk_bytes.len() {
