@@ -8,10 +8,7 @@ plugins {
 
 cargo { libname = "wraps" }
 
-testModuleInfo {
-    requires("org.junit.jupiter.api")
-    requires("com.hedera.cryptography.hints")
-}
+testModuleInfo { requires("org.junit.jupiter.api") }
 
 // remove license header check for rust files
 spotless { format("rust") { clearSteps() } }

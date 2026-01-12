@@ -277,6 +277,13 @@ public class WRAPSLibraryBridge {
     private native byte[] hashAddressBookImpl(byte[][] schnorrPublicKeys, long[] weights);
 
     /**
+     * A convenience API to compute the Poseidon hash of an arbitrary non-null and non-empty array.
+     * @param array a non-null and non-empty array of bytes
+     * @return a hash of the array, or null if errors occur
+     */
+    public native byte[] hashArray(byte[] array);
+
+    /**
      * Constructs a rotation message by concatenating the hash of the next address book with the hash
      * of the hinTS VerificationKey.
      * @param schnorrPublicKeys Schnorr public keys for nodes in the next address book
@@ -302,7 +309,7 @@ public class WRAPSLibraryBridge {
 
     /**
      * Creates the first proof for the genesis AddressBook when both prev and next AddressBooks are the same
-     * and the tssVerificationKey is 1280 zeros, and prevProof is null.
+     * and the tssVerificationKey is 1288 zeros, and prevProof is null.
      * Produces both the incremental Nova proof and the compressed decider proof when the AddressBooks differ
      * and the tssVerificationKey is real, and the prevProof is present.
      * <p>
@@ -314,7 +321,7 @@ public class WRAPSLibraryBridge {
      * @param nextSchnorrPublicKeys keys for the next AB, or the current AB to generate initial proof
      * @param nextWeights weights for the next AB, or the current AB to generate initial proof
      * @param prevProof previous proof, or null to generate the initial proof
-     * @param tssVerificationKey hinTS VerificationKey, or 1280 zeros to generate the initial proof
+     * @param tssVerificationKey hinTS VerificationKey, or 1288 zeros to generate the initial proof
      * @param aggregateSignature aggregate Schnorr signature on the rotation message
      * @param signers a boolean mask to mark signers of the aggregate signature from the current AB
      * @return a Proof in both uncompressed and compressed forms as byte arrays
@@ -386,7 +393,7 @@ public class WRAPSLibraryBridge {
      *
      * @param compressedProof Compressed proof bundle returned by `constructWrapsProof()`
      * @param genesisAddressBookHash genesis AddressBook hash
-     * @param tssVerificationKey hinTS VerificationKey, or 1280 zeros for the initial proof
+     * @param tssVerificationKey hinTS VerificationKey, or 1288 zeros for the initial proof
      * @return true if the decider successfully verifies the proof, false if not or if errors occur
      */
     public boolean verifyCompressedProof(

@@ -5,6 +5,7 @@ use jni::{JNIEnv, JavaVM};
 use jni::objects::{JByteArray, JObject, JObjectArray, JValue, JLongArray, JBooleanArray};
 use std::env;
 use ark_serialize::CanonicalDeserialize;
+use ark_ff::{BigInteger, PrimeField};
 
 use crate::{
     jni_util,
@@ -20,7 +21,8 @@ use crate::{
     AddressBook,
     AddressBookHash,
     UncompressedProofSerialized,
-    CompressedProofSerialized
+    CompressedProofSerialized,
+    hash_hints_vk
 };
 
 const SECRET_KEY_LENGTH: usize = 32;
@@ -222,6 +224,33 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     let serialized_hash = utils::serialize(&hash);
 
     jni_util::u8_vec_to_jbyte_array(&env, &serialized_hash)
+}
+
+/// JNI for WRAPSLibraryBridge.hashArray
+#[no_mangle]
+pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBridge_hashArray(
+    env: JNIEnv,
+    _instance: JObject,
+    input_jarray: JByteArray,
+) -> jbyteArray {
+    if input_jarray.is_null() {
+        return std::ptr::null_mut()
+    }
+    let input_vec: Vec<u8> = match env.convert_byte_array(&input_jarray) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+    if input_vec.is_empty() {
+        return std::ptr::null_mut()
+    }
+
+    // NOTE: hash_hints_vk() works for any vector. It's not specific to hints verification keys at all.
+    let hash: Vec<u8> = match hash_hints_vk(&input_vec) {
+        Ok(val) => val.into_bigint().to_bytes_le(),
+        Err(_) => return std::ptr::null_mut()
+    };
+
+    jni_util::u8_vec_to_jbyte_array(&env, &hash)
 }
 
 /// JNI for WRAPSLibraryBridge.formatRotationMessageImpl

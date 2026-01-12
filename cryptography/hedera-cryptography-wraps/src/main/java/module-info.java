@@ -3,6 +3,8 @@
  */
 module com.hedera.cryptography.wraps {
     exports com.hedera.cryptography.wraps;
+    exports com.hedera.cryptography.tss;
 
     requires com.hedera.common.nativesupport;
+    requires com.hedera.cryptography.hints;
 }
