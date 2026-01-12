@@ -88,7 +88,7 @@ public final class TSS {
      * that has a different length. When this is the case, this method will check if the `aggregate_schnorr_signature`
      * is valid for the `ledgerId` as a message that was signed, using the Schnorr public keys set via a call to the
      * `TSS.setSchnorrPublicKeys()` method. If the client didn't set any keys before calling `TSS.verifyTSS(), then
-     * the verification will fail and return false. While it's okay not to set the keys if the client code is certain
+     * this method will throw IllegalStateException. While it's okay not to set the keys if the client code is certain
      * that only real WRAPS proofs will be used for verification, it is still STRONGLY recommended to set the Schnorr
      * keys unconditionally just in case.
      * <p>
