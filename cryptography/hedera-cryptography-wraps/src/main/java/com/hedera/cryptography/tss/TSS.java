@@ -136,6 +136,11 @@ public final class TSS {
 
             // We sign a rotation message with Schnorr signatures, so we have to prepare it first:
             final byte[] hintsKeyHash = WRAPS.hashArray(hintsVerificationKey);
+            if (hintsKeyHash == null) {
+                // This is a very unlikely scenario that could only happen if the Rust code computing the Poseidon
+                // hash fails in an unknown way. We interpret this condition as a malformed input argument:
+                throw new IllegalArgumentException("Failed to hash `hints_verification_key` from `tssSignature`");
+            }
             final byte[] rotationMessage = Arrays.copyOf(ledgerId, ledgerId.length + hintsKeyHash.length);
             System.arraycopy(hintsKeyHash, 0, rotationMessage, ledgerId.length, hintsKeyHash.length);
 

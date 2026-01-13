@@ -409,11 +409,15 @@ public class WRAPSLibraryBridge {
                 || compressedProof.length == 0) {
             return false;
         }
-        return verifyCompressedProofImpl(compressedProof, genesisAddressBookHash, tssVerificationKey);
+        return verifyCompressedProofImpl(
+                compressedProof, genesisAddressBookHash, tssVerificationKey, WRAPSVerificationKey.getCurrentKey());
     }
 
     private native boolean verifyCompressedProofImpl(
-            byte[] compressedProof, byte[] genesisAddressBookHash, byte[] tssVerificationKey);
+            byte[] compressedProof,
+            byte[] genesisAddressBookHash,
+            byte[] tssVerificationKey,
+            byte[] wrapsVerificationKey);
 
     /** Check if the sum of weights doesn't exceed MAX_SUM_OF_WEIGHTS. */
     private static boolean validateWeightsSum(final long weights[]) {
