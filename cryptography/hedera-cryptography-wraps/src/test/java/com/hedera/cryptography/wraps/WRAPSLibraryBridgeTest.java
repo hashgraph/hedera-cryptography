@@ -25,8 +25,8 @@ public class WRAPSLibraryBridgeTest {
 
     private static final byte[] CRS = HINTS.initCRS((short) SIGNERS_NUM);
 
-    private record Node(byte[] seed, SchnorrKeys schnorrKeys, long weight, byte[] hintsSecretKey, byte[] hints) {
-        static Node from(byte[] seed, long weight, int partyId) {
+    public record Node(byte[] seed, SchnorrKeys schnorrKeys, long weight, byte[] hintsSecretKey, byte[] hints) {
+        public static Node from(byte[] seed, long weight, int partyId) {
             final byte[] hintsSecretKey = HINTS.generateSecretKey(seed);
             return new Node(
                     seed,
@@ -37,13 +37,13 @@ public class WRAPSLibraryBridgeTest {
         }
     }
 
-    private record Network(List<Node> nodes) {
-        byte[][] publicKeys() {
+    public record Network(List<Node> nodes) {
+        public byte[][] publicKeys() {
             return listToArray(
                     nodes.stream().map(n -> n.schnorrKeys().publicKey()).toList());
         }
 
-        long[] weights() {
+        public long[] weights() {
             return nodes.stream().mapToLong(Node::weight).toArray();
         }
     }
@@ -86,9 +86,9 @@ public class WRAPSLibraryBridgeTest {
         return list.toArray(new byte[list.size()][]);
     }
 
-    private record SigningProtocolOutput(byte[] signature, List<List<byte[]>> roundMessages) {}
+    public record SigningProtocolOutput(byte[] signature, List<List<byte[]>> roundMessages) {}
 
-    private SigningProtocolOutput aggregateSignature(final Network network, final byte[] message) {
+    public static SigningProtocolOutput aggregateSignature(final Network network, final byte[] message) {
         final List<byte[]> round1 = network.nodes().stream()
                 .map(node -> WRAPS.runSigningProtocolPhase(
                         WRAPSLibraryBridge.SigningProtocolPhase.R1,

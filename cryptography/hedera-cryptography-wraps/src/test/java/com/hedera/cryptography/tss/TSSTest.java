@@ -5,11 +5,27 @@ import static com.hedera.cryptography.wraps.WRAPSLibraryBridgeTest.assertArrayEq
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import com.hedera.cryptography.hints.AggregationAndVerificationKeys;
+import com.hedera.cryptography.hints.HintsLibraryBridge;
+import com.hedera.cryptography.wraps.Constants;
+import com.hedera.cryptography.wraps.Proof;
+import com.hedera.cryptography.wraps.WRAPSLibraryBridge;
+import com.hedera.cryptography.wraps.WRAPSLibraryBridgeTest;
+import com.hedera.cryptography.wraps.WRAPSLibraryBridgeTest.Network;
+import com.hedera.cryptography.wraps.WRAPSLibraryBridgeTest.Node;
+import com.hedera.cryptography.wraps.WRAPSLibraryBridgeTest.SigningProtocolOutput;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 public class TSSTest {
+    private static final HintsLibraryBridge HINTS = HintsLibraryBridge.getInstance();
+    private static final WRAPSLibraryBridge WRAPS = WRAPSLibraryBridge.getInstance();
+
     private static final byte[] EMPTY = new byte[0];
     private static final byte[] ONE = new byte[] {1};
 
@@ -328,5 +344,80 @@ public class TSSTest {
                                 TSSTestConstants.HINTS_SIGNATURE,
                                 TSSTestConstants.COMPRESSED_WRAPS_PROOF),
                         EMPTY));
+    }
+
+    /**
+     * This isn't a test per se, but rather a utility to capture all the TSSTestConstants
+     * used in unit tests here. It's designed to be run manually by uncommenting the
+     * `@Test` annotation below. It's useless and time-expensive to keep this "test" enabled
+     * otherwise because the WRAPS proof construction would add an extra 30 minutes to the runtime.
+     */
+    // @Test
+    void captureTestData() {
+        if (!WRAPSLibraryBridge.isProofSupported()) {
+            // Gradle script should download artifacts and set TSS_LIB_WRAPS_ARTIFACTS_PATH to bypass this.
+            fail("Must have TSS_LIB_WRAPS_ARTIFACTS_PATH downloaded, or comment out @Test annotation instead.");
+        }
+
+        final Network genesisNetwork = new Network(List.of(
+                Node.from(Constants.SEED_0, 1000, 0),
+                Node.from(Constants.SEED_1, 0, 1),
+                Node.from(Constants.SEED_2, 100, 2),
+                Node.from(Constants.SEED_3, 666, 3)));
+        System.err.println("SCHNORR_PUBLIC_KEYS:");
+        for (int i = 0; i < genesisNetwork.publicKeys().length; i++) {
+            System.err.println(
+                    "    " + i + ": " + Arrays.toString(genesisNetwork.publicKeys()[i]));
+        }
+
+        final byte[] genesisAddressBookHash =
+                WRAPS.hashAddressBook(genesisNetwork.publicKeys(), genesisNetwork.weights());
+        System.err.println("ADDRESS_BOOK_HASH = " + Arrays.toString(genesisAddressBookHash));
+
+        final int N = 8;
+
+        final byte[] crs = HINTS.initCRS((short) N);
+        // For simplicity, use the same secretKey for all:
+        final byte[] secretKey = HINTS.generateSecretKey(TSSTestConstants.RANDOM);
+
+        final AggregationAndVerificationKeys keys = HINTS.preprocess(
+                crs,
+                new int[] {0, 1, 2, 3},
+                Stream.of(0, 1, 2, 3)
+                        .map(i -> HINTS.computeHints(crs, secretKey, i, N))
+                        .toList()
+                        .toArray(new byte[4][]),
+                genesisNetwork.weights(),
+                N);
+
+        System.err.println("HINTS_VERIFICATION_KEY = " + Arrays.toString(keys.verificationKey()));
+
+        // Since we use the same key, the signature is also the same for all:
+        final byte[] blsSignature = HINTS.signBls(TSSTestConstants.MESSAGE, secretKey);
+        final byte[] hintsSignature = HINTS.aggregateSignatures(
+                crs, keys.aggregationKey(), keys.verificationKey(), new int[] {0, 1, 2, 3}, new byte[][] {
+                    blsSignature, blsSignature, blsSignature, blsSignature
+                });
+        System.err.println("HINTS_SIGNATURE = " + Arrays.toString(hintsSignature));
+
+        final byte[] message0 = WRAPS.formatRotationMessage(
+                genesisNetwork.publicKeys(), genesisNetwork.weights(), keys.verificationKey());
+        final SigningProtocolOutput output0 = WRAPSLibraryBridgeTest.aggregateSignature(genesisNetwork, message0);
+
+        System.err.println("AGGREGATE_SCHNORR_SIGNATURE = " + Arrays.toString(output0.signature()));
+
+        System.err.println("Computing proof0 which may take up to 30 minutes...");
+        final Proof proof0 = WRAPS.constructWrapsProof(
+                genesisAddressBookHash,
+                genesisNetwork.publicKeys(),
+                genesisNetwork.weights(),
+                genesisNetwork.publicKeys(),
+                genesisNetwork.weights(),
+                null,
+                keys.verificationKey(),
+                output0.signature(),
+                new boolean[] {true, true, true, true});
+
+        System.err.println("COMPRESSED_WRAPS_PROOF = " + Arrays.toString(proof0.compressed()));
     }
 }

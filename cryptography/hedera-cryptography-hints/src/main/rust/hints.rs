@@ -169,6 +169,8 @@ pub struct VerificationKey {
     h_0: G2AffinePoint,
     /// second G1 element from the KZG CRS (for first power of tau)
     h_1: G2AffinePoint,
+    /// third G1 element from the KZG CRS (for second power of tau)
+    h_2: G2AffinePoint,
     /// commitment to the L_{n-1} polynomial
     l_n_minus_1_of_tau_com: G1AffinePoint,
     /// commitment to the W polynomial
@@ -470,6 +472,7 @@ impl HinTS {
             g_0: crs.powers_of_g[0],
             h_0: crs.powers_of_h[0],
             h_1: crs.powers_of_h[1],
+            h_2: crs.powers_of_h[2],
             l_n_minus_1_of_tau_com: KZG::commit_g1(&crs, &l_n_minus_1_of_x)?,
             w_of_tau_com: KZG::commit_g1(&crs, &w_of_x)?,
             sk_of_tau_com: add::<G2AffinePoint>(sk_l_of_tau_coms),
@@ -808,8 +811,9 @@ impl HinTS {
         check_or_return_false!(lhs == rhs);
 
         //run the degree check e([Qx(τ)]_1, [τ]_2) ?= e([Qx(τ)·τ]_1, [1]_2)
-        let lhs = <Curve as Pairing>::pairing(&π.qx_of_tau_com, &vk.h_1);
-        let rhs = <Curve as Pairing>::pairing(&π.qx_of_tau_mul_tau_com, &vk.h_0);
+        let lhs = <Curve as Pairing>::pairing(&π.qx_of_tau_com, &vk.h_2);
+        let rhs = <Curve as Pairing>::pairing(&π.qx_of_tau_mul_tau_com, &vk.h_1);
+
         check_or_return_false!(lhs == rhs);
 
         Ok(true)
