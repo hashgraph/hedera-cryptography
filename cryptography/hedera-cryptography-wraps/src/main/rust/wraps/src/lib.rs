@@ -947,6 +947,10 @@ impl WRAPS {
         // Archive the decider proof in compressed form for on-chain / off-chain verification.
         compressed_proof.serialize_compressed(&mut compressed_proof_serialized).unwrap();
 
+        // NOTE: constructing the proof uses the default proving binary artifacts (decider_pp and friends),
+        // and therefore the proof verification must use the verification key associated with these same artifacts.
+        // So we don't want to use the verification key that is currently used in the library for stand-alone
+        // verification calls, and instead we must use the correct key. See `WRAPSVerificationKey` in Java for details.
         let decider_vp_serialized = Self::get_compressed_verification_key_bytes(vk)?;
 
         assert!(Self::verify_compressed_wraps_proof(

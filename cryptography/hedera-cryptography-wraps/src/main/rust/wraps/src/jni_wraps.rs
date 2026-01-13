@@ -22,6 +22,7 @@ use crate::{
     AddressBookHash,
     UncompressedProofSerialized,
     CompressedProofSerialized,
+    CompressedVerificationKeySerialized,
     hash_hints_vk
 };
 
@@ -399,6 +400,7 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     compressed_proof_jarray: JByteArray,
     ab_genesis_hash_jarray: JByteArray,
     tss_vk_jarray: JByteArray,
+    wraps_vk_jarray: JByteArray,
 ) -> jboolean {
     let ab_genesis_hash: AddressBookHash = {
         let ab_genesis_hash_vec: Vec<u8> = match env.convert_byte_array(&ab_genesis_hash_jarray) {
@@ -421,13 +423,8 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
         Err(_) => return jboolean::from(false)
     };
 
-    let vk = match utils::get_verification_key() {
-        Ok(val) => val,
-        Err(_) => return jboolean::from(false)
-    };
-
-    let decider_vp_serialized = match WRAPS::get_compressed_verification_key_bytes(&vk) {
-        Ok(val) => val,
+    let decider_vp_serialized = match env.convert_byte_array(&wraps_vk_jarray) {
+        Ok(val) => val as CompressedVerificationKeySerialized,
         Err(_) => return jboolean::from(false)
     };
 

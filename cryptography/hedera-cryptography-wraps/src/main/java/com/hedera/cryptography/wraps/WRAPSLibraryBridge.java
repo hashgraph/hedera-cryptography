@@ -398,9 +398,8 @@ public class WRAPSLibraryBridge {
      */
     public boolean verifyCompressedProof(
             byte[] compressedProof, byte[] genesisAddressBookHash, byte[] tssVerificationKey) {
-        if (!isProofSupported()) {
-            return false;
-        }
+        // Don't check the isProofSupported() because this call doesn't require the binary artifacts anymore
+        // (because the WRAPSVerificationKey hard-codes the key.)
         if (genesisAddressBookHash == null
                 || genesisAddressBookHash.length == 0
                 || tssVerificationKey == null
@@ -409,11 +408,15 @@ public class WRAPSLibraryBridge {
                 || compressedProof.length == 0) {
             return false;
         }
-        return verifyCompressedProofImpl(compressedProof, genesisAddressBookHash, tssVerificationKey);
+        return verifyCompressedProofImpl(
+                compressedProof, genesisAddressBookHash, tssVerificationKey, WRAPSVerificationKey.getCurrentKey());
     }
 
     private native boolean verifyCompressedProofImpl(
-            byte[] compressedProof, byte[] genesisAddressBookHash, byte[] tssVerificationKey);
+            byte[] compressedProof,
+            byte[] genesisAddressBookHash,
+            byte[] tssVerificationKey,
+            byte[] wrapsVerificationKey);
 
     /** Check if the sum of weights doesn't exceed MAX_SUM_OF_WEIGHTS. */
     private static boolean validateWeightsSum(final long weights[]) {
