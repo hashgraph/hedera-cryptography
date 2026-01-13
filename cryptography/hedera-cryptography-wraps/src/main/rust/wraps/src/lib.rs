@@ -991,7 +991,9 @@ impl WRAPS {
         let compressed_proof = ProofData::deserialize_compressed(proof_serialized.as_slice())
             .map_err(|_| WRAPSError::CryptographyError)?;
 
-        let hints_vk_verified = compressed_proof.z_0[1] == hash_hints_vk(hints_vk.as_ref())?;
+        // Does the i-th state of IVC have the expected hints_vk?
+        let hints_vk_verified = compressed_proof.z_i[1] == hash_hints_vk(hints_vk.as_ref())?;
+        // Does the initial state of IVC have the expected genesis ledger ID?
         let ledger_id_verified = compressed_proof.z_0[0] == *ab_genesis_hash;
 
         // Delegate verification to the decider gadget and return its verdict.
@@ -1169,7 +1171,7 @@ mod tests {
             } else {
                 create_new_addressbook()
             };
-            let next_tss_vk = [0u8; 1280]; // placeholder for TSS vk bytes
+            let next_tss_vk = [i as u8; 1480]; // placeholder for TSS vk bytes
 
             // message being signed via threshold Schnorr
             let message: Vec<u8> = WRAPS::compute_rotation_message(&next_ab, &next_tss_vk).unwrap();
