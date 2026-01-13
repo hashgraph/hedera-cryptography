@@ -4,7 +4,7 @@ package com.hedera.cryptography.wraps;
 /**
  * A utility class that manages the WRAPS verification key.
  * Normally, networks would use the `DEFAULT_KEY` that is hard-coded in this class at all times.
- * In rare very cases, the key may need to be updated, either at some point in time, or for a separate isolated network.
+ * In very rare cases, the key may need to be updated, either at some point in time, or for a separate isolated network.
  * To keep WRAPS verification APIs simple and not require an extra argument for the key, its management
  * is extracted into this utility class.
  */
