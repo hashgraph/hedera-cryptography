@@ -398,9 +398,8 @@ public class WRAPSLibraryBridge {
      */
     public boolean verifyCompressedProof(
             byte[] compressedProof, byte[] genesisAddressBookHash, byte[] tssVerificationKey) {
-        if (!isProofSupported()) {
-            return false;
-        }
+        // Don't check the isProofSupported() because this call doesn't require the binary artifacts anymore
+        // (because the WRAPSVerificationKey hard-codes the key.)
         if (genesisAddressBookHash == null
                 || genesisAddressBookHash.length == 0
                 || tssVerificationKey == null
