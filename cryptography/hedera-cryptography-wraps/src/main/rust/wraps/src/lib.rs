@@ -877,11 +877,6 @@ impl WRAPS {
     ) -> Result<(UncompressedProofSerialized, CompressedProofSerialized), WRAPSError> {
         let (bitvector, aggregate_signature) = multi_signature;
 
-        // serialize multi_signature to byte array
-        let mut multi_signature_bytes = vec![];
-        multi_signature.serialize_uncompressed(&mut multi_signature_bytes).unwrap();
-        println!("Aggregate signature size: {}", multi_signature_bytes.len());
-
         if prev_ab.len() > MAX_AB_SIZE || next_ab.len() > MAX_AB_SIZE {
             return Err(WRAPSError::AddressBookSizeExceeded);
         }
