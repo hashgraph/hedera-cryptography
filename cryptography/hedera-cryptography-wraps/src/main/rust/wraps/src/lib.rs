@@ -15,6 +15,7 @@ mod jni_wraps;
 mod alloc;
 pub mod preprocessing;
 
+use digest::typenum::bit;
 use signature::{*};
 
 /********************************* Imports *********************************/
@@ -139,7 +140,7 @@ type Fr = ark_bn254::Fr;
 type JubJubFr = ark_ed_on_bn254::Fr;
 type JubJub = ark_ed_on_bn254::EdwardsProjective;
 type JubJubVar = ark_ed_on_bn254::constraints::EdwardsVar;
-type BitVector = Vec<bool>;
+type BitVector = [bool; MAX_AB_SIZE];
 
 /********************************* Derived Types *********************************/
 
@@ -439,19 +440,12 @@ fn prepare_external_inputs(
     prev_ab: &AddressBook,
     next_ab: &AddressBook,
     next_hints_vk: &[u8],
-    bitvector: &[bool; MAX_AB_SIZE],
+    bitvector: &BitVector,
 ) -> Result<Vec<Fr>, WRAPSError> {
     // assumes prev_ab and next_ab are already padded to MAX_AB_SIZE
     if prev_ab.len() != MAX_AB_SIZE || next_ab.len() != MAX_AB_SIZE {
         return Err(WRAPSError::InvalidInput(
             "prepare_external_inputs expected padded AddressBooks".to_string()
-        ));
-    }
-
-    // assumes padded bitvector of size MAX_AB_SIZE
-    if bitvector.len() != MAX_AB_SIZE {
-        return Err(WRAPSError::InvalidInput(
-            "prepare_external_inputs expected padded bitvector".to_string()
         ));
     }
 
@@ -593,6 +587,12 @@ impl WRAPS {
             .filter_map(|(abe, &is_present)| if is_present { Some(abe.0.clone()) } else { None })
             .collect();
 
+        let padded_bitvector: [bool; MAX_AB_SIZE] = {
+            let mut vec = bitvector.as_ref().to_vec();
+            vec.resize(MAX_AB_SIZE, false);
+            vec.try_into().unwrap()
+        };
+
         // Use fixed parameters so every participant derives identical protocol parameters.
         // Note that the entropy here is irrelevant since it is used for a salt that is unused.
         let pp = Schnorr::setup([0u8; 32]).unwrap();
@@ -683,7 +683,7 @@ impl WRAPS {
                     &r2_msgs,
                     &r3_msgs,
                 ).map_err(|_| WRAPSError::CryptographyError)?;
-                Ok(SigningProtocolObject::ProtocolOutput((bitvector.as_ref().to_vec(), signature)))
+                Ok(SigningProtocolObject::ProtocolOutput((padded_bitvector.clone(), signature)))
             },
         }
     }
@@ -875,14 +875,12 @@ impl WRAPS {
         hints_vk: impl AsRef<[u8]>,                          // TSS verification key for the next AddressBook
         multi_signature: &SchnorrMultiSignature,         // threshold Schnorr signature attesting the next AddressBook
     ) -> Result<(UncompressedProofSerialized, CompressedProofSerialized), WRAPSError> {
-        let aggregate_signature: &SchnorrSignature = &multi_signature.1;
-        let bitvector: &Vec<bool> = &multi_signature.0;
+        let (bitvector, aggregate_signature) = multi_signature;
 
-        if prev_ab.len() != bitvector.len() {
-            return Err(WRAPSError::InvalidInput(
-                "AddressBook and bitvector lengths do not match".to_string()
-            ));
-        }
+        // serialize multi_signature to byte array
+        let mut multi_signature_bytes = vec![];
+        multi_signature.serialize_uncompressed(&mut multi_signature_bytes).unwrap();
+        println!("Aggregate signature size: {}", multi_signature_bytes.len());
 
         if prev_ab.len() > MAX_AB_SIZE || next_ab.len() > MAX_AB_SIZE {
             return Err(WRAPSError::AddressBookSizeExceeded);
@@ -892,11 +890,6 @@ impl WRAPS {
         // Ensure both address books and the participation bitmap align with circuit expectations.
         let padded_prev_ab = pad_addressbook(prev_ab);
         let padded_next_ab = pad_addressbook(next_ab);
-        let padded_bitvector: [bool; MAX_AB_SIZE] = {
-            let mut vec = bitvector.clone();
-            vec.resize(MAX_AB_SIZE, false);
-            vec.try_into().unwrap()
-        };
 
         let is_genesis: bool = prev_proof.is_none();
         if is_genesis {
@@ -922,7 +915,7 @@ impl WRAPS {
             &padded_prev_ab,
             &padded_next_ab,
             hints_vk.as_ref(),
-            &padded_bitvector,
+            &bitvector,
         )?;
 
         let mut ivc_instance = if is_genesis {
