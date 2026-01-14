@@ -159,7 +159,7 @@ public class TSSTest {
 
         // Two happy cases first:
 
-        TSS.setSchnorrPublicKeys(TSSTestConstants.SCHNORR_PUBLIC_KEYS);
+        TSS.setAddressBook(TSSTestConstants.SCHNORR_PUBLIC_KEYS, TSSTestConstants.WEIGHTS);
         assertTrue(TSS.verifyTSS(
                 TSSTestConstants.ADDRESS_BOOK_HASH,
                 concat(
@@ -168,7 +168,7 @@ public class TSSTest {
                         TSSTestConstants.AGGREGATE_SCHNORR_SIGNATURE),
                 TSSTestConstants.MESSAGE));
 
-        TSS.setSchnorrPublicKeys(null);
+        TSS.setAddressBook(null, null);
         assertTrue(TSS.verifyTSS(
                 TSSTestConstants.ADDRESS_BOOK_HASH,
                 concat(
@@ -214,7 +214,7 @@ public class TSSTest {
                         TSSTestConstants.COMPRESSED_WRAPS_PROOF),
                 rnd(TSSTestConstants.MESSAGE, rnd)));
 
-        TSS.setSchnorrPublicKeys(TSSTestConstants.SCHNORR_PUBLIC_KEYS);
+        TSS.setAddressBook(TSSTestConstants.SCHNORR_PUBLIC_KEYS, TSSTestConstants.WEIGHTS);
         assertFalse(TSS.verifyTSS(
                 rnd(TSSTestConstants.ADDRESS_BOOK_HASH, rnd),
                 concat(
@@ -257,7 +257,7 @@ public class TSSTest {
                 badSchnorrKeys[i] = rnd(badSchnorrKeys[i], rnd);
             }
         }
-        TSS.setSchnorrPublicKeys(badSchnorrKeys);
+        TSS.setAddressBook(badSchnorrKeys, TSSTestConstants.WEIGHTS);
         assertFalse(TSS.verifyTSS(
                 TSSTestConstants.ADDRESS_BOOK_HASH,
                 concat(
@@ -267,7 +267,7 @@ public class TSSTest {
                 TSSTestConstants.MESSAGE));
 
         // Then test the missing keys
-        TSS.setSchnorrPublicKeys(null);
+        TSS.setAddressBook(null, null);
         assertThrows(
                 IllegalStateException.class,
                 () -> TSS.verifyTSS(
@@ -415,8 +415,7 @@ public class TSSTest {
                 genesisNetwork.weights(),
                 null,
                 keys.verificationKey(),
-                output0.signature(),
-                new boolean[] {true, true, true, true});
+                output0.signature());
 
         System.err.println("COMPRESSED_WRAPS_PROOF = " + Arrays.toString(proof0.compressed()));
     }

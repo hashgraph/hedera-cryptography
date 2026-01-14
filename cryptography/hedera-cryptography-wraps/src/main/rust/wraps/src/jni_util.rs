@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use jni::JNIEnv;
-use jni::objects::{JByteArray, JObject, JObjectArray, JLongArray};
-use jni::sys::{jbyte, jbyteArray, jlong, jsize};
+use jni::objects::{JBooleanArray, JByteArray, JObject, JObjectArray, JLongArray};
+use jni::sys::{jboolean, jbyte, jbyteArray, jlong, jsize};
 use ark_serialize::CanonicalDeserialize;
 
 use crate::{ENTROPY_SIZE, AddressBook, AddressBookEntry, SchnorrPubKey, Weight};
@@ -129,5 +129,26 @@ pub fn build_address_book(
     }
 
     Result::Ok(entries as AddressBook)
+}
+
+/// Converts a JBooleanArray into a Vec<bool>
+pub fn jboolean_array_to_vec(env: &JNIEnv, boolean_jarray: JBooleanArray) -> Result<Vec<bool>, ()> {
+    let num = match env.get_array_length(&boolean_jarray) {
+        Ok(len) => len as usize,
+        Err(_) => return Result::Err(())
+    };
+
+    let mut jboolean_vec: Vec<jboolean> = vec![0; num];
+    match env.get_boolean_array_region(boolean_jarray, 0, jboolean_vec.as_mut_slice()) {
+        Ok(()) => {},
+        Err(_) => return Result::Err(())
+    };
+
+    let mut vec: Vec<bool> = vec![];
+    for i in 0..num {
+        vec.push(jboolean_vec[i] != 0);
+    }
+
+    Result::Ok(vec)
 }
 

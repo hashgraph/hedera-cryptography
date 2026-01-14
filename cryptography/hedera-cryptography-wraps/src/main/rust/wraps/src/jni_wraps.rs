@@ -17,7 +17,7 @@ use crate::{
     SchnorrPubKey,
     SigningProtocolMessage,
     SigningProtocolObject,
-    SchnorrSignature,
+    SchnorrMultiSignature,
     AddressBook,
     AddressBookHash,
     UncompressedProofSerialized,
@@ -99,6 +99,8 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     message_jarray: JByteArray,
     schnorr_private_key_jarray: JByteArray,
     schnorr_public_keys_jarray: JObjectArray,
+    weights_jarray: JLongArray,
+    signers_jarray: JBooleanArray,
     round1messages_jarray: JObjectArray,
     round2messages_jarray: JObjectArray,
     round3messages_jarray: JObjectArray,
@@ -138,7 +140,11 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
         }
     };
 
-    let public_keys: Vec<SchnorrPubKey> = match jni_util::build_vector(&mut env, &schnorr_public_keys_jarray) {
+    let ab: AddressBook = match jni_util::build_address_book(&mut env, schnorr_public_keys_jarray, weights_jarray) {
+        Ok(val) => val,
+        Err(_) => return std::ptr::null_mut()
+    };
+    let signers: Vec<bool> = match jni_util::jboolean_array_to_vec(&env, signers_jarray) {
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
@@ -155,7 +161,7 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
         Err(_) => return std::ptr::null_mut()
     };
 
-    let obj: SigningProtocolObject = match WRAPS::signing_protocol(phase, random_arr, message, signing_key.as_ref(), &public_keys, &round1messages, &round2messages, &round3messages) {
+    let obj: SigningProtocolObject = match WRAPS::signing_protocol(phase, random_arr, message, signing_key.as_ref(), &ab, &signers, &round1messages, &round2messages, &round3messages) {
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
@@ -174,10 +180,11 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     mut env: JNIEnv,
     _instance: JObject,
     schnorr_public_keys_jarray: JObjectArray,
+    weights_jarray: JLongArray,
     message_jarray: JByteArray,
     signature_jarray: JByteArray,
 ) -> jboolean {
-    let public_keys: Vec<SchnorrPubKey> = match jni_util::build_vector(&mut env, &schnorr_public_keys_jarray) {
+    let ab: AddressBook = match jni_util::build_address_book(&mut env, schnorr_public_keys_jarray, weights_jarray) {
         Ok(val) => val,
         Err(_) => return jboolean::from(false)
     };
@@ -187,18 +194,18 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
         Err(_) => return jboolean::from(false)
     };
 
-    let signature: SchnorrSignature = {
+    let signature: SchnorrMultiSignature = {
         let signature_vec: Vec<u8> = match env.convert_byte_array(&signature_jarray) {
             Ok(val) => val,
             Err(_) => return jboolean::from(false)
         };
-        match SchnorrSignature::deserialize_uncompressed(signature_vec.as_slice()) {
+        match SchnorrMultiSignature::deserialize_uncompressed(signature_vec.as_slice()) {
             Ok(val) => val,
             Err(_) => return jboolean::from(false)
         }
     };
 
-    match WRAPS::verify_signature(public_keys.as_slice(), message, &signature) {
+    match WRAPS::verify_signature(&ab, message, &signature) {
         Ok(val) => jboolean::from(val),
         Err(_) => return jboolean::from(false)
     }
@@ -294,7 +301,6 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     prev_proof_jarray: JByteArray,
     tss_vk_jarray: JByteArray,
     signature_jarray: JByteArray,
-    signers_jarray: JBooleanArray,
 ) -> jbyteArray {
     let ab_genesis_hash: AddressBookHash = {
         let ab_genesis_hash_vec: Vec<u8> = match env.convert_byte_array(&ab_genesis_hash_jarray) {
@@ -329,30 +335,16 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
         Err(_) => return std::ptr::null_mut()
     };
 
-    let signature: SchnorrSignature = {
+    let signature: SchnorrMultiSignature = {
         let signature_vec: Vec<u8> = match env.convert_byte_array(&signature_jarray) {
             Ok(val) => val,
             Err(_) => return std::ptr::null_mut()
         };
-        match SchnorrSignature::deserialize_uncompressed(signature_vec.as_slice()) {
+        match SchnorrMultiSignature::deserialize_uncompressed(signature_vec.as_slice()) {
             Ok(val) => val,
             Err(_) => return std::ptr::null_mut()
         }
     };
-
-    let num_of_signers = match env.get_array_length(&signers_jarray) {
-        Ok(len) => len as usize,
-        Err(_) => return std::ptr::null_mut()
-    };
-    let mut signers_jboolean: Vec<jboolean> = vec![0; num_of_signers];
-    match env.get_boolean_array_region(signers_jarray, 0, signers_jboolean.as_mut_slice()) {
-        Ok(()) => {},
-        Err(_) => return std::ptr::null_mut()
-    };
-    let mut signers: Vec<bool> = vec![];
-    for i in 0..num_of_signers {
-        signers.push(signers_jboolean[i] != 0);
-    }
 
     let pk = match utils::get_proving_key() {
         Ok(val) => val,
@@ -371,8 +363,7 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
             &next_ab,
             prev_proof,
             tss_vk_vec,
-            &signature,
-            &signers) {
+            &signature) {
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };

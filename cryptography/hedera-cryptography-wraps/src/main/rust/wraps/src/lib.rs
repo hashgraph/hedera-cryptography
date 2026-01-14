@@ -15,6 +15,7 @@ mod jni_wraps;
 mod alloc;
 pub mod preprocessing;
 
+use digest::typenum::bit;
 use signature::{*};
 
 /********************************* Imports *********************************/
@@ -97,7 +98,7 @@ pub type SigningProtocolMessage = Vec<u8>;
 
 pub enum SigningProtocolObject {
     ProtocolMessage(SigningProtocolMessage),
-    ProtocolOutput(SchnorrSignature),
+    ProtocolOutput(SchnorrMultiSignature),
 }
 
 pub type CompressedProofSerialized = Vec<u8>;
@@ -139,6 +140,7 @@ type Fr = ark_bn254::Fr;
 type JubJubFr = ark_ed_on_bn254::Fr;
 type JubJub = ark_ed_on_bn254::EdwardsProjective;
 type JubJubVar = ark_ed_on_bn254::constraints::EdwardsVar;
+type BitVector = [bool; MAX_AB_SIZE];
 
 /********************************* Derived Types *********************************/
 
@@ -146,6 +148,7 @@ const MAX_EXT_INPUTS: usize = 4 * MAX_AB_SIZE + 4;
 
 type Schnorr = signature::schnorr::Schnorr<JubJub>;
 type SchnorrSignature = <Schnorr as SignatureScheme>::Signature;
+type SchnorrMultiSignature = (BitVector, SchnorrSignature);
 type SchnorrPrivKey = JubJubFr;
 type SchnorrPubKey = <JubJub as CurveGroup>::Affine;
 type SchnorrParams = signature::schnorr::Parameters<JubJub>;
@@ -431,24 +434,18 @@ fn hash_addressbook(ab: &AddressBook) -> Result<Fr, WRAPSError> {
 }
 
 /// Formats user-visible data into the external-input vector consumed by the Nova circuit.
+/// It assumes that the input address books and bitvector are already padded to `MAX_AB_SIZE`.
 fn prepare_external_inputs(
     aggregate_signature: &SchnorrSignature,
     prev_ab: &AddressBook,
     next_ab: &AddressBook,
     next_hints_vk: &[u8],
-    bitvector: &[bool; MAX_AB_SIZE],
+    bitvector: &BitVector,
 ) -> Result<Vec<Fr>, WRAPSError> {
     // assumes prev_ab and next_ab are already padded to MAX_AB_SIZE
     if prev_ab.len() != MAX_AB_SIZE || next_ab.len() != MAX_AB_SIZE {
         return Err(WRAPSError::InvalidInput(
             "prepare_external_inputs expected padded AddressBooks".to_string()
-        ));
-    }
-
-    // assumes padded bitvector of size MAX_AB_SIZE
-    if bitvector.len() != MAX_AB_SIZE {
-        return Err(WRAPSError::InvalidInput(
-            "prepare_external_inputs expected padded bitvector".to_string()
         ));
     }
 
@@ -565,7 +562,8 @@ impl WRAPS {
     /// * `protocol_instance_entropy` - Participant-specific randomness reused across rounds.
     /// * `message_to_sign` - Byte message that rounds R3/Aggregate must attest.
     /// * `signing_key` - Optional private key required only during phase R3.
-    /// * `public_keys` - Participants' public keys; must be present for phases beyond R1.
+    /// * `address_book` - AddressBook containing the signers; must be present for phases beyond R1.
+    /// * `bitvector` - Bitvector indicating which members of address_book are participating.
     /// * `round1_messages` / `round2_messages` / `round3_messages` - Messages collected from prior rounds.
     ///
     /// # Returns
@@ -577,13 +575,27 @@ impl WRAPS {
         protocol_instance_entropy: Option<[u8; ENTROPY_SIZE]>, // reuse in all rounds of a protocol instance R1...R3, and pass empty in Aggregate
         message_to_sign: impl AsRef<[u8]>, // message to sign should be output of rotation_message(..)
         signing_key: Option<&SchnorrPrivKey>, // should be None if phase == Aggregate
-        public_keys: &[SchnorrPubKey], // can be [] if phase == R1, but must be non-empty otherwise
+        address_book: &AddressBook, // can be [] if phase == R1, but must be non-empty otherwise
+        bitvector: impl AsRef<[bool]>, // bitvector indicating which signers are participating
         round1_messages: &[SigningProtocolMessage], // should be [] if phase == R1
         round2_messages: &[SigningProtocolMessage], // should be [] if phase == R2
         round3_messages: &[SigningProtocolMessage], // should be [] if phase == R3
     ) -> Result<SigningProtocolObject, WRAPSError> {
-        // Use fixed parameters so every participant derives identical protocol randomness.
-        let pp = Schnorr::setup([0u8; 32]).unwrap(); // dummy entropy for dummy parameters
+        // extract public keys of participating signers using the bitvector
+        let participant_pubkeys: Vec<SchnorrPubKey> = address_book.iter()
+            .zip(bitvector.as_ref().iter())
+            .filter_map(|(abe, &is_present)| if is_present { Some(abe.0.clone()) } else { None })
+            .collect();
+
+        let padded_bitvector: [bool; MAX_AB_SIZE] = {
+            let mut vec = bitvector.as_ref().to_vec();
+            vec.resize(MAX_AB_SIZE, false);
+            vec.try_into().unwrap()
+        };
+
+        // Use fixed parameters so every participant derives identical protocol parameters.
+        // Note that the entropy here is irrelevant since it is used for a salt that is unused.
+        let pp = Schnorr::setup([0u8; 32]).unwrap();
 
         match phase {
             SigningProtocolPhase::R1 => {
@@ -601,7 +613,7 @@ impl WRAPS {
             },
             SigningProtocolPhase::R2 => {
                 // Round 2 produces each signer's commitments; all R1 messages must be present.
-                assert!(round1_messages.len() == public_keys.len());
+                assert!(round1_messages.len() == participant_pubkeys.len());
                 assert!(round2_messages.len() == 0);
                 assert!(round3_messages.len() == 0);
                 assert!(protocol_instance_entropy.is_some());
@@ -620,8 +632,8 @@ impl WRAPS {
             },
             SigningProtocolPhase::R3 => {
                 // Round 3 produces each signer’s response; all prior messages must be present.
-                assert!(round1_messages.len() == public_keys.len());
-                assert!(round2_messages.len() == public_keys.len());
+                assert!(round1_messages.len() == participant_pubkeys.len());
+                assert!(round2_messages.len() == participant_pubkeys.len());
                 assert!(round3_messages.len() == 0);
                 assert!(protocol_instance_entropy.is_some());
                 let r1_msgs: Vec<ThresholdSchnorrR1Msg> = round1_messages
@@ -637,7 +649,7 @@ impl WRAPS {
                     protocol_instance_entropy.unwrap(),
                     message_to_sign.as_ref(),
                     signing_key.unwrap(),
-                    public_keys,
+                    &participant_pubkeys,
                     &r1_msgs,
                     &r2_msgs
                 ).map_err(|_| WRAPSError::CryptographyError)?;
@@ -647,9 +659,9 @@ impl WRAPS {
             },
             SigningProtocolPhase::Aggregate => {
                 // Aggregator verifies inputs and bundles all shares into a final signature.
-                assert!(round1_messages.len() == public_keys.len());
-                assert!(round2_messages.len() == public_keys.len());
-                assert!(round3_messages.len() == public_keys.len());
+                assert!(round1_messages.len() == participant_pubkeys.len());
+                assert!(round2_messages.len() == participant_pubkeys.len());
+                assert!(round3_messages.len() == participant_pubkeys.len());
                 assert!(protocol_instance_entropy.is_none());
                 let r1_msgs: Vec<ThresholdSchnorrR1Msg> = round1_messages
                     .iter()
@@ -666,12 +678,12 @@ impl WRAPS {
                 let signature = ThresholdSchnorr::aggregate(
                     &pp,
                     message_to_sign.as_ref(),
-                    public_keys,
+                    &participant_pubkeys,
                     &r1_msgs,
                     &r2_msgs,
                     &r3_msgs,
                 ).map_err(|_| WRAPSError::CryptographyError)?;
-                Ok(SigningProtocolObject::ProtocolOutput(signature))
+                Ok(SigningProtocolObject::ProtocolOutput((padded_bitvector.clone(), signature)))
             },
         }
     }
@@ -688,16 +700,39 @@ impl WRAPS {
     /// * `Ok(false)` when the signature is invalid.
     /// * `Err(WRAPSError::CryptographyError)` when verification cannot be performed.
     pub fn verify_signature(
-        public_keys: &[SchnorrPubKey],
+        address_book: &AddressBook,
         message: impl AsRef<[u8]>,
-        signature: &SchnorrSignature
+        multisignature: &SchnorrMultiSignature
     ) -> Result<bool, WRAPSError> {
-        // dummy entropy [0u8; 32] for dummy parameters, since we don't need salting here
+        // fixed entropy value [0u8; 32], since we don't need salting in our protocol
         let pp = Schnorr::setup([0u8; 32]).unwrap();
+
+        let (bitvector, signature) = multisignature;
+
+        let public_keys: Vec<SchnorrPubKey> = address_book.iter()
+            .zip(bitvector.iter())
+            .filter_map(|(abe, &is_present)| if is_present { Some(abe.0.clone()) } else { None })
+            .collect();
+
         // Aggregate the provided public keys to obtain the threshold public key.
         let aggregate_pk = public_keys
             .iter()
             .fold(SchnorrPubKey::zero(), |acc, pk| (acc + pk).into_affine());
+
+        let aggregate_weight = address_book.iter()
+            .zip(bitvector.iter())
+            .filter_map(|(abe, &is_present)| if is_present { Some(abe.1) } else { None })
+            .fold(Fr::from(0), |acc, w| acc + w);
+
+        let total_weight: Fr = address_book.iter()
+            .map(|abe| abe.1)
+            .fold(Fr::from(0), |acc, w| acc + w);
+
+        // Ensure the aggregate weight is more than half the total weight.
+        if total_weight > (aggregate_weight + aggregate_weight) {
+            return Ok(false);
+        }
+
         // Verify the combined signature against the aggregate key and message.
         Schnorr::verify(&pp, &aggregate_pk, message.as_ref(), signature)
             .map_err(|_| WRAPSError::CryptographyError)
@@ -822,7 +857,7 @@ impl WRAPS {
     /// * `next_ab` - Next address book snapshot authorized by the committee.
     /// * `prev_proof` - Optional uncompressed Nova proof from the previous iteration.
     /// * `tss_vk` - Serialized threshold verification key corresponding to `next_ab`.
-    /// * `aggregate_signature` - Aggregated Schnorr signature validating the rotation message.
+    /// * `multi_signature` - Aggregated Schnorr signature validating the rotation message.
     /// * `bitvector` - Participation bitmap indicating which parties signed.
     ///
     /// # Returns
@@ -838,14 +873,9 @@ impl WRAPS {
         next_ab: &AddressBook,                               // next AddressBook
         prev_proof: Option<UncompressedProofSerialized>,     // the previous proof
         hints_vk: impl AsRef<[u8]>,                          // TSS verification key for the next AddressBook
-        aggregate_signature: &SchnorrSignature,              // threshold Schnorr signature attesting the next AddressBook
-        bitvector: impl AsRef<[bool]>,                       // bitvector indicating which members signed the signature
+        multi_signature: &SchnorrMultiSignature,         // threshold Schnorr signature attesting the next AddressBook
     ) -> Result<(UncompressedProofSerialized, CompressedProofSerialized), WRAPSError> {
-        if prev_ab.len() != bitvector.as_ref().len() {
-            return Err(WRAPSError::InvalidInput(
-                "AddressBook and bitvector lengths do not match".to_string()
-            ));
-        }
+        let (bitvector, aggregate_signature) = multi_signature;
 
         if prev_ab.len() > MAX_AB_SIZE || next_ab.len() > MAX_AB_SIZE {
             return Err(WRAPSError::AddressBookSizeExceeded);
@@ -855,11 +885,6 @@ impl WRAPS {
         // Ensure both address books and the participation bitmap align with circuit expectations.
         let padded_prev_ab = pad_addressbook(prev_ab);
         let padded_next_ab = pad_addressbook(next_ab);
-        let padded_bitvector: [bool; MAX_AB_SIZE] = {
-            let mut vec = bitvector.as_ref().to_vec();
-            vec.resize(MAX_AB_SIZE, false);
-            vec.try_into().unwrap()
-        };
 
         let is_genesis: bool = prev_proof.is_none();
         if is_genesis {
@@ -874,7 +899,7 @@ impl WRAPS {
 
         // compute aggregate public key
         let aggregate_pubkey: ark_ec::twisted_edwards::Affine<ark_ed_on_bn254::EdwardsConfig> = (0..prev_ab.len())
-            .filter(|&i| bitvector.as_ref()[i])
+            .filter(|&i| bitvector[i])
             .fold(ark_ed_on_bn254::EdwardsAffine::zero(),|acc, i| acc.add(&prev_ab[i].0.clone()).into_affine());
 
         let schnorr_parameters = Schnorr::setup([0u8; 32]).unwrap();
@@ -885,7 +910,7 @@ impl WRAPS {
             &padded_prev_ab,
             &padded_next_ab,
             hints_vk.as_ref(),
-            &padded_bitvector,
+            &bitvector,
         )?;
 
         let mut ivc_instance = if is_genesis {
@@ -1017,6 +1042,8 @@ impl WRAPS {
 
 #[cfg(test)]
 mod tests {
+    use digest::typenum::bit;
+
     use crate::preprocessing::WRAPSPreprocessing;
 
     use super::*;
@@ -1057,7 +1084,13 @@ mod tests {
         (pks, sk_refs)
     }
 
-    fn threshold_sign(message_to_sign: &[u8], pks: &[SchnorrPubKey], sk_refs: &[&SchnorrPrivKey]) -> SchnorrSignature {
+    fn threshold_sign(
+        message_to_sign: &[u8],
+        address_book: &AddressBook,
+        sk_refs: &Keys,
+        bitvector: &[bool],
+    ) -> SchnorrMultiSignature {
+        let (pks, sk_refs) = signing_subset(address_book, sk_refs, bitvector);
         let n = pks.len();
         let rng = &mut thread_rng();
         let seeds: Vec<[u8; ENTROPY_SIZE]> = (0..pks.len())
@@ -1071,7 +1104,8 @@ mod tests {
                 Some(seeds[i]),
                 message_to_sign,
                 None,
-                &[],
+                address_book,
+                bitvector,
                 &[],
                 &[],
                 &[]
@@ -1088,7 +1122,8 @@ mod tests {
                 Some(seeds[i]),
                 message_to_sign,
                 None,
-                pks,
+                address_book,
+                bitvector,
                 &r1_msgs,
                 &[],
                 &[]
@@ -1105,7 +1140,8 @@ mod tests {
                 Some(seeds[i]),
                 message_to_sign,
                 Some(sk_refs[i]),
-                pks,
+                address_book,
+                bitvector,
                 &r1_msgs,
                 &r2_msgs,
                 &[]
@@ -1121,7 +1157,8 @@ mod tests {
             None, // no entropy for aggregation
             message_to_sign,
             None,
-            pks,
+            address_book,
+            bitvector,
             &r1_msgs,
             &r2_msgs,
             &r3_msgs,
@@ -1157,7 +1194,6 @@ mod tests {
             (wraps_pk, wraps_vk)
         };
 
-        let schnorr_parameters = Schnorr::setup([0u8; 32]).unwrap();
         // Build genesis address book and keys
         let (genesis_ab, genesis_keys) = create_new_addressbook();
         let ab_genesis_hash = WRAPS::compute_addressbook_hash(&genesis_ab).unwrap();
@@ -1175,23 +1211,24 @@ mod tests {
             } else {
                 create_new_addressbook()
             };
-            let next_tss_vk = [i as u8; 1480]; // placeholder for TSS vk bytes
+
+            // dummy TSS vk bytes, but let's pick a new one each day at least
+            let next_tss_vk = [i as u8; 1480];
 
             // message being signed via threshold Schnorr
             let message: Vec<u8> = WRAPS::compute_rotation_message(&next_ab, &next_tss_vk).unwrap();
 
-            let (pks_present, sks_present) = signing_subset(&prev_ab, &prev_keys, &even_bitvector(&prev_ab));
-
-            // compute aggregate public key
-            let aggregate_pubkey = pks_present
-                .iter()
-                .fold(SchnorrPubKey::zero(), |acc, pk| (acc + pk).into_affine());
-
             // simulate the signing protocol
-            let aggregate_signature = threshold_sign(&message, &pks_present, &sks_present);
+            let multi_signature = threshold_sign(
+                &message,
+                &prev_ab,
+                &prev_keys,
+                &even_bitvector(&prev_ab)
+            );
+            // sanity check the signature
+            assert!(WRAPS::verify_signature(&prev_ab, &message, &multi_signature).unwrap());
 
-            assert!(Schnorr::verify(&schnorr_parameters, &aggregate_pubkey, &message, &aggregate_signature).unwrap());
-
+            // kick off proof construction
             let start = std::time::Instant::now();
             let (next_uncompressed, next_compressed) = WRAPS::construct_wraps_proof(
                 &wraps_pk,
@@ -1201,8 +1238,7 @@ mod tests {
                 &next_ab,
                 if i == 0 { None } else { Some(prev_uncompressed_wraps_proof.clone()) },
                 &next_tss_vk,
-                &aggregate_signature,
-                &even_bitvector(&prev_ab),
+                &multi_signature,
             ).expect("WRAPS proof should be created");
             println!("Step {} WRAPS proof creation time: {:?}", i, start.elapsed());
 

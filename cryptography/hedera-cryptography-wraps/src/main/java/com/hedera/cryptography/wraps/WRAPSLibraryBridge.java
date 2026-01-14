@@ -114,6 +114,8 @@ public class WRAPSLibraryBridge {
     private native SchnorrKeys generateSchnorrKeysImpl(byte[] seed);
 
     private static final byte[][] EMPTY_BYTE_ARRAY_2 = new byte[0][];
+    private static final long[] EMPTY_LONG_ARRAY = new long[0];
+    private static final boolean[] EMPTY_BOOLEAN_ARRAY = new boolean[0];
 
     /**
      * Executes a single phase of the threshold Schnorr signing protocol.
@@ -121,7 +123,9 @@ public class WRAPSLibraryBridge {
      * @param instanceEntropy Participant-specific randomness reused across rounds.
      * @param messageToSign Byte message that rounds R3/Aggregate must attest.
      * @param schnorrPrivateKey Optional private key required only during phases R1-R3. null in Aggregate.
-     * @param schnorrPublicKeys Participants' public keys; must be present for phases beyond R1.
+     * @param schnorrPublicKeys Full AddressBook public keys; must be present for phases beyond R1.
+     * @param weights Full AddressBook weights; must be present for phases beyond R1.
+     * @param signers a boolean vector of AddressBook's participants in the signing protocol.
      * @param round1Messages Messages collected from prior rounds.
      * @param round2Messages Messages collected from prior rounds.
      * @param round3Messages Messages collected from prior rounds.
@@ -133,6 +137,8 @@ public class WRAPSLibraryBridge {
             final byte[] messageToSign,
             final byte[] schnorrPrivateKey,
             byte[][] schnorrPublicKeys,
+            long[] weights,
+            boolean[] signers,
             byte[][] round1Messages,
             byte[][] round2Messages,
             byte[][] round3Messages) {
@@ -143,6 +149,12 @@ public class WRAPSLibraryBridge {
         // Just to simplify the API usage and the native bridge implementation:
         if (schnorrPublicKeys == null) {
             schnorrPublicKeys = EMPTY_BYTE_ARRAY_2;
+        }
+        if (weights == null) {
+            weights = EMPTY_LONG_ARRAY;
+        }
+        if (signers == null) {
+            signers = EMPTY_BOOLEAN_ARRAY;
         }
         if (round1Messages == null) {
             round1Messages = EMPTY_BYTE_ARRAY_2;
@@ -175,7 +187,9 @@ public class WRAPSLibraryBridge {
             }
             if (schnorrPublicKeys.length == 0
                     || schnorrPublicKeys.length != round1Messages.length
-                    || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
+                    || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)
+                    || weights.length != schnorrPublicKeys.length
+                    || signers.length != schnorrPublicKeys.length) {
                 return null;
             }
         } else if (phase == SigningProtocolPhase.R3) {
@@ -187,7 +201,9 @@ public class WRAPSLibraryBridge {
             if (schnorrPublicKeys.length == 0
                     || schnorrPublicKeys.length != round1Messages.length
                     || schnorrPublicKeys.length != round2Messages.length
-                    || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
+                    || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)
+                    || weights.length != schnorrPublicKeys.length
+                    || signers.length != schnorrPublicKeys.length) {
                 return null;
             }
         } else if (phase == SigningProtocolPhase.Aggregate) {
@@ -203,7 +219,9 @@ public class WRAPSLibraryBridge {
                     || schnorrPublicKeys.length != round1Messages.length
                     || schnorrPublicKeys.length != round2Messages.length
                     || schnorrPublicKeys.length != round3Messages.length
-                    || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
+                    || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)
+                    || weights.length != schnorrPublicKeys.length
+                    || signers.length != schnorrPublicKeys.length) {
                 return null;
             }
         } else {
@@ -217,6 +235,8 @@ public class WRAPSLibraryBridge {
                 messageToSign,
                 schnorrPrivateKey,
                 schnorrPublicKeys,
+                weights,
+                signers,
                 round1Messages,
                 round2Messages,
                 round3Messages);
@@ -228,33 +248,39 @@ public class WRAPSLibraryBridge {
             byte[] messageToSign,
             byte[] schnorrPrivateKey,
             byte[][] schnorrPublicKeys,
+            long[] weights,
+            boolean[] signers,
             byte[][] round1Messages,
             byte[][] round2Messages,
             byte[][] round3Messages);
 
     /**
      * Verifies an aggregated Schnorr signature against the supplied public keys.
-     * @param schnorrPublicKeys Subset of participant public keys who collectively signed the message
+     * @param schnorrPublicKeys Full AddressBook Schnorr public keys; the signature encodes the actual signers
+     * @param weights Full AddressBook weights; the signature encodes the actual signers
      * @param messageToSign Message bytes that were signed
      * @param signature Aggregated Schnorr signature to validate
      * @return true if verified successfully, false otherwise or if errors occur
      */
-    public boolean verifySignature(byte[][] schnorrPublicKeys, final byte[] messageToSign, final byte[] signature) {
+    public boolean verifySignature(
+            byte[][] schnorrPublicKeys, long[] weights, final byte[] messageToSign, final byte[] signature) {
         if (schnorrPublicKeys == null
                 || messageToSign == null
                 || signature == null
                 || schnorrPublicKeys.length == 0
+                || weights == null
+                || weights.length != schnorrPublicKeys.length
                 || messageToSign.length == 0
                 || signature.length == 0
                 || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
             return false;
         }
 
-        return verifySignatureImpl(schnorrPublicKeys, messageToSign, signature);
+        return verifySignatureImpl(schnorrPublicKeys, weights, messageToSign, signature);
     }
 
     private native boolean verifySignatureImpl(
-            byte[][] schnorrPublicKeys, final byte[] messageToSign, final byte[] signature);
+            byte[][] schnorrPublicKeys, long[] weights, final byte[] messageToSign, final byte[] signature);
 
     /**
      * Computes the Poseidon hash of an address book. This is expected to only be used to compute the ledger ID.
@@ -323,7 +349,6 @@ public class WRAPSLibraryBridge {
      * @param prevProof previous proof, or null to generate the initial proof
      * @param tssVerificationKey hinTS VerificationKey, or 1480 zeros to generate the initial proof
      * @param aggregateSignature aggregate Schnorr signature on the rotation message
-     * @param signers a boolean mask to mark signers of the aggregate signature from the current AB
      * @return a Proof in both uncompressed and compressed forms as byte arrays
      */
     public Proof constructWrapsProof(
@@ -334,8 +359,7 @@ public class WRAPSLibraryBridge {
             long[] nextWeights,
             byte[] prevProof,
             byte[] tssVerificationKey,
-            byte[] aggregateSignature,
-            boolean[] signers) {
+            byte[] aggregateSignature) {
         if (!isProofSupported()) {
             return null;
         }
@@ -356,8 +380,6 @@ public class WRAPSLibraryBridge {
                 || tssVerificationKey.length == 0
                 || aggregateSignature == null
                 || aggregateSignature.length == 0
-                || signers == null
-                || signers.length != prevSchnorrPublicKeys.length
                 || !WRAPSLibraryBridge.validateSchnorrPublicKeys(prevSchnorrPublicKeys)
                 || !WRAPSLibraryBridge.validateSchnorrPublicKeys(nextSchnorrPublicKeys)) {
             return null;
@@ -371,8 +393,7 @@ public class WRAPSLibraryBridge {
                 nextWeights,
                 prevProof,
                 tssVerificationKey,
-                aggregateSignature,
-                signers);
+                aggregateSignature);
     }
 
     private native Proof constructWrapsProofImpl(
@@ -383,8 +404,7 @@ public class WRAPSLibraryBridge {
             long[] nextWeights,
             byte[] prevProof,
             byte[] tssVerificationKey,
-            byte[] aggregateSignature,
-            boolean[] signers);
+            byte[] aggregateSignature);
 
     /**
      * Checks a compressed WRAPS proof against a compressed verification key.
