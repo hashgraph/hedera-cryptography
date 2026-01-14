@@ -89,6 +89,9 @@ public class WRAPSLibraryBridgeTest {
     public record SigningProtocolOutput(byte[] signature, List<List<byte[]>> roundMessages) {}
 
     public static SigningProtocolOutput aggregateSignature(final Network network, final byte[] message) {
+        final boolean[] signers = new boolean[network.publicKeys().length];
+        Arrays.fill(signers, true);
+
         final List<byte[]> round1 = network.nodes().stream()
                 .map(node -> WRAPS.runSigningProtocolPhase(
                         WRAPSLibraryBridge.SigningProtocolPhase.R1,
@@ -96,6 +99,8 @@ public class WRAPSLibraryBridgeTest {
                         message,
                         node.schnorrKeys().privateKey(),
                         EMPTY_BYTE_ARRAY_2,
+                        null,
+                        null,
                         EMPTY_BYTE_ARRAY_2,
                         EMPTY_BYTE_ARRAY_2,
                         EMPTY_BYTE_ARRAY_2))
@@ -109,6 +114,8 @@ public class WRAPSLibraryBridgeTest {
                         message,
                         node.schnorrKeys().privateKey(),
                         network.publicKeys(),
+                        network.weights(),
+                        signers,
                         round1Array,
                         EMPTY_BYTE_ARRAY_2,
                         EMPTY_BYTE_ARRAY_2))
@@ -122,6 +129,8 @@ public class WRAPSLibraryBridgeTest {
                         message,
                         node.schnorrKeys().privateKey(),
                         network.publicKeys(),
+                        network.weights(),
+                        signers,
                         round1Array,
                         round2Array,
                         EMPTY_BYTE_ARRAY_2))
@@ -134,6 +143,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 null,
                 network.publicKeys(),
+                network.weights(),
+                signers,
                 round1Array,
                 round2Array,
                 round3Array);
@@ -160,26 +171,39 @@ public class WRAPSLibraryBridgeTest {
         assertArrayEquals(Constants.SIGNATURE, output.signature());
 
         // Let's also verify the signature while we're at it, so that we don't duplicate the code above:
-        assertTrue(WRAPS.verifySignature(network.publicKeys(), Constants.MESSAGE_0, output.signature()));
+        assertTrue(WRAPS.verifySignature(
+                network.publicKeys(), network.weights(), Constants.MESSAGE_0, output.signature()));
         network.publicKeys()[0][20]++;
-        assertFalse(WRAPS.verifySignature(network.publicKeys(), Constants.MESSAGE_0, output.signature()));
+        assertFalse(WRAPS.verifySignature(
+                network.publicKeys(), network.weights(), Constants.MESSAGE_0, output.signature()));
         network.publicKeys()[0][20]--;
-        assertFalse(WRAPS.verifySignature(network.publicKeys(), Constants.MESSAGE_1, output.signature()));
+        assertFalse(WRAPS.verifySignature(
+                network.publicKeys(), network.weights(), Constants.MESSAGE_1, output.signature()));
         output.signature()[7]++;
-        assertFalse(WRAPS.verifySignature(network.publicKeys(), Constants.MESSAGE_0, output.signature()));
+        assertFalse(WRAPS.verifySignature(
+                network.publicKeys(), network.weights(), Constants.MESSAGE_0, output.signature()));
         output.signature()[7]--;
 
         // And while we're at it, let's test verifySignature constraints
-        assertFalse(WRAPS.verifySignature(null, Constants.MESSAGE_0, output.signature()));
-        assertFalse(WRAPS.verifySignature(EMPTY_BYTE_ARRAY_2, Constants.MESSAGE_0, output.signature()));
-        assertFalse(WRAPS.verifySignature(network.publicKeys(), null, output.signature()));
-        assertFalse(WRAPS.verifySignature(network.publicKeys(), new byte[0], output.signature()));
-        assertFalse(WRAPS.verifySignature(network.publicKeys(), Constants.MESSAGE_0, null));
-        assertFalse(WRAPS.verifySignature(network.publicKeys(), Constants.MESSAGE_0, new byte[0]));
+        assertFalse(WRAPS.verifySignature(null, network.weights(), Constants.MESSAGE_0, output.signature()));
+        assertFalse(
+                WRAPS.verifySignature(EMPTY_BYTE_ARRAY_2, network.weights(), Constants.MESSAGE_0, output.signature()));
+        assertFalse(WRAPS.verifySignature(network.publicKeys(), null, Constants.MESSAGE_0, output.signature()));
+        assertFalse(WRAPS.verifySignature(network.publicKeys(), new long[0], Constants.MESSAGE_0, output.signature()));
+        assertFalse(WRAPS.verifySignature(network.publicKeys(), network.weights(), null, output.signature()));
+        assertFalse(WRAPS.verifySignature(network.publicKeys(), network.weights(), new byte[0], output.signature()));
+        assertFalse(WRAPS.verifySignature(network.publicKeys(), network.weights(), Constants.MESSAGE_0, null));
+        assertFalse(WRAPS.verifySignature(network.publicKeys(), network.weights(), Constants.MESSAGE_0, new byte[0]));
         assertFalse(WRAPS.verifySignature(
-                new byte[][] {network.publicKeys()[0], null}, Constants.MESSAGE_0, output.signature()));
+                new byte[][] {network.publicKeys()[0], null},
+                network.weights(),
+                Constants.MESSAGE_0,
+                output.signature()));
         assertFalse(WRAPS.verifySignature(
-                new byte[][] {network.publicKeys()[0], new byte[0]}, Constants.MESSAGE_0, output.signature()));
+                new byte[][] {network.publicKeys()[0], new byte[0]},
+                network.weights(),
+                Constants.MESSAGE_0,
+                output.signature()));
     }
 
     @Test
@@ -188,6 +212,7 @@ public class WRAPSLibraryBridgeTest {
                 Node.from(Constants.SEED_0, 1000, 0),
                 Node.from(Constants.SEED_1, 0, 1),
                 Node.from(Constants.SEED_2, 100, 2)));
+        final boolean[] signers = new boolean[] {true, true, true};
 
         final Node node = network.nodes().get(0);
         final byte[] message = Constants.MESSAGE_0;
@@ -198,6 +223,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -207,6 +234,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -216,6 +245,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -225,6 +256,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -234,6 +267,8 @@ public class WRAPSLibraryBridgeTest {
                 null,
                 node.schnorrKeys().privateKey(),
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -243,6 +278,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 null,
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -252,6 +289,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 new byte[0],
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -261,6 +300,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -270,6 +311,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -279,6 +322,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2));
@@ -288,6 +333,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2,
                 new byte[][] {new byte[] {1}}));
@@ -298,6 +345,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 null,
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -307,6 +356,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -316,6 +367,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -325,6 +378,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 null,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -334,6 +389,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -343,6 +400,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}, new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -352,6 +411,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2));
@@ -361,6 +422,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2,
                 new byte[][] {new byte[] {1}}));
@@ -371,6 +434,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2));
@@ -380,6 +445,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}, new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2));
@@ -389,6 +456,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {null},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2));
@@ -398,6 +467,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2));
@@ -407,6 +478,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}, new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2));
@@ -416,6 +489,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2,
                 EMPTY_BYTE_ARRAY_2));
@@ -425,6 +500,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}, new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2));
@@ -434,6 +511,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}}));
@@ -444,6 +523,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 null,
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}}));
@@ -453,6 +534,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 node.schnorrKeys().privateKey(),
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}}));
@@ -462,6 +545,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 null,
                 EMPTY_BYTE_ARRAY_2,
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}}));
@@ -471,6 +556,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 null,
                 new byte[][] {null},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}}));
@@ -480,6 +567,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 null,
                 new byte[][] {new byte[] {1}, new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}}));
@@ -489,6 +578,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 null,
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 EMPTY_BYTE_ARRAY_2,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}}));
@@ -498,6 +589,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 null,
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}, new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}}));
@@ -507,6 +600,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 null,
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2,
                 new byte[][] {new byte[] {1}}));
@@ -516,6 +611,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 null,
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}, new byte[] {1}},
                 new byte[][] {new byte[] {1}}));
@@ -525,6 +622,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 null,
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 EMPTY_BYTE_ARRAY_2));
@@ -534,6 +633,8 @@ public class WRAPSLibraryBridgeTest {
                 message,
                 null,
                 new byte[][] {new byte[] {1}},
+                network.weights(),
+                signers,
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}},
                 new byte[][] {new byte[] {1}, new byte[] {1}}));
@@ -642,8 +743,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true});
+                output0.signature());
 
         assertEquals(30331352, proof0.uncompressed().length);
         assertEquals(704, proof0.compressed().length);
@@ -689,8 +789,7 @@ public class WRAPSLibraryBridgeTest {
                 nextNetwork.weights(),
                 proof0.uncompressed(),
                 hintsKeys.verificationKey(),
-                output1.signature(),
-                new boolean[] {true, true, true, true});
+                output1.signature());
 
         assertEquals(30331352, proof1.uncompressed().length);
         assertEquals(704, proof1.compressed().length);
@@ -722,8 +821,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 new byte[0],
                 genesisNetwork.publicKeys(),
@@ -732,8 +830,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 null,
@@ -742,8 +839,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 new byte[][] {genesisNetwork.publicKeys()[0]},
@@ -752,8 +848,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 new byte[][] {
@@ -767,8 +862,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 new byte[][] {
@@ -782,8 +876,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -792,8 +885,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -802,8 +894,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -812,8 +903,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -822,8 +912,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -832,8 +921,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -842,8 +930,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -857,8 +944,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -872,8 +958,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -882,8 +967,7 @@ public class WRAPSLibraryBridgeTest {
                 null,
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -892,8 +976,7 @@ public class WRAPSLibraryBridgeTest {
                 new long[] {1},
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -902,8 +985,7 @@ public class WRAPSLibraryBridgeTest {
                 new long[] {1, -1, 2, 3},
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -912,8 +994,7 @@ public class WRAPSLibraryBridgeTest {
                 new long[] {1, Long.MAX_VALUE, 2, 3},
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -922,8 +1003,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 null,
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -932,8 +1012,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 new byte[0],
-                output0.signature(),
-                new boolean[] {true, true, true, true}));
+                output0.signature()));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
@@ -942,27 +1021,6 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                null,
-                new boolean[] {true, true, true, true}));
-        assertNull(WRAPS.constructWrapsProof(
-                genesisAddressBookHash,
-                genesisNetwork.publicKeys(),
-                genesisNetwork.weights(),
-                genesisNetwork.publicKeys(),
-                genesisNetwork.weights(),
-                null,
-                dummyHintsKey,
-                new byte[0],
-                new boolean[] {true, true, true, true}));
-        assertNull(WRAPS.constructWrapsProof(
-                genesisAddressBookHash,
-                genesisNetwork.publicKeys(),
-                genesisNetwork.weights(),
-                genesisNetwork.publicKeys(),
-                genesisNetwork.weights(),
-                null,
-                dummyHintsKey,
-                output0.signature(),
                 null));
         assertNull(WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
@@ -972,8 +1030,7 @@ public class WRAPSLibraryBridgeTest {
                 genesisNetwork.weights(),
                 null,
                 dummyHintsKey,
-                output0.signature(),
-                new boolean[] {true}));
+                new byte[0]));
     }
 
     @Test

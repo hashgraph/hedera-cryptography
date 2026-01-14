@@ -13,13 +13,16 @@ public final class TSS {
     private static final int HINTS_VERIFICATION_KEY_LENGTH = 1480;
     private static final int HINTS_SIGNATURE_LENGTH = 1632;
     private static final int COMPRESSED_WRAPS_PROOF_LENGTH = 704;
-    private static final int AGGREGATE_SCHNORR_SIGNATURE_LENGTH = 64;
+    private static final int AGGREGATE_SCHNORR_SIGNATURE_LENGTH = 76;
 
     private static final HintsLibraryBridge HINTS = HintsLibraryBridge.getInstance();
     private static final WRAPSLibraryBridge WRAPS = WRAPSLibraryBridge.getInstance();
 
     /** A mutable array of Schnorr public keys. */
     private static byte[][] schnorrPublicKeys;
+
+    /** A mutable array of weights. */
+    private static long[] weights;
 
     private TSS() {}
 
@@ -59,14 +62,19 @@ public final class TSS {
     }
 
     /**
-     * Sets the Schnorr public keys to the specified array. This method DOES NOT create a defensive copy
-     * of the data. Therefore, the client code is fully responsible for keeping the keys immutable.
-     * Also, the client code is fully responsible for thread-safety of this method with respect to calling
-     * the `TSS.verifyTSS()` method that may use the Schnorr public keys when a WRAPS proof hasn't been provided.
+     * Sets the AddressBook which includes Schnorr public keys and weights to the specified arrays.
+     * This method DOES NOT create a defensive copy of the data. Therefore, the client code is fully
+     * responsible for keeping the data immutable.
+     * Also, the client code is fully responsible for thread-safety of this method with respect to
+     * calling the `TSS.verifyTSS()` method that may use the AddressBook when a WRAPS proof hasn't been provided.
+     * Finally, the client code is fully responsible for the correctness of the data. In particular,
+     * the lengths of the keys and weights arrays must be equal.
      * @param schnorrPublicKeys the Schnorr public keys
+     * @param weights the weights
      */
-    public static void setSchnorrPublicKeys(byte[][] schnorrPublicKeys) {
+    public static void setAddressBook(byte[][] schnorrPublicKeys, long[] weights) {
         TSS.schnorrPublicKeys = schnorrPublicKeys;
+        TSS.weights = weights;
     }
 
     /**
@@ -144,7 +152,7 @@ public final class TSS {
             final byte[] rotationMessage = Arrays.copyOf(ledgerId, ledgerId.length + hintsKeyHash.length);
             System.arraycopy(hintsKeyHash, 0, rotationMessage, ledgerId.length, hintsKeyHash.length);
 
-            if (!WRAPS.verifySignature(TSS.schnorrPublicKeys, rotationMessage, abProof)) {
+            if (!WRAPS.verifySignature(TSS.schnorrPublicKeys, TSS.weights, rotationMessage, abProof)) {
                 return false;
             }
         } else {
