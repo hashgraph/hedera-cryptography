@@ -179,10 +179,12 @@ public class WRAPSLibraryBridgeTest {
         network.publicKeys()[0][20]--;
         assertFalse(WRAPS.verifySignature(
                 network.publicKeys(), network.weights(), Constants.MESSAGE_1, output.signature()));
-        output.signature()[7]++;
+
+        // 128 is the MAX_AB_SIZE. The sig has a bool-vector prefix with the signers. Easier to corrupt the sig itself:
+        output.signature()[128 + 7]++;
         assertFalse(WRAPS.verifySignature(
                 network.publicKeys(), network.weights(), Constants.MESSAGE_0, output.signature()));
-        output.signature()[7]--;
+        output.signature()[128 + 7]--;
 
         // And while we're at it, let's test verifySignature constraints
         assertFalse(WRAPS.verifySignature(null, network.weights(), Constants.MESSAGE_0, output.signature()));
