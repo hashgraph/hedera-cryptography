@@ -410,7 +410,7 @@ pub fn hash_hints_vk(vk_bytes: &[u8]) -> Result<Fr, WRAPSError> {
     let out_bytes = PoseidonCRH::evaluate(&poseidon_canonical_config::<Fr>(), tss_vk_hash_elements)
         .map_err(|_| WRAPSError::CryptographyError)?;
     let out: Vec<Fr> = out_bytes.to_field_elements().unwrap();
-    // because of modulus, we actually get two Fr elemeents, but we will only use the first one
+    // out contains only one field element, because Poseidon output is in the field
     Ok(out[0])
 }
 
@@ -440,8 +440,7 @@ fn hash_addressbook(ab: &AddressBook) -> Result<Fr, WRAPSError> {
     let out_bytes = PoseidonCRH::evaluate(&poseidon_canonical_config::<Fr>(), poseidon_input)
         .map_err(|_| WRAPSError::CryptographyError)?;
     let out: Vec<Fr> = out_bytes.to_field_elements().unwrap();
-    // because of modulus, we actually get two Fr elemeents, but we will only use the first one
-    println!("AddressBook hash output field elements len: {}", out.len());
+    // out contains only one field element, because Poseidon output is in the field
     Ok(out[0])
 }
 
