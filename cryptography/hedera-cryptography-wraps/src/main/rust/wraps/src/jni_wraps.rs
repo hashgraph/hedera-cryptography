@@ -100,6 +100,7 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     schnorr_private_key_jarray: JByteArray,
     schnorr_public_keys_jarray: JObjectArray,
     weights_jarray: JLongArray,
+    node_ids_jarray: JLongArray,
     signers_jarray: JBooleanArray,
     round1messages_jarray: JObjectArray,
     round2messages_jarray: JObjectArray,
@@ -140,7 +141,7 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
         }
     };
 
-    let ab: AddressBook = match jni_util::build_address_book(&mut env, schnorr_public_keys_jarray, weights_jarray) {
+    let ab: AddressBook = match jni_util::build_address_book(&mut env, schnorr_public_keys_jarray, weights_jarray, node_ids_jarray) {
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
@@ -181,10 +182,11 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     _instance: JObject,
     schnorr_public_keys_jarray: JObjectArray,
     weights_jarray: JLongArray,
+    node_ids_jarray: JLongArray,
     message_jarray: JByteArray,
     signature_jarray: JByteArray,
 ) -> jboolean {
-    let ab: AddressBook = match jni_util::build_address_book(&mut env, schnorr_public_keys_jarray, weights_jarray) {
+    let ab: AddressBook = match jni_util::build_address_book(&mut env, schnorr_public_keys_jarray, weights_jarray, node_ids_jarray) {
         Ok(val) => val,
         Err(_) => return jboolean::from(false)
     };
@@ -218,8 +220,9 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     _instance: JObject,
     schnorr_public_keys_jarray: JObjectArray,
     weights_jarray: JLongArray,
+    node_ids_jarray: JLongArray,
 ) -> jbyteArray {
-    let ab: AddressBook = match jni_util::build_address_book(&mut env, schnorr_public_keys_jarray, weights_jarray) {
+    let ab: AddressBook = match jni_util::build_address_book(&mut env, schnorr_public_keys_jarray, weights_jarray, node_ids_jarray) {
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
@@ -268,9 +271,10 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     _instance: JObject,
     schnorr_public_keys_jarray: JObjectArray,
     weights_jarray: JLongArray,
+    node_ids_jarray: JLongArray,
     tss_vk_jarray: JByteArray,
 ) -> jbyteArray {
-    let ab: AddressBook = match jni_util::build_address_book(&mut env, schnorr_public_keys_jarray, weights_jarray) {
+    let ab: AddressBook = match jni_util::build_address_book(&mut env, schnorr_public_keys_jarray, weights_jarray, node_ids_jarray) {
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
@@ -296,8 +300,10 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     ab_genesis_hash_jarray: JByteArray,
     prev_schnorr_public_keys_jarray: JObjectArray,
     prev_weights_jarray: JLongArray,
+    prev_node_ids_jarray: JLongArray,
     next_schnorr_public_keys_jarray: JObjectArray,
     next_weights_jarray: JLongArray,
+    next_node_ids_jarray: JLongArray,
     prev_proof_jarray: JByteArray,
     tss_vk_jarray: JByteArray,
     signature_jarray: JByteArray,
@@ -313,12 +319,12 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
         }
     };
 
-    let prev_ab: AddressBook = match jni_util::build_address_book(&mut env, prev_schnorr_public_keys_jarray, prev_weights_jarray) {
+    let prev_ab: AddressBook = match jni_util::build_address_book(&mut env, prev_schnorr_public_keys_jarray, prev_weights_jarray, prev_node_ids_jarray) {
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };
 
-    let next_ab: AddressBook = match jni_util::build_address_book(&mut env, next_schnorr_public_keys_jarray, next_weights_jarray) {
+    let next_ab: AddressBook = match jni_util::build_address_book(&mut env, next_schnorr_public_keys_jarray, next_weights_jarray, next_node_ids_jarray) {
         Ok(val) => val,
         Err(_) => return std::ptr::null_mut()
     };

@@ -24,6 +24,9 @@ public final class TSS {
     /** A mutable array of weights. */
     private static long[] weights;
 
+    /** A mutable array of nodeIds. */
+    private static long[] nodeIds;
+
     private TSS() {}
 
     /**
@@ -62,19 +65,21 @@ public final class TSS {
     }
 
     /**
-     * Sets the AddressBook which includes Schnorr public keys and weights to the specified arrays.
+     * Sets the AddressBook which includes Schnorr public keys, weights, and nodeIds to the specified arrays.
      * This method DOES NOT create a defensive copy of the data. Therefore, the client code is fully
      * responsible for keeping the data immutable.
      * Also, the client code is fully responsible for thread-safety of this method with respect to
      * calling the `TSS.verifyTSS()` method that may use the AddressBook when a WRAPS proof hasn't been provided.
      * Finally, the client code is fully responsible for the correctness of the data. In particular,
-     * the lengths of the keys and weights arrays must be equal.
+     * the lengths of the all the arrays must be equal.
      * @param schnorrPublicKeys the Schnorr public keys
      * @param weights the weights
+     * @param nodeIds the nodeIds
      */
-    public static void setAddressBook(byte[][] schnorrPublicKeys, long[] weights) {
+    public static void setAddressBook(byte[][] schnorrPublicKeys, long[] weights, long[] nodeIds) {
         TSS.schnorrPublicKeys = schnorrPublicKeys;
         TSS.weights = weights;
+        TSS.nodeIds = nodeIds;
     }
 
     /**
@@ -152,7 +157,7 @@ public final class TSS {
             final byte[] rotationMessage = Arrays.copyOf(ledgerId, ledgerId.length + hintsKeyHash.length);
             System.arraycopy(hintsKeyHash, 0, rotationMessage, ledgerId.length, hintsKeyHash.length);
 
-            if (!WRAPS.verifySignature(TSS.schnorrPublicKeys, TSS.weights, rotationMessage, abProof)) {
+            if (!WRAPS.verifySignature(TSS.schnorrPublicKeys, TSS.weights, TSS.nodeIds, rotationMessage, abProof)) {
                 return false;
             }
         } else {

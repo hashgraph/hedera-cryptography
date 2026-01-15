@@ -16,6 +16,7 @@ import com.hedera.cryptography.wraps.WRAPSLibraryBridgeTest;
 import com.hedera.cryptography.wraps.WRAPSLibraryBridgeTest.Network;
 import com.hedera.cryptography.wraps.WRAPSLibraryBridgeTest.Node;
 import com.hedera.cryptography.wraps.WRAPSLibraryBridgeTest.SigningProtocolOutput;
+import java.io.FileInputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -159,7 +160,7 @@ public class TSSTest {
 
         // Two happy cases first:
 
-        TSS.setAddressBook(TSSTestConstants.SCHNORR_PUBLIC_KEYS, TSSTestConstants.WEIGHTS);
+        TSS.setAddressBook(TSSTestConstants.SCHNORR_PUBLIC_KEYS, TSSTestConstants.WEIGHTS, TSSTestConstants.NODE_IDS);
         assertTrue(TSS.verifyTSS(
                 TSSTestConstants.ADDRESS_BOOK_HASH,
                 concat(
@@ -168,7 +169,7 @@ public class TSSTest {
                         TSSTestConstants.AGGREGATE_SCHNORR_SIGNATURE),
                 TSSTestConstants.MESSAGE));
 
-        TSS.setAddressBook(null, null);
+        TSS.setAddressBook(null, null, null);
         assertTrue(TSS.verifyTSS(
                 TSSTestConstants.ADDRESS_BOOK_HASH,
                 concat(
@@ -214,7 +215,7 @@ public class TSSTest {
                         TSSTestConstants.COMPRESSED_WRAPS_PROOF),
                 rnd(TSSTestConstants.MESSAGE, rnd)));
 
-        TSS.setAddressBook(TSSTestConstants.SCHNORR_PUBLIC_KEYS, TSSTestConstants.WEIGHTS);
+        TSS.setAddressBook(TSSTestConstants.SCHNORR_PUBLIC_KEYS, TSSTestConstants.WEIGHTS, TSSTestConstants.NODE_IDS);
         assertFalse(TSS.verifyTSS(
                 rnd(TSSTestConstants.ADDRESS_BOOK_HASH, rnd),
                 concat(
@@ -257,7 +258,7 @@ public class TSSTest {
                 badSchnorrKeys[i] = rnd(badSchnorrKeys[i], rnd);
             }
         }
-        TSS.setAddressBook(badSchnorrKeys, TSSTestConstants.WEIGHTS);
+        TSS.setAddressBook(badSchnorrKeys, TSSTestConstants.WEIGHTS, TSSTestConstants.NODE_IDS);
         assertFalse(TSS.verifyTSS(
                 TSSTestConstants.ADDRESS_BOOK_HASH,
                 concat(
@@ -267,7 +268,7 @@ public class TSSTest {
                 TSSTestConstants.MESSAGE));
 
         // Then test the missing keys
-        TSS.setAddressBook(null, null);
+        TSS.setAddressBook(null, null, null);
         assertThrows(
                 IllegalStateException.class,
                 () -> TSS.verifyTSS(
@@ -353,10 +354,16 @@ public class TSSTest {
      * otherwise because the WRAPS proof construction would add an extra 30 minutes to the runtime.
      */
     // @Test
-    void captureTestData() {
+    void captureTestData() throws Exception {
         if (!WRAPSLibraryBridge.isProofSupported()) {
             // Gradle script should download artifacts and set TSS_LIB_WRAPS_ARTIFACTS_PATH to bypass this.
             fail("Must have TSS_LIB_WRAPS_ARTIFACTS_PATH downloaded, or comment out @Test annotation instead.");
+        }
+
+        try (FileInputStream fis =
+                new FileInputStream(System.getenv("TSS_LIB_WRAPS_ARTIFACTS_PATH") + "/decider_vp.bin")) {
+            final byte[] bytes = fis.readNBytes(4096); // It's 1.7KB, but limit to 4KB for safety.
+            System.err.println("decider_vp.bin aka WRAPSVerificationKey.DEFAULT_KEY = " + Arrays.toString(bytes));
         }
 
         final Network genesisNetwork = new Network(List.of(
@@ -371,7 +378,7 @@ public class TSSTest {
         }
 
         final byte[] genesisAddressBookHash =
-                WRAPS.hashAddressBook(genesisNetwork.publicKeys(), genesisNetwork.weights());
+                WRAPS.hashAddressBook(genesisNetwork.publicKeys(), genesisNetwork.weights(), genesisNetwork.nodeIds());
         System.err.println("ADDRESS_BOOK_HASH = " + Arrays.toString(genesisAddressBookHash));
 
         final int N = 8;
@@ -401,7 +408,10 @@ public class TSSTest {
         System.err.println("HINTS_SIGNATURE = " + Arrays.toString(hintsSignature));
 
         final byte[] message0 = WRAPS.formatRotationMessage(
-                genesisNetwork.publicKeys(), genesisNetwork.weights(), keys.verificationKey());
+                genesisNetwork.publicKeys(),
+                genesisNetwork.weights(),
+                genesisNetwork.nodeIds(),
+                keys.verificationKey());
         final SigningProtocolOutput output0 = WRAPSLibraryBridgeTest.aggregateSignature(genesisNetwork, message0);
 
         System.err.println("AGGREGATE_SCHNORR_SIGNATURE = " + Arrays.toString(output0.signature()));
@@ -411,8 +421,10 @@ public class TSSTest {
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),
                 genesisNetwork.weights(),
+                genesisNetwork.nodeIds(),
                 genesisNetwork.publicKeys(),
                 genesisNetwork.weights(),
+                genesisNetwork.nodeIds(),
                 null,
                 keys.verificationKey(),
                 output0.signature());

@@ -5,7 +5,7 @@ use jni::objects::{JBooleanArray, JByteArray, JObject, JObjectArray, JLongArray}
 use jni::sys::{jboolean, jbyte, jbyteArray, jlong, jsize};
 use ark_serialize::CanonicalDeserialize;
 
-use crate::{ENTROPY_SIZE, AddressBook, AddressBookEntry, SchnorrPubKey, Weight};
+use crate::{ENTROPY_SIZE, AddressBook, AddressBookEntry, SchnorrPubKey, Weight, NodeId};
 
 /// Creates a jbyteArray out of a Vec<jbyte> object.
 /// # Arguments
@@ -96,6 +96,7 @@ pub fn build_address_book(
     env: &mut JNIEnv,
     schnorr_public_keys_jarray: JObjectArray,
     weights_jarray: JLongArray,
+    node_ids_jarray: JLongArray,
 ) -> Result<AddressBook, ()> {
     let num_of_keys = match env.get_array_length(&schnorr_public_keys_jarray) {
         Ok(len) => len,
@@ -104,6 +105,12 @@ pub fn build_address_book(
 
     let mut weights_jlong: Vec<jlong> = vec![0; num_of_keys as usize];
     match env.get_long_array_region(weights_jarray, 0, weights_jlong.as_mut_slice()) {
+        Ok(()) => {},
+        Err(_) => return Result::Err(())
+    };
+
+    let mut node_ids_jlong: Vec<jlong> = vec![0; num_of_keys as usize];
+    match env.get_long_array_region(node_ids_jarray, 0, node_ids_jlong.as_mut_slice()) {
         Ok(()) => {},
         Err(_) => return Result::Err(())
     };
@@ -125,7 +132,7 @@ pub fn build_address_book(
             Err(_) => return Result::Err(())
         };
 
-        entries.push((key, Weight::from(weights_jlong[i] as u64)) as AddressBookEntry);
+        entries.push((key, Weight::from(weights_jlong[i] as u64), NodeId::from(node_ids_jlong[i] as u64)) as AddressBookEntry);
     }
 
     Result::Ok(entries as AddressBook)
