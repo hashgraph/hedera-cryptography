@@ -12,12 +12,14 @@ abstract class DownloadWrapsArtifactTask : DefaultTask() {
 
     @TaskAction
     fun action() {
-        val out = wrapsDir.get().dir("v0.1.0")
+        // The version, e.g. "v0.2" for https://builds.hedera.com/tss/hiero/wraps/v0.2/wraps-v0.2.0.tar.gz
+        val ver = "v0.2"
+        val out = wrapsDir.get().dir("${ver}.0")
         files.mkdir(out)
 
         // This is a 3GB download, so we only do this if we must:
-        val filename = "wraps-v0.1.0.tar.gz"
-        val uri = "https://builds.hedera.com/tss/hiero/wraps/v0.1/$filename"
+        val filename = "wraps-${ver}.0.tar.gz"
+        val uri = "https://builds.hedera.com/tss/hiero/wraps/${ver}/$filename"
         val url = URI(uri).toURL()
         val tarball = wrapsDir.get().file(filename).asFile
         if (!tarball.exists()) {
