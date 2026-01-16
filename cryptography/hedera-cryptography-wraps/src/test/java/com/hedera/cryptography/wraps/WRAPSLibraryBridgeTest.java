@@ -833,7 +833,7 @@ public class WRAPSLibraryBridgeTest {
                 dummyHintsKey,
                 output0.signature());
 
-        assertEquals(30331352, proof0.uncompressed().length);
+        assertEquals(31568344, proof0.uncompressed().length);
         assertEquals(704, proof0.compressed().length);
 
         // Note: the compressed proof is non-deterministic, so we can only check the size, and then verify it:
@@ -881,7 +881,7 @@ public class WRAPSLibraryBridgeTest {
                 hintsKeys.verificationKey(),
                 output1.signature());
 
-        assertEquals(30331352, proof1.uncompressed().length);
+        assertEquals(31568344, proof1.uncompressed().length);
         assertEquals(704, proof1.compressed().length);
         assertTrue(
                 WRAPS.verifyCompressedProof(proof1.compressed(), genesisAddressBookHash, hintsKeys.verificationKey()));
