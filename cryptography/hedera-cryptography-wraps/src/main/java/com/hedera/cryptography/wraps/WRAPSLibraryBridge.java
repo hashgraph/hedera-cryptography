@@ -125,6 +125,7 @@ public class WRAPSLibraryBridge {
      * @param schnorrPrivateKey Optional private key required only during phases R1-R3. null in Aggregate.
      * @param schnorrPublicKeys Full AddressBook public keys; must be present for phases beyond R1.
      * @param weights Full AddressBook weights; must be present for phases beyond R1.
+     * @param nodeIds Full AddressBook nodeIds; must be present for phases beyond R1.
      * @param signers a boolean vector of AddressBook's participants in the signing protocol.
      * @param round1Messages Messages collected from prior rounds.
      * @param round2Messages Messages collected from prior rounds.
@@ -138,6 +139,7 @@ public class WRAPSLibraryBridge {
             final byte[] schnorrPrivateKey,
             byte[][] schnorrPublicKeys,
             long[] weights,
+            long[] nodeIds,
             boolean[] signers,
             byte[][] round1Messages,
             byte[][] round2Messages,
@@ -152,6 +154,9 @@ public class WRAPSLibraryBridge {
         }
         if (weights == null) {
             weights = EMPTY_LONG_ARRAY;
+        }
+        if (nodeIds == null) {
+            nodeIds = EMPTY_LONG_ARRAY;
         }
         if (signers == null) {
             signers = EMPTY_BOOLEAN_ARRAY;
@@ -189,6 +194,7 @@ public class WRAPSLibraryBridge {
                     || schnorrPublicKeys.length != round1Messages.length
                     || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)
                     || weights.length != schnorrPublicKeys.length
+                    || nodeIds.length != schnorrPublicKeys.length
                     || signers.length != schnorrPublicKeys.length) {
                 return null;
             }
@@ -203,6 +209,7 @@ public class WRAPSLibraryBridge {
                     || schnorrPublicKeys.length != round2Messages.length
                     || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)
                     || weights.length != schnorrPublicKeys.length
+                    || nodeIds.length != schnorrPublicKeys.length
                     || signers.length != schnorrPublicKeys.length) {
                 return null;
             }
@@ -221,6 +228,7 @@ public class WRAPSLibraryBridge {
                     || schnorrPublicKeys.length != round3Messages.length
                     || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)
                     || weights.length != schnorrPublicKeys.length
+                    || nodeIds.length != schnorrPublicKeys.length
                     || signers.length != schnorrPublicKeys.length) {
                 return null;
             }
@@ -236,6 +244,7 @@ public class WRAPSLibraryBridge {
                 schnorrPrivateKey,
                 schnorrPublicKeys,
                 weights,
+                nodeIds,
                 signers,
                 round1Messages,
                 round2Messages,
@@ -249,6 +258,7 @@ public class WRAPSLibraryBridge {
             byte[] schnorrPrivateKey,
             byte[][] schnorrPublicKeys,
             long[] weights,
+            long[] nodeIds,
             boolean[] signers,
             byte[][] round1Messages,
             byte[][] round2Messages,
@@ -258,49 +268,63 @@ public class WRAPSLibraryBridge {
      * Verifies an aggregated Schnorr signature against the supplied public keys.
      * @param schnorrPublicKeys Full AddressBook Schnorr public keys; the signature encodes the actual signers
      * @param weights Full AddressBook weights; the signature encodes the actual signers
+     * @param nodeIds Full AddressBook nodeIds; the signature encodes the actual signers
      * @param messageToSign Message bytes that were signed
      * @param signature Aggregated Schnorr signature to validate
      * @return true if verified successfully, false otherwise or if errors occur
      */
     public boolean verifySignature(
-            byte[][] schnorrPublicKeys, long[] weights, final byte[] messageToSign, final byte[] signature) {
+            byte[][] schnorrPublicKeys,
+            long[] weights,
+            long[] nodeIds,
+            final byte[] messageToSign,
+            final byte[] signature) {
         if (schnorrPublicKeys == null
                 || messageToSign == null
                 || signature == null
                 || schnorrPublicKeys.length == 0
                 || weights == null
                 || weights.length != schnorrPublicKeys.length
+                || nodeIds == null
+                || nodeIds.length != schnorrPublicKeys.length
                 || messageToSign.length == 0
                 || signature.length == 0
                 || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
             return false;
         }
 
-        return verifySignatureImpl(schnorrPublicKeys, weights, messageToSign, signature);
+        return verifySignatureImpl(schnorrPublicKeys, weights, nodeIds, messageToSign, signature);
     }
 
     private native boolean verifySignatureImpl(
-            byte[][] schnorrPublicKeys, long[] weights, final byte[] messageToSign, final byte[] signature);
+            byte[][] schnorrPublicKeys,
+            long[] weights,
+            long[] nodeIds,
+            final byte[] messageToSign,
+            final byte[] signature);
 
     /**
      * Computes the Poseidon hash of an address book. This is expected to only be used to compute the ledger ID.
      * As of 10/20/2025, the address book size is limited to 128 nodes (see MAX_AB_SIZE in Rust code.)
      * @param schnorrPublicKeys Schnorr public keys for nodes in the address book
      * @param weights corresponding non-negative weights of the nodes in the address book
+     * @param nodeIds corresponding nodeIds of the nodes in the address book
      * @return a hash of the address book, or null if errors occur
      */
-    public byte[] hashAddressBook(final byte[][] schnorrPublicKeys, final long[] weights) {
+    public byte[] hashAddressBook(final byte[][] schnorrPublicKeys, final long[] weights, final long[] nodeIds) {
         if (schnorrPublicKeys == null
                 || weights == null
                 || schnorrPublicKeys.length != weights.length
+                || nodeIds == null
+                || schnorrPublicKeys.length != nodeIds.length
                 || !WRAPSLibraryBridge.validateWeightsSum(weights)
                 || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
             return null;
         }
-        return hashAddressBookImpl(schnorrPublicKeys, weights);
+        return hashAddressBookImpl(schnorrPublicKeys, weights, nodeIds);
     }
 
-    private native byte[] hashAddressBookImpl(byte[][] schnorrPublicKeys, long[] weights);
+    private native byte[] hashAddressBookImpl(byte[][] schnorrPublicKeys, long[] weights, long[] nodeIds);
 
     /**
      * A convenience API to compute the Poseidon hash of an arbitrary non-null and non-empty array.
@@ -317,21 +341,24 @@ public class WRAPSLibraryBridge {
      * @param hintsVerificationKey the hinTS VerificationKey
      * @return
      */
-    public byte[] formatRotationMessage(byte[][] schnorrPublicKeys, long[] weights, byte[] hintsVerificationKey) {
+    public byte[] formatRotationMessage(
+            byte[][] schnorrPublicKeys, long[] weights, long[] nodeIds, byte[] hintsVerificationKey) {
         if (schnorrPublicKeys == null
                 || weights == null
                 || schnorrPublicKeys.length != weights.length
+                || nodeIds == null
+                || schnorrPublicKeys.length != nodeIds.length
                 || !WRAPSLibraryBridge.validateWeightsSum(weights)
                 || hintsVerificationKey == null
                 || hintsVerificationKey.length == 0
                 || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)) {
             return null;
         }
-        return formatRotationMessageImpl(schnorrPublicKeys, weights, hintsVerificationKey);
+        return formatRotationMessageImpl(schnorrPublicKeys, weights, nodeIds, hintsVerificationKey);
     }
 
     private native byte[] formatRotationMessageImpl(
-            byte[][] schnorrPublicKeys, long[] weights, byte[] hintsVerificationKey);
+            byte[][] schnorrPublicKeys, long[] weights, long[] nodeIds, byte[] hintsVerificationKey);
 
     /**
      * Creates the first proof for the genesis AddressBook when both prev and next AddressBooks are the same
@@ -344,8 +371,10 @@ public class WRAPSLibraryBridge {
      * @param genesisAddressBookHash genesis AddressBook hash
      * @param prevSchnorrPublicKeys keys for the previous (aka current) AB
      * @param prevWeights weights for the previous (aka current) AB
+     * @param prevNodeIds nodeIds for the previous (aka current) AB
      * @param nextSchnorrPublicKeys keys for the next AB, or the current AB to generate initial proof
      * @param nextWeights weights for the next AB, or the current AB to generate initial proof
+     * @param nextNodeIds nodeIds for the next AB, or the current AB to generate initial proof
      * @param prevProof previous proof, or null to generate the initial proof
      * @param tssVerificationKey hinTS VerificationKey, or 1480 zeros to generate the initial proof
      * @param aggregateSignature aggregate Schnorr signature on the rotation message
@@ -355,8 +384,10 @@ public class WRAPSLibraryBridge {
             byte[] genesisAddressBookHash,
             byte[][] prevSchnorrPublicKeys,
             long[] prevWeights,
+            long[] prevNodeIds,
             byte[][] nextSchnorrPublicKeys,
             long[] nextWeights,
+            long[] nextNodeIds,
             byte[] prevProof,
             byte[] tssVerificationKey,
             byte[] aggregateSignature) {
@@ -370,11 +401,15 @@ public class WRAPSLibraryBridge {
                 || prevWeights == null
                 || prevSchnorrPublicKeys.length == 0
                 || prevSchnorrPublicKeys.length != prevWeights.length
+                || prevNodeIds == null
+                || prevSchnorrPublicKeys.length != prevNodeIds.length
                 || !WRAPSLibraryBridge.validateWeightsSum(prevWeights)
                 || nextSchnorrPublicKeys == null
                 || nextWeights == null
                 || nextSchnorrPublicKeys.length == 0
                 || nextSchnorrPublicKeys.length != nextWeights.length
+                || nextNodeIds == null
+                || prevSchnorrPublicKeys.length != nextNodeIds.length
                 || !WRAPSLibraryBridge.validateWeightsSum(nextWeights)
                 || tssVerificationKey == null
                 || tssVerificationKey.length == 0
@@ -389,8 +424,10 @@ public class WRAPSLibraryBridge {
                 genesisAddressBookHash,
                 prevSchnorrPublicKeys,
                 prevWeights,
+                prevNodeIds,
                 nextSchnorrPublicKeys,
                 nextWeights,
+                nextNodeIds,
                 prevProof,
                 tssVerificationKey,
                 aggregateSignature);
@@ -400,8 +437,10 @@ public class WRAPSLibraryBridge {
             byte[] genesisAddressBookHash,
             byte[][] prevSchnorrPublicKeys,
             long[] prevWeights,
+            long[] prevNodeIds,
             byte[][] nextSchnorrPublicKeys,
             long[] nextWeights,
+            long[] nextNodeIds,
             byte[] prevProof,
             byte[] tssVerificationKey,
             byte[] aggregateSignature);

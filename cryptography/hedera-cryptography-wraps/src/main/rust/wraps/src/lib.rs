@@ -144,8 +144,9 @@ type BitVector = [bool; MAX_AB_SIZE];
 
 /********************************* Derived Types *********************************/
 
-const MAX_EXT_INPUTS: usize = 4 * MAX_AB_SIZE + 4;
+const MAX_EXT_INPUTS: usize = 5 * MAX_AB_SIZE + 4;
 
+type NodeId = Fr;
 type Schnorr = signature::schnorr::Schnorr<JubJub>;
 type SchnorrSignature = <Schnorr as SignatureScheme>::Signature;
 type SchnorrMultiSignature = (BitVector, SchnorrSignature);
@@ -168,7 +169,7 @@ type GrothVerifierKey = <Groth16<PairingCurve> as ark_snark::SNARK<Fr>>::Verifyi
 type Weight = Fr;
 type AddressBookHash = Fr;
 type TSSVKHash = Fr;
-type AddressBookEntry = (SchnorrPubKey, Weight);
+type AddressBookEntry = (SchnorrPubKey, Weight, NodeId);
 type AddressBook = Vec<AddressBookEntry>;
 type Keys = Vec<SchnorrPrivKey>;
 
@@ -262,23 +263,23 @@ impl<const K: usize> FCircuit<Fr> for TSSFCircuit<K> {
         let prev_pk_vars = (0..K)
             .map(|i| JubJubVar::new_witness(cs.clone(), || Ok(
                 ark_ed_on_bn254::EdwardsAffine::new(
-                    external_inputs.0[3*i + 0].value()?,
-                    external_inputs.0[3*i + 1].value()?
+                    external_inputs.0[4*i + 0].value()?,
+                    external_inputs.0[4*i + 1].value()?
                 )
             )).unwrap())
             .collect::<Vec<_>>();
 
         let prev_weights = (0..K)
-            .map(|i| external_inputs.0[3*i + 2].clone())
+            .map(|i| external_inputs.0[4*i + 2].clone())
             .collect::<Vec<_>>();
 
         let present_bits = (0..K)
-            .map(|i| external_inputs.0[3*K + i].to_bytes_le().unwrap()[0].clone())
+            .map(|i| external_inputs.0[4*K + i].to_bytes_le().unwrap()[0].clone())
             .collect::<Vec<_>>();
 
         let aggregate_signature = SchnorrSignatureVar {
-            verifier_challenge: external_inputs.0[4*K + 0].to_bytes_le().unwrap(),
-            prover_response: external_inputs.0[4*K + 1].to_bytes_le().unwrap(),
+            verifier_challenge: external_inputs.0[5*K + 0].to_bytes_le().unwrap(),
+            prover_response: external_inputs.0[5*K + 1].to_bytes_le().unwrap(),
             _group: PhantomData,
         };
 
@@ -328,18 +329,22 @@ impl<const K: usize> FCircuit<Fr> for TSSFCircuit<K> {
         let recomputed_prev_state = {
             // Recreate the Poseidon hash that committed the previous address book.
             let x_coords: Vec<FpVar<Fr>> = (0..K)
-                .map(|i| external_inputs.0[3*i].clone())
+                .map(|i| external_inputs.0[4*i].clone())
                 .collect();
             let y_coords: Vec<FpVar<Fr>> = (0..K)
-                .map(|i| external_inputs.0[3*i + 1].clone())
+                .map(|i| external_inputs.0[4*i + 1].clone())
                 .collect();
             let weights: Vec<FpVar<Fr>> = (0..K)
-                .map(|i| external_inputs.0[3*i + 2].clone())
+                .map(|i| external_inputs.0[4*i + 2].clone())
+                .collect();
+            let node_ids: Vec<FpVar<Fr>> = (0..K)
+                .map(|i| external_inputs.0[4*i + 3].clone())
                 .collect();
             let poseidon_input: Vec<FpVar<Fr>> = x_coords
                 .into_iter()
                 .chain(y_coords.into_iter())
                 .chain(weights.into_iter())
+                .chain(node_ids.into_iter())
                 .collect();
             let poseidon_output = PoseidonCRHGadget::evaluate(&poseidon_config_var, &poseidon_input)?;
             poseidon_output.to_constraint_field()?
@@ -349,8 +354,8 @@ impl<const K: usize> FCircuit<Fr> for TSSFCircuit<K> {
         let schnorr_parameters = Schnorr::setup(test_rng().gen()).unwrap();
         let parameters_var = <SchnorrVerifyGadget as SigVerifyGadget<Schnorr, Fr>>
             ::ParametersVar::new_constant(cs.clone(), schnorr_parameters)?;
-        let next_ab_hash = external_inputs.0[4*K + 2].clone();
-        let tss_vk_hash = external_inputs.0[4*K + 3].clone();
+        let next_ab_hash = external_inputs.0[5*K + 2].clone();
+        let tss_vk_hash = external_inputs.0[5*K + 3].clone();
         let msg_var = next_ab_hash
             .to_bytes_le()?
             .into_iter()
@@ -367,8 +372,8 @@ impl<const K: usize> FCircuit<Fr> for TSSFCircuit<K> {
 
         // enforce that the previous public keys are equal to the external inputs
         for i in 0..K {
-            prev_pk_vars[i].x.enforce_equal(&external_inputs.0[3*i + 0])?;
-            prev_pk_vars[i].y.enforce_equal(&external_inputs.0[3*i + 1])?;
+            prev_pk_vars[i].x.enforce_equal(&external_inputs.0[4*i + 0])?;
+            prev_pk_vars[i].y.enforce_equal(&external_inputs.0[4*i + 1])?;
         }
 
         // enforce that the recomputed previous address book hash
@@ -384,8 +389,9 @@ fn pad_addressbook(ab: &AddressBook) -> AddressBook {
     let mut ab_padded = ab.clone();
     let dummy_party = WRAPS::keygen([0; 32]).unwrap();
     let zero_weight = Fr::from(0);
+    let dummy_node_id = Fr::from(-1); //some really large number
     while ab_padded.len() < MAX_AB_SIZE {
-        ab_padded.push((dummy_party.1.clone(), zero_weight));
+        ab_padded.push((dummy_party.1.clone(), zero_weight, dummy_node_id));
     }
     ab_padded
 }
@@ -404,7 +410,7 @@ pub fn hash_hints_vk(vk_bytes: &[u8]) -> Result<Fr, WRAPSError> {
     let out_bytes = PoseidonCRH::evaluate(&poseidon_canonical_config::<Fr>(), tss_vk_hash_elements)
         .map_err(|_| WRAPSError::CryptographyError)?;
     let out: Vec<Fr> = out_bytes.to_field_elements().unwrap();
-    // because of modulus, we actually get two Fr elemeents, but we will only use the first one
+    // out contains only one field element, because Poseidon output is in the field
     Ok(out[0])
 }
 
@@ -422,14 +428,19 @@ fn hash_addressbook(ab: &AddressBook) -> Result<Fr, WRAPSError> {
         .iter()
         .map(|abe| abe.1)
         .collect();
+    let node_ids: Vec<Fr> = ab
+        .iter()
+        .map(|abe| abe.2)
+        .collect();
     let poseidon_input: Vec<Fr> = xcoords.into_iter()
         .chain(ycoords.into_iter())
         .chain(weights.into_iter())
+        .chain(node_ids.into_iter())
         .collect();
     let out_bytes = PoseidonCRH::evaluate(&poseidon_canonical_config::<Fr>(), poseidon_input)
         .map_err(|_| WRAPSError::CryptographyError)?;
     let out: Vec<Fr> = out_bytes.to_field_elements().unwrap();
-    // because of modulus, we actually get two Fr elemeents, but we will only use the first one
+    // out contains only one field element, because Poseidon output is in the field
     Ok(out[0])
 }
 
@@ -454,6 +465,7 @@ fn prepare_external_inputs(
         external_inputs_at_step.push(prev_ab[i].0.x);
         external_inputs_at_step.push(prev_ab[i].0.y);
         external_inputs_at_step.push(prev_ab[i].1);
+        external_inputs_at_step.push(prev_ab[i].2);
     }
 
     for i in 0..MAX_AB_SIZE {
@@ -897,13 +909,14 @@ impl WRAPS {
         // Build the message the committee signed to authorize the rotation.
         let ab_rotation_message: Vec<u8> = Self::compute_rotation_message(&padded_next_ab, hints_vk.as_ref())?;
 
-        // compute aggregate public key
-        let aggregate_pubkey: ark_ec::twisted_edwards::Affine<ark_ed_on_bn254::EdwardsConfig> = (0..prev_ab.len())
-            .filter(|&i| bitvector[i])
-            .fold(ark_ed_on_bn254::EdwardsAffine::zero(),|acc, i| acc.add(&prev_ab[i].0.clone()).into_affine());
-
-        let schnorr_parameters = Schnorr::setup([0u8; 32]).unwrap();
-        assert!(Schnorr::verify(&schnorr_parameters, &aggregate_pubkey, &ab_rotation_message, &aggregate_signature).unwrap());
+        let sig_verification = Self::verify_signature(
+            prev_ab,
+            &ab_rotation_message,
+            multi_signature
+        )?;
+        if !sig_verification {
+            return Err(WRAPSError::InvalidInput("Schnorr multisignature verification failed".to_string()));
+        }
 
         let external_inputs_at_step = prepare_external_inputs(
             &aggregate_signature,
@@ -1055,11 +1068,12 @@ mod tests {
         let mut keys = Vec::new();
         let mut ab = Vec::new();
         let ab_size = rng.gen_range(MAX_AB_SIZE/4..=MAX_AB_SIZE);
-        for _i in 0..ab_size {
+        for i in 0..ab_size {
             let (pk, sk) = Schnorr::keygen(&schnorr_parameters, rng.gen()).unwrap();
             let weight = Fr::from(1);
+            let node_id = Fr::from(i as u64);
             keys.push(sk);
-            ab.push((pk, weight));
+            ab.push((pk, weight, node_id));
         }
         (ab.try_into().unwrap(), keys.try_into().unwrap())
     }
