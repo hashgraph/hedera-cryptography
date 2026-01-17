@@ -33,7 +33,7 @@ gradlew                                                 @hashgraph/platform-ci @
 gradlew.bat                                             @hashgraph/platform-ci @hashgraph/platform-ci-committers
 **/build-logic/                                         @hashgraph/platform-ci @hashgraph/platform-ci-committers
 **/gradle.*                                             @hashgraph/platform-ci @hashgraph/platform-ci-committers
-**/*.gradle.*                                           @hashgraph/platform-ci @hashgraph/platform-ci-committers
+**/*.gradle.*                                           @hashgraph/platform-ci @hashgraph/platform-ci-committers @hashgraph/hedera-cryptography-maintainers
 
 # Codacy Tool Configurations
 /config/                                                @hashgraph/platform-ci @hashgraph/release-engineering-managers
@@ -43,7 +43,7 @@ gradlew.bat                                             @hashgraph/platform-ci @
 /CODEOWNERS                                             @hashgraph/release-engineering-managers
 
 # Protect the repository root files
-/README.md                                              @hashgraph/platform-ci @hashgraph/release-engineering-managers
+/README.md                                              @hashgraph/platform-ci @hashgraph/release-engineering-managers @hashgraph/hedera-cryptography-maintainers
 **/LICENSE                                              @hashgraph/release-engineering-managers
 
 # CodeCov configuration
