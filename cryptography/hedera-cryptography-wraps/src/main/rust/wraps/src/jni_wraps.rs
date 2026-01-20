@@ -14,7 +14,7 @@ use crate::{
     SigningProtocolPhase,
     ENTROPY_SIZE,
     SchnorrPrivKey,
-    SchnorrPubKey,
+    SchnorrAttestedPubKey,
     SigningProtocolMessage,
     SigningProtocolObject,
     SchnorrMultiSignature,

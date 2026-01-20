@@ -15,13 +15,14 @@ mod jni_wraps;
 mod alloc;
 pub mod preprocessing;
 
-use digest::typenum::bit;
+use digest::{Digest, typenum::bit};
 use signature::{*};
+use rand_chacha::rand_core::SeedableRng;
 
 /********************************* Imports *********************************/
 
-use ark_ec::CurveGroup;
-use ark_ff::{BigInteger, PrimeField, ToConstraintField};
+use ark_ec::{PrimeGroup, CurveGroup};
+use ark_ff::{field_hashers::{DefaultFieldHasher, HashToField}, BigInteger, PrimeField, ToConstraintField};
 use ark_r1cs_std::{
     alloc::{AllocVar, AllocationMode},
     convert::{ToBytesGadget, ToConstraintFieldGadget},
@@ -40,7 +41,7 @@ use ark_crypto_primitives::crh::{
 };
 use ark_groth16::{Groth16};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{rand::Rng, test_rng, rand::thread_rng, fmt::Debug};
+use ark_std::{rand::Rng, UniformRand, test_rng, rand::thread_rng, fmt::Debug};
 use ark_poly::{GeneralEvaluationDomain, EvaluationDomain};
 use ark_relations::gr1cs::{
     ConstraintSynthesizer, ConstraintSystem, ConstraintSystemRef,
@@ -146,12 +147,21 @@ type BitVector = [bool; MAX_AB_SIZE];
 
 const MAX_EXT_INPUTS: usize = 5 * MAX_AB_SIZE + 4;
 
+// Non-interactive proof of knowledge of discrete log, using Fiat-Shamir transform
+#[derive(Clone, CanonicalSerialize, CanonicalDeserialize)]
+pub struct SchnorrPoK {
+    pub commitment: <JubJub as CurveGroup>::Affine,
+    pub challenge: JubJubFr,
+    pub response: JubJubFr,
+}
+
 type NodeId = Fr;
 type Schnorr = signature::schnorr::Schnorr<JubJub>;
 type SchnorrSignature = <Schnorr as SignatureScheme>::Signature;
 type SchnorrMultiSignature = (BitVector, SchnorrSignature);
 type SchnorrPrivKey = JubJubFr;
 type SchnorrPubKey = <JubJub as CurveGroup>::Affine;
+type SchnorrAttestedPubKey = (SchnorrPubKey, SchnorrPoK);
 type SchnorrParams = signature::schnorr::Parameters<JubJub>;
 
 type SchnorrPubKeyVar = signature::schnorr::constraints::PublicKeyVar<JubJub, JubJubVar>;
@@ -169,7 +179,7 @@ type GrothVerifierKey = <Groth16<PairingCurve> as ark_snark::SNARK<Fr>>::Verifyi
 type Weight = Fr;
 type AddressBookHash = Fr;
 type TSSVKHash = Fr;
-type AddressBookEntry = (SchnorrPubKey, Weight, NodeId);
+type AddressBookEntry = (SchnorrAttestedPubKey, Weight, NodeId);
 type AddressBook = Vec<AddressBookEntry>;
 type Keys = Vec<SchnorrPrivKey>;
 
@@ -418,11 +428,11 @@ pub fn hash_hints_vk(vk_bytes: &[u8]) -> Result<Fr, WRAPSError> {
 fn hash_addressbook(ab: &AddressBook) -> Result<Fr, WRAPSError> {
     let xcoords: Vec<Fr> = ab
         .iter()
-        .map(|abe| abe.0.x)
+        .map(|abe| abe.0.0.x)
         .collect();
     let ycoords: Vec<Fr> = ab
         .iter()
-        .map(|abe| abe.0.y)
+        .map(|abe| abe.0.0.y)
         .collect();
     let weights: Vec<Fr> = ab
         .iter()
@@ -444,6 +454,20 @@ fn hash_addressbook(ab: &AddressBook) -> Result<Fr, WRAPSError> {
     Ok(out[0])
 }
 
+// verifies that each Schnorr public key has a valid proof of knowledge
+fn verify_addressbook(ab: &AddressBook) -> Result<bool, WRAPSError> {
+    if ab.len() > MAX_AB_SIZE {
+        return Err(WRAPSError::AddressBookSizeExceeded);
+    }
+    for ((pk, pok), _weight, _node_id) in ab.iter() {
+        let is_valid = verify_proof_of_knowledge(pok, pk);
+        if !is_valid {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
 /// Formats user-visible data into the external-input vector consumed by the Nova circuit.
 /// It assumes that the input address books and bitvector are already padded to `MAX_AB_SIZE`.
 fn prepare_external_inputs(
@@ -462,8 +486,8 @@ fn prepare_external_inputs(
 
     let mut external_inputs_at_step = Vec::new();
     for i in 0..MAX_AB_SIZE {
-        external_inputs_at_step.push(prev_ab[i].0.x);
-        external_inputs_at_step.push(prev_ab[i].0.y);
+        external_inputs_at_step.push(prev_ab[i].0.0.x);
+        external_inputs_at_step.push(prev_ab[i].0.0.y);
         external_inputs_at_step.push(prev_ab[i].1);
         external_inputs_at_step.push(prev_ab[i].2);
     }
@@ -485,6 +509,71 @@ fn prepare_external_inputs(
     Ok(external_inputs_at_step)
 }
 
+// Fiat-Shamir transform to derive challenge for proof of knowledge
+fn proof_of_knowledge_random_oracle(
+    g: JubJub,
+    statement: <JubJub as CurveGroup>::Affine,
+    commitment: <JubJub as CurveGroup>::Affine
+) -> JubJubFr {
+    let mut serialized_data = Vec::new();
+    g.serialize_compressed(&mut serialized_data).unwrap();
+    statement.serialize_compressed(&mut serialized_data).unwrap();
+    commitment.serialize_compressed(&mut serialized_data).unwrap();
+    println!("Serialized data length: {}", serialized_data.len());
+
+    let hasher = <DefaultFieldHasher<Sha256> as HashToField<JubJubFr>>::new(&[]);
+    hasher.hash_to_field::<1>(&serialized_data)[0]
+}
+
+fn expand_seed(seed: [u8; ENTROPY_SIZE]) -> [u8; 2 * ENTROPY_SIZE] {
+    let mut output: [u8; 2 * ENTROPY_SIZE] = [0; 2 * ENTROPY_SIZE];
+
+    for i in 0..2 {
+        // create a Sha256 object
+        let mut hasher = Sha256::new();
+        hasher.update(seed);
+        hasher.update([i as u8; 1]); //counter as hash input
+        let hash = hasher.finalize();
+
+        output[i * ENTROPY_SIZE..(i + 1) * ENTROPY_SIZE].copy_from_slice(&hash);
+    }
+
+    output
+}
+
+// Generates a Schnorr proof of knowledge of the discrete log of the public key.
+fn generate_proof_of_knowledge(
+    x: &SchnorrPrivKey,
+    seed:[u8; ENTROPY_SIZE]
+) -> SchnorrPoK {
+    let g = JubJub::generator();
+    let statement = (g * x).into_affine();
+
+    let r = JubJubFr::rand(&mut rand_chacha::ChaCha8Rng::from_seed(seed));
+    let commitment = (g * r).into_affine();
+
+    let challenge = proof_of_knowledge_random_oracle(g, statement, commitment);
+
+    // compute response = x + challenge * sk
+    let response = r + challenge * x;
+
+    SchnorrPoK {
+        commitment,
+        challenge,
+        response,
+    }
+}
+
+// Verifies a Schnorr proof of knowledge of the discrete log of the public key.
+fn verify_proof_of_knowledge(
+    pok: &SchnorrPoK,
+    pubkey: &SchnorrPubKey
+) -> bool {
+    let g = JubJub::generator();
+    let lhs = g * pok.response;
+    let rhs = pok.commitment + (pubkey.clone() * pok.challenge);
+    lhs.into_affine() == rhs
+}
 
 impl ProvingKey {
     /// Recreates a proving key from serialized Nova and decider artifacts.
@@ -556,15 +645,27 @@ impl WRAPS {
     /// * `Err(WRAPSError::CryptographyError)` if parameter generation or key derivation fails.
     pub fn keygen(
         seed: [u8; ENTROPY_SIZE]
-    ) -> Result<(SchnorrPrivKey, SchnorrPubKey), WRAPSError> {
+    ) -> Result<(SchnorrPrivKey, SchnorrAttestedPubKey), WRAPSError> {
         // Initialize Schnorr parameters deterministically for reproducible keygen.
         // secret is a random scalar x, and the pubkey is y = xG
         let pp = Schnorr::setup([0u8; 32])
             .map_err(|_| WRAPSError::CryptographyError)?;
-        // Derive the keypair from the supplied seed.
-        let (pk, sk) = Schnorr::keygen(&pp, seed)
+
+        // we need 2 256-bit seeds, one for keygen and one for proof of knowledge
+        let expanded_seed: [u8; 2 * ENTROPY_SIZE] = expand_seed(seed);
+        let seed1 = expanded_seed[0..ENTROPY_SIZE]
+            .try_into()
             .map_err(|_| WRAPSError::CryptographyError)?;
-        Ok((sk, pk))
+        let seed2 = expanded_seed[ENTROPY_SIZE..2*ENTROPY_SIZE]
+            .try_into()
+            .map_err(|_| WRAPSError::CryptographyError)?;
+
+        // Derive the keypair from the supplied seed.
+        let (pk, sk) = Schnorr::keygen(&pp, seed1)
+            .map_err(|_| WRAPSError::CryptographyError)?;
+        let pok = generate_proof_of_knowledge(&sk, seed2);
+        let attested_pk: SchnorrAttestedPubKey = (pk, pok);
+        Ok((sk, attested_pk))
     }
 
     /// Executes a single phase of the threshold Schnorr signing protocol.
@@ -596,7 +697,7 @@ impl WRAPS {
         // extract public keys of participating signers using the bitvector
         let participant_pubkeys: Vec<SchnorrPubKey> = address_book.iter()
             .zip(bitvector.as_ref().iter())
-            .filter_map(|(abe, &is_present)| if is_present { Some(abe.0.clone()) } else { None })
+            .filter_map(|(abe, &is_present)| if is_present { Some(abe.0.0.clone()) } else { None })
             .collect();
 
         let padded_bitvector: [bool; MAX_AB_SIZE] = {
@@ -716,6 +817,13 @@ impl WRAPS {
         message: impl AsRef<[u8]>,
         multisignature: &SchnorrMultiSignature
     ) -> Result<bool, WRAPSError> {
+        // likely been verified before when the AddressBook was constructed but double-check here to be safe.
+        // For instance, if you hashed this AddressBook, it has been verified.
+        let is_valid_ab = verify_addressbook(address_book)?;
+        if !is_valid_ab {
+            return Ok(false);
+        }
+
         // fixed entropy value [0u8; 32], since we don't need salting in our protocol
         let pp = Schnorr::setup([0u8; 32]).unwrap();
 
@@ -723,7 +831,7 @@ impl WRAPS {
 
         let public_keys: Vec<SchnorrPubKey> = address_book.iter()
             .zip(bitvector.iter())
-            .filter_map(|(abe, &is_present)| if is_present { Some(abe.0.clone()) } else { None })
+            .filter_map(|(abe, &is_present)| if is_present { Some(abe.0.0.clone()) } else { None })
             .collect();
 
         // Aggregate the provided public keys to obtain the threshold public key.
@@ -759,13 +867,16 @@ impl WRAPS {
     /// # Returns
     /// * `Ok(AddressBookHash)` containing the Poseidon digest of the padded address book.
     /// * `Err(WRAPSError::AddressBookSizeExceeded)` if the address book is too large.
+    /// * `Err(WRAPSError::InvalidInput)` if the address book has an invalid proof of knowledge.
     /// * `Err(WRAPSError::CryptographyError)` if hashing fails.
     pub fn compute_addressbook_hash(
         ab: &AddressBook
     ) -> Result<AddressBookHash, WRAPSError> {
-        if ab.len() > MAX_AB_SIZE {
-            return Err(WRAPSError::AddressBookSizeExceeded);
+        let ab_valid = verify_addressbook(ab)?;
+        if !ab_valid {
+            return Err(WRAPSError::InvalidInput("Invalid AddressBook".to_string()));
         }
+
         // Pad the address book to the circuit’s expected length before hashing.
         let padded_ab = pad_addressbook(ab);
 
@@ -786,16 +897,13 @@ impl WRAPS {
         ab_next: &AddressBook,
         hints_vk: impl AsRef<[u8]>
     ) -> Result<Vec<u8>, WRAPSError> {
-        if ab_next.len() > MAX_AB_SIZE {
-            return Err(WRAPSError::AddressBookSizeExceeded);
-        }
-        // Normalize the next address book to the fixed circuit width.
-        let padded_ab_next = pad_addressbook(ab_next);
+        let ab_hash = Self::compute_addressbook_hash(ab_next)?;
+        let hints_vk_hash = hash_hints_vk(hints_vk.as_ref())?;
 
         // Concatenate the address book hash and hashed TSS verification key to form the message.
-        let msg = [
-            hash_addressbook(&padded_ab_next)?.into_bigint().to_bytes_le(),
-            hash_hints_vk(hints_vk.as_ref())?.into_bigint().to_bytes_le()
+        let msg: Vec<u8> = [
+            ab_hash.into_bigint().to_bytes_le(),
+            hints_vk_hash.into_bigint().to_bytes_le()
         ].concat();
         Ok(msg)
     }
@@ -889,8 +997,13 @@ impl WRAPS {
     ) -> Result<(UncompressedProofSerialized, CompressedProofSerialized), WRAPSError> {
         let (bitvector, aggregate_signature) = multi_signature;
 
-        if prev_ab.len() > MAX_AB_SIZE || next_ab.len() > MAX_AB_SIZE {
-            return Err(WRAPSError::AddressBookSizeExceeded);
+        let prev_ab_valid = verify_addressbook(prev_ab)?;
+        let next_ab_valid = verify_addressbook(next_ab)?;
+        if !prev_ab_valid {
+            return Err(WRAPSError::InvalidInput("Invalid previous AddressBook".to_string()));
+        }
+        if !next_ab_valid {
+            return Err(WRAPSError::InvalidInput("Invalid next AddressBook".to_string()));
         }
 
         // pad up inputs to MAX_AB_SIZE
@@ -1064,16 +1177,16 @@ mod tests {
 
     fn create_new_addressbook() -> (AddressBook, Keys) {
         let rng = &mut thread_rng();
-        let schnorr_parameters = Schnorr::setup(rng.gen()).unwrap();
+
         let mut keys = Vec::new();
         let mut ab = Vec::new();
         let ab_size = rng.gen_range(MAX_AB_SIZE/4..=MAX_AB_SIZE);
         for i in 0..ab_size {
-            let (pk, sk) = Schnorr::keygen(&schnorr_parameters, rng.gen()).unwrap();
+            let (sk, attested_pk) = WRAPS::keygen(rng.gen()).unwrap();
             let weight = Fr::from(1);
             let node_id = Fr::from(i as u64);
             keys.push(sk);
-            ab.push((pk, weight, node_id));
+            ab.push((attested_pk, weight, node_id));
         }
         (ab.try_into().unwrap(), keys.try_into().unwrap())
     }
@@ -1091,7 +1204,7 @@ mod tests {
         let mut sk_refs = Vec::new();
         for i in 0..bitvector.as_ref().len() {
             if bitvector.as_ref()[i] {
-                pks.push(ab[i].0);
+                pks.push(ab[i].0.0);
                 sk_refs.push(&keys[i]);
             }
         }

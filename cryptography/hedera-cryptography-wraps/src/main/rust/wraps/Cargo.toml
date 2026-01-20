@@ -29,6 +29,8 @@ rayon = { version = "1.10.0" }
 sha3 = { workspace = true }
 blake2 = { workspace = true }
 digest = { workspace = true }
+rand = { workspace = true }
+rand_chacha = { workspace = true }
 
 folding-schemes = { workspace = true }
 
