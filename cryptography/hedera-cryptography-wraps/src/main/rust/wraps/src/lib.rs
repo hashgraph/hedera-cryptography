@@ -519,7 +519,6 @@ fn proof_of_knowledge_random_oracle(
     g.serialize_compressed(&mut serialized_data).unwrap();
     statement.serialize_compressed(&mut serialized_data).unwrap();
     commitment.serialize_compressed(&mut serialized_data).unwrap();
-    println!("Serialized data length: {}", serialized_data.len());
 
     let hasher = <DefaultFieldHasher<Sha256> as HashToField<JubJubFr>>::new(&[]);
     hasher.hash_to_field::<1>(&serialized_data)[0]
