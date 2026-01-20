@@ -496,7 +496,7 @@ public class WRAPSLibraryBridge {
 
     private static boolean validateSchnorrPublicKeys(final byte[][] schnorrPublicKeys) {
         for (int i = 0; i < schnorrPublicKeys.length; i++) {
-            if (schnorrPublicKeys[i] == null || schnorrPublicKeys[i].length != 64) {
+            if (schnorrPublicKeys[i] == null || schnorrPublicKeys[i].length != 192) {
                 return false;
             }
         }
