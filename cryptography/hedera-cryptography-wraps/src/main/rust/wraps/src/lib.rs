@@ -1182,6 +1182,7 @@ mod tests {
         let ab_size = rng.gen_range(MAX_AB_SIZE/4..=MAX_AB_SIZE);
         for i in 0..ab_size {
             let (sk, attested_pk) = WRAPS::keygen(rng.gen()).unwrap();
+            assert!(verify_proof_of_knowledge(&attested_pk.1, &attested_pk.0));
             let weight = Fr::from(1);
             let node_id = Fr::from(i as u64);
             keys.push(sk);
