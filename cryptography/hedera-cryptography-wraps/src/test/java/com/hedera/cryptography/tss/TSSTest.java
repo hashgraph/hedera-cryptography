@@ -429,6 +429,9 @@ public class TSSTest {
                 keys.verificationKey(),
                 output0.signature());
 
+        System.err.println("uncompressed proof size: " + proof0.uncompressed().length);
+        System.err.println("compressed proof size: " + proof0.compressed().length);
+
         System.err.println("COMPRESSED_WRAPS_PROOF = " + Arrays.toString(proof0.compressed()));
     }
 }

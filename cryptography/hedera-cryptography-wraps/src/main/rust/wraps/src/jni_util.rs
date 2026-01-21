@@ -5,7 +5,7 @@ use jni::objects::{JBooleanArray, JByteArray, JObject, JObjectArray, JLongArray}
 use jni::sys::{jboolean, jbyte, jbyteArray, jlong, jsize};
 use ark_serialize::CanonicalDeserialize;
 
-use crate::{ENTROPY_SIZE, AddressBook, AddressBookEntry, SchnorrPubKey, Weight, NodeId};
+use crate::{ENTROPY_SIZE, AddressBook, AddressBookEntry, SchnorrAttestedPubKey, Weight, NodeId};
 
 /// Creates a jbyteArray out of a Vec<jbyte> object.
 /// # Arguments
@@ -127,7 +127,7 @@ pub fn build_address_book(
             Ok(val) => val,
             Err(_) => return Result::Err(())
         };
-        let key = match SchnorrPubKey::deserialize_uncompressed(key_vec.as_slice()) {
+        let key = match SchnorrAttestedPubKey::deserialize_uncompressed(key_vec.as_slice()) {
             Ok(val) => val,
             Err(_) => return Result::Err(())
         };
