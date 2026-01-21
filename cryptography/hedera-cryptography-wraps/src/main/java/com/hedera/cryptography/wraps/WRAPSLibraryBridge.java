@@ -409,7 +409,7 @@ public class WRAPSLibraryBridge {
                 || nextSchnorrPublicKeys.length == 0
                 || nextSchnorrPublicKeys.length != nextWeights.length
                 || nextNodeIds == null
-                || prevSchnorrPublicKeys.length != nextNodeIds.length
+                || nextSchnorrPublicKeys.length != nextNodeIds.length
                 || !WRAPSLibraryBridge.validateWeightsSum(nextWeights)
                 || tssVerificationKey == null
                 || tssVerificationKey.length == 0
