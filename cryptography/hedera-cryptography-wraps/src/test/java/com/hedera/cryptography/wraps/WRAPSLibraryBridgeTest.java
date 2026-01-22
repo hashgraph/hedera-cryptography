@@ -839,16 +839,12 @@ public class WRAPSLibraryBridgeTest {
         // Note: the compressed proof is non-deterministic, so we can only check the size, and then verify it:
         assertTrue(WRAPS.verifyCompressedProof(proof0.compressed(), genesisAddressBookHash, dummyHintsKey));
 
-        if (true) {
-            // The above test takes ~30 minutes to run.
-            // The below test performs similar actions, simply advancing to the next AB.
-            // But essentially, it executes the same math/crypto logic in native code.
-            // Yet it takes another 30 minutes to run, which may be expensive.
-            // So we short-circuit here, until/unless we:
-            // a) implement optional caching for loading proving and verifying keys
-            // b) use parallelism in the math to make use of all the CPU cores
-            return;
-        }
+        // Now let's test a rotated AddressBook.
+
+        // NOTE: we rely on the TSS_LIB_WRAPS_ARTIFACTS_CACHE_ENABLED env var set to "true" in Gradle.
+        // so that the proving key is cached and the second proof here takes only a few minutes.
+        // Otherwise, this test is going to take ~1 hour because loading the key takes ~27 minutes.
+        // With the cache enabled, both the proofs together take ~30 minutes only.
 
         final Network nextNetwork = new Network(List.of(
                 Node.from(Constants.SEED_0, 1000, 0),
@@ -868,7 +864,8 @@ public class WRAPSLibraryBridgeTest {
                 nextNetwork.publicKeys(), nextNetwork.weights(), nextNetwork.nodeIds(), hintsKeys.verificationKey());
         final SigningProtocolOutput output1 = aggregateSignature(genesisNetwork, message1);
 
-        System.err.println("Computing proof1 which may take up to 30 minutes...");
+        System.err.println(
+                "Computing proof1 which should take only a few minutes because we assume we cache the proving key...");
         final Proof proof1 = WRAPS.constructWrapsProof(
                 genesisAddressBookHash,
                 genesisNetwork.publicKeys(),

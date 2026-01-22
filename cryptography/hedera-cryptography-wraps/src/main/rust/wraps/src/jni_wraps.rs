@@ -362,7 +362,7 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     };
 
     let (uncompressed_proof, compressed_proof): (UncompressedProofSerialized, CompressedProofSerialized) = match WRAPS::construct_wraps_proof(
-            &pk,
+            pk.get_ref(),
             &vk,
             &ab_genesis_hash,
             &prev_ab,
