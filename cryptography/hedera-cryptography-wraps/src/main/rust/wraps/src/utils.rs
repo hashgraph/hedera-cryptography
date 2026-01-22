@@ -67,7 +67,7 @@ impl ProvingKeyWrapper {
     }
 
     /// Return a reference to the value.
-    pub unsafe fn get_ref(&self) -> &ProvingKey {
+    pub fn get_ref(&self) -> &ProvingKey {
         if self.ref_pk.is_some() {
             return self.ref_pk.unwrap();
         }
