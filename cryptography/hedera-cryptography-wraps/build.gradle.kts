@@ -29,6 +29,10 @@ tasks.test {
                     .asFile
                     .absolutePath,
 
+            // Cache the proving key so we can construct proof multiple times in the same JVM
+            // w/o having to reload the proving key, which takes up to 27 minutes.
+            "TSS_LIB_WRAPS_ARTIFACTS_CACHE_ENABLED" to "true",
+
             // Commented-out just to provide an example of how to enable swap for WRAPS 2.0.
             // When not set, the proof construction may require up to ~16GB of RAM.
             // "TSS_LIB_WRAPS_SWAP_FILE" to "/tmp/MemoryMapFile",

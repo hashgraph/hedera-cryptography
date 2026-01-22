@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use std::env;
 use std::fs::File;
+use std::sync::OnceLock;
 use memmap2::Mmap;
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::{FftField, Field, Zero};
@@ -30,8 +31,59 @@ pub fn serialize<T: ark_serialize::CanonicalSerialize>(
 
 const ARTIFACTS_PATH_ENV_VAR: &str = "TSS_LIB_WRAPS_ARTIFACTS_PATH";
 
-/// Gets a ProvingKey.
-pub fn get_proving_key() -> Result<ProvingKey, WRAPSError> {
+/// This env var, when set to "true", enables a cache for the ProvingKey.
+/// The ProvingKey may consume ~6GB of RAM, so the caching is normally not desired because
+/// the key is only used to construct AddressBook rotations proofs. However, it may be useful
+/// in tests running in a single JVM (or an external dedicated JVM hosting the tss-lib) in order
+/// to not waste ~27 minutes loading the key from disk and deserializing it for every proof.
+const ARTIFACTS_CACHE_ENABLED_ENV_VAR: &str = "TSS_LIB_WRAPS_ARTIFACTS_CACHE_ENABLED";
+
+/// A utility for returning the key and freeing memory if necessary.
+/// An owned value will be released once the caller finishes. This is useful when the cache
+/// is disabled and each call loads a new key.
+/// A reference value will not be released because it's a reference to a static (cached) object.
+/// The caller can call `get_ref` and obtain a reference to the value w/o having to know whether
+/// the value is cached or owned.
+pub struct ProvingKeyWrapper {
+    owned_pk: Option<ProvingKey>,
+    ref_pk: Option<&'static ProvingKey>,
+}
+
+impl ProvingKeyWrapper {
+    /// Create a new owned value wrapper.
+    fn new_owned(owned_pk: ProvingKey) -> Self {
+        ProvingKeyWrapper {
+            owned_pk: Some(owned_pk),
+            ref_pk: None
+        }
+    }
+
+    /// Create a new cached value wrapper.
+    fn new_ref(ref_pk: &'static ProvingKey) -> Self {
+        ProvingKeyWrapper {
+            owned_pk: None,
+            ref_pk: Some(ref_pk)
+        }
+    }
+
+    /// Return a reference to the value.
+    pub fn get_ref(&self) -> &ProvingKey {
+        if self.ref_pk.is_some() {
+            return self.ref_pk.unwrap();
+        }
+        if self.owned_pk.is_some() {
+            return self.owned_pk.as_ref().unwrap();
+        }
+        // Re-iterating: this should never happen as ensured by the `new` constructors above:
+        panic!("Neither ref_pk nor owned_pk exists. This should never happen!");
+    }
+}
+
+/// A holder for a cached key (or empty `Option` when the cache is disabled).
+static PROVING_KEY: OnceLock<Option<ProvingKey>> = OnceLock::new();
+
+/// Loads the key from disk directly.
+fn load_proving_key() -> Result<ProvingKey, WRAPSError> {
     let artifacts_path = match env::var(ARTIFACTS_PATH_ENV_VAR) {
         Ok(val) => val,
         Err(_) => return Err(WRAPSError::BinaryArtifactMissing)
@@ -48,6 +100,35 @@ pub fn get_proving_key() -> Result<ProvingKey, WRAPSError> {
     }.map_err(|_| WRAPSError::BinaryArtifactMissing)?;
 
     WRAPS::setup_prover(nova_pp_map, decider_pp_map)
+}
+
+/// A utility getter for the cached PROVING_KEY that implements its `OnceLock` initialization.
+/// Returns an empty `Option` if the cache is disabled or errors occur during loading the key.
+fn get_cached_proving_key() -> &'static Option<ProvingKey> {
+    PROVING_KEY.get_or_init(|| {
+        let cache_enabled_str = match env::var(ARTIFACTS_CACHE_ENABLED_ENV_VAR) {
+            Ok(val) => val,
+            Err(_) => return None
+        };
+
+        if cache_enabled_str.to_lowercase() != "true" {
+            return None;
+        }
+
+        match load_proving_key() {
+            Ok(val) => Some(val),
+            Err(_) => None
+        }
+    })
+}
+
+/// Gets a ProvingKeyWrapper. May return a cached value if the cache is enabled, or load
+/// a new key otherwise. The ProvingKeyWrapper will take care of releasing memory if needed.
+pub fn get_proving_key() -> Result<ProvingKeyWrapper, WRAPSError> {
+    match get_cached_proving_key() {
+        Some(val) => Ok(ProvingKeyWrapper::new_ref(val)),
+        None => load_proving_key().map(|pk| ProvingKeyWrapper::new_owned(pk))
+    }
 }
 
 /// Gets a VerificationKey.
