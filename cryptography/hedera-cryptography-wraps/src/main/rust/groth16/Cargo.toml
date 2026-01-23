@@ -21,11 +21,16 @@ edition = "2021"
 [dependencies]
 ark-ff = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
 ark-ec = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
+
+# IntelliJ IDEA grays out the ark-serialize dependency, but the code needs it still:
 ark-serialize = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false, features = [ "derive" ] }
+
 ark-poly = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
 ark-std = { version = "0.5.0", default-features = false }
 
 ark-relations = { git = "https://github.com/arkworks-rs/snark.git", default-features = false }
+
+# IntelliJ IDEA grays out the ark-snark dependency, but the code needs it still:
 ark-snark = { git = "https://github.com/arkworks-rs/snark.git", default-features = false }
 
 ark-r1cs-std = { git = "https://github.com/arkworks-rs/r1cs-std.git", default-features = false, optional = true }
@@ -36,11 +41,6 @@ educe = { version = "0.6.0", default-features = false, features = [ "Clone" ], o
 rayon = { version = "1", optional = true }
 
 [dev-dependencies]
-ark-bls12-381 = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false, features = [ "curve" ] }
-ark-bls12-377 = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false, features = [ "curve" ] }
-ark-bn254 = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false, features = [ "curve" ] }
-ark-bw6-761 = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
-ark-mnt4-298 = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false, features = [ "curve", "r1cs" ] }
 ark-r1cs-std = { git = "https://github.com/arkworks-rs/r1cs-std.git", default-features = true }
 
 
