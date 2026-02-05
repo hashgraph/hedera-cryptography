@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-
 use ark_bls12_381::{g1::Config as G1Config, g2::Config as G2Config, Bls12_381};
 use ark_ec::hashing::{
     curve_maps::wb::WBMap, map_to_curve_hasher::MapToCurveBasedHasher, HashToCurve,
@@ -169,8 +168,6 @@ pub struct VerificationKey {
     h_0: G2AffinePoint,
     /// second G1 element from the KZG CRS (for first power of tau)
     h_1: G2AffinePoint,
-    /// third G1 element from the KZG CRS (for second power of tau)
-    h_2: G2AffinePoint,
     /// commitment to the L_{n-1} polynomial
     l_n_minus_1_of_tau_com: G1AffinePoint,
     /// commitment to the W polynomial
@@ -179,8 +176,7 @@ pub struct VerificationKey {
     sk_of_tau_com: G2AffinePoint,
     /// commitment to the vanishing polynomial Z(x) = x^n - 1
     z_of_tau_com: G2AffinePoint,
-    /// commitment to the f(x) = x, which equals [\tau]_2
-    tau_com: G2AffinePoint,
+   
 }
 
 pub struct HinTS;
@@ -457,7 +453,7 @@ impl HinTS {
         }
 
         let z_of_x = utils::compute_vanishing_poly(n);
-        let x_monomial = utils::compute_x_monomial();
+        
         let l_n_minus_1_of_x = utils::lagrange_poly(n, n - 1).ok_or(
             HinTSError::CryptographyCatastrophe(
                 format!("Unable to compute Lagrange<n,i>(x) for i = {}, n = {}", n - 1, n)
@@ -472,12 +468,10 @@ impl HinTS {
             g_0: crs.powers_of_g[0],
             h_0: crs.powers_of_h[0],
             h_1: crs.powers_of_h[1],
-            h_2: crs.powers_of_h[2],
             l_n_minus_1_of_tau_com: KZG::commit_g1(&crs, &l_n_minus_1_of_x)?,
             w_of_tau_com: KZG::commit_g1(&crs, &w_of_x)?,
             sk_of_tau_com: add::<G2AffinePoint>(sk_l_of_tau_coms),
             z_of_tau_com: KZG::commit_g2(&crs, &z_of_x)?,
-            tau_com: KZG::commit_g2(&crs, &x_monomial)?,
         };
 
         let ak = AggregationKey {
@@ -779,10 +773,11 @@ impl HinTS {
         let l_n_minus_1_of_r =
             (ω_pow_n_minus_1 / F::from(vk.n as u64)) * (vanishing_of_r / (r - ω_pow_n_minus_1));
 
-        //assert polynomial identity B(x) SK(x) = ask + Q_z(x) Z(x) + Q_x(x) x
+        //assert polynomial identity B(x) SK(x) = ask + Q_z(x) Z(x) + Q_x(x) x using the following pairing equation
+        // e([SK(τ)]_1, [B(τ)]_2) = e([Qz(τ)]_1,[Qx(τ)]_2) * e([Qx(τ)]_1,[τ]_2) * e(avk,[1]_2)
         let lhs = <Curve as Pairing>::pairing(&π.b_of_tau_com, &vk.sk_of_tau_com);
         let x1 = <Curve as Pairing>::pairing(&π.qz_of_tau_com, &vk.z_of_tau_com);
-        let x2 = <Curve as Pairing>::pairing(&π.qx_of_tau_com, &vk.tau_com);
+        let x2 = <Curve as Pairing>::pairing(&π.qx_of_tau_com, &vk.h_1);
         let x3 = <Curve as Pairing>::pairing(&π.agg_pk, &vk.h_0);
         let rhs = x1.add(x2).add(x3);
         check_or_return_false!(lhs == rhs);
@@ -811,8 +806,9 @@ impl HinTS {
         check_or_return_false!(lhs == rhs);
 
         //run the degree check e([Qx(τ)]_1, [τ]_2) ?= e([Qx(τ)·τ]_1, [1]_2)
-        let lhs = <Curve as Pairing>::pairing(&π.qx_of_tau_com, &vk.h_2);
-        let rhs = <Curve as Pairing>::pairing(&π.qx_of_tau_mul_tau_com, &vk.h_1);
+        // lhs is already computed above and is stored in x2
+        let lhs = x2;
+        let rhs = <Curve as Pairing>::pairing(&π.qx_of_tau_mul_tau_com, &vk.h_0);
 
         check_or_return_false!(lhs == rhs);
 
@@ -1066,8 +1062,12 @@ mod tests {
         println!("crs size: {}", serialized_crs.len());
     }
 
+
+    
     #[test]
     fn it_works() {
+        use std::time::Instant; // Add this import
+
         let universe_n = 32;
         let num_signers = universe_n - 1;
         let msg = b"hello";
@@ -1091,7 +1091,18 @@ mod tests {
         let π = HinTS::aggregate(&crs, &ak, &vk, &sigs).unwrap();
 
         let threshold = (F::from(1), F::from(3)); // 1/3
-        assert!(HinTS::verify(msg, &vk, &π, threshold).unwrap());
+
+        // --- START MEASUREMENT ---
+        let start = Instant::now();
+        
+        let verification_result = HinTS::verify(msg, &vk, &π, threshold).unwrap();
+        
+        let duration = start.elapsed();
+        // --- END MEASUREMENT ---
+
+        println!("\nVerification logic alone took: {:?}", duration);
+
+        assert!(verification_result);
 
         // attack the proof
         let mut π_attack = π.clone();
