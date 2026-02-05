@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 use ark_bls12_381::{g1::Config as G1Config, g2::Config as G2Config, Bls12_381};
 use ark_ec::hashing::{
     curve_maps::wb::WBMap, map_to_curve_hasher::MapToCurveBasedHasher, HashToCurve,
@@ -8,18 +9,21 @@ use ark_ec::{
     short_weierstrass::{Affine, Projective},
     AffineRepr, CurveGroup,
 };
-use ark_ff::{field_hashers::{DefaultFieldHasher, HashToField}, Field};
+use ark_ff::{
+    field_hashers::{DefaultFieldHasher, HashToField},
+    Field,
+};
 use ark_poly::{univariate::DensePolynomial, Polynomial};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::collections::HashMap;
 use ark_std::{ops::*, UniformRand};
-use sha2::Sha256;
 use rand_chacha::rand_core::SeedableRng;
+use sha2::Sha256;
 
 // hinTS depends on the utils and kzg modules
+use crate::errors::*;
 use crate::kzg;
 use crate::utils;
-use crate::errors::*;
 
 /// The size of input randomness
 pub const RANDOM_SIZE: usize = 32;
@@ -56,7 +60,6 @@ macro_rules! check_or_return_false {
         }
     };
 }
-
 
 #[derive(Clone, Debug, PartialEq, CanonicalDeserialize, CanonicalSerialize)]
 /// hinTS aggregate signature
@@ -176,16 +179,13 @@ pub struct VerificationKey {
     sk_of_tau_com: G2AffinePoint,
     /// commitment to the vanishing polynomial Z(x) = x^n - 1
     z_of_tau_com: G2AffinePoint,
-   
 }
 
 pub struct HinTS;
 
 impl HinTS {
     /// generates a random secret key using a PRNG seeded by the input entropy
-    pub fn keygen(
-        seed: [u8; 32]
-    ) -> SecretKey {
+    pub fn keygen(seed: [u8; 32]) -> SecretKey {
         let mut rng = rand_chacha::ChaCha8Rng::from_seed(seed);
         F::rand(&mut rng)
     }
@@ -196,7 +196,7 @@ impl HinTS {
         crs: &CRS,
         n: usize,
         i: usize,
-        sk: &SecretKey
+        sk: &SecretKey,
     ) -> Result<ExtendedPublicKey, HinTSError> {
         // let us first perform sanity checks on the input
 
@@ -207,9 +207,10 @@ impl HinTS {
 
         // obviously, i must be less than n
         if i >= n {
-            return Err(HinTSError::InvalidInput(
-                format!("Invalid index i = {} greater than n = {}", i, n))
-            );
+            return Err(HinTSError::InvalidInput(format!(
+                "Invalid index i = {} greater than n = {}",
+                i, n
+            )));
         }
 
         // CRS must be large enough to support the operation
@@ -219,11 +220,11 @@ impl HinTS {
         }
 
         //let us compute the q1 term
-        let l_i_of_x = utils::lagrange_poly(n, i).ok_or(
-            HinTSError::CryptographyCatastrophe(
-                format!("Unable to compute Lagrange<n,i>(x) for i = {}, n = {}", i, n)
-            )
-        )?;
+        let l_i_of_x =
+            utils::lagrange_poly(n, i).ok_or(HinTSError::CryptographyCatastrophe(format!(
+                "Unable to compute Lagrange<n,i>(x) for i = {}, n = {}",
+                i, n
+            )))?;
         let z_of_x = utils::compute_vanishing_poly(n);
 
         let mut qz_terms = vec![];
@@ -235,9 +236,10 @@ impl HinTS {
             } else {
                 //cross-terms
                 let l_j_of_x = utils::lagrange_poly(n, j).ok_or(
-                    HinTSError::CryptographyCatastrophe(
-                        format!("Unable to compute Lagrange<n,j>(x) for j = {}, n = {}", j, n)
-                    )
+                    HinTSError::CryptographyCatastrophe(format!(
+                        "Unable to compute Lagrange<n,j>(x) for j = {}, n = {}",
+                        j, n
+                    )),
                 )?;
                 num = l_j_of_x.mul(&l_i_of_x);
             }
@@ -293,7 +295,7 @@ impl HinTS {
         crs: &CRS,
         n: usize,
         i: usize,
-        hint: &ExtendedPublicKey
+        hint: &ExtendedPublicKey,
     ) -> Result<bool, HinTSError> {
         // sanity check on the inputs
 
@@ -304,9 +306,10 @@ impl HinTS {
 
         // obviously, i must be less than n
         if i >= n {
-            return Err(HinTSError::InvalidInput(
-                format!("Invalid index i = {} greater than n = {}", i, n))
-            );
+            return Err(HinTSError::InvalidInput(format!(
+                "Invalid index i = {} greater than n = {}",
+                i, n
+            )));
         }
 
         // CRS must be large enough to support the operation
@@ -321,11 +324,11 @@ impl HinTS {
         check_or_return_false!(n == hint.qz_i_terms.len());
 
         //e([sk_i L_i(τ)]1, [1]2) = e([sk_i]1, [L_i(τ)]2)
-        let l_i_of_x = utils::lagrange_poly(n, i).ok_or(
-            HinTSError::CryptographyCatastrophe(
-                format!("Unable to compute Lagrange<n,i>(x) for i = {}, n = {}", i, n)
-            )
-        )?;
+        let l_i_of_x =
+            utils::lagrange_poly(n, i).ok_or(HinTSError::CryptographyCatastrophe(format!(
+                "Unable to compute Lagrange<n,i>(x) for i = {}, n = {}",
+                i, n
+            )))?;
         let z_of_x = utils::compute_vanishing_poly(n);
 
         let l_i_of_tau_com = KZG::commit_g2(&crs, &l_i_of_x)?;
@@ -340,9 +343,10 @@ impl HinTS {
             } else {
                 //cross-terms
                 let l_j_of_x = utils::lagrange_poly(n, j).ok_or(
-                    HinTSError::CryptographyCatastrophe(
-                        format!("Unable to compute Lagrange<n,j>(x) for j = {}, n = {}", j, n)
-                    )
+                    HinTSError::CryptographyCatastrophe(format!(
+                        "Unable to compute Lagrange<n,j>(x) for j = {}, n = {}",
+                        j, n
+                    )),
                 )?;
                 num = l_j_of_x.mul(&l_i_of_x);
             }
@@ -413,14 +417,16 @@ impl HinTS {
         for i in 0..n {
             if let Some((weight, hint)) = signer_info.get(&i) {
                 if hint.n != n {
-                    return Err(HinTSError::InvalidInput(
-                        format!("Invalid hint: got hint.n = {}, expected n = {}", hint.n, n))
-                    );
+                    return Err(HinTSError::InvalidInput(format!(
+                        "Invalid hint: got hint.n = {}, expected n = {}",
+                        hint.n, n
+                    )));
                 }
-                if ! Self::verify_hint(crs, n, i, hint)? {
-                    return Err(HinTSError::InvalidInput(
-                        format!("Invalid hint: hint verification failed for i = {}", i))
-                    );
+                if !Self::verify_hint(crs, n, i, hint)? {
+                    return Err(HinTSError::InvalidInput(format!(
+                        "Invalid hint: hint verification failed for i = {}",
+                        i
+                    )));
                 }
                 weights.push(weight.clone());
                 epks.push(hint.clone());
@@ -431,9 +437,10 @@ impl HinTS {
         }
 
         let w_of_x = utils::interpolate_poly_over_mult_subgroup(&weights).ok_or(
-            HinTSError::CryptographyCatastrophe(
-                format!("Unable to construct Radix2EvaluationDomain for n = {}", weights.len())
-            )
+            HinTSError::CryptographyCatastrophe(format!(
+                "Unable to construct Radix2EvaluationDomain for n = {}",
+                weights.len()
+            )),
         )?;
 
         //allocate space to collect setup material from all n-1 parties
@@ -453,12 +460,13 @@ impl HinTS {
         }
 
         let z_of_x = utils::compute_vanishing_poly(n);
-        
-        let l_n_minus_1_of_x = utils::lagrange_poly(n, n - 1).ok_or(
-            HinTSError::CryptographyCatastrophe(
-                format!("Unable to compute Lagrange<n,i>(x) for i = {}, n = {}", n - 1, n)
-            )
-        )?;
+
+        let l_n_minus_1_of_x =
+            utils::lagrange_poly(n, n - 1).ok_or(HinTSError::CryptographyCatastrophe(format!(
+                "Unable to compute Lagrange<n,i>(x) for i = {}, n = {}",
+                n - 1,
+                n
+            )))?;
 
         let total_weight = weights.iter().fold(F::from(0), |acc, &x| acc + x);
 
@@ -487,10 +495,7 @@ impl HinTS {
     }
 
     /// signs a message using the signer's secret key, producing a partial signature
-    pub fn sign(
-        msg: &[u8],
-        sk: &SecretKey
-    ) -> Result<PartialSignature, HinTSError> {
+    pub fn sign(msg: &[u8], sk: &SecretKey) -> Result<PartialSignature, HinTSError> {
         Ok(hash_to_g2(msg)?.mul(sk).into_affine())
     }
 
@@ -499,13 +504,15 @@ impl HinTS {
         msg: &[u8],
         ak: &AggregationKey,
         party_id: usize,
-        sig: &PartialSignature
+        sig: &PartialSignature,
     ) -> Result<bool, HinTSError> {
         // party_id can only be between 0 and n-2, inclusive
-        if party_id >= ak.n - 1 { // usize ensures non-negative
-            return Err(HinTSError::InvalidInput(
-                format!("signer_id {} out of range", party_id))
-            );
+        if party_id >= ak.n - 1 {
+            // usize ensures non-negative
+            return Err(HinTSError::InvalidInput(format!(
+                "signer_id {} out of range",
+                party_id
+            )));
         }
 
         let lhs = <Curve as Pairing>::pairing(ak.pks[party_id], hash_to_g2(msg)?);
@@ -587,29 +594,30 @@ impl HinTS {
         bitmap[n - 1] = F::from(1);
 
         //compute all the scalars we will need in the prover
-        let ω: F = utils::nth_root_of_unity(n).ok_or(
-            HinTSError::CryptographyCatastrophe(
-                format!("Unable to construct Radix2EvaluationDomain for n = {}", n)
-            )
-        )?;
+        let ω: F = utils::nth_root_of_unity(n).ok_or(HinTSError::CryptographyCatastrophe(
+            format!("Unable to construct Radix2EvaluationDomain for n = {}", n),
+        ))?;
         let ω_inv: F = F::from(1) / ω;
 
         //compute all the polynomials we will need in the prover
         let z_of_x = utils::compute_vanishing_poly(n); //returns Z(X) = X^n - 1
-        let l_n_minus_1_of_x = utils::lagrange_poly(n, n - 1).ok_or(
-            HinTSError::CryptographyCatastrophe(
-                format!("Unable to compute Lagrange<n,i>(x) for i = {}, n = {}", n - 1, n)
-            )
-        )?;
+        let l_n_minus_1_of_x =
+            utils::lagrange_poly(n, n - 1).ok_or(HinTSError::CryptographyCatastrophe(format!(
+                "Unable to compute Lagrange<n,i>(x) for i = {}, n = {}",
+                n - 1,
+                n
+            )))?;
         let w_of_x = utils::interpolate_poly_over_mult_subgroup(&weights).ok_or(
-            HinTSError::CryptographyCatastrophe(
-                format!("Unable to construct Radix2EvaluationDomain for n = {}", weights.len())
-            )
+            HinTSError::CryptographyCatastrophe(format!(
+                "Unable to construct Radix2EvaluationDomain for n = {}",
+                weights.len()
+            )),
         )?;
         let b_of_x = utils::interpolate_poly_over_mult_subgroup(&bitmap).ok_or(
-            HinTSError::CryptographyCatastrophe(
-                format!("Unable to construct Radix2EvaluationDomain for n = {}", bitmap.len())
-            )
+            HinTSError::CryptographyCatastrophe(format!(
+                "Unable to construct Radix2EvaluationDomain for n = {}",
+                bitmap.len()
+            )),
         )?;
         let psw_of_x = compute_psw_poly(&weights, &bitmap)?;
         let psw_of_x_div_ω = utils::poly_domain_mult_ω(&psw_of_x, &ω_inv);
@@ -740,11 +748,11 @@ impl HinTS {
         check_or_return_false!(lhs == rhs);
 
         // compute nth root of unity
-        let ω: F = utils::nth_root_of_unity(vk.n).ok_or(
-            HinTSError::CryptographyCatastrophe(
-                format!("Unable to construct Radix2EvaluationDomain for n = {}", vk.n)
-            )
-        )?;
+        let ω: F =
+            utils::nth_root_of_unity(vk.n).ok_or(HinTSError::CryptographyCatastrophe(format!(
+                "Unable to construct Radix2EvaluationDomain for n = {}",
+                vk.n
+            )))?;
 
         //RO(SK, W, B, ParSum, Qx, Qz, Qx(τ ) · τ, Q1, Q2, Q3, Q4)
         let r = random_oracle(
@@ -868,7 +876,7 @@ fn verify_opening(
 fn verify_openings_in_proof(
     vk: &VerificationKey,
     π: &ThresholdSignature,
-    r: F
+    r: F,
 ) -> Result<bool, HinTSError> {
     //adjust the w_of_x_com
     let adjustment = F::from(0) - π.agg_weight;
@@ -896,11 +904,11 @@ fn verify_openings_in_proof(
     let rhs = <Curve as Pairing>::pairing(π.opening_proof_r, vk.h_1 - vk.h_0.mul(r).into_affine());
     check_or_return_false!(lhs == rhs);
 
-    let ω: F = utils::nth_root_of_unity(vk.n).ok_or(
-        HinTSError::CryptographyCatastrophe(
-            format!("Unable to construct Radix2EvaluationDomain for n = {}", vk.n)
-        )
-    )?;
+    let ω: F =
+        utils::nth_root_of_unity(vk.n).ok_or(HinTSError::CryptographyCatastrophe(format!(
+            "Unable to construct Radix2EvaluationDomain for n = {}",
+            vk.n
+        )))?;
     let r_div_ω: F = r / ω;
 
     Ok(verify_opening(
@@ -912,9 +920,7 @@ fn verify_openings_in_proof(
     ))
 }
 
-fn preprocess_qz_contributions(
-    q1_contributions: &Vec<Vec<G1AffinePoint>>
-) -> Vec<G1AffinePoint> {
+fn preprocess_qz_contributions(q1_contributions: &Vec<Vec<G1AffinePoint>>) -> Vec<G1AffinePoint> {
     let n = q1_contributions.len();
     let mut q1_coms = vec![];
 
@@ -937,7 +943,7 @@ fn preprocess_qz_contributions(
 
 fn compute_psw_poly(
     weights: &Vec<Weight>,
-    bitmap: &Vec<F>
+    bitmap: &Vec<F>,
 ) -> Result<DensePolynomial<F>, HinTSError> {
     let n = weights.len(); // assumes power of 2 size
 
@@ -948,18 +954,16 @@ fn compute_psw_poly(
         evals.push(parsum);
     }
 
-    utils::interpolate_poly_over_mult_subgroup(&evals).ok_or(
-        HinTSError::CryptographyCatastrophe(
-            format!("Unable to construct Radix2EvaluationDomain for n = {}", evals.len())
-        )
-    )
+    utils::interpolate_poly_over_mult_subgroup(&evals).ok_or(HinTSError::CryptographyCatastrophe(
+        format!(
+            "Unable to construct Radix2EvaluationDomain for n = {}",
+            evals.len()
+        ),
+    ))
 }
 
 /// computes the inner product between a vector of group elements and bitvector
-fn inner_product<T: AffineRepr>(
-    elements: &Vec<T>,
-    bitmap: &Vec<F>
-) -> T {
+fn inner_product<T: AffineRepr>(elements: &Vec<T>, bitmap: &Vec<F>) -> T {
     elements
         .iter()
         .zip(bitmap.iter())
@@ -975,21 +979,19 @@ fn add<T: AffineRepr>(elements: impl IntoIterator<Item = T>) -> T {
 }
 
 /// hashes a byte array to an elliptic curve group element
-pub fn hash_to_g2(
-    msg: impl AsRef<[u8]>
-) -> Result<G2AffinePoint, HinTSError> {
+pub fn hash_to_g2(msg: impl AsRef<[u8]>) -> Result<G2AffinePoint, HinTSError> {
     const DST_G2: &str = "BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_";
     let g2_mapper = MapToCurveBasedHasher::<
         G2ProjectivePoint,
         DefaultFieldHasher<Sha256, 128>,
         WBMap<G2Config>,
     >::new(DST_G2.as_bytes())?;
-    g2_mapper.hash(msg.as_ref()).map_err(|e| HinTSError::HashingError(e))
+    g2_mapper
+        .hash(msg.as_ref())
+        .map_err(|e| HinTSError::HashingError(e))
 }
 
-pub fn serialize<T: CanonicalSerialize>(
-    t: &T
-) -> Result<Vec<u8>, HinTSError> {
+pub fn serialize<T: CanonicalSerialize>(t: &T) -> Result<Vec<u8>, HinTSError> {
     let mut buf = Vec::new();
     // unwrap() should be safe because we serialize into a variable-size vector.
     // However, it might fail if the `t` is invalid somehow, although this
@@ -1062,11 +1064,9 @@ mod tests {
         println!("crs size: {}", serialized_crs.len());
     }
 
-
-    
-    #[test]
+   #[test]
     fn it_works() {
-        use std::time::Instant; // Add this import
+        use std::time::Instant;
 
         let universe_n = 32;
         let num_signers = universe_n - 1;
@@ -1079,14 +1079,13 @@ mod tests {
             assert!(HinTS::partial_verify(msg, &ak, *i, sig).unwrap());
         }
 
-        assert!(
-            HinTS::partial_verify_batch(
-                msg,
-                &ak,
-                sigs.keys().cloned().collect::<Vec<usize>>(),
-                sigs.values().cloned().collect::<Vec<PartialSignature>>()
-            ).unwrap()
-        );
+        assert!(HinTS::partial_verify_batch(
+            msg,
+            &ak,
+            sigs.keys().cloned().collect::<Vec<usize>>(),
+            sigs.values().cloned().collect::<Vec<PartialSignature>>()
+        )
+        .unwrap());
 
         let π = HinTS::aggregate(&crs, &ak, &vk, &sigs).unwrap();
 
@@ -1094,9 +1093,9 @@ mod tests {
 
         // --- START MEASUREMENT ---
         let start = Instant::now();
-        
+
         let verification_result = HinTS::verify(msg, &vk, &π, threshold).unwrap();
-        
+
         let duration = start.elapsed();
         // --- END MEASUREMENT ---
 
@@ -1155,7 +1154,9 @@ mod tests {
         // -------------- sample universe specific values ---------------
         //sample random keys
         // WARN: supply a random seed, not a fixed one as shown here.
-        let sks: Vec<SecretKey> = (0..num_signers).map(|_| HinTS::keygen([42u8; 32])).collect();
+        let sks: Vec<SecretKey> = (0..num_signers)
+            .map(|_| HinTS::keygen([42u8; 32]))
+            .collect();
 
         let epks = (0..num_signers)
             .map(|i| HinTS::hint_gen(&crs, n, i, &sks[i]).unwrap())

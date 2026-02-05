@@ -8,9 +8,7 @@ use ark_std::ops::*;
 
 /// returns the vanishing polynomial for a multiplicative subgroup of size n;
 /// when n is a power of 2, this is equivalent to t(X) = X^n - 1
-pub fn compute_vanishing_poly<F: PrimeField + From<u64>>(
-    n: usize
-) -> DensePolynomial<F> {
+pub fn compute_vanishing_poly<F: PrimeField + From<u64>>(n: usize) -> DensePolynomial<F> {
     let mut coeffs = vec![];
     for i in 0..n + 1 {
         if i == 0 {
@@ -30,18 +28,14 @@ pub fn compute_vanishing_poly<F: PrimeField + From<u64>>(
 pub fn interpolate_poly_over_mult_subgroup<F: PrimeField + From<u64>>(
     evals: &Vec<F>,
 ) -> Option<DensePolynomial<F>> {
-    Radix2EvaluationDomain::<F>::new(evals.len()).map(|d| {
-        Evaluations::from_vec_and_domain(evals.clone(), d).interpolate()
-    })
+    Radix2EvaluationDomain::<F>::new(evals.len())
+        .map(|d| Evaluations::from_vec_and_domain(evals.clone(), d).interpolate())
 }
 
 /// outputs the Lagrange polynomial for the ith location in a multiplicative subgroup
 /// of size n, defined to be 1 at omega^i and 0 elsewhere on domain
 /// {omega^i}_{i \in [n]} (where omega is the n-th root of unity)
-pub fn lagrange_poly<F: PrimeField + From<u64>>(
-    n: usize,
-    i: usize
-) -> Option<DensePolynomial<F>> {
+pub fn lagrange_poly<F: PrimeField + From<u64>>(n: usize, i: usize) -> Option<DensePolynomial<F>> {
     // see sec 3 of https://eprint.iacr.org/2023/567.pdf
     nth_root_of_unity::<F>(n).map(|ω| {
         let factor = ω.pow([i as u64]) / F::from(n as u64);
@@ -90,7 +84,9 @@ pub fn poly_eval_mult_c<F: PrimeField>(f: &DensePolynomial<F>, c: &F) -> DensePo
         return f.clone();
     }
 
-    DensePolynomial { coeffs: f.coeffs.iter().map(|a| a.clone() * c.clone()).collect() }
+    DensePolynomial {
+        coeffs: f.coeffs.iter().map(|a| a.clone() * c.clone()).collect(),
+    }
 }
 
 /// outputs a generator of the multiplicative subgroup of input size n
@@ -102,7 +98,6 @@ pub fn nth_root_of_unity<F: PrimeField>(n: usize) -> Option<F> {
 pub fn is_n_valid(n: usize) -> bool {
     n > 1 && (n & (n - 1)) == 0
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -118,16 +113,19 @@ mod tests {
         assert!(result.coeffs.is_empty());
         assert_eq!(result.degree(), 0);
 
-        let poly = DensePolynomial::<F> { coeffs: vec![F::from(1u64)] };
+        let poly = DensePolynomial::<F> {
+            coeffs: vec![F::from(1u64)],
+        };
         let result = super::poly_eval_mult_c(&poly, &c);
         assert_eq!(result.coeffs.len(), 1);
         assert_eq!(result.coeffs[0], F::from(2u64));
 
-        let poly = DensePolynomial::<F> { coeffs: vec![F::from(1u64), F::from(2u64)] };
+        let poly = DensePolynomial::<F> {
+            coeffs: vec![F::from(1u64), F::from(2u64)],
+        };
         let result = super::poly_eval_mult_c(&poly, &c);
         assert_eq!(result.coeffs.len(), 2);
         assert_eq!(result.coeffs[0], F::from(2u64));
         assert_eq!(result.coeffs[1], F::from(4u64));
     }
-
 }

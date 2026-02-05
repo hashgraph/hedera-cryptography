@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::any::Any;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use jni::JNIEnv;
-use jni::objects::{JByteArray, JObject};
-use jni::sys::{jbyte, jbyteArray};
 use crate::errors::HinTSError;
 use crate::hints::{serialize, RANDOM_SIZE};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use jni::objects::{JByteArray, JObject};
+use jni::sys::{jbyte, jbyteArray};
+use jni::JNIEnv;
+use std::any::Any;
 
 /// Creates a jbyteArray out of a Vec<jbyte> object.
 /// # Arguments
@@ -17,7 +17,7 @@ use crate::hints::{serialize, RANDOM_SIZE};
 pub fn jbyte_vec_to_jbyte_array(env: &JNIEnv, vec: &Vec<jbyte>) -> jbyteArray {
     let array = match env.new_byte_array(vec.len() as i32) {
         Ok(val) => val,
-        Err(_) => return std::ptr::null_mut()
+        Err(_) => return std::ptr::null_mut(),
     };
     match env.set_byte_array_region(&array, 0, &vec) {
         Ok(()) => array.into_raw(),
@@ -47,10 +47,13 @@ pub fn u8_vec_to_jbyte_array(env: &JNIEnv, vec: &Vec<u8>) -> jbyteArray {
 /// # Returns
 /// *   a byte array with all the vectors written one after another, or null on error
 pub fn two_u8_vec_to_jbyte_array(env: &JNIEnv, vec1: &Vec<u8>, vec2: &Vec<u8>) -> jbyteArray {
-    let jbyte_vec = vec1.iter().chain(vec2.iter()).map(|&x| x as jbyte).collect();
+    let jbyte_vec = vec1
+        .iter()
+        .chain(vec2.iter())
+        .map(|&x| x as jbyte)
+        .collect();
     jbyte_vec_to_jbyte_array(env, &jbyte_vec)
 }
-
 
 /// Creates a `[u8; RANDOM_SIZE]` array out of a given Java byte array,
 /// which must be of size RANDOM_SIZE (currently 32).
@@ -59,35 +62,44 @@ pub fn two_u8_vec_to_jbyte_array(env: &JNIEnv, vec1: &Vec<u8>, vec2: &Vec<u8>) -
 /// * `random_array` the Java byte array of size RANDOM_SIZE
 /// # Returns
 /// *   an entropy array as accepted by the CRS/HinTS implementation, or Err
-pub fn build_entropy_array(env: &JNIEnv, random_array: &JByteArray) -> Result<[u8; RANDOM_SIZE], ()> {
+pub fn build_entropy_array(
+    env: &JNIEnv,
+    random_array: &JByteArray,
+) -> Result<[u8; RANDOM_SIZE], ()> {
     let random_vec = match env.convert_byte_array(&random_array) {
         Ok(val) => val,
-        Err(_) => return Result::Err(())
+        Err(_) => return Result::Err(()),
     };
-    let random_arr :[u8; RANDOM_SIZE] = match random_vec.try_into() {
+    let random_arr: [u8; RANDOM_SIZE] = match random_vec.try_into() {
         Ok(val) => val,
-        Err(_) => return Result::Err(())
+        Err(_) => return Result::Err(()),
     };
     Ok(random_arr)
 }
 
 /// Deserializes a JByteArray into an object, or returns Err.
-pub fn deserialize_jbyte_array<T: CanonicalDeserialize>(env: &JNIEnv, jarray: &JByteArray) -> Result<T, Box<dyn Any>> {
+pub fn deserialize_jbyte_array<T: CanonicalDeserialize>(
+    env: &JNIEnv,
+    jarray: &JByteArray,
+) -> Result<T, Box<dyn Any>> {
     let vec = match env.convert_byte_array(&jarray) {
         Ok(val) => val,
-        Err(err) => return Err(Box::new(err))
+        Err(err) => return Err(Box::new(err)),
     };
     match T::deserialize_uncompressed(&*vec) {
         Ok(val) => Ok(val),
-        Err(err) => Err(Box::new(err))
+        Err(err) => Err(Box::new(err)),
     }
 }
 
 /// Serializes an object into a jbyteArray.
-pub fn serialize_object<T: CanonicalSerialize>(env: &JNIEnv, obj: &T) -> Result<jbyteArray, HinTSError> {
+pub fn serialize_object<T: CanonicalSerialize>(
+    env: &JNIEnv,
+    obj: &T,
+) -> Result<jbyteArray, HinTSError> {
     let vec = match serialize(obj) {
         Ok(val) => val,
-        Err(e) => return Err(e)
+        Err(e) => return Err(e),
     };
     Ok(u8_vec_to_jbyte_array(env, &vec))
 }

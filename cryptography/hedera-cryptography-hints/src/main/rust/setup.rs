@@ -3,7 +3,10 @@
 /// module responsible for generating the CRS
 /// implements the algorithm in https://eprint.iacr.org/2022/1592.pdf
 use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup, VariableBaseMSM};
-use ark_ff::{field_hashers::{DefaultFieldHasher, HashToField}, Field, PrimeField};
+use ark_ff::{
+    field_hashers::{DefaultFieldHasher, HashToField},
+    Field, PrimeField,
+};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{ops::*, UniformRand};
 use rand::Rng;
@@ -81,12 +84,7 @@ impl PowersOfTauProtocol {
             powers_of_h,
         };
 
-        let proof = schnorr_nizk(
-            &crs.powers_of_g[1],
-            &next_crs.powers_of_g[1],
-            &r,
-            &mut rng,
-        )?;
+        let proof = schnorr_nizk(&crs.powers_of_g[1], &next_crs.powers_of_g[1], &r, &mut rng)?;
 
         Ok((next_crs, proof))
     }
@@ -96,13 +94,13 @@ impl PowersOfTauProtocol {
         let c1 = {
             match check1(&prev_crs.powers_of_g[1], &next_crs.powers_of_g[1], proof) {
                 Ok(c1) => c1,
-                Err(_) => false
+                Err(_) => false,
             }
         };
         let c2 = {
             match check2(next_crs) {
                 Ok(c2) => c2,
-                Err(_) => false
+                Err(_) => false,
             }
         };
         let c3 = check3(next_crs);
@@ -130,7 +128,11 @@ fn schnorr_nizk<R: Rng>(
 }
 
 /// verify the Schnorr proof of knowledge of discrete logarithm of next_p1 w.r.t. prev_p1
-fn check1(prev_p1: &G1AffinePoint, next_p1: &G1AffinePoint, proof: &ContributionProof) -> Result<bool, HinTSError> {
+fn check1(
+    prev_p1: &G1AffinePoint,
+    next_p1: &G1AffinePoint,
+    proof: &ContributionProof,
+) -> Result<bool, HinTSError> {
     let h = random_oracle(prev_p1, next_p1, &proof.p1_mul_z)?;
     let lhs = prev_p1.mul(&proof.z_plus_hr).into_affine();
     let rhs = proof.p1_mul_z.add(next_p1.mul(h)).into_affine();
@@ -177,7 +179,7 @@ fn check2(crs: &CRS) -> Result<bool, usize> {
     let mut crs_bytes = Vec::new();
     match crs.serialize_uncompressed(&mut crs_bytes) {
         Ok(_) => (),
-        Err(_) => return Err(0)
+        Err(_) => return Err(0),
     };
 
     // use random oracle with domain separators
@@ -195,14 +197,16 @@ fn check2(crs: &CRS) -> Result<bool, usize> {
         &(0..=n - 1)
             .map(|i| rho1.pow(&[i as u64]))
             .collect::<Vec<F>>(),
-    )?.into_affine();
+    )?
+    .into_affine();
 
     let lhs_rhs = <<Curve as Pairing>::G2 as VariableBaseMSM>::msm(
         &crs.powers_of_h[1..=n - 1],
         &(1..=n - 1)
             .map(|i| rho2.pow(&[i as u64]))
             .collect::<Vec<F>>(),
-    )?.add(crs.powers_of_h[0])
+    )?
+    .add(crs.powers_of_h[0])
     .into_affine();
 
     let rhs_lhs = <<Curve as Pairing>::G1 as VariableBaseMSM>::msm(
@@ -210,7 +214,8 @@ fn check2(crs: &CRS) -> Result<bool, usize> {
         &(1..=n - 1)
             .map(|i| rho1.pow(&[i as u64]))
             .collect::<Vec<F>>(),
-    )?.add(crs.powers_of_g[0])
+    )?
+    .add(crs.powers_of_g[0])
     .into_affine();
 
     let rhs_rhs = <<Curve as Pairing>::G2 as VariableBaseMSM>::msm(
@@ -218,7 +223,8 @@ fn check2(crs: &CRS) -> Result<bool, usize> {
         &(0..=n - 1)
             .map(|i| rho2.pow(&[i as u64]))
             .collect::<Vec<F>>(),
-    )?.into_affine();
+    )?
+    .into_affine();
 
     let lhs = <Curve as Pairing>::pairing(lhs_lhs, lhs_rhs);
     let rhs = <Curve as Pairing>::pairing(rhs_lhs, rhs_rhs);
@@ -267,7 +273,8 @@ mod tests {
             next_next_crs,
             CRS::deserialize_uncompressed(
                 crate::hints::serialize(&next_next_crs).unwrap().as_slice()
-            ).unwrap()
+            )
+            .unwrap()
         );
     }
 }

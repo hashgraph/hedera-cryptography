@@ -70,7 +70,10 @@ where
         pp
     }
 
-    pub fn commit_g1(params: &UniversalParams<E>, polynomial: &P) -> Result<E::G1Affine, HinTSError> {
+    pub fn commit_g1(
+        params: &UniversalParams<E>,
+        polynomial: &P,
+    ) -> Result<E::G1Affine, HinTSError> {
         let d = polynomial.degree();
         if d >= params.powers_of_g.len() {
             return Err(HinTSError::InsufficientCRS(d));
@@ -80,11 +83,15 @@ where
             convert_to_bigints(&polynomial.coeffs());
 
         let powers_of_g = &params.powers_of_g[..=d].to_vec();
-        let commitment = <E::G1 as VariableBaseMSM>::msm_bigint(&powers_of_g[..], plain_coeffs.as_slice());
+        let commitment =
+            <E::G1 as VariableBaseMSM>::msm_bigint(&powers_of_g[..], plain_coeffs.as_slice());
         Ok(commitment.into_affine())
     }
 
-    pub fn commit_g2(params: &UniversalParams<E>, polynomial: &P) -> Result<E::G2Affine, HinTSError> {
+    pub fn commit_g2(
+        params: &UniversalParams<E>,
+        polynomial: &P,
+    ) -> Result<E::G2Affine, HinTSError> {
         let d = polynomial.degree();
         if d >= params.powers_of_h.len() {
             return Err(HinTSError::InsufficientCRS(d));
@@ -94,7 +101,8 @@ where
             convert_to_bigints(&polynomial.coeffs());
 
         let powers_of_h = &params.powers_of_h[..=d].to_vec();
-        let commitment = <E::G2 as VariableBaseMSM>::msm_bigint(&powers_of_h[..], plain_coeffs.as_slice());
+        let commitment =
+            <E::G2 as VariableBaseMSM>::msm_bigint(&powers_of_h[..], plain_coeffs.as_slice());
 
         Ok(commitment.into_affine())
     }
@@ -127,9 +135,6 @@ fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: DenseUVPolynomial
 }
 
 fn convert_to_bigints<F: PrimeField>(p: &[F]) -> Vec<F::BigInt> {
-    let coeffs = p
-        .into_iter()
-        .map(|s| s.into_bigint())
-        .collect::<Vec<_>>();
+    let coeffs = p.into_iter().map(|s| s.into_bigint()).collect::<Vec<_>>();
     coeffs
 }

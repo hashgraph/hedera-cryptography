@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use jni::objects::{JByteArray, JObject};
-use jni::sys::{jbyteArray, jboolean, jshort};
-use jni::JNIEnv;
-use crate::setup::{ContributionProof, PowersOfTauProtocol};
 use crate::hints::{serialize, CRS};
 use crate::jni_util;
+use crate::setup::{ContributionProof, PowersOfTauProtocol};
+use jni::objects::{JByteArray, JObject};
+use jni::sys::{jboolean, jbyteArray, jshort};
+use jni::JNIEnv;
 
 /// JNI function to create a new CRS object
 /// # Arguments
@@ -23,7 +23,7 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ini
     let crs = PowersOfTauProtocol::init(signers_num as usize);
     match jni_util::serialize_object(&env, &crs) {
         Ok(val) => val,
-        Err(_) => std::ptr::null_mut()
+        Err(_) => std::ptr::null_mut(),
     }
 }
 
@@ -42,28 +42,28 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_upd
     prev_crs_array: JByteArray,
     random_array: JByteArray,
 ) -> jbyteArray {
-    let prev_crs :CRS = match jni_util::deserialize_jbyte_array(&env, &prev_crs_array) {
+    let prev_crs: CRS = match jni_util::deserialize_jbyte_array(&env, &prev_crs_array) {
         Ok(val) => val,
-        Err(_) => return std::ptr::null_mut()
+        Err(_) => return std::ptr::null_mut(),
     };
 
     let random_arr = match jni_util::build_entropy_array(&env, &random_array) {
         Ok(val) => val,
-        Err(_) => return std::ptr::null_mut()
+        Err(_) => return std::ptr::null_mut(),
     };
 
     let (crs, contribution_proof) = match PowersOfTauProtocol::contribute(&prev_crs, random_arr) {
         Ok(val) => val,
-        Err(_) => return std::ptr::null_mut()
+        Err(_) => return std::ptr::null_mut(),
     };
 
     let serialized_crs = match serialize(&crs) {
         Ok(val) => val,
-        Err(_) => return std::ptr::null_mut()
+        Err(_) => return std::ptr::null_mut(),
     };
     let serialized_contribution_proof = match serialize(&contribution_proof) {
         Ok(val) => val,
-        Err(_) => return std::ptr::null_mut()
+        Err(_) => return std::ptr::null_mut(),
     };
 
     jni_util::two_u8_vec_to_jbyte_array(&env, &serialized_crs, &serialized_contribution_proof)
@@ -86,22 +86,27 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
     next_crs_array: JByteArray,
     contribution_proof_array: JByteArray,
 ) -> jboolean {
-    let prev_crs :CRS = match jni_util::deserialize_jbyte_array(&env, &prev_crs_array) {
+    let prev_crs: CRS = match jni_util::deserialize_jbyte_array(&env, &prev_crs_array) {
         Ok(val) => val,
-        Err(_) => return jboolean::from(false)
+        Err(_) => return jboolean::from(false),
     };
 
-    let next_crs :CRS = match jni_util::deserialize_jbyte_array(&env, &next_crs_array) {
+    let next_crs: CRS = match jni_util::deserialize_jbyte_array(&env, &next_crs_array) {
         Ok(val) => val,
-        Err(_) => return jboolean::from(false)
+        Err(_) => return jboolean::from(false),
     };
 
-    let contribution_proof: ContributionProof = match jni_util::deserialize_jbyte_array(&env, &contribution_proof_array) {
-        Ok(val) => val,
-        Err(_) => return jboolean::from(false)
-    };
+    let contribution_proof: ContributionProof =
+        match jni_util::deserialize_jbyte_array(&env, &contribution_proof_array) {
+            Ok(val) => val,
+            Err(_) => return jboolean::from(false),
+        };
 
-    jboolean::from(PowersOfTauProtocol::verify_contribution(&prev_crs, &next_crs, &contribution_proof))
+    jboolean::from(PowersOfTauProtocol::verify_contribution(
+        &prev_crs,
+        &next_crs,
+        &contribution_proof,
+    ))
 }
 
 /// JNI for HintsLibraryBridge.pruneCRSImpl
@@ -112,18 +117,18 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_pru
     prev_crs_array: JByteArray,
     signers_num: jshort,
 ) -> jbyteArray {
-    let prev_crs :CRS = match jni_util::deserialize_jbyte_array(&env, &prev_crs_array) {
+    let prev_crs: CRS = match jni_util::deserialize_jbyte_array(&env, &prev_crs_array) {
         Ok(val) => val,
-        Err(_) => return std::ptr::null_mut()
+        Err(_) => return std::ptr::null_mut(),
     };
 
-    let crs :CRS = match PowersOfTauProtocol::prune_crs(&prev_crs, signers_num as usize) {
+    let crs: CRS = match PowersOfTauProtocol::prune_crs(&prev_crs, signers_num as usize) {
         Ok(val) => val,
-        Err(_) => return std::ptr::null_mut()
+        Err(_) => return std::ptr::null_mut(),
     };
 
     match jni_util::serialize_object(&env, &crs) {
         Ok(val) => val,
-        Err(_) => std::ptr::null_mut()
+        Err(_) => std::ptr::null_mut(),
     }
 }

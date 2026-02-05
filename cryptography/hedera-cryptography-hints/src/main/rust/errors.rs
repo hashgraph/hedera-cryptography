@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::error::Error;
-use std::fmt;
 use ark_ec::hashing::HashToCurveError;
 use ark_serialize::SerializationError;
+use std::error::Error;
+use std::fmt;
 
-/// Error enum to wrap underlying failures in HinTS operations, 
+/// Error enum to wrap underlying failures in HinTS operations,
 /// or wrap errors coming from dependencies (namely, arkworks).
 #[derive(Debug)]
 pub enum HinTSError {
@@ -29,10 +29,17 @@ impl fmt::Display for HinTSError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             HinTSError::EncodingError(ref err) => err.fmt(f),
-            HinTSError::InvalidNetworkSize(n) => write!(f, "Network size must be a power of 2. Got {n}"),
-            HinTSError::InsufficientCRS(d) => write!(f, "CRS is insufficient for the operation. Expected degree {d}"),
+            HinTSError::InvalidNetworkSize(n) => {
+                write!(f, "Network size must be a power of 2. Got {n}")
+            }
+            HinTSError::InsufficientCRS(d) => write!(
+                f,
+                "CRS is insufficient for the operation. Expected degree {d}"
+            ),
             HinTSError::InvalidInput(ref s) => write!(f, "Invalid input: {s}"),
-            HinTSError::CryptographyCatastrophe(ref s) => write!(f, "Cryptography catastrophe: {s}"),
+            HinTSError::CryptographyCatastrophe(ref s) => {
+                write!(f, "Cryptography catastrophe: {s}")
+            }
             HinTSError::HashingError(ref err) => err.fmt(f),
         }
     }
