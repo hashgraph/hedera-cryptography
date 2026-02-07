@@ -3,10 +3,24 @@ package com.hedera.cryptography.ceremony;
 
 import com.hedera.cryptography.ceremony.s3.S3Client;
 import com.hedera.cryptography.ceremony.s3.S3ClientInitializationException;
+import com.hedera.cryptography.ceremony.s3.S3ResponseException;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+/// TSS Ceremony Orchestrator.
 public class Orchestrator {
+    /// Maximum number of cycles of the ceremony.
+    private static final int MAX_CYCLES = 100;
+
+    /// Make the loop less tight to reduce the number of S3 API calls in case we keep re-running the last cycle.
+    /// Long enough to avoid bombarding S3 with unnecessary requests.
+    /// Short enough to allow a human to start a new cycle by uploading the initial.bin/ready whenever needed.
+    private static final long WAIT_BETWEEN_CYCLES_MILLIS = 15 * 60 * 1000;
+
+    /// Make the loop less tight to avoid 429 TOO_MANY_REQUESTS.
+    private static final long WAIT_IN_DETERMINE_CYCLE_LOOP_MILLIS = 1000;
+
     /**
      * Main class that requires command-line arguments:
      * <p>
@@ -50,13 +64,79 @@ public class Orchestrator {
             System.err.println("Starting Orchestrator for nodeId: " + thisNodeId + " and allNodeIds: " + allNodeIds
                     + " using dataCruncher: " + dataCruncherExecutableFile);
 
-            // Run phase 1
-            new Phase("1", thisNodeId, allNodeIds, new S3DirectoryAccessor(s3Client, "phase1"), dataCruncher, crypto)
-                    .run();
+            while (true) {
+                try {
+                    System.err.println(
+                            "Trying to determine a cycle to run (will keep trying until there's one ready)...");
+                    final String cycle = determineCycle(s3Client);
+                    if (cycle != null) {
+                        System.err.println("Running cycle: " + cycle);
 
-            // Run phase 2
-            new Phase("2", thisNodeId, allNodeIds, new S3DirectoryAccessor(s3Client, "phase2"), dataCruncher, crypto)
-                    .run();
+                        // Run phase 1
+                        new Phase(
+                                        "1",
+                                        thisNodeId,
+                                        allNodeIds,
+                                        new S3DirectoryAccessor(s3Client, cycle + "/phase1"),
+                                        dataCruncher,
+                                        crypto)
+                                .run();
+
+                        // Run phase 2
+                        new Phase(
+                                        "2",
+                                        thisNodeId,
+                                        allNodeIds,
+                                        new S3DirectoryAccessor(s3Client, cycle + "/phase2"),
+                                        dataCruncher,
+                                        crypto)
+                                .run();
+                    }
+                } catch (S3ResponseException | IOException e) {
+                    e.printStackTrace();
+
+                    // An S3 call failed (or maybe a disk read/write failed.) On one hand we could die here.
+                    // On the other hand, this may be an intermittent network failure or throttling of some sort,
+                    // so let's keep running. We have a Thread.sleep() below to avoid bombarding S3 with bad requests
+                    // if it's our fault, actually.
+                    // A NodeOp might want to check logs (our stderr/out redirected to a file) to decide if the
+                    // process should be killed (e.g. if S3 credentials are indeed bad or similar.)
+                }
+
+                try {
+                    Thread.sleep(WAIT_BETWEEN_CYCLES_MILLIS);
+                } catch (InterruptedException ignore) {
+                    // Swallow it to prevent spurious InterruptedExceptions.
+                    // We don't really support a graceful shutdown, so an operator would have to kill the process.
+                }
+            }
         }
+    }
+
+    private static String cycleName(int i) {
+        return "cycle" + i;
+    }
+
+    /// Determine a cycle to run, or null if there's none ready.
+    private static String determineCycle(S3Client s3Client) throws S3ResponseException, IOException {
+        // It would be nice to list all objects and filter out the pattern we like, but S3 API has a hard-limit
+        // of 1000 max_keys for listObject call, and with multiple cycles and phases we could hit the limit.
+        // So we loop instead:
+        int lastCycle = -1;
+        for (int i = 0; i < MAX_CYCLES; i++) {
+            final String name = cycleName(i) + "/phase1/" + Phase.INITIAL_FILE_NAME + ".ready";
+            final List<String> objects = s3Client.listObjects(name, 2);
+            if (objects.size() == 1 && objects.get(0).equals(name)) {
+                lastCycle = i;
+            }
+            try {
+                Thread.sleep(WAIT_IN_DETERMINE_CYCLE_LOOP_MILLIS);
+            } catch (InterruptedException ignore) {
+                // Swallow it to prevent spurious InterruptedExceptions.
+                // We don't really support a graceful shutdown, so an operator would have to kill the process.
+            }
+        }
+
+        return lastCycle == -1 ? null : cycleName(lastCycle);
     }
 }

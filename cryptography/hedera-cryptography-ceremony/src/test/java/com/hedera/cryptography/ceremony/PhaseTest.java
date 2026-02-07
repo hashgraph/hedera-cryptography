@@ -44,6 +44,9 @@ public class PhaseTest {
 
         phase.run();
 
+        verify(s3DirectoryAccessor, times(1)).doesExist("1.claimed");
+        verify(s3DirectoryAccessor, times(1)).doesExist("2.claimed");
+
         verify(s3DirectoryAccessor, times(1)).writeText("1.claimed", "initial");
 
         ArgumentCaptor<Path> outputPathCaptor = ArgumentCaptor.forClass(Path.class);
@@ -72,6 +75,8 @@ public class PhaseTest {
 
         phase.run();
 
+        verify(s3DirectoryAccessor, times(1)).doesExist("2.claimed");
+
         verify(s3DirectoryAccessor, times(1)).writeText("2.claimed", "1");
 
         ArgumentCaptor<Path> outputPathCaptor = ArgumentCaptor.forClass(Path.class);
@@ -99,6 +104,8 @@ public class PhaseTest {
         doReturn(0).when(dataCruncher).execute(eq(PHASE), eq(inputPath), any(Path.class));
 
         phase.run();
+
+        verify(s3DirectoryAccessor, times(1)).doesExist("2.claimed");
 
         verify(s3DirectoryAccessor, times(1)).writeText("2.claimed", "initial");
 
