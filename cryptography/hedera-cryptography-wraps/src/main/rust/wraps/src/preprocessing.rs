@@ -8,6 +8,8 @@ use ark_ff::Field;
 use ark_poly::{EvaluationDomain, GeneralEvaluationDomain, domain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{Zero, ops::*};
+use ark_relations::utils::matrix::Matrix;
+
 use folding_schemes::folding::nova::decider_eth_circuit::DeciderEthCircuit;
 use folding_schemes::folding::traits::Dummy;
 use folding_schemes::commitment::{kzg::KZG, pedersen::Pedersen, CommitmentScheme};
@@ -72,6 +74,16 @@ pub struct Phase2SRS {
     gamma_abc_g1: Vec<G1Affine>,
     delta_abc_g1: Vec<G1Affine>,
     h_g1: Vec<G1Affine>,
+}
+
+#[derive(CanonicalDeserialize, CanonicalSerialize)]
+pub struct CircuitConfig {
+    pub num_constraints: usize,
+    pub num_witness_variables: usize,
+    pub num_instance_variables: usize,
+    pub matrix_A: Matrix<Fr>,
+    pub matrix_B: Matrix<Fr>,
+    pub matrix_C: Matrix<Fr>,
 }
 
 fn load_from_file<T: CanonicalDeserialize>(path: &PathBuf) -> Result<T, Error> {
@@ -201,10 +213,10 @@ impl WRAPSPreprocessing {
     }
 
     /// creates an initial SRS for Groth16, using tau = 1, and alpha, beta = 1
-    fn create_init_srs_phase1(cs: ConstraintSystemRef<Fr>, path: &PathBuf) {
+    fn create_init_srs_phase1(circuit_config: &CircuitConfig, path: &PathBuf) {
         // let us figure out the circuit dimensions
         // domain_size is computed the same way (and then padded to the next power of 2)
-        let n = cs.num_constraints() + cs.num_instance_variables();
+        let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
         let domain = GeneralEvaluationDomain::<Fr>::new(n)
             .ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
         let domain_size = domain.size();
@@ -238,9 +250,9 @@ impl WRAPSPreprocessing {
 
     }
 
-    fn update_srs_phase1(cs: ConstraintSystemRef<Fr>, prev_srs: &PathBuf, next_srs: &PathBuf) {
+    fn update_srs_phase1(circuit_config: &CircuitConfig, prev_srs: &PathBuf, next_srs: &PathBuf) {
         type D<F> = GeneralEvaluationDomain<F>;
-        let n = cs.num_constraints() + cs.num_instance_variables();
+        let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
         let domain = D::new(n)
             .ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
 
@@ -272,18 +284,18 @@ impl WRAPSPreprocessing {
         update_srs_helper_g1(prev_srs, next_srs, "h_g1.bin", delta_inverse, Fr::from(1u64), true);
     }
 
-    fn specialize_srs(p1_srs: &PathBuf, p1_out: &PathBuf, p2_srs: &PathBuf, cs: ConstraintSystemRef<Fr>) {
+    fn specialize_srs(circuit_config: &CircuitConfig, p1_srs: &PathBuf, p1_out: &PathBuf, p2_srs: &PathBuf) {
         pause_until_enter();
-        let matrices = &cs.to_matrices().unwrap()["R1CS"];
-        let domain = GeneralEvaluationDomain::<Fr>::new(cs.num_constraints() + cs.num_instance_variables())
+        let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
+        let domain = GeneralEvaluationDomain::<Fr>::new(n)
             .ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
         let ds = domain.size();
 
         // some useful values
-        let qap_num_constraints = cs.num_constraints();
-        let qap_num_variables = (cs.num_instance_variables() - 1) + cs.num_witness_variables();
+        let qap_num_constraints = circuit_config.num_constraints;
+        let qap_num_variables = (circuit_config.num_instance_variables - 1) + circuit_config.num_witness_variables;
         let start = 0;
-        let end = cs.num_instance_variables();
+        let end = circuit_config.num_instance_variables;
 
         pause_until_enter();
 
@@ -307,8 +319,8 @@ impl WRAPSPreprocessing {
         let ifft_of_powers_of_tau_g2  = ECFFTUtils::ifft::<ark_bn254::G2Projective>(&phase1_powers_of_tau_g2[..ds]);
         drop(phase1_powers_of_tau_g2);
         println!("Computing b_g2...");
-        for (i, u_i) in ifft_of_powers_of_tau_g2.iter().enumerate().take(cs.num_constraints()) {
-            for &(ref coeff, index) in &matrices[1][i] {
+        for (i, u_i) in ifft_of_powers_of_tau_g2.iter().enumerate().take(qap_num_constraints) {
+            for &(ref coeff, index) in &circuit_config.matrix_B[i] {
                 b_g2[index] = (b_g2[index] + (*u_i * coeff)).into_affine();
             }
         }
@@ -342,8 +354,8 @@ impl WRAPSPreprocessing {
         abc_g1[start..end].copy_from_slice(&ifft_of_powers_of_beta_tau_g1[(start + qap_num_constraints)..(end + qap_num_constraints)]);
 
         println!("Updating abc_g1 using powers_of_beta_tau_g1...");
-        for (i, u_i) in ifft_of_powers_of_beta_tau_g1.iter().enumerate().take(cs.num_constraints()) {
-            for &(ref coeff, index) in &matrices[0][i] {
+        for (i, u_i) in ifft_of_powers_of_beta_tau_g1.iter().enumerate().take(qap_num_constraints) {
+            for &(ref coeff, index) in &circuit_config.matrix_A[i] {
                 abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
             }
         }
@@ -357,8 +369,8 @@ impl WRAPSPreprocessing {
         let ifft_of_powers_of_alpha_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_alpha_tau_g1);
         pause_until_enter();
         drop(phase1_powers_of_alpha_tau_g1);
-        for (i, u_i) in ifft_of_powers_of_alpha_tau_g1.iter().enumerate().take(cs.num_constraints()) {
-            for &(ref coeff, index) in &matrices[1][i] {
+        for (i, u_i) in ifft_of_powers_of_alpha_tau_g1.iter().enumerate().take(qap_num_constraints) {
+            for &(ref coeff, index) in &circuit_config.matrix_B[i] {
                 abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
             }
         }
@@ -371,16 +383,16 @@ impl WRAPSPreprocessing {
         let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_tau_g1.bin")).unwrap();
         let ifft_of_powers_of_tau_g1  = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_tau_g1[..ds]);
         drop(phase1_powers_of_tau_g1);
-        for (i, u_i) in ifft_of_powers_of_tau_g1.iter().enumerate().take(cs.num_constraints()) {
-            for &(ref coeff, index) in &matrices[2][i] {
+        for (i, u_i) in ifft_of_powers_of_tau_g1.iter().enumerate().take(qap_num_constraints) {
+            for &(ref coeff, index) in &circuit_config.matrix_C[i] {
                 abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
             }
 
-            for &(ref coeff, index) in &matrices[0][i] {
+            for &(ref coeff, index) in &circuit_config.matrix_A[i] {
                 a_g1[index] = (a_g1[index] + (*u_i * coeff)).into_affine();
             }
 
-            for &(ref coeff, index) in &matrices[1][i] {
+            for &(ref coeff, index) in &circuit_config.matrix_B[i] {
                 b_g1[index] = (b_g1[index] + (*u_i * coeff)).into_affine();
             }
         }
@@ -388,7 +400,7 @@ impl WRAPSPreprocessing {
 
         // we use delta and gamma as 1 for this step
         let mut gamma_abc_g1 = abc_g1;
-        let delta_abc_g1 = gamma_abc_g1.split_off(cs.num_instance_variables());
+        let delta_abc_g1 = gamma_abc_g1.split_off(circuit_config.num_instance_variables);
 
         let delta_g1 = G1Affine::generator();
         let delta_g2 = G2Affine::generator();
@@ -458,14 +470,6 @@ impl WRAPSPreprocessing {
         Ok((g16_pk, g16_vk))
     }
 
-    fn circuit_to_cs<C: ConstraintSynthesizer<Fr>>(circuit: C) -> Result<ConstraintSystemRef<Fr>, WRAPSError> {
-        let cs = ConstraintSystem::new_ref();
-        cs.set_optimization_goal(OptimizationGoal::Constraints);
-        cs.set_mode(SynthesisMode::Setup);
-        circuit.generate_constraints(cs.clone()).map_err(|_| WRAPSError::CryptographyError)?;
-        cs.finalize();
-        Ok(cs)
-    }
 }
 
 
@@ -507,39 +511,62 @@ mod tests {
     };
     use ark_std::test_rng;
 
-    fn sample_ceremony_groth_setup<C: ConstraintSynthesizer<Fr>>(circuit: C)
+    fn extract_circuit<C: ConstraintSynthesizer<Fr>>(circuit: C, path: &PathBuf) {
+        let cs = ConstraintSystem::new_ref();
+        cs.set_optimization_goal(OptimizationGoal::Constraints);
+        cs.set_mode(SynthesisMode::Setup);
+        circuit.generate_constraints(cs.clone()).unwrap();
+        cs.finalize();
+
+        let matrices = &cs.to_matrices().unwrap()["R1CS"];
+
+        let circuit_config = CircuitConfig {
+            num_constraints: cs.num_constraints(),
+            num_instance_variables: cs.num_instance_variables(),
+            num_witness_variables: cs.num_witness_variables(),
+            matrix_A: matrices[0].clone(),
+            matrix_B: matrices[1].clone(),
+            matrix_C: matrices[2].clone(),
+        };
+
+        store_to_file(path, &circuit_config).unwrap();
+    }
+
+    fn sample_ceremony_groth_setup()
         -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
-        let cs = WRAPSPreprocessing::circuit_to_cs(circuit)?;
+        let circuit_config = load_from_file::<CircuitConfig>(
+            &PathBuf::from("/Users/rohit/tss/circuit/config")
+        ).unwrap();
 
         // coordinator must create the initial SRS
         WRAPSPreprocessing::create_init_srs_phase1(
-            cs.clone(),
+            &circuit_config,
             &PathBuf::from("/Users/rohit/tss/coordinator/phase1_init")
         );
 
         // three parties take turns updating the SRS
         WRAPSPreprocessing::update_srs_phase1(
-            cs.clone(),
+            &circuit_config,
             &PathBuf::from("/Users/rohit/tss/coordinator/phase1_init"),
             &PathBuf::from("/Users/rohit/tss/node1/phase1")
         );
         WRAPSPreprocessing::update_srs_phase1(
-            cs.clone(),
+            &circuit_config,
             &PathBuf::from("/Users/rohit/tss/node1/phase1"),
             &PathBuf::from("/Users/rohit/tss/node2/phase1")
         );
         WRAPSPreprocessing::update_srs_phase1(
-            cs.clone(),
+            &circuit_config,
             &PathBuf::from("/Users/rohit/tss/node2/phase1"),
             &PathBuf::from("/Users/rohit/tss/node3/phase1")
         );
 
         // coordianator specialzes the SRS to the circuit
         WRAPSPreprocessing::specialize_srs(
+            &circuit_config,
             &PathBuf::from("/Users/rohit/tss/node3/phase1"),
             &PathBuf::from("/Users/rohit/tss/coordinator/phase1_output"),
             &PathBuf::from("/Users/rohit/tss/coordinator/phase2_init"),
-            cs.clone()
         );
 
         // three parties take turns updating the phase 2 SRS
@@ -648,8 +675,9 @@ mod tests {
         }
     }
 
-    const MIMC_ROUNDS: usize = 3222;
+    const MIMC_ROUNDS: usize = 32222;
     const USE_MPC_CEREMONY: bool = true;
+    const GENERATE_CIRCUIT_CONFIG: bool = false;
 
     #[test]
     fn test_mimc_groth16() {
@@ -674,12 +702,11 @@ mod tests {
                 constants: &constants,
             };
 
-            let cs = WRAPSPreprocessing::circuit_to_cs(c).unwrap();
-            println!("Number of constraints: {}", cs.num_constraints());
-            println!("Number of variables: {}", cs.num_variables());
-
             if USE_MPC_CEREMONY {
-                sample_ceremony_groth_setup(c).unwrap()
+                if GENERATE_CIRCUIT_CONFIG {
+                    extract_circuit(c, &PathBuf::from("/Users/rohit/tss/circuit/config"));
+                }
+                sample_ceremony_groth_setup().unwrap()
             } else {
                 WRAPSPreprocessing::trusted_groth_setup(c).unwrap()
             }
