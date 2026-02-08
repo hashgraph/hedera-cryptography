@@ -8,7 +8,7 @@ use ark_ff::Field;
 use ark_poly::{EvaluationDomain, GeneralEvaluationDomain, domain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{Zero, ops::*};
-use ark_relations::utils::matrix::Matrix;
+use ark_relations::utils::matrix::{self, Matrix};
 
 use folding_schemes::folding::nova::decider_eth_circuit::DeciderEthCircuit;
 use folding_schemes::folding::traits::Dummy;
@@ -81,9 +81,6 @@ pub struct CircuitConfig {
     pub num_constraints: usize,
     pub num_witness_variables: usize,
     pub num_instance_variables: usize,
-    pub matrix_A: Matrix<Fr>,
-    pub matrix_B: Matrix<Fr>,
-    pub matrix_C: Matrix<Fr>,
 }
 
 fn load_from_file<T: CanonicalDeserialize>(path: &PathBuf) -> Result<T, Error> {
@@ -284,7 +281,13 @@ impl WRAPSPreprocessing {
         update_srs_helper_g1(prev_srs, next_srs, "h_g1.bin", delta_inverse, Fr::from(1u64), true);
     }
 
-    fn specialize_srs(circuit_config: &CircuitConfig, p1_srs: &PathBuf, p1_out: &PathBuf, p2_srs: &PathBuf) {
+    fn specialize_srs(
+        circuit_config: &CircuitConfig, // params related to circuit dimensions
+        r1cs_matrix_path: &PathBuf, // path to the R1CS matrices for the circuit
+        p1_srs: &PathBuf, // input to specialization, that is output by last phase 1 update
+        p1_out: &PathBuf, // output that will be used for phase 2 SRS specialization
+        p2_srs: &PathBuf, // output that will be used as phase 2 starting SRS
+    ) {
         pause_until_enter();
         let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
         let domain = GeneralEvaluationDomain::<Fr>::new(n)
@@ -297,12 +300,21 @@ impl WRAPSPreprocessing {
         let start = 0;
         let end = circuit_config.num_instance_variables;
 
+        let matrix_a_path = r1cs_matrix_path.join("matrix_A.bin");
+        let matrix_b_path = r1cs_matrix_path.join("matrix_B.bin");
+        let matrix_c_path = r1cs_matrix_path.join("matrix_C.bin");
+
+        let powers_of_tau_g1_path = p1_srs.join("powers_of_tau_g1.bin");
+        let powers_of_tau_g2_path = p1_srs.join("powers_of_tau_g2.bin");
+        let powers_of_beta_tau_g1_path = p1_srs.join("powers_of_beta_tau_g1.bin");
+        let powers_of_alpha_tau_g1_path = p1_srs.join("powers_of_alpha_tau_g1.bin");
+
         pause_until_enter();
 
         /* ---------------------------- begin compute h_g1 ---------------------------- */
         println!("Computing h_g1...");
         let mut h_g1 = vec![G1Affine::zero(); domain.size() - 1];
-        let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_tau_g1.bin")).unwrap();
+        let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
         for i in 0..=(domain.size()-2) {
             h_g1[i] = (phase1_powers_of_tau_g1[i + domain.size()] - phase1_powers_of_tau_g1[i]).into_affine();
         }
@@ -315,16 +327,18 @@ impl WRAPSPreprocessing {
         /* ---------------------------- begin compute b_g2 ---------------------------- */
         println!("Computing IFFT of phase1_powers_of_tau_g2...");
         let mut b_g2 = vec![G2Affine::zero(); qap_num_variables + 1];
-        let phase1_powers_of_tau_g2 = load_from_file::<Vec<G2Affine>>(&p1_srs.join("powers_of_tau_g2.bin")).unwrap();
+        let phase1_powers_of_tau_g2 = load_from_file::<Vec<G2Affine>>(&powers_of_tau_g2_path).unwrap();
         let ifft_of_powers_of_tau_g2  = ECFFTUtils::ifft::<ark_bn254::G2Projective>(&phase1_powers_of_tau_g2[..ds]);
         drop(phase1_powers_of_tau_g2);
         println!("Computing b_g2...");
+        let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
         for (i, u_i) in ifft_of_powers_of_tau_g2.iter().enumerate().take(qap_num_constraints) {
-            for &(ref coeff, index) in &circuit_config.matrix_B[i] {
+            for &(ref coeff, index) in &matrix_b[i] {
                 b_g2[index] = (b_g2[index] + (*u_i * coeff)).into_affine();
             }
         }
         store_to_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin"), &b_g2).unwrap();
+        drop(matrix_b);
         drop(ifft_of_powers_of_tau_g2);
         drop(b_g2);
         /* ---------------------------- end compute b_g2 ---------------------------- */
@@ -348,29 +362,32 @@ impl WRAPSPreprocessing {
 
         // this handles the dummy constraints x * 0 = 0 for non-malleability
         println!("Computing IFFT of powers_of_beta_tau_g1...");
-        let phase1_powers_of_beta_tau_g1 = load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_beta_tau_g1.bin")).unwrap();
+        let phase1_powers_of_beta_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_beta_tau_g1_path).unwrap();
         let ifft_of_powers_of_beta_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_beta_tau_g1);
         drop(phase1_powers_of_beta_tau_g1);
         abc_g1[start..end].copy_from_slice(&ifft_of_powers_of_beta_tau_g1[(start + qap_num_constraints)..(end + qap_num_constraints)]);
 
         println!("Updating abc_g1 using powers_of_beta_tau_g1...");
+        let matrix_a = load_from_file::<Matrix<Fr>>(&matrix_a_path).unwrap();
         for (i, u_i) in ifft_of_powers_of_beta_tau_g1.iter().enumerate().take(qap_num_constraints) {
-            for &(ref coeff, index) in &circuit_config.matrix_A[i] {
+            for &(ref coeff, index) in &matrix_a[i] {
                 abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
             }
         }
+        drop(matrix_a);
         drop(ifft_of_powers_of_beta_tau_g1);
 
         pause_until_enter();
 
         println!("Updating abc_g1 using powers_of_alpha_tau_g1...");
         println!("Computing IFFT of powers_of_alpha_tau_g1...");
-        let phase1_powers_of_alpha_tau_g1 = load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_alpha_tau_g1.bin")).unwrap();
+        let phase1_powers_of_alpha_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_alpha_tau_g1_path).unwrap();
         let ifft_of_powers_of_alpha_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_alpha_tau_g1);
         pause_until_enter();
         drop(phase1_powers_of_alpha_tau_g1);
+        let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
         for (i, u_i) in ifft_of_powers_of_alpha_tau_g1.iter().enumerate().take(qap_num_constraints) {
-            for &(ref coeff, index) in &circuit_config.matrix_B[i] {
+            for &(ref coeff, index) in &matrix_b[i] {
                 abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
             }
         }
@@ -380,22 +397,28 @@ impl WRAPSPreprocessing {
 
         println!("Updating abc_g1, a_g1, b_g1 using powers_of_tau_g1...");
         println!("Computing IFFT of phase1_powers_of_tau_g1...");
-        let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_tau_g1.bin")).unwrap();
+        let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
         let ifft_of_powers_of_tau_g1  = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_tau_g1[..ds]);
         drop(phase1_powers_of_tau_g1);
+        let matrix_a = load_from_file::<Matrix<Fr>>(&matrix_a_path).unwrap();
+        let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
+        let matrix_c = load_from_file::<Matrix<Fr>>(&matrix_c_path).unwrap();
         for (i, u_i) in ifft_of_powers_of_tau_g1.iter().enumerate().take(qap_num_constraints) {
-            for &(ref coeff, index) in &circuit_config.matrix_C[i] {
+            for &(ref coeff, index) in &matrix_c[i] {
                 abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
             }
 
-            for &(ref coeff, index) in &circuit_config.matrix_A[i] {
+            for &(ref coeff, index) in &matrix_a[i] {
                 a_g1[index] = (a_g1[index] + (*u_i * coeff)).into_affine();
             }
 
-            for &(ref coeff, index) in &circuit_config.matrix_B[i] {
+            for &(ref coeff, index) in &matrix_b[i] {
                 b_g1[index] = (b_g1[index] + (*u_i * coeff)).into_affine();
             }
         }
+        drop(matrix_a);
+        drop(matrix_b);
+        drop(matrix_c);
         drop(ifft_of_powers_of_tau_g1);
 
         // we use delta and gamma as 1 for this step
@@ -524,18 +547,19 @@ mod tests {
             num_constraints: cs.num_constraints(),
             num_instance_variables: cs.num_instance_variables(),
             num_witness_variables: cs.num_witness_variables(),
-            matrix_A: matrices[0].clone(),
-            matrix_B: matrices[1].clone(),
-            matrix_C: matrices[2].clone(),
         };
 
-        store_to_file(path, &circuit_config).unwrap();
+        store_to_file(&path.join("matrix_A.bin"), &matrices[0]).unwrap();
+        store_to_file(&path.join("matrix_B.bin"), &matrices[1]).unwrap();
+        store_to_file(&path.join("matrix_C.bin"), &matrices[2]).unwrap();
+
+        store_to_file(&path.join("circuit_config.bin"), &circuit_config).unwrap();
     }
 
     fn sample_ceremony_groth_setup()
         -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
         let circuit_config = load_from_file::<CircuitConfig>(
-            &PathBuf::from("/Users/rohit/tss/circuit/config")
+            &PathBuf::from("/Users/rohit/tss/circuit/circuit_config.bin")
         ).unwrap();
 
         // coordinator must create the initial SRS
@@ -564,6 +588,7 @@ mod tests {
         // coordianator specialzes the SRS to the circuit
         WRAPSPreprocessing::specialize_srs(
             &circuit_config,
+            &PathBuf::from("/Users/rohit/tss/circuit"),
             &PathBuf::from("/Users/rohit/tss/node3/phase1"),
             &PathBuf::from("/Users/rohit/tss/coordinator/phase1_output"),
             &PathBuf::from("/Users/rohit/tss/coordinator/phase2_init"),
@@ -675,9 +700,9 @@ mod tests {
         }
     }
 
-    const MIMC_ROUNDS: usize = 32222;
+    const MIMC_ROUNDS: usize = 3222;
     const USE_MPC_CEREMONY: bool = true;
-    const GENERATE_CIRCUIT_CONFIG: bool = false;
+    const PREPROCESS_CIRCUIT: bool = false;
 
     #[test]
     fn test_mimc_groth16() {
@@ -703,8 +728,8 @@ mod tests {
             };
 
             if USE_MPC_CEREMONY {
-                if GENERATE_CIRCUIT_CONFIG {
-                    extract_circuit(c, &PathBuf::from("/Users/rohit/tss/circuit/config"));
+                if PREPROCESS_CIRCUIT {
+                    extract_circuit(c, &PathBuf::from("/Users/rohit/tss/circuit"));
                 }
                 sample_ceremony_groth_setup().unwrap()
             } else {
