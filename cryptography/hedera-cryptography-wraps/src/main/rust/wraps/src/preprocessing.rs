@@ -281,8 +281,25 @@ impl WRAPSPreprocessing {
         update_srs_helper_g1(prev_srs, next_srs, "h_g1.bin", delta_inverse, Fr::from(1u64), true);
     }
 
-    fn specialize_srs_helper() {
+    fn specialize_srs_helper_g1(
+        abc_g1: &mut [G1Affine],
+        matrix_path: &PathBuf,
+        powers: &[G1Affine],
+        qap_num_constraints: usize,
+        qap_num_variables: usize)
+    {
+        let matrix = load_from_file::<Matrix<Fr>>(&matrix_path).unwrap();
+        let mut output = vec![G1Affine::zero(); qap_num_variables + 1];
+        for (i, u_i) in powers.iter().enumerate().take(qap_num_constraints) {
+            for &(ref coeff, index) in &matrix[i] {
+                output[index] = (output[index] + (*u_i * coeff)).into_affine();
+            }
+        }
+        drop(matrix);
 
+        for (dst, src) in abc_g1.iter_mut().zip(output.iter()) {
+            *dst = (*dst + *src).into_affine();
+        }
     }
 
     pub fn specialize_srs(
@@ -299,8 +316,8 @@ impl WRAPSPreprocessing {
         let ds = domain.size();
 
         // some useful values
-        let qap_num_constraints = circuit_config.num_constraints;
-        let qap_num_variables = (circuit_config.num_instance_variables - 1) + circuit_config.num_witness_variables;
+        let num_constraints = circuit_config.num_constraints;
+        let num_variables = (circuit_config.num_instance_variables - 1) + circuit_config.num_witness_variables;
         let start = 0;
         let end = circuit_config.num_instance_variables;
 
@@ -359,10 +376,10 @@ impl WRAPSPreprocessing {
         pause_until_enter();
 
         /* ---------------------------- begin compute b_g2 ---------------------------- */
-        let mut b_g2 = vec![G2Affine::zero(); qap_num_variables + 1];
+        let mut b_g2 = vec![G2Affine::zero(); num_variables + 1];
         println!("Computing b_g2...");
         let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
-        for (i, u_i) in ifft_of_powers_of_tau_g2.iter().enumerate().take(qap_num_constraints) {
+        for (i, u_i) in ifft_of_powers_of_tau_g2.iter().enumerate().take(num_constraints) {
             for &(ref coeff, index) in &matrix_b[i] {
                 b_g2[index] = (b_g2[index] + (*u_i * coeff)).into_affine();
             }
@@ -374,65 +391,34 @@ impl WRAPSPreprocessing {
 
         pause_until_enter();
 
-        let mut abc_g1 = vec![G1Affine::zero(); qap_num_variables + 1];
-        let mut a_g1 = vec![G1Affine::zero(); qap_num_variables + 1];
-        let mut b_g1 = vec![G1Affine::zero(); qap_num_variables + 1];
+        let mut abc_g1 = vec![G1Affine::zero(); num_variables + 1];
+        let mut a_g1 = vec![G1Affine::zero(); num_variables + 1];
+        let mut b_g1 = vec![G1Affine::zero(); num_variables + 1];
 
         println!("Initializing a_g1 and abc_g1 for dummy constraints...");
 
         /* ---------------------------- begin dummy constraints ---------------------------- */
         // this handles the dummy constraints x * 0 = 0 for non-malleability
-        a_g1[start..end].copy_from_slice(&ifft_of_powers_of_tau_g1[(start + qap_num_constraints)..(end + qap_num_constraints)]);
-        abc_g1[start..end].copy_from_slice(&ifft_of_powers_of_beta_tau_g1[(start + qap_num_constraints)..(end + qap_num_constraints)]);
+        a_g1[start..end].copy_from_slice(&ifft_of_powers_of_tau_g1[(start + num_constraints)..(end + num_constraints)]);
+        abc_g1[start..end].copy_from_slice(&ifft_of_powers_of_beta_tau_g1[(start + num_constraints)..(end + num_constraints)]);
         /* ---------------------------- end dummy constraints ---------------------------- */
 
 
         /* ---------------------------- begin compute abc_g1, a_g1, b_g1 ---------------------------- */
         println!("Updating abc_g1 using powers_of_beta_tau_g1...");
-        let matrix_a = load_from_file::<Matrix<Fr>>(&matrix_a_path).unwrap();
-        for (i, u_i) in ifft_of_powers_of_beta_tau_g1.iter().enumerate().take(qap_num_constraints) {
-            for &(ref coeff, index) in &matrix_a[i] {
-                abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
-            }
-        }
-        drop(matrix_a);
+        Self::specialize_srs_helper_g1(&mut abc_g1, &matrix_a_path, &ifft_of_powers_of_beta_tau_g1, num_constraints, num_variables);
 
         pause_until_enter();
+
         println!("Updating abc_g1 using powers_of_alpha_tau_g1...");
-        let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
-        for (i, u_i) in ifft_of_powers_of_alpha_tau_g1.iter().enumerate().take(qap_num_constraints) {
-            for &(ref coeff, index) in &matrix_b[i] {
-                abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
-            }
-        }
-        drop(matrix_b);
+        Self::specialize_srs_helper_g1(&mut abc_g1, &matrix_b_path, &ifft_of_powers_of_alpha_tau_g1, num_constraints, num_variables);
 
         pause_until_enter();
 
         println!("Updating abc_g1, a_g1, b_g1 using powers_of_tau_g1...");
-        let matrix_a = load_from_file::<Matrix<Fr>>(&matrix_a_path).unwrap();
-        for (i, u_i) in ifft_of_powers_of_tau_g1.iter().enumerate().take(qap_num_constraints) {
-            for &(ref coeff, index) in &matrix_a[i] {
-                a_g1[index] = (a_g1[index] + (*u_i * coeff)).into_affine();
-            }
-        }
-        drop(matrix_a);
-
-        let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
-        for (i, u_i) in ifft_of_powers_of_tau_g1.iter().enumerate().take(qap_num_constraints) {
-            for &(ref coeff, index) in &matrix_b[i] {
-                b_g1[index] = (b_g1[index] + (*u_i * coeff)).into_affine();
-            }
-        }
-        drop(matrix_b);
-
-        let matrix_c = load_from_file::<Matrix<Fr>>(&matrix_c_path).unwrap();
-        for (i, u_i) in ifft_of_powers_of_tau_g1.iter().enumerate().take(qap_num_constraints) {
-            for &(ref coeff, index) in &matrix_c[i] {
-                abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
-            }
-        }
-        drop(matrix_c);
+        Self::specialize_srs_helper_g1(&mut a_g1, &matrix_a_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        Self::specialize_srs_helper_g1(&mut b_g1, &matrix_b_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        Self::specialize_srs_helper_g1(&mut abc_g1, &matrix_c_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
 
         /* ---------------------------- end compute abc_g1, a_g1, b_g1 ---------------------------- */
 
