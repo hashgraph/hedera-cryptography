@@ -210,7 +210,7 @@ impl WRAPSPreprocessing {
     }
 
     /// creates an initial SRS for Groth16, using tau = 1, and alpha, beta = 1
-    fn create_init_srs_phase1(circuit_config: &CircuitConfig, path: &PathBuf) {
+    pub fn create_init_srs_phase1(circuit_config: &CircuitConfig, path: &PathBuf) {
         // let us figure out the circuit dimensions
         // domain_size is computed the same way (and then padded to the next power of 2)
         let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
@@ -247,7 +247,7 @@ impl WRAPSPreprocessing {
 
     }
 
-    fn update_srs_phase1(circuit_config: &CircuitConfig, prev_srs: &PathBuf, next_srs: &PathBuf) {
+    pub fn update_srs_phase1(circuit_config: &CircuitConfig, prev_srs: &PathBuf, next_srs: &PathBuf) {
         type D<F> = GeneralEvaluationDomain<F>;
         let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
         let domain = D::new(n)
@@ -281,7 +281,11 @@ impl WRAPSPreprocessing {
         update_srs_helper_g1(prev_srs, next_srs, "h_g1.bin", delta_inverse, Fr::from(1u64), true);
     }
 
-    fn specialize_srs(
+    fn specialize_srs_helper() {
+
+    }
+
+    pub fn specialize_srs(
         circuit_config: &CircuitConfig, // params related to circuit dimensions
         r1cs_matrix_path: &PathBuf, // path to the R1CS matrices for the circuit
         p1_srs: &PathBuf, // input to specialization, that is output by last phase 1 update
@@ -376,10 +380,14 @@ impl WRAPSPreprocessing {
 
         println!("Initializing a_g1 and abc_g1 for dummy constraints...");
 
+        /* ---------------------------- begin dummy constraints ---------------------------- */
         // this handles the dummy constraints x * 0 = 0 for non-malleability
         a_g1[start..end].copy_from_slice(&ifft_of_powers_of_tau_g1[(start + qap_num_constraints)..(end + qap_num_constraints)]);
         abc_g1[start..end].copy_from_slice(&ifft_of_powers_of_beta_tau_g1[(start + qap_num_constraints)..(end + qap_num_constraints)]);
+        /* ---------------------------- end dummy constraints ---------------------------- */
 
+
+        /* ---------------------------- begin compute abc_g1, a_g1, b_g1 ---------------------------- */
         println!("Updating abc_g1 using powers_of_beta_tau_g1...");
         let matrix_a = load_from_file::<Matrix<Fr>>(&matrix_a_path).unwrap();
         for (i, u_i) in ifft_of_powers_of_beta_tau_g1.iter().enumerate().take(qap_num_constraints) {
@@ -390,6 +398,7 @@ impl WRAPSPreprocessing {
         drop(matrix_a);
 
         pause_until_enter();
+        println!("Updating abc_g1 using powers_of_alpha_tau_g1...");
         let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
         for (i, u_i) in ifft_of_powers_of_alpha_tau_g1.iter().enumerate().take(qap_num_constraints) {
             for &(ref coeff, index) in &matrix_b[i] {
@@ -402,24 +411,30 @@ impl WRAPSPreprocessing {
 
         println!("Updating abc_g1, a_g1, b_g1 using powers_of_tau_g1...");
         let matrix_a = load_from_file::<Matrix<Fr>>(&matrix_a_path).unwrap();
+        for (i, u_i) in ifft_of_powers_of_tau_g1.iter().enumerate().take(qap_num_constraints) {
+            for &(ref coeff, index) in &matrix_a[i] {
+                a_g1[index] = (a_g1[index] + (*u_i * coeff)).into_affine();
+            }
+        }
+        drop(matrix_a);
+
         let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
+        for (i, u_i) in ifft_of_powers_of_tau_g1.iter().enumerate().take(qap_num_constraints) {
+            for &(ref coeff, index) in &matrix_b[i] {
+                b_g1[index] = (b_g1[index] + (*u_i * coeff)).into_affine();
+            }
+        }
+        drop(matrix_b);
+
         let matrix_c = load_from_file::<Matrix<Fr>>(&matrix_c_path).unwrap();
         for (i, u_i) in ifft_of_powers_of_tau_g1.iter().enumerate().take(qap_num_constraints) {
             for &(ref coeff, index) in &matrix_c[i] {
                 abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
             }
-
-            for &(ref coeff, index) in &matrix_a[i] {
-                a_g1[index] = (a_g1[index] + (*u_i * coeff)).into_affine();
-            }
-
-            for &(ref coeff, index) in &matrix_b[i] {
-                b_g1[index] = (b_g1[index] + (*u_i * coeff)).into_affine();
-            }
         }
-        drop(matrix_a);
-        drop(matrix_b);
         drop(matrix_c);
+
+        /* ---------------------------- end compute abc_g1, a_g1, b_g1 ---------------------------- */
 
         // we use delta and gamma as 1 for this step
         let mut gamma_abc_g1 = abc_g1;
