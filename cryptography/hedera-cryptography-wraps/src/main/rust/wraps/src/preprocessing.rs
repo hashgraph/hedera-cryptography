@@ -309,27 +309,53 @@ impl WRAPSPreprocessing {
         let powers_of_beta_tau_g1_path = p1_srs.join("powers_of_beta_tau_g1.bin");
         let powers_of_alpha_tau_g1_path = p1_srs.join("powers_of_alpha_tau_g1.bin");
 
+        let ifft_of_powers_of_tau_g1_path = p1_out.join("ifft_of_powers_of_tau_g1.bin");
+        let ifft_of_powers_of_tau_g2_path = p1_out.join("ifft_of_powers_of_tau_g2.bin");
+        let ifft_of_powers_of_alpha_tau_g1_path = p1_out.join("ifft_of_powers_of_alpha_tau_g1.bin");
+        let ifft_of_powers_of_beta_tau_g1_path = p1_out.join("ifft_of_powers_of_beta_tau_g1.bin");
+
+        println!("Computing IFFT of phase1_powers_of_tau_g1...");
+        let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
+        let ifft_of_powers_of_tau_g1  = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_tau_g1[..ds]);
+        store_to_file(&ifft_of_powers_of_tau_g1_path, &ifft_of_powers_of_tau_g1).unwrap();
+        drop(phase1_powers_of_tau_g1);
+
+        println!("Computing IFFT of phase1_powers_of_tau_g2...");
+        let phase1_powers_of_tau_g2 = load_from_file::<Vec<G2Affine>>(&powers_of_tau_g2_path).unwrap();
+        let ifft_of_powers_of_tau_g2  = ECFFTUtils::ifft::<ark_bn254::G2Projective>(&phase1_powers_of_tau_g2[..ds]);
+        store_to_file(&ifft_of_powers_of_tau_g2_path, &ifft_of_powers_of_tau_g2).unwrap();
+        drop(phase1_powers_of_tau_g2);
+
+        println!("Computing IFFT of phase1_powers_of_alpha_tau_g1...");
+        let phase1_powers_of_alpha_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_alpha_tau_g1_path).unwrap();
+        let ifft_of_powers_of_alpha_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_alpha_tau_g1);
+        store_to_file(&ifft_of_powers_of_alpha_tau_g1_path, &ifft_of_powers_of_alpha_tau_g1).unwrap();
+        drop(phase1_powers_of_alpha_tau_g1);
+
+        println!("Computing IFFT of phase1_powers_of_beta_tau_g1...");
+        let phase1_powers_of_beta_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_beta_tau_g1_path).unwrap();
+        let ifft_of_powers_of_beta_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_beta_tau_g1);
+        store_to_file(&ifft_of_powers_of_beta_tau_g1_path, &ifft_of_powers_of_beta_tau_g1).unwrap();
+        drop(phase1_powers_of_beta_tau_g1);
+
         pause_until_enter();
 
         /* ---------------------------- begin compute h_g1 ---------------------------- */
         println!("Computing h_g1...");
-        let mut h_g1 = vec![G1Affine::zero(); domain.size() - 1];
         let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
+        let mut h_g1 = vec![G1Affine::zero(); domain.size() - 1];
         for i in 0..=(domain.size()-2) {
             h_g1[i] = (phase1_powers_of_tau_g1[i + domain.size()] - phase1_powers_of_tau_g1[i]).into_affine();
         }
         store_to_file::<Vec<G1Affine>>(&p2_srs.join("h_g1.bin"), &h_g1).unwrap();
         drop(h_g1);
+        drop(phase1_powers_of_tau_g1);
         /* ---------------------------- end compute h_g1 ---------------------------- */
 
         pause_until_enter();
 
         /* ---------------------------- begin compute b_g2 ---------------------------- */
-        println!("Computing IFFT of phase1_powers_of_tau_g2...");
         let mut b_g2 = vec![G2Affine::zero(); qap_num_variables + 1];
-        let phase1_powers_of_tau_g2 = load_from_file::<Vec<G2Affine>>(&powers_of_tau_g2_path).unwrap();
-        let ifft_of_powers_of_tau_g2  = ECFFTUtils::ifft::<ark_bn254::G2Projective>(&phase1_powers_of_tau_g2[..ds]);
-        drop(phase1_powers_of_tau_g2);
         println!("Computing b_g2...");
         let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
         for (i, u_i) in ifft_of_powers_of_tau_g2.iter().enumerate().take(qap_num_constraints) {
@@ -339,7 +365,6 @@ impl WRAPSPreprocessing {
         }
         store_to_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin"), &b_g2).unwrap();
         drop(matrix_b);
-        drop(ifft_of_powers_of_tau_g2);
         drop(b_g2);
         /* ---------------------------- end compute b_g2 ---------------------------- */
 
@@ -352,19 +377,7 @@ impl WRAPSPreprocessing {
         println!("Initializing a_g1 and abc_g1 for dummy constraints...");
 
         // this handles the dummy constraints x * 0 = 0 for non-malleability
-        println!("Computing IFFT of powers_of_tau_g1...");
-        let ifft_of_powers_of_tau_g1  = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_tau_g1[..ds]);
         a_g1[start..end].copy_from_slice(&ifft_of_powers_of_tau_g1[(start + qap_num_constraints)..(end + qap_num_constraints)]);
-        drop(ifft_of_powers_of_tau_g1);
-        drop(phase1_powers_of_tau_g1);
-
-        pause_until_enter();
-
-        // this handles the dummy constraints x * 0 = 0 for non-malleability
-        println!("Computing IFFT of powers_of_beta_tau_g1...");
-        let phase1_powers_of_beta_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_beta_tau_g1_path).unwrap();
-        let ifft_of_powers_of_beta_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_beta_tau_g1);
-        drop(phase1_powers_of_beta_tau_g1);
         abc_g1[start..end].copy_from_slice(&ifft_of_powers_of_beta_tau_g1[(start + qap_num_constraints)..(end + qap_num_constraints)]);
 
         println!("Updating abc_g1 using powers_of_beta_tau_g1...");
@@ -375,31 +388,19 @@ impl WRAPSPreprocessing {
             }
         }
         drop(matrix_a);
-        drop(ifft_of_powers_of_beta_tau_g1);
 
         pause_until_enter();
-
-        println!("Updating abc_g1 using powers_of_alpha_tau_g1...");
-        println!("Computing IFFT of powers_of_alpha_tau_g1...");
-        let phase1_powers_of_alpha_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_alpha_tau_g1_path).unwrap();
-        let ifft_of_powers_of_alpha_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_alpha_tau_g1);
-        pause_until_enter();
-        drop(phase1_powers_of_alpha_tau_g1);
         let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
         for (i, u_i) in ifft_of_powers_of_alpha_tau_g1.iter().enumerate().take(qap_num_constraints) {
             for &(ref coeff, index) in &matrix_b[i] {
                 abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
             }
         }
-        drop(ifft_of_powers_of_alpha_tau_g1);
+        drop(matrix_b);
 
         pause_until_enter();
 
         println!("Updating abc_g1, a_g1, b_g1 using powers_of_tau_g1...");
-        println!("Computing IFFT of phase1_powers_of_tau_g1...");
-        let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
-        let ifft_of_powers_of_tau_g1  = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_tau_g1[..ds]);
-        drop(phase1_powers_of_tau_g1);
         let matrix_a = load_from_file::<Matrix<Fr>>(&matrix_a_path).unwrap();
         let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
         let matrix_c = load_from_file::<Matrix<Fr>>(&matrix_c_path).unwrap();
@@ -419,7 +420,6 @@ impl WRAPSPreprocessing {
         drop(matrix_a);
         drop(matrix_b);
         drop(matrix_c);
-        drop(ifft_of_powers_of_tau_g1);
 
         // we use delta and gamma as 1 for this step
         let mut gamma_abc_g1 = abc_g1;
