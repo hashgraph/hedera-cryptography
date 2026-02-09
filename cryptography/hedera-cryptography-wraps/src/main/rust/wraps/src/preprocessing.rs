@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use std::path::PathBuf;
- use std::io::Write;
+use std::io::Write;
 use ark_bn254::{G1Affine, G2Affine, g1};
 use ark_ec::{CurveGroup, AffineRepr};
 use ark_ff::Field;
@@ -41,6 +41,8 @@ use ark_relations::gr1cs::{
     OptimizationGoal, Result as R1CSResult,
     SynthesisError, SynthesisMode, Namespace
 };
+
+use rayon::prelude::*;
 
 use super::{
     Circuit,
@@ -282,22 +284,50 @@ impl WRAPSPreprocessing {
     }
 
     fn specialize_srs_helper_g1(
-        abc_g1: &mut [G1Affine],
+        state: &mut [G1Affine],
         matrix_path: &PathBuf,
         powers: &[G1Affine],
-        qap_num_constraints: usize,
-        qap_num_variables: usize)
+        num_constraints: usize,
+        num_variables: usize)
     {
         let matrix = load_from_file::<Matrix<Fr>>(&matrix_path).unwrap();
-        let mut output = vec![G1Affine::zero(); qap_num_variables + 1];
-        for (i, u_i) in powers.iter().enumerate().take(qap_num_constraints) {
-            for &(ref coeff, index) in &matrix[i] {
-                output[index] = (output[index] + (*u_i * coeff)).into_affine();
-            }
-        }
+        // let mut output = vec![G1Affine::zero(); num_variables + 1];
+        // for (i, u_i) in powers.iter().enumerate().take(num_constraints) {
+        //     for &(ref coeff, index) in &matrix[i] {
+        //         output[index] = (output[index] + (*u_i * coeff)).into_affine();
+        //     }
+        // }
+
+        let intermediate = (0..num_constraints)
+            .into_par_iter()
+            .fold(
+                || vec![ark_bn254::G1Projective::zero(); num_variables + 1],
+                |mut local, i| {
+                    let u_i = powers[i].into_group();
+                    for &(ref coeff, index) in &matrix[i] {
+                        local[index] += u_i * coeff;
+                    }
+                    local
+                }
+            )
+            .reduce (
+                || vec![ark_bn254::G1Projective::zero(); num_variables + 1],
+                |mut acc, local| {
+                    for (a, b) in acc.iter_mut().zip(local.iter()) {
+                        *a += b;
+                    }
+                    acc
+                }
+            );
+
+        let intermediate = intermediate
+            .into_iter()
+            .map(|p| p.into_affine())
+            .collect::<Vec<G1Affine>>();
+
         drop(matrix);
 
-        for (dst, src) in abc_g1.iter_mut().zip(output.iter()) {
+        for (dst, src) in state.iter_mut().zip(intermediate.iter()) {
             *dst = (*dst + *src).into_affine();
         }
     }
@@ -703,12 +733,17 @@ mod tests {
 
     const MIMC_ROUNDS: usize = 3222;
     const USE_MPC_CEREMONY: bool = true;
-    const PREPROCESS_CIRCUIT: bool = false;
+    const PREPROCESS_CIRCUIT: bool = true;
 
     #[test]
     fn test_mimc_groth16() {
         // We're going to use the Groth16 proving system.
         use ark_groth16::Groth16;
+
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(8)
+            .build_global()
+            .unwrap(); // can only be called once
 
         // This may not be cryptographically safe, use
         // `OsRng` (for example) in production software.
