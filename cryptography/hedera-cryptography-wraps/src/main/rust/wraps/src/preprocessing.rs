@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
+use std::path::PathBuf;
+use std::io::Write;
 use ark_bn254::{G1Affine, G2Affine, g1};
 use ark_ec::{CurveGroup, AffineRepr};
 use ark_ff::Field;
 use ark_poly::{EvaluationDomain, GeneralEvaluationDomain, domain};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{Zero, ops::*};
+use ark_relations::utils::matrix::{self, Matrix};
+
 use folding_schemes::folding::nova::decider_eth_circuit::DeciderEthCircuit;
 use folding_schemes::folding::traits::Dummy;
 use folding_schemes::commitment::{kzg::KZG, pedersen::Pedersen, CommitmentScheme};
@@ -36,6 +41,8 @@ use ark_relations::gr1cs::{
     OptimizationGoal, Result as R1CSResult,
     SynthesisError, SynthesisMode, Namespace
 };
+
+use rayon::prelude::*;
 
 use super::{
     Circuit,
@@ -70,6 +77,164 @@ pub struct Phase2SRS {
     delta_abc_g1: Vec<G1Affine>,
     h_g1: Vec<G1Affine>,
 }
+
+#[derive(CanonicalDeserialize, CanonicalSerialize)]
+pub struct CircuitConfig {
+    pub num_constraints: usize,
+    pub num_witness_variables: usize,
+    pub num_instance_variables: usize,
+}
+
+fn load_from_file<T: CanonicalDeserialize>(path: &PathBuf) -> Result<T, Error> {
+    let raw_data = std::fs::read(path)?;
+    let data: T = T::deserialize_uncompressed(&*raw_data)?;
+    Ok(data)
+}
+
+fn store_to_file<T: CanonicalSerialize>(path: &PathBuf, data: &T) -> Result<(), Error> {
+    let mut raw_data = Vec::new();
+    data.serialize_uncompressed(&mut raw_data)?;
+    std::fs::write(path, &raw_data)?;
+    Ok(())
+}
+
+const PAUSE: bool = false;
+fn pause_until_enter() {
+    if PAUSE {
+        print!("Press Enter to continue...");
+        std::io::stdout().flush().unwrap(); // make sure prompt shows before blocking
+
+        let mut s = String::new();
+        std::io::stdin().read_line(&mut s).unwrap(); // waits for Enter
+    }
+}
+
+fn update_srs_helper_g1(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, multiplier: Fr, tau: Fr, is_vec: bool) {
+    if is_vec {
+        let prev_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&prev_srs.join(name)).unwrap();
+        let new_powers_of_tau_g1 = prev_powers_of_tau_g1
+            .iter()
+            .enumerate()
+            .map(|(i, g)| {
+                let tau_pow_i = multiplier * tau.pow([i as u64]);
+                g.mul(tau_pow_i).into_affine()
+            })
+            .collect::<Vec<G1Affine>>();
+        store_to_file::<Vec<G1Affine>>(&next_srs.join(name), &new_powers_of_tau_g1).unwrap();
+        drop(new_powers_of_tau_g1);
+        drop(prev_powers_of_tau_g1);
+    } else {
+        let prev_power = load_from_file::<G1Affine>(&prev_srs.join(name)).unwrap();
+        let new_power = prev_power.mul(multiplier).into_affine();
+        store_to_file::<G1Affine>(&next_srs.join(name), &new_power).unwrap();
+    }
+}
+
+fn update_srs_helper_g2(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, multiplier: Fr, tau: Fr, is_vec: bool) {
+    if is_vec {
+        let prev_powers_of_tau_g2 = load_from_file::<Vec<G2Affine>>(&prev_srs.join(name)).unwrap();
+        let new_powers_of_tau_g2 = prev_powers_of_tau_g2
+            .iter()
+            .enumerate()
+            .map(|(i, g)| {
+                let tau_pow_i = multiplier * tau.pow([i as u64]);
+                g.mul(tau_pow_i).into_affine()
+            })
+            .collect::<Vec<G2Affine>>();
+        store_to_file::<Vec<G2Affine>>(&next_srs.join(name), &new_powers_of_tau_g2).unwrap();
+        drop(new_powers_of_tau_g2);
+        drop(prev_powers_of_tau_g2);
+    } else {
+        let prev_power = load_from_file::<G2Affine>(&prev_srs.join(name)).unwrap();
+        let new_power = prev_power.mul(multiplier).into_affine();
+        store_to_file::<G2Affine>(&next_srs.join(name), &new_power).unwrap();
+    }
+}
+
+fn specialize_srs_helper_g1(
+    state: &mut [G1Affine],
+    matrix_path: &PathBuf,
+    powers: &[G1Affine],
+    num_constraints: usize,
+    num_variables: usize)
+{
+    let matrix = load_from_file::<Matrix<Fr>>(&matrix_path).unwrap();
+    let intermediate = (0..num_constraints)
+        .into_par_iter()
+        .fold(
+            || vec![ark_bn254::G1Projective::zero(); num_variables + 1],
+            |mut local, i| {
+                let u_i = powers[i].into_group();
+                for &(ref coeff, index) in &matrix[i] {
+                    local[index] += u_i * coeff;
+                }
+                local
+            }
+        )
+        .reduce (
+            || vec![ark_bn254::G1Projective::zero(); num_variables + 1],
+            |mut acc, local| {
+                for (a, b) in acc.iter_mut().zip(local.iter()) {
+                    *a += b;
+                }
+                acc
+            }
+        );
+
+    let intermediate = intermediate
+        .into_iter()
+        .map(|p| p.into_affine())
+        .collect::<Vec<G1Affine>>();
+
+    drop(matrix);
+
+    for (dst, src) in state.iter_mut().zip(intermediate.iter()) {
+        *dst = (*dst + *src).into_affine();
+    }
+}
+
+fn specialize_srs_helper_g2(
+    state: &mut [G2Affine],
+    matrix_path: &PathBuf,
+    powers: &[G2Affine],
+    num_constraints: usize,
+    num_variables: usize)
+{
+    let matrix = load_from_file::<Matrix<Fr>>(&matrix_path).unwrap();
+    let intermediate = (0..num_constraints)
+        .into_par_iter()
+        .fold(
+            || vec![ark_bn254::G2Projective::zero(); num_variables + 1],
+            |mut local, i| {
+                let u_i = powers[i].into_group();
+                for &(ref coeff, index) in &matrix[i] {
+                    local[index] += u_i * coeff;
+                }
+                local
+            }
+        )
+        .reduce (
+            || vec![ark_bn254::G2Projective::zero(); num_variables + 1],
+            |mut acc, local| {
+                for (a, b) in acc.iter_mut().zip(local.iter()) {
+                    *a += b;
+                }
+                acc
+            }
+        );
+
+    let intermediate = intermediate
+        .into_iter()
+        .map(|p| p.into_affine())
+        .collect::<Vec<G2Affine>>();
+
+    drop(matrix);
+
+    for (dst, src) in state.iter_mut().zip(intermediate.iter()) {
+        *dst = (*dst + *src).into_affine();
+    }
+}
+
 
 pub struct WRAPSPreprocessing {}
 
@@ -130,34 +295,48 @@ impl WRAPSPreprocessing {
     }
 
     /// creates an initial SRS for Groth16, using tau = 1, and alpha, beta = 1
-    fn create_init_srs_phase1(cs: ConstraintSystemRef<Fr>) -> Phase1SRS {
+    pub fn create_init_srs_phase1(circuit_path: &PathBuf, output_path: &PathBuf) {
+        let circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
+        // let us figure out the circuit dimensions
         // domain_size is computed the same way (and then padded to the next power of 2)
-        let n = cs.num_constraints() + cs.num_instance_variables();
+        let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
         let domain = GeneralEvaluationDomain::<Fr>::new(n)
             .ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
         let domain_size = domain.size();
 
+        // generate default SRS elements and store them to disk, so we can purge them from memory
+
+        // generate default powers of tau in G1
         let powers_of_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); 2*domain_size]; // {Gx:i} | i=0..2n-2}
+        store_to_file::<Vec<G1Affine>>(&output_path.join("powers_of_tau_g1.bin"), &powers_of_tau_g1).unwrap();
+        drop(powers_of_tau_g1);
+
+        // generate default powers of tau in G2
         let powers_of_tau_g2: Vec<G2Affine> = vec![G2Affine::generator(); domain_size]; // {Hx:i} | i=0..2n-2}
+        // store to file so we can purge this data structure from memory
+        store_to_file::<Vec<G2Affine>>(&output_path.join("powers_of_tau_g2.bin"), &powers_of_tau_g2).unwrap();
+        drop(powers_of_tau_g2);
 
+        // generate default powers of alpha * tau in G1
         let powers_of_alpha_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); domain_size]; // {Gαx:i} | i=0..n-1}
+        store_to_file::<Vec<G1Affine>>(&output_path.join("powers_of_alpha_tau_g1.bin"), &powers_of_alpha_tau_g1).unwrap();
+        drop(powers_of_alpha_tau_g1);
 
+        // generate default powers of beta * tau in G1
         let powers_of_beta_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); domain_size]; // {Gβx:i} | i=0..n-1}
+        store_to_file::<Vec<G1Affine>>(&output_path.join("powers_of_beta_tau_g1.bin"),&powers_of_beta_tau_g1).unwrap();
+        drop(powers_of_beta_tau_g1);
 
+        // generate default beta in G2
         let beta_g2: G2Affine = G2Affine::generator();
+        store_to_file::<G2Affine>(&output_path.join("beta_g2.bin"), &beta_g2).unwrap();
 
-        Phase1SRS {
-            powers_of_tau_g1,
-            powers_of_tau_g2,
-            powers_of_alpha_tau_g1,
-            powers_of_beta_tau_g1,
-            beta_g2
-        }
     }
 
-    fn update_srs_phase1(cs: ConstraintSystemRef<Fr>, prev_srs: &Phase1SRS) -> Phase1SRS {
+    pub fn update_srs_phase1(circuit_path: &PathBuf, prev_srs: &PathBuf, next_srs: &PathBuf) {
+        let circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
         type D<F> = GeneralEvaluationDomain<F>;
-        let n = cs.num_constraints() + cs.num_instance_variables();
+        let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
         let domain = D::new(n)
             .ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
 
@@ -166,147 +345,15 @@ impl WRAPSPreprocessing {
         let alpha = Fr::rand(&mut rng);
         let beta = Fr::rand(&mut rng);
 
-        // multiply all existing SRS elements by the new random scalars
-        let new_powers_of_tau_g1 = prev_srs.powers_of_tau_g1
-            .iter()
-            .enumerate()
-            .map(|(i, g)| {
-                let tau_pow_i = tau.pow([i as u64]);
-                g.mul(tau_pow_i).into_affine()
-            })
-            .collect::<Vec<G1Affine>>();
-
-        let new_powers_of_tau_g2 = prev_srs.powers_of_tau_g2
-            .iter()
-            .enumerate()
-            .map(|(i, h)| {
-                let tau_pow_i = tau.pow([i as u64]);
-                h.mul(tau_pow_i).into_affine()
-            })
-            .collect::<Vec<G2Affine>>();
-
-        let new_powers_of_alpha_tau_g1 = prev_srs.powers_of_alpha_tau_g1
-            .iter()
-            .enumerate()
-            .map(|(i, g)| {
-                let alpha_tau_pow_i = alpha * tau.pow([i as u64]);
-                g.mul(alpha_tau_pow_i).into_affine()
-            })
-            .collect::<Vec<G1Affine>>();
-
-        let new_powers_of_beta_tau_g1 = prev_srs.powers_of_beta_tau_g1
-            .iter()
-            .enumerate()
-            .map(|(i, g)| {
-                let beta_tau_pow_i = beta * tau.pow([i as u64]);
-                g.mul(beta_tau_pow_i).into_affine()
-            })
-            .collect::<Vec<G1Affine>>();
-
-        let new_power_of_beta_tau_g2 = prev_srs.beta_g2.mul(beta).into_affine();
-
-        Phase1SRS {
-            powers_of_tau_g1: new_powers_of_tau_g1,
-            powers_of_tau_g2: new_powers_of_tau_g2,
-            powers_of_alpha_tau_g1: new_powers_of_alpha_tau_g1,
-            powers_of_beta_tau_g1: new_powers_of_beta_tau_g1,
-            beta_g2: new_power_of_beta_tau_g2,
-        }
+        update_srs_helper_g1(prev_srs, next_srs, "powers_of_tau_g1.bin", Fr::from(1u64), tau, true);
+        update_srs_helper_g2(prev_srs, next_srs, "powers_of_tau_g2.bin", Fr::from(1u64), tau, true);
+        update_srs_helper_g1(prev_srs, next_srs, "powers_of_alpha_tau_g1.bin", alpha, tau, true);
+        update_srs_helper_g1(prev_srs, next_srs, "powers_of_beta_tau_g1.bin", beta, tau, true);
+        update_srs_helper_g2(prev_srs, next_srs, "beta_g2.bin", beta, Fr::from(1u64), false);
     }
 
-    fn specialize_srs(srs: &Phase1SRS, cs: ConstraintSystemRef<Fr>) -> (Phase1Output, Phase2SRS) {
-        let matrices = &cs.to_matrices().unwrap()["R1CS"];
-        let domain = GeneralEvaluationDomain::<Fr>::new(cs.num_constraints() + cs.num_instance_variables())
-            .ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
-        let ds = domain.size();
-
-        let ifft_of_powers_of_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&srs.powers_of_tau_g1[..ds]);
-        let ifft_of_powers_of_tau_g2 = ECFFTUtils::ifft::<ark_bn254::G2Projective>(&srs.powers_of_tau_g2[..ds]);
-        let ifft_of_powers_of_alpha_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&srs.powers_of_alpha_tau_g1);
-        let ifft_of_powers_of_beta_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&srs.powers_of_beta_tau_g1);
-
-        let qap_num_variables = (cs.num_instance_variables() - 1) + cs.num_witness_variables();
-
-        let mut abc_g1 = vec![G1Affine::zero(); qap_num_variables + 1];
-        let mut a_g1 = vec![G1Affine::zero(); qap_num_variables + 1];
-        let mut b_g1 = vec![G1Affine::zero(); qap_num_variables + 1];
-        let mut b_g2 = vec![G2Affine::zero(); qap_num_variables + 1];
-
-        // this handles the dummy constraints x * 0 = 0 for non-malleability
-        {
-            let start = 0;
-            let end = cs.num_instance_variables();
-            let num_constraints = cs.num_constraints();
-            abc_g1[start..end].copy_from_slice(&ifft_of_powers_of_beta_tau_g1[(start + num_constraints)..(end + num_constraints)]);
-            a_g1[start..end].copy_from_slice(&ifft_of_powers_of_tau_g1[(start + num_constraints)..(end + num_constraints)]);
-        }
-
-        for (i, u_i) in ifft_of_powers_of_beta_tau_g1.iter().enumerate().take(cs.num_constraints()) {
-            for &(ref coeff, index) in &matrices[0][i] {
-                abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
-            }
-        }
-
-        for (i, u_i) in ifft_of_powers_of_alpha_tau_g1.iter().enumerate().take(cs.num_constraints()) {
-            for &(ref coeff, index) in &matrices[1][i] {
-                abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
-            }
-        }
-
-        for (i, u_i) in ifft_of_powers_of_tau_g1.iter().enumerate().take(cs.num_constraints()) {
-            for &(ref coeff, index) in &matrices[2][i] {
-                abc_g1[index] = (abc_g1[index] + (*u_i * coeff)).into_affine();
-            }
-
-            for &(ref coeff, index) in &matrices[0][i] {
-                a_g1[index] = (a_g1[index] + (*u_i * coeff)).into_affine();
-            }
-
-            for &(ref coeff, index) in &matrices[1][i] {
-                b_g1[index] = (b_g1[index] + (*u_i * coeff)).into_affine();
-            }
-        }
-
-        for (i, u_i) in ifft_of_powers_of_tau_g2.iter().enumerate().take(cs.num_constraints()) {
-            for &(ref coeff, index) in &matrices[1][i] {
-                b_g2[index] = (b_g2[index] + (*u_i * coeff)).into_affine();
-            }
-        }
-
-        let mut h_g1 = vec![G1Affine::zero(); domain.size() - 1];
-        for i in 0..=(domain.size()-2) {
-            h_g1[i] = (srs.powers_of_tau_g1[i + domain.size()] - srs.powers_of_tau_g1[i]).into_affine();
-        }
-
-        // we use delta and gamma as 1 for this step
-        let mut gamma_abc_g1 = abc_g1;
-        let delta_abc_g1 = gamma_abc_g1.split_off(cs.num_instance_variables());
-
-        let delta_g1 = G1Affine::generator();
-        let delta_g2 = G2Affine::generator();
-        let gamma_g2 = G2Affine::generator();
-
-        let phase1_output = Phase1Output {
-            a_query: a_g1,
-            b_g1_query: b_g1,
-            b_g2_query: b_g2,
-        };
-
-        let phase2_srs = Phase2SRS {
-            delta_g1,
-            delta_g2,
-            gamma_g2,
-            gamma_abc_g1,
-            delta_abc_g1,
-            h_g1,
-        };
-
-        (phase1_output, phase2_srs)
-    }
-
-    pub fn update_srs_phase2(
-        prev_srs: &Phase2SRS,
-    ) -> Phase2SRS {
+    pub fn update_srs_phase2(circuit_path: &PathBuf, prev_srs: &PathBuf, next_srs: &PathBuf) {
+        let _circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
         let mut rng = ark_std::rand::rngs::OsRng;
         let delta = Fr::rand(&mut rng);
         let gamma = Fr::rand(&mut rng);
@@ -314,37 +361,194 @@ impl WRAPSPreprocessing {
         let delta_inverse = delta.inverse().unwrap();
         let gamma_inverse = gamma.inverse().unwrap();
 
-        let new_delta_g1 = prev_srs.delta_g1.mul(delta).into_affine();
-        let new_delta_g2 = prev_srs.delta_g2.mul(delta).into_affine();
-        let new_gamma_g2 = prev_srs.gamma_g2.mul(gamma).into_affine();
-        let new_gamma_abc_g1 = prev_srs.gamma_abc_g1
-            .iter()
-            .map(|g| g.mul(gamma_inverse).into_affine())
-            .collect::<Vec<G1Affine>>();
-        let new_delta_abc_g1 = prev_srs.delta_abc_g1
-            .iter()
-            .map(|g| g.mul(delta_inverse).into_affine())
-            .collect::<Vec<G1Affine>>();
-        let new_h_g1 = prev_srs.h_g1
-            .iter()
-            .map(|g| g.mul(delta_inverse).into_affine())
-            .collect::<Vec<G1Affine>>();
+        update_srs_helper_g1(prev_srs, next_srs, "delta_g1.bin", delta, Fr::from(1u64), false);
+        update_srs_helper_g2(prev_srs, next_srs, "delta_g2.bin", delta, Fr::from(1u64), false);
+        update_srs_helper_g2(prev_srs, next_srs, "gamma_g2.bin", gamma, Fr::from(1u64), false);
+        update_srs_helper_g1(prev_srs, next_srs, "gamma_abc_g1.bin", gamma_inverse, Fr::from(1u64), true);
+        update_srs_helper_g1(prev_srs, next_srs, "delta_abc_g1.bin", delta_inverse, Fr::from(1u64), true);
+        update_srs_helper_g1(prev_srs, next_srs, "h_g1.bin", delta_inverse, Fr::from(1u64), true);
+    }
 
-        Phase2SRS {
-            delta_g1: new_delta_g1,
-            delta_g2: new_delta_g2,
-            gamma_g2: new_gamma_g2,
-            gamma_abc_g1: new_gamma_abc_g1,
-            delta_abc_g1: new_delta_abc_g1,
-            h_g1: new_h_g1,
+    pub fn specialize_srs(
+        circuit_path: &PathBuf, // path to the R1CS matrices for the circuit
+        p1_srs: &PathBuf, // input to specialization, that is output by last phase 1 update
+        p1_out: &PathBuf, // output that will be used for phase 2 SRS specialization
+        p2_srs: &PathBuf, // output that will be used as phase 2 starting SRS
+    ) {
+        let circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
+        pause_until_enter();
+        let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
+        let domain = GeneralEvaluationDomain::<Fr>::new(n)
+            .ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
+        let ds = domain.size();
+
+        // some useful values
+        let num_constraints = circuit_config.num_constraints;
+        let num_variables = (circuit_config.num_instance_variables - 1) + circuit_config.num_witness_variables;
+        let start_index = 0;
+        let end_index = circuit_config.num_instance_variables;
+
+        let matrix_a_path = circuit_path.join("matrix_A.bin");
+        let matrix_b_path = circuit_path.join("matrix_B.bin");
+        let matrix_c_path = circuit_path.join("matrix_C.bin");
+
+        let powers_of_tau_g1_path = p1_srs.join("powers_of_tau_g1.bin");
+        let powers_of_tau_g2_path = p1_srs.join("powers_of_tau_g2.bin");
+        let powers_of_beta_tau_g1_path = p1_srs.join("powers_of_beta_tau_g1.bin");
+        let powers_of_alpha_tau_g1_path = p1_srs.join("powers_of_alpha_tau_g1.bin");
+
+        let ifft_of_powers_of_tau_g1_path = p1_out.join("ifft_of_powers_of_tau_g1.bin");
+        let ifft_of_powers_of_tau_g2_path = p1_out.join("ifft_of_powers_of_tau_g2.bin");
+        let ifft_of_powers_of_alpha_tau_g1_path = p1_out.join("ifft_of_powers_of_alpha_tau_g1.bin");
+        let ifft_of_powers_of_beta_tau_g1_path = p1_out.join("ifft_of_powers_of_beta_tau_g1.bin");
+
+        let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
+        let start = std::time::Instant::now();
+        let ifft_of_powers_of_tau_g1  = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_tau_g1[..ds]);
+        println!("IFFT (powers_of_tau_g1) took {:?}", start.elapsed());
+        store_to_file(&ifft_of_powers_of_tau_g1_path, &ifft_of_powers_of_tau_g1).unwrap();
+        drop(phase1_powers_of_tau_g1);
+
+        let phase1_powers_of_tau_g2 = load_from_file::<Vec<G2Affine>>(&powers_of_tau_g2_path).unwrap();
+        let start = std::time::Instant::now();
+        let ifft_of_powers_of_tau_g2  = ECFFTUtils::ifft::<ark_bn254::G2Projective>(&phase1_powers_of_tau_g2[..ds]);
+        println!("IFFT (powers_of_tau_g2) took {:?}", start.elapsed());
+        store_to_file(&ifft_of_powers_of_tau_g2_path, &ifft_of_powers_of_tau_g2).unwrap();
+        drop(phase1_powers_of_tau_g2);
+
+        let phase1_powers_of_alpha_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_alpha_tau_g1_path).unwrap();
+        let start = std::time::Instant::now();
+        let ifft_of_powers_of_alpha_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_alpha_tau_g1);
+        println!("IFFT (powers_of_alpha_tau_g1) took {:?}", start.elapsed());
+        store_to_file(&ifft_of_powers_of_alpha_tau_g1_path, &ifft_of_powers_of_alpha_tau_g1).unwrap();
+        drop(phase1_powers_of_alpha_tau_g1);
+
+        let phase1_powers_of_beta_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_beta_tau_g1_path).unwrap();
+        let start = std::time::Instant::now();
+        let ifft_of_powers_of_beta_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_beta_tau_g1);
+        println!("IFFT (powers_of_beta_tau_g1) took {:?}", start.elapsed());
+        store_to_file(&ifft_of_powers_of_beta_tau_g1_path, &ifft_of_powers_of_beta_tau_g1).unwrap();
+        drop(phase1_powers_of_beta_tau_g1);
+
+        pause_until_enter();
+
+        /* ---------------------------- begin compute h_g1 ---------------------------- */
+        let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
+        let mut h_g1 = vec![G1Affine::zero(); domain.size() - 1];
+        let start = std::time::Instant::now();
+        for i in 0..=(domain.size()-2) {
+            h_g1[i] = (phase1_powers_of_tau_g1[i + domain.size()] - phase1_powers_of_tau_g1[i]).into_affine();
         }
+        println!("Computing h_g1 took {:?}", start.elapsed());
+        store_to_file::<Vec<G1Affine>>(&p2_srs.join("h_g1.bin"), &h_g1).unwrap();
+        drop(h_g1);
+        drop(phase1_powers_of_tau_g1);
+        /* ---------------------------- end compute h_g1 ---------------------------- */
+
+        pause_until_enter();
+
+        /* ---------------------------- begin compute b_g2 ---------------------------- */
+        let mut b_g2 = vec![G2Affine::zero(); num_variables + 1];
+        let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
+        let start = std::time::Instant::now();
+        specialize_srs_helper_g2(&mut b_g2, &matrix_b_path, &ifft_of_powers_of_tau_g2, num_constraints, num_variables);
+        println!("Computing b_g2 took {:?}", start.elapsed());
+        store_to_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin"), &b_g2).unwrap();
+        drop(matrix_b);
+        drop(b_g2);
+        /* ---------------------------- end compute b_g2 ---------------------------- */
+
+        pause_until_enter();
+
+        let mut abc_g1 = vec![G1Affine::zero(); num_variables + 1];
+        let mut a_g1 = vec![G1Affine::zero(); num_variables + 1];
+        let mut b_g1 = vec![G1Affine::zero(); num_variables + 1];
+
+        /* ---------------------------- begin dummy constraints ---------------------------- */
+        println!("Initializing a_g1 and abc_g1 for dummy constraints...");
+        // this handles the dummy constraints x * 0 = 0 for non-malleability
+        a_g1[start_index..end_index].copy_from_slice(&ifft_of_powers_of_tau_g1[(start_index + num_constraints)..(end_index + num_constraints)]);
+        abc_g1[start_index..end_index].copy_from_slice(&ifft_of_powers_of_beta_tau_g1[(start_index + num_constraints)..(end_index + num_constraints)]);
+        /* ---------------------------- end dummy constraints ---------------------------- */
+
+
+        /* ---------------------------- begin compute abc_g1, a_g1, b_g1 ---------------------------- */
+        let start = std::time::Instant::now();
+        specialize_srs_helper_g1(&mut abc_g1, &matrix_a_path, &ifft_of_powers_of_beta_tau_g1, num_constraints, num_variables);
+        println!("Updating abc_g1 using powers_of_beta_tau_g1 took {:?}", start.elapsed());
+
+        pause_until_enter();
+
+        let start = std::time::Instant::now();
+        specialize_srs_helper_g1(&mut abc_g1, &matrix_b_path, &ifft_of_powers_of_alpha_tau_g1, num_constraints, num_variables);
+        println!("Updating abc_g1 using powers_of_alpha_tau_g1 took {:?}", start.elapsed());
+
+        pause_until_enter();
+
+        let start = std::time::Instant::now();
+        specialize_srs_helper_g1(&mut a_g1, &matrix_a_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        println!("Updating a_g1 using powers_of_tau_g1 took {:?}. ", start.elapsed());
+
+        let start = std::time::Instant::now();
+        specialize_srs_helper_g1(&mut b_g1, &matrix_b_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        println!("Updating b_g1 using powers_of_tau_g1 took {:?}. ", start.elapsed());
+
+        let start = std::time::Instant::now();
+        specialize_srs_helper_g1(&mut abc_g1, &matrix_c_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        println!("Updating abc_g1 using powers_of_tau_g1 took {:?}. ", start.elapsed());
+
+        /* ---------------------------- end compute abc_g1, a_g1, b_g1 ---------------------------- */
+
+        // we use delta and gamma as 1 for this step
+        let mut gamma_abc_g1 = abc_g1;
+        let delta_abc_g1 = gamma_abc_g1.split_off(circuit_config.num_instance_variables);
+
+        let delta_g1 = G1Affine::generator();
+        let delta_g2 = G2Affine::generator();
+        let gamma_g2 = G2Affine::generator();
+
+        // store phase 1 output to disk
+        store_to_file::<Vec<G1Affine>>(&p1_out.join("a_query.bin"), &a_g1).unwrap();
+        store_to_file::<Vec<G1Affine>>(&p1_out.join("b_g1_query.bin"), &b_g1).unwrap();
+
+        // store phase 2 SRS to disk
+        store_to_file::<G1Affine>(&p2_srs.join("delta_g1.bin"), &delta_g1).unwrap();
+        store_to_file::<G2Affine>(&p2_srs.join("delta_g2.bin"), &delta_g2).unwrap();
+        store_to_file::<G2Affine>(&p2_srs.join("gamma_g2.bin"), &gamma_g2).unwrap();
+        store_to_file::<Vec<G1Affine>>(&p2_srs.join("gamma_abc_g1.bin"), &gamma_abc_g1).unwrap();
+        store_to_file::<Vec<G1Affine>>(&p2_srs.join("delta_abc_g1.bin"), &delta_abc_g1).unwrap();
+
     }
 
     pub fn finish_groth_setup(
-        srs1: &Phase1SRS,
-        phase1out: &Phase1Output,
-        srs2: &Phase2SRS,
-    ) -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
+        p1_srs: &PathBuf,
+        p1_out: &PathBuf,
+        p2_srs: &PathBuf,
+        output_path: &PathBuf
+    ) -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), Error> {
+
+        let srs1 = Phase1SRS {
+            powers_of_tau_g1: load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_tau_g1.bin"))?,
+            powers_of_tau_g2: load_from_file::<Vec<G2Affine>>(&p1_srs.join("powers_of_tau_g2.bin"))?,
+            powers_of_alpha_tau_g1: load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_alpha_tau_g1.bin"))?,
+            powers_of_beta_tau_g1: load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_beta_tau_g1.bin"))?,
+            beta_g2: load_from_file::<G2Affine>(&p1_srs.join("beta_g2.bin"))?,
+        };
+
+        let phase1out = Phase1Output {
+            a_query: load_from_file::<Vec<G1Affine>>(&p1_out.join("a_query.bin"))?,
+            b_g1_query: load_from_file::<Vec<G1Affine>>(&p1_out.join("b_g1_query.bin"))?,
+            b_g2_query: load_from_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin"))?,
+        };
+
+        let srs2 = Phase2SRS {
+            delta_g1: load_from_file::<G1Affine>(&p2_srs.join("delta_g1.bin"))?,
+            delta_g2: load_from_file::<G2Affine>(&p2_srs.join("delta_g2.bin"))?,
+            gamma_g2: load_from_file::<G2Affine>(&p2_srs.join("gamma_g2.bin"))?,
+            gamma_abc_g1: load_from_file::<Vec<G1Affine>>(&p2_srs.join("gamma_abc_g1.bin"))?,
+            delta_abc_g1: load_from_file::<Vec<G1Affine>>(&p2_srs.join("delta_abc_g1.bin"))?,
+            h_g1: load_from_file::<Vec<G1Affine>>(&p2_srs.join("h_g1.bin"))?,
+        };
 
         let g16_vk = Groth16VerifyingKey {
             alpha_g1: srs1.powers_of_alpha_tau_g1[0],
@@ -365,17 +569,20 @@ impl WRAPSPreprocessing {
             l_query: srs2.delta_abc_g1.to_vec(),
         };
 
+        let mut decider_vp_serialized = vec![];
+        g16_vk.serialize_compressed(&mut decider_vp_serialized).unwrap();
+
+        let mut decider_pp_serialized = vec![];
+        g16_pk.serialize_compressed(&mut decider_pp_serialized).unwrap();
+
+        let output_decider_pp_path = output_path.join("decider_pp.bin");
+        let output_decider_vp_path = output_path.join("decider_vp.bin");
+        std::fs::write(output_decider_pp_path, &decider_pp_serialized).unwrap();
+        std::fs::write(output_decider_vp_path, &decider_vp_serialized).unwrap();
+
         Ok((g16_pk, g16_vk))
     }
 
-    fn circuit_to_cs<C: ConstraintSynthesizer<Fr>>(circuit: C) -> Result<ConstraintSystemRef<Fr>, WRAPSError> {
-        let cs = ConstraintSystem::new_ref();
-        cs.set_optimization_goal(OptimizationGoal::Constraints);
-        cs.set_mode(SynthesisMode::Setup);
-        circuit.generate_constraints(cs.clone()).map_err(|_| WRAPSError::CryptographyError)?;
-        cs.finalize();
-        Ok(cs)
-    }
 }
 
 
@@ -401,6 +608,7 @@ mod end_to_end_tests {
 #[cfg(test)]
 mod tests {
     use ark_bn254::Bn254;
+    use ark_crypto_primitives::merkle_tree::Path;
     // For randomness (during paramgen and proof generation)
     use ark_std::rand::{Rng, RngCore, SeedableRng};
     use super::*;
@@ -416,35 +624,85 @@ mod tests {
     };
     use ark_std::test_rng;
 
-    const MIMC_ROUNDS: usize = 322;
-    const USE_MPC_CEREMONY: bool = true;
+    fn extract_circuit<C: ConstraintSynthesizer<Fr>>(circuit: C, path: &PathBuf) {
+        let cs = ConstraintSystem::new_ref();
+        cs.set_optimization_goal(OptimizationGoal::Constraints);
+        cs.set_mode(SynthesisMode::Setup);
+        circuit.generate_constraints(cs.clone()).unwrap();
+        cs.finalize();
 
-    fn sample_ceremony_groth_setup<C: ConstraintSynthesizer<Fr>>(circuit: C)
+        let matrices = &cs.to_matrices().unwrap()["R1CS"];
+
+        let circuit_config = CircuitConfig {
+            num_constraints: cs.num_constraints(),
+            num_instance_variables: cs.num_instance_variables(),
+            num_witness_variables: cs.num_witness_variables(),
+        };
+
+        store_to_file(&path.join("matrix_A.bin"), &matrices[0]).unwrap();
+        store_to_file(&path.join("matrix_B.bin"), &matrices[1]).unwrap();
+        store_to_file(&path.join("matrix_C.bin"), &matrices[2]).unwrap();
+
+        store_to_file(&path.join("circuit_config.bin"), &circuit_config).unwrap();
+    }
+
+    fn sample_ceremony_groth_setup(tss_root: &PathBuf)
         -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
-        let cs = WRAPSPreprocessing::circuit_to_cs(circuit)?;
-
         // coordinator must create the initial SRS
-        let srs_phase1 = WRAPSPreprocessing::create_init_srs_phase1(cs.clone());
+        WRAPSPreprocessing::create_init_srs_phase1(
+            &tss_root.join("circuit"),
+            &tss_root.join("coordinator/phase1_init")
+        );
 
-        // two parties take turns updating the SRS
-        let srs_phase1 = WRAPSPreprocessing::update_srs_phase1(cs.clone(), &srs_phase1);
-        let srs_phase1 = WRAPSPreprocessing::update_srs_phase1(cs.clone(), &srs_phase1);
-        let srs_phase1 = WRAPSPreprocessing::update_srs_phase1(cs.clone(), &srs_phase1);
+        // three parties take turns updating the SRS
+        WRAPSPreprocessing::update_srs_phase1(
+            &tss_root.join("circuit"),
+            &tss_root.join("coordinator/phase1_init"),
+            &tss_root.join("node1/phase1")
+        );
+        WRAPSPreprocessing::update_srs_phase1(
+            &tss_root.join("circuit"),
+            &tss_root.join("node1/phase1"),
+            &tss_root.join("node2/phase1")
+        );
+        WRAPSPreprocessing::update_srs_phase1(
+            &tss_root.join("circuit"),
+            &tss_root.join("node2/phase1"),
+            &tss_root.join("node3/phase1")
+        );
 
         // coordianator specialzes the SRS to the circuit
-        let (phase1_output, srs_phase2) = WRAPSPreprocessing::specialize_srs(&srs_phase1, cs.clone());
+        WRAPSPreprocessing::specialize_srs(
+            &tss_root.join("circuit"),
+            &tss_root.join("node3/phase1"),
+            &tss_root.join("coordinator/phase1_output"),
+            &tss_root.join("coordinator/phase2_init"),
+        );
 
-        // two parties take turns updating the phase 2 SRS
-        let srs_phase2 = WRAPSPreprocessing::update_srs_phase2(&srs_phase2);
-        let srs_phase2 = WRAPSPreprocessing::update_srs_phase2(&srs_phase2);
-        let srs_phase2 = WRAPSPreprocessing::update_srs_phase2(&srs_phase2);
+        // three parties take turns updating the phase 2 SRS
+        WRAPSPreprocessing::update_srs_phase2(
+            &tss_root.join("circuit"),
+            &tss_root.join("coordinator/phase2_init"),
+            &tss_root.join("node1/phase2")
+        );
+        WRAPSPreprocessing::update_srs_phase2(
+            &tss_root.join("circuit"),
+            &tss_root.join("node1/phase2"),
+            &tss_root.join("node2/phase2")
+        );
+        WRAPSPreprocessing::update_srs_phase2(
+            &tss_root.join("circuit"),
+            &tss_root.join("node2/phase2"),
+            &tss_root.join("node3/phase2")
+        );
 
         // finalize the Groth16 keys
         let (g16_pk, g16_vk) = WRAPSPreprocessing::finish_groth_setup(
-            &srs_phase1,
-            &phase1_output,
-            &srs_phase2
-        )?;
+            &tss_root.join("node3/phase1"), // last SRS phase 1 path
+            &tss_root.join("coordinator/phase1_output"), // phase 1 output path
+            &tss_root.join("node3/phase2"), // last SRS phase 2 path
+            &tss_root.join("result") // output path for final Groth16 keys
+        ).unwrap();
 
         Ok((g16_pk, g16_vk))
     }
@@ -531,10 +789,65 @@ mod tests {
         }
     }
 
+    const MIMC_ROUNDS: usize = 3222;
+    const USE_MPC_CEREMONY: bool = true;
+    const PREPROCESS_CIRCUIT: bool = true;
+    const NUM_THREADS: usize = 16;
+
+    #[test]
+    fn test_tss_circuit() {
+        // We're going to use the Groth16 proving system.
+        use ark_groth16::Groth16;
+
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(NUM_THREADS)
+            .build_global()
+            .unwrap(); // can only be called once
+
+        let mut rng = ark_std::rand::rngs::OsRng;
+        let F_circuit = Circuit::new(()).unwrap();
+
+        let poseidon_config = poseidon_canonical_config::<Fr>();
+
+        let nova_preprocess_params = PreprocessorParam::new(poseidon_config, F_circuit);
+        // Generate Nova parameters for the WRAPS folding circuit.
+        let (nova_pp, nova_vp) = N::preprocess(&mut rng, &nova_preprocess_params).unwrap();
+
+        let circuit = DeciderEthCircuit::<G1, G2>::dummy((
+            nova_vp.clone().r1cs,
+            nova_vp.clone().cf_r1cs,
+            nova_pp.clone().cf_cs_pp,
+            nova_pp.clone().poseidon_config,
+            (),
+            (),
+            F_circuit.state_len(),
+            2, // Nova's running CommittedInstance contains 2 commitments
+        ));
+
+        let tss_root = PathBuf::from("/Users/rohit/tss");
+
+        // Create parameters for our circuit
+        let (_g16_pk, _g16_vk) = {
+            if USE_MPC_CEREMONY {
+                if PREPROCESS_CIRCUIT {
+                    extract_circuit(circuit, &tss_root.join("circuit"));
+                }
+                sample_ceremony_groth_setup(&tss_root).unwrap()
+            } else {
+                WRAPSPreprocessing::trusted_groth_setup(circuit).unwrap()
+            }
+        };
+    }
+
     #[test]
     fn test_mimc_groth16() {
         // We're going to use the Groth16 proving system.
         use ark_groth16::Groth16;
+
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(NUM_THREADS)
+            .build_global()
+            .unwrap(); // can only be called once
 
         // This may not be cryptographically safe, use
         // `OsRng` (for example) in production software.
@@ -554,11 +867,12 @@ mod tests {
                 constants: &constants,
             };
 
-            let cs = WRAPSPreprocessing::circuit_to_cs(c).unwrap();
-            println!("Number of constraints: {}", cs.num_constraints());
-
+            let tss_root = PathBuf::from("/tmp/tss");
             if USE_MPC_CEREMONY {
-                sample_ceremony_groth_setup(c).unwrap()
+                if PREPROCESS_CIRCUIT {
+                    extract_circuit(c, &tss_root.join("circuit"));
+                }
+                sample_ceremony_groth_setup(&tss_root).unwrap()
             } else {
                 WRAPSPreprocessing::trusted_groth_setup(c).unwrap()
             }

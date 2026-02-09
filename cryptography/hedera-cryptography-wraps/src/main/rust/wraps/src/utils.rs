@@ -7,6 +7,8 @@ use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::{FftField, Field, Zero};
 use ark_poly::{EvaluationDomain, domain::general::GeneralEvaluationDomain};
 use ark_std::ops::*;
+use rayon::join;
+
 use crate::{WRAPS, ProvingKey, VerificationKey, WRAPSError};
 
 pub fn serialize<T: ark_serialize::CanonicalSerialize>(
@@ -171,6 +173,7 @@ impl ECFFTUtils {
         Self::fft_recursive::<C>(data, omega)
     }
 
+    const FFT_PAR_CUTOFF: usize = 1024;
     fn fft_recursive<C: CurveGroup>(data: &[C::Affine], omega: C::ScalarField) -> Vec<C::Affine> {
         let n = data.len();
         if n == 1 {
@@ -192,8 +195,18 @@ impl ECFFTUtils {
 
         // we recurse on both halves, with omega squared
         let subdomain_omega = omega * omega;
-        let y_even = Self::fft_recursive::<C>(&even_points, subdomain_omega);
-        let y_odd = Self::fft_recursive::<C>(&odd_points, subdomain_omega);
+
+        let (y_even, y_odd) = if n > Self::FFT_PAR_CUTOFF {
+            join(
+                || Self::fft_recursive::<C>(&even_points, subdomain_omega),
+                || Self::fft_recursive::<C>(&odd_points, subdomain_omega),
+            )
+        } else {
+            (
+                Self::fft_recursive::<C>(&even_points, subdomain_omega),
+                Self::fft_recursive::<C>(&odd_points, subdomain_omega),
+            )
+        };
 
         // y is the output
         let mut y = vec![C::Affine::zero(); n];
