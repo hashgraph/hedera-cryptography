@@ -11,9 +11,14 @@ class Phase {
     ///  The phase won't start until the initial file is present. Wait for 1 week because it's manual.
     private static final long WAIT_FOR_INITIAL_FILE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000;
 
-    /// Regular processing on a node should be "fast", but we give it 12 hours of timeout before
+    /// Regular processing on a node should be "fast", but we give it 6 hours of timeout before
     /// giving up and trying the previous node's file:
-    private static final long WAIT_FOR_REGULAR_FILE_TIMEOUT_MILLIS = 12 * 60 * 60 * 1000;
+    private static final long WAIT_FOR_REGULAR_FILE_TIMEOUT_MILLIS = 6 * 60 * 60 * 1000;
+
+    /// Make the loop less tight to avoid 429 TOO_MANY_REQUESTS.
+    private static final long WAIT_BETWEEN_CLAIMED_FILES_CHECKS_MILLIS = 500;
+
+    static final String INITIAL_FILE_NAME = "initial";
 
     /// Phase number, e.g. "1", or "2"
     private final String phase;
@@ -41,10 +46,14 @@ class Phase {
     /// @return for -1 - "initial", otherwise the nodeId at the given index.
     private String nameAtIndex(int index) {
         if (index < 0) {
-            return "initial";
+            return INITIAL_FILE_NAME;
         } else {
             return allNodeIds.get(index).toString();
         }
+    }
+
+    private String claimedFileNameAtIndex(int index) {
+        return nameAtIndex(index) + ".claimed";
     }
 
     private String readyFileNameAtIndex(int index) {
@@ -81,7 +90,28 @@ class Phase {
         try {
             System.err.println("Starting phase " + phase + "...");
 
+            // Check if this node or any later nodes have already started processing anything.
+            // If true, then it's no longer our turn, and we won't participate in this phase at all.
+            // This allows us to return fast in case we've been restarted in the middle of a currently running cycle,
+            // or if we're asked to re-run a cycle that has already completed in the past.
+            final int thisIndex = allNodeIds.indexOf(thisNodeId);
+            System.err.println("Checking .claimed files to decide if we should run this phase...");
+            for (int i = thisIndex; i < allNodeIds.size(); i++) {
+                if (s3DirectoryAccessor.doesExist(claimedFileNameAtIndex(i))) {
+                    System.err.println("File " + claimedFileNameAtIndex(i)
+                            + " exists, so this or a later node has started processing already. Skip the phase.");
+                    return;
+                }
+                try {
+                    Thread.sleep(WAIT_BETWEEN_CLAIMED_FILES_CHECKS_MILLIS);
+                } catch (InterruptedException e) {
+                    // Swallow spurious exceptions.
+                }
+            }
+
             // First, wait until the current phase actually starts - the initial file MUST be present.
+            // Note that the cycle selection mechanism in the Orchestrator already checks this condition before
+            // starting a cycle, so the following wait() should be quick. It's here simply as a safety mechanism.
             final String initialReadyFileName = readyFileNameAtIndex(-1);
             System.err.println("Waiting for the initial file: " + initialReadyFileName);
             if (!s3DirectoryAccessor.waitForFile(initialReadyFileName, WAIT_FOR_INITIAL_FILE_TIMEOUT_MILLIS)) {
@@ -91,7 +121,6 @@ class Phase {
             }
 
             // Now wait for the actual input file for this node to process
-            final int thisIndex = allNodeIds.indexOf(thisNodeId);
             final int inputIndex = waitForInputReady(thisIndex);
             if (inputIndex < -1) {
                 System.err.println("Timeout reached while waiting for input data");
@@ -101,8 +130,8 @@ class Phase {
             // We know the input file to process, let's claim it (we don't use the .claimed, it's for manual debugging.)
             final String inputFileName = nameAtIndex(inputIndex);
             final String thisFileName = nameAtIndex(thisIndex);
-            s3DirectoryAccessor.writeText(thisFileName + ".claimed", inputFileName);
-            System.err.println("Wrote: " + thisFileName + ".claimed" + " with inputFileName: " + inputFileName);
+            s3DirectoryAccessor.writeText(claimedFileNameAtIndex(thisIndex), inputFileName);
+            System.err.println("Wrote: " + claimedFileNameAtIndex(thisIndex) + " with inputFileName: " + inputFileName);
 
             System.err.println("Downloading input dir: " + inputFileName + ".bin");
             final Path inputDir;
