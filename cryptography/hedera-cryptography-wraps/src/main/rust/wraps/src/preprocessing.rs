@@ -295,7 +295,8 @@ impl WRAPSPreprocessing {
     }
 
     /// creates an initial SRS for Groth16, using tau = 1, and alpha, beta = 1
-    pub fn create_init_srs_phase1(circuit_config: &CircuitConfig, path: &PathBuf) {
+    pub fn create_init_srs_phase1(circuit_path: &PathBuf, output_path: &PathBuf) {
+        let circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
         // let us figure out the circuit dimensions
         // domain_size is computed the same way (and then padded to the next power of 2)
         let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
@@ -307,32 +308,33 @@ impl WRAPSPreprocessing {
 
         // generate default powers of tau in G1
         let powers_of_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); 2*domain_size]; // {Gx:i} | i=0..2n-2}
-        store_to_file::<Vec<G1Affine>>(&path.join("powers_of_tau_g1.bin"), &powers_of_tau_g1).unwrap();
+        store_to_file::<Vec<G1Affine>>(&output_path.join("powers_of_tau_g1.bin"), &powers_of_tau_g1).unwrap();
         drop(powers_of_tau_g1);
 
         // generate default powers of tau in G2
         let powers_of_tau_g2: Vec<G2Affine> = vec![G2Affine::generator(); domain_size]; // {Hx:i} | i=0..2n-2}
         // store to file so we can purge this data structure from memory
-        store_to_file::<Vec<G2Affine>>(&path.join("powers_of_tau_g2.bin"), &powers_of_tau_g2).unwrap();
+        store_to_file::<Vec<G2Affine>>(&output_path.join("powers_of_tau_g2.bin"), &powers_of_tau_g2).unwrap();
         drop(powers_of_tau_g2);
 
         // generate default powers of alpha * tau in G1
         let powers_of_alpha_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); domain_size]; // {Gαx:i} | i=0..n-1}
-        store_to_file::<Vec<G1Affine>>(&path.join("powers_of_alpha_tau_g1.bin"), &powers_of_alpha_tau_g1).unwrap();
+        store_to_file::<Vec<G1Affine>>(&output_path.join("powers_of_alpha_tau_g1.bin"), &powers_of_alpha_tau_g1).unwrap();
         drop(powers_of_alpha_tau_g1);
 
         // generate default powers of beta * tau in G1
         let powers_of_beta_tau_g1: Vec<G1Affine> = vec![G1Affine::generator(); domain_size]; // {Gβx:i} | i=0..n-1}
-        store_to_file::<Vec<G1Affine>>(&path.join("powers_of_beta_tau_g1.bin"),&powers_of_beta_tau_g1).unwrap();
+        store_to_file::<Vec<G1Affine>>(&output_path.join("powers_of_beta_tau_g1.bin"),&powers_of_beta_tau_g1).unwrap();
         drop(powers_of_beta_tau_g1);
 
         // generate default beta in G2
         let beta_g2: G2Affine = G2Affine::generator();
-        store_to_file::<G2Affine>(&path.join("beta_g2.bin"), &beta_g2).unwrap();
+        store_to_file::<G2Affine>(&output_path.join("beta_g2.bin"), &beta_g2).unwrap();
 
     }
 
-    pub fn update_srs_phase1(circuit_config: &CircuitConfig, prev_srs: &PathBuf, next_srs: &PathBuf) {
+    pub fn update_srs_phase1(circuit_path: &PathBuf, prev_srs: &PathBuf, next_srs: &PathBuf) {
+        let circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
         type D<F> = GeneralEvaluationDomain<F>;
         let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
         let domain = D::new(n)
@@ -350,7 +352,8 @@ impl WRAPSPreprocessing {
         update_srs_helper_g2(prev_srs, next_srs, "beta_g2.bin", beta, Fr::from(1u64), false);
     }
 
-    pub fn update_srs_phase2(prev_srs: &PathBuf, next_srs: &PathBuf) {
+    pub fn update_srs_phase2(circuit_path: &PathBuf, prev_srs: &PathBuf, next_srs: &PathBuf) {
+        let _circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
         let mut rng = ark_std::rand::rngs::OsRng;
         let delta = Fr::rand(&mut rng);
         let gamma = Fr::rand(&mut rng);
@@ -367,12 +370,12 @@ impl WRAPSPreprocessing {
     }
 
     pub fn specialize_srs(
-        circuit_config: &CircuitConfig, // params related to circuit dimensions
-        r1cs_matrix_path: &PathBuf, // path to the R1CS matrices for the circuit
+        circuit_path: &PathBuf, // path to the R1CS matrices for the circuit
         p1_srs: &PathBuf, // input to specialization, that is output by last phase 1 update
         p1_out: &PathBuf, // output that will be used for phase 2 SRS specialization
         p2_srs: &PathBuf, // output that will be used as phase 2 starting SRS
     ) {
+        let circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
         pause_until_enter();
         let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
         let domain = GeneralEvaluationDomain::<Fr>::new(n)
@@ -385,9 +388,9 @@ impl WRAPSPreprocessing {
         let start_index = 0;
         let end_index = circuit_config.num_instance_variables;
 
-        let matrix_a_path = r1cs_matrix_path.join("matrix_A.bin");
-        let matrix_b_path = r1cs_matrix_path.join("matrix_B.bin");
-        let matrix_c_path = r1cs_matrix_path.join("matrix_C.bin");
+        let matrix_a_path = circuit_path.join("matrix_A.bin");
+        let matrix_b_path = circuit_path.join("matrix_B.bin");
+        let matrix_c_path = circuit_path.join("matrix_C.bin");
 
         let powers_of_tau_g1_path = p1_srs.join("powers_of_tau_g1.bin");
         let powers_of_tau_g2_path = p1_srs.join("powers_of_tau_g2.bin");
@@ -520,7 +523,8 @@ impl WRAPSPreprocessing {
     pub fn finish_groth_setup(
         p1_srs: &PathBuf,
         p1_out: &PathBuf,
-        p2_srs: &PathBuf
+        p2_srs: &PathBuf,
+        output_path: &PathBuf
     ) -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), Error> {
 
         let srs1 = Phase1SRS {
@@ -564,6 +568,17 @@ impl WRAPSPreprocessing {
             h_query: srs2.h_g1.clone(),
             l_query: srs2.delta_abc_g1.to_vec(),
         };
+
+        let mut decider_vp_serialized = vec![];
+        g16_vk.serialize_compressed(&mut decider_vp_serialized).unwrap();
+
+        let mut decider_pp_serialized = vec![];
+        g16_pk.serialize_compressed(&mut decider_pp_serialized).unwrap();
+
+        let output_decider_pp_path = output_path.join("decider_pp.bin");
+        let output_decider_vp_path = output_path.join("decider_vp.bin");
+        std::fs::write(output_decider_pp_path, &decider_pp_serialized).unwrap();
+        std::fs::write(output_decider_vp_path, &decider_vp_serialized).unwrap();
 
         Ok((g16_pk, g16_vk))
     }
@@ -631,63 +646,62 @@ mod tests {
         store_to_file(&path.join("circuit_config.bin"), &circuit_config).unwrap();
     }
 
-    fn sample_ceremony_groth_setup()
+    fn sample_ceremony_groth_setup(tss_root: &PathBuf)
         -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
-        let circuit_config = load_from_file::<CircuitConfig>(
-            &PathBuf::from("/Users/rohit/tss/circuit/circuit_config.bin")
-        ).unwrap();
-
         // coordinator must create the initial SRS
         WRAPSPreprocessing::create_init_srs_phase1(
-            &circuit_config,
-            &PathBuf::from("/Users/rohit/tss/coordinator/phase1_init")
+            &tss_root.join("circuit"),
+            &tss_root.join("coordinator/phase1_init")
         );
 
         // three parties take turns updating the SRS
         WRAPSPreprocessing::update_srs_phase1(
-            &circuit_config,
-            &PathBuf::from("/Users/rohit/tss/coordinator/phase1_init"),
-            &PathBuf::from("/Users/rohit/tss/node1/phase1")
+            &tss_root.join("circuit"),
+            &tss_root.join("coordinator/phase1_init"),
+            &tss_root.join("node1/phase1")
         );
         WRAPSPreprocessing::update_srs_phase1(
-            &circuit_config,
-            &PathBuf::from("/Users/rohit/tss/node1/phase1"),
-            &PathBuf::from("/Users/rohit/tss/node2/phase1")
+            &tss_root.join("circuit"),
+            &tss_root.join("node1/phase1"),
+            &tss_root.join("node2/phase1")
         );
         WRAPSPreprocessing::update_srs_phase1(
-            &circuit_config,
-            &PathBuf::from("/Users/rohit/tss/node2/phase1"),
-            &PathBuf::from("/Users/rohit/tss/node3/phase1")
+            &tss_root.join("circuit"),
+            &tss_root.join("node2/phase1"),
+            &tss_root.join("node3/phase1")
         );
 
         // coordianator specialzes the SRS to the circuit
         WRAPSPreprocessing::specialize_srs(
-            &circuit_config,
-            &PathBuf::from("/Users/rohit/tss/circuit"),
-            &PathBuf::from("/Users/rohit/tss/node3/phase1"),
-            &PathBuf::from("/Users/rohit/tss/coordinator/phase1_output"),
-            &PathBuf::from("/Users/rohit/tss/coordinator/phase2_init"),
+            &tss_root.join("circuit"),
+            &tss_root.join("node3/phase1"),
+            &tss_root.join("coordinator/phase1_output"),
+            &tss_root.join("coordinator/phase2_init"),
         );
 
         // three parties take turns updating the phase 2 SRS
         WRAPSPreprocessing::update_srs_phase2(
-            &PathBuf::from("/Users/rohit/tss/coordinator/phase2_init"),
-            &PathBuf::from("/Users/rohit/tss/node1/phase2")
+            &tss_root.join("circuit"),
+            &tss_root.join("coordinator/phase2_init"),
+            &tss_root.join("node1/phase2")
         );
         WRAPSPreprocessing::update_srs_phase2(
-            &PathBuf::from("/Users/rohit/tss/node1/phase2"),
-            &PathBuf::from("/Users/rohit/tss/node2/phase2")
+            &tss_root.join("circuit"),
+            &tss_root.join("node1/phase2"),
+            &tss_root.join("node2/phase2")
         );
         WRAPSPreprocessing::update_srs_phase2(
-            &PathBuf::from("/Users/rohit/tss/node2/phase2"),
-            &PathBuf::from("/Users/rohit/tss/node3/phase2")
+            &tss_root.join("circuit"),
+            &tss_root.join("node2/phase2"),
+            &tss_root.join("node3/phase2")
         );
 
         // finalize the Groth16 keys
         let (g16_pk, g16_vk) = WRAPSPreprocessing::finish_groth_setup(
-            &PathBuf::from("/Users/rohit/tss/node3/phase1"), // last SRS phase 1 path
-            &PathBuf::from("/Users/rohit/tss/coordinator/phase1_output"), // phase 1 output path
-            &PathBuf::from("/Users/rohit/tss/node3/phase2"), // last SRS phase 2 path
+            &tss_root.join("node3/phase1"), // last SRS phase 1 path
+            &tss_root.join("coordinator/phase1_output"), // phase 1 output path
+            &tss_root.join("node3/phase2"), // last SRS phase 2 path
+            &tss_root.join("result") // output path for final Groth16 keys
         ).unwrap();
 
         Ok((g16_pk, g16_vk))
@@ -810,27 +824,19 @@ mod tests {
             2, // Nova's running CommittedInstance contains 2 commitments
         ));
 
+        let tss_root = PathBuf::from("/Users/rohit/tss");
+
         // Create parameters for our circuit
-        let (g16_pk, g16_vk) = {
+        let (_g16_pk, _g16_vk) = {
             if USE_MPC_CEREMONY {
                 if PREPROCESS_CIRCUIT {
-                    extract_circuit(circuit, &PathBuf::from("/Users/rohit/tss/circuit"));
+                    extract_circuit(circuit, &tss_root.join("circuit"));
                 }
-                sample_ceremony_groth_setup().unwrap()
+                sample_ceremony_groth_setup(&tss_root).unwrap()
             } else {
                 WRAPSPreprocessing::trusted_groth_setup(circuit).unwrap()
             }
         };
-
-        let mut decider_vp_serialized = vec![];
-        g16_vk.serialize_compressed(&mut decider_vp_serialized).unwrap();
-
-        let mut decider_pp_serialized = vec![];
-        g16_pk.serialize_compressed(&mut decider_pp_serialized).unwrap();
-
-        let cwd = std::env::current_dir().unwrap();
-        std::fs::write(cwd.join("/Users/rohit/tss/result/decider_pp.bin"), &decider_pp_serialized).unwrap();
-        std::fs::write(cwd.join("/Users/rohit/tss/result/decider_vp.bin"), &decider_vp_serialized).unwrap();
     }
 
     #[test]
@@ -861,11 +867,12 @@ mod tests {
                 constants: &constants,
             };
 
+            let tss_root = PathBuf::from("/tmp/tss");
             if USE_MPC_CEREMONY {
                 if PREPROCESS_CIRCUIT {
-                    extract_circuit(c, &PathBuf::from("/Users/rohit/tss/circuit"));
+                    extract_circuit(c, &tss_root.join("circuit"));
                 }
-                sample_ceremony_groth_setup().unwrap()
+                sample_ceremony_groth_setup(&tss_root).unwrap()
             } else {
                 WRAPSPreprocessing::trusted_groth_setup(c).unwrap()
             }
