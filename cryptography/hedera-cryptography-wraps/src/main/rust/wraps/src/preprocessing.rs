@@ -86,7 +86,6 @@ pub struct CircuitConfig {
 }
 
 fn load_from_file<T: CanonicalDeserialize>(path: &PathBuf) -> Result<T, Error> {
-    println!("Loading from file: {}", path.to_str().unwrap());
     let raw_data = std::fs::read(path)?;
     let data: T = T::deserialize_uncompressed(&*raw_data)?;
     Ok(data)
@@ -95,7 +94,6 @@ fn load_from_file<T: CanonicalDeserialize>(path: &PathBuf) -> Result<T, Error> {
 fn store_to_file<T: CanonicalSerialize>(path: &PathBuf, data: &T) -> Result<(), Error> {
     let mut raw_data = Vec::new();
     data.serialize_uncompressed(&mut raw_data)?;
-    println!("Storing to file: {}", path.to_str().unwrap());
     std::fs::write(path, &raw_data)?;
     Ok(())
 }
@@ -348,8 +346,8 @@ impl WRAPSPreprocessing {
         // some useful values
         let num_constraints = circuit_config.num_constraints;
         let num_variables = (circuit_config.num_instance_variables - 1) + circuit_config.num_witness_variables;
-        let start = 0;
-        let end = circuit_config.num_instance_variables;
+        let start_index = 0;
+        let end_index = circuit_config.num_instance_variables;
 
         let matrix_a_path = r1cs_matrix_path.join("matrix_A.bin");
         let matrix_b_path = r1cs_matrix_path.join("matrix_B.bin");
@@ -365,39 +363,44 @@ impl WRAPSPreprocessing {
         let ifft_of_powers_of_alpha_tau_g1_path = p1_out.join("ifft_of_powers_of_alpha_tau_g1.bin");
         let ifft_of_powers_of_beta_tau_g1_path = p1_out.join("ifft_of_powers_of_beta_tau_g1.bin");
 
-        println!("Computing IFFT of phase1_powers_of_tau_g1...");
         let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
+        let start = std::time::Instant::now();
         let ifft_of_powers_of_tau_g1  = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_tau_g1[..ds]);
+        println!("IFFT (powers_of_tau_g1) took {:?}", start.elapsed());
         store_to_file(&ifft_of_powers_of_tau_g1_path, &ifft_of_powers_of_tau_g1).unwrap();
         drop(phase1_powers_of_tau_g1);
 
-        println!("Computing IFFT of phase1_powers_of_tau_g2...");
         let phase1_powers_of_tau_g2 = load_from_file::<Vec<G2Affine>>(&powers_of_tau_g2_path).unwrap();
+        let start = std::time::Instant::now();
         let ifft_of_powers_of_tau_g2  = ECFFTUtils::ifft::<ark_bn254::G2Projective>(&phase1_powers_of_tau_g2[..ds]);
+        println!("IFFT (powers_of_tau_g2) took {:?}", start.elapsed());
         store_to_file(&ifft_of_powers_of_tau_g2_path, &ifft_of_powers_of_tau_g2).unwrap();
         drop(phase1_powers_of_tau_g2);
 
-        println!("Computing IFFT of phase1_powers_of_alpha_tau_g1...");
         let phase1_powers_of_alpha_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_alpha_tau_g1_path).unwrap();
+        let start = std::time::Instant::now();
         let ifft_of_powers_of_alpha_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_alpha_tau_g1);
+        println!("IFFT (powers_of_alpha_tau_g1) took {:?}", start.elapsed());
         store_to_file(&ifft_of_powers_of_alpha_tau_g1_path, &ifft_of_powers_of_alpha_tau_g1).unwrap();
         drop(phase1_powers_of_alpha_tau_g1);
 
-        println!("Computing IFFT of phase1_powers_of_beta_tau_g1...");
         let phase1_powers_of_beta_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_beta_tau_g1_path).unwrap();
+        let start = std::time::Instant::now();
         let ifft_of_powers_of_beta_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_beta_tau_g1);
+        println!("IFFT (powers_of_beta_tau_g1) took {:?}", start.elapsed());
         store_to_file(&ifft_of_powers_of_beta_tau_g1_path, &ifft_of_powers_of_beta_tau_g1).unwrap();
         drop(phase1_powers_of_beta_tau_g1);
 
         pause_until_enter();
 
         /* ---------------------------- begin compute h_g1 ---------------------------- */
-        println!("Computing h_g1...");
         let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
         let mut h_g1 = vec![G1Affine::zero(); domain.size() - 1];
+        let start = std::time::Instant::now();
         for i in 0..=(domain.size()-2) {
             h_g1[i] = (phase1_powers_of_tau_g1[i + domain.size()] - phase1_powers_of_tau_g1[i]).into_affine();
         }
+        println!("Computing h_g1 took {:?}", start.elapsed());
         store_to_file::<Vec<G1Affine>>(&p2_srs.join("h_g1.bin"), &h_g1).unwrap();
         drop(h_g1);
         drop(phase1_powers_of_tau_g1);
@@ -407,13 +410,14 @@ impl WRAPSPreprocessing {
 
         /* ---------------------------- begin compute b_g2 ---------------------------- */
         let mut b_g2 = vec![G2Affine::zero(); num_variables + 1];
-        println!("Computing b_g2...");
         let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
+        let start = std::time::Instant::now();
         for (i, u_i) in ifft_of_powers_of_tau_g2.iter().enumerate().take(num_constraints) {
             for &(ref coeff, index) in &matrix_b[i] {
                 b_g2[index] = (b_g2[index] + (*u_i * coeff)).into_affine();
             }
         }
+        println!("Computing b_g2 took {:?}", start.elapsed());
         store_to_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin"), &b_g2).unwrap();
         drop(matrix_b);
         drop(b_g2);
@@ -425,30 +429,38 @@ impl WRAPSPreprocessing {
         let mut a_g1 = vec![G1Affine::zero(); num_variables + 1];
         let mut b_g1 = vec![G1Affine::zero(); num_variables + 1];
 
-        println!("Initializing a_g1 and abc_g1 for dummy constraints...");
-
         /* ---------------------------- begin dummy constraints ---------------------------- */
+        println!("Initializing a_g1 and abc_g1 for dummy constraints...");
         // this handles the dummy constraints x * 0 = 0 for non-malleability
-        a_g1[start..end].copy_from_slice(&ifft_of_powers_of_tau_g1[(start + num_constraints)..(end + num_constraints)]);
-        abc_g1[start..end].copy_from_slice(&ifft_of_powers_of_beta_tau_g1[(start + num_constraints)..(end + num_constraints)]);
+        a_g1[start_index..end_index].copy_from_slice(&ifft_of_powers_of_tau_g1[(start_index + num_constraints)..(end_index + num_constraints)]);
+        abc_g1[start_index..end_index].copy_from_slice(&ifft_of_powers_of_beta_tau_g1[(start_index + num_constraints)..(end_index + num_constraints)]);
         /* ---------------------------- end dummy constraints ---------------------------- */
 
 
         /* ---------------------------- begin compute abc_g1, a_g1, b_g1 ---------------------------- */
-        println!("Updating abc_g1 using powers_of_beta_tau_g1...");
+        let start = std::time::Instant::now();
         Self::specialize_srs_helper_g1(&mut abc_g1, &matrix_a_path, &ifft_of_powers_of_beta_tau_g1, num_constraints, num_variables);
+        println!("Updating abc_g1 using powers_of_beta_tau_g1 took {:?}", start.elapsed());
 
         pause_until_enter();
 
-        println!("Updating abc_g1 using powers_of_alpha_tau_g1...");
+        let start = std::time::Instant::now();
         Self::specialize_srs_helper_g1(&mut abc_g1, &matrix_b_path, &ifft_of_powers_of_alpha_tau_g1, num_constraints, num_variables);
+        println!("Updating abc_g1 using powers_of_alpha_tau_g1 took {:?}", start.elapsed());
 
         pause_until_enter();
 
-        println!("Updating abc_g1, a_g1, b_g1 using powers_of_tau_g1...");
+        let start = std::time::Instant::now();
         Self::specialize_srs_helper_g1(&mut a_g1, &matrix_a_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        println!("Updating a_g1 using powers_of_tau_g1 took {:?}. ", start.elapsed());
+
+        let start = std::time::Instant::now();
         Self::specialize_srs_helper_g1(&mut b_g1, &matrix_b_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        println!("Updating b_g1 using powers_of_tau_g1 took {:?}. ", start.elapsed());
+
+        let start = std::time::Instant::now();
         Self::specialize_srs_helper_g1(&mut abc_g1, &matrix_c_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        println!("Updating abc_g1 using powers_of_tau_g1 took {:?}. ", start.elapsed());
 
         /* ---------------------------- end compute abc_g1, a_g1, b_g1 ---------------------------- */
 
@@ -731,7 +743,7 @@ mod tests {
         }
     }
 
-    const MIMC_ROUNDS: usize = 3222;
+    const MIMC_ROUNDS: usize = 32222;
     const USE_MPC_CEREMONY: bool = true;
     const PREPROCESS_CIRCUIT: bool = true;
 
