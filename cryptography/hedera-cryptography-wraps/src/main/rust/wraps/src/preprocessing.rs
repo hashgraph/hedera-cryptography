@@ -448,11 +448,7 @@ impl WRAPSPreprocessing {
         let mut b_g2 = vec![G2Affine::zero(); num_variables + 1];
         let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
         let start = std::time::Instant::now();
-        for (i, u_i) in ifft_of_powers_of_tau_g2.iter().enumerate().take(num_constraints) {
-            for &(ref coeff, index) in &matrix_b[i] {
-                b_g2[index] = (b_g2[index] + (*u_i * coeff)).into_affine();
-            }
-        }
+        specialize_srs_helper_g2(&mut b_g2, &matrix_b_path, &ifft_of_powers_of_tau_g2, num_constraints, num_variables);
         println!("Computing b_g2 took {:?}", start.elapsed());
         store_to_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin"), &b_g2).unwrap();
         drop(matrix_b);
