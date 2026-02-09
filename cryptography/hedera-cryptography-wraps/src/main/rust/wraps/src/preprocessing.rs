@@ -775,9 +775,63 @@ mod tests {
         }
     }
 
-    const MIMC_ROUNDS: usize = 32222;
+    const MIMC_ROUNDS: usize = 3222;
     const USE_MPC_CEREMONY: bool = true;
     const PREPROCESS_CIRCUIT: bool = true;
+    const NUM_THREADS: usize = 16;
+
+    #[test]
+    fn test_tss_circuit() {
+        // We're going to use the Groth16 proving system.
+        use ark_groth16::Groth16;
+
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(NUM_THREADS)
+            .build_global()
+            .unwrap(); // can only be called once
+
+        let mut rng = ark_std::rand::rngs::OsRng;
+        let F_circuit = Circuit::new(()).unwrap();
+
+        let poseidon_config = poseidon_canonical_config::<Fr>();
+
+        let nova_preprocess_params = PreprocessorParam::new(poseidon_config, F_circuit);
+        // Generate Nova parameters for the WRAPS folding circuit.
+        let (nova_pp, nova_vp) = N::preprocess(&mut rng, &nova_preprocess_params).unwrap();
+
+        let circuit = DeciderEthCircuit::<G1, G2>::dummy((
+            nova_vp.clone().r1cs,
+            nova_vp.clone().cf_r1cs,
+            nova_pp.clone().cf_cs_pp,
+            nova_pp.clone().poseidon_config,
+            (),
+            (),
+            F_circuit.state_len(),
+            2, // Nova's running CommittedInstance contains 2 commitments
+        ));
+
+        // Create parameters for our circuit
+        let (g16_pk, g16_vk) = {
+            if USE_MPC_CEREMONY {
+                if PREPROCESS_CIRCUIT {
+                    extract_circuit(circuit, &PathBuf::from("/Users/rohit/tss/circuit"));
+                }
+                sample_ceremony_groth_setup().unwrap()
+            } else {
+                WRAPSPreprocessing::trusted_groth_setup(circuit).unwrap()
+            }
+        };
+
+        let mut decider_vp_serialized = vec![];
+        g16_vk.serialize_compressed(&mut decider_vp_serialized).unwrap();
+
+        let mut decider_pp_serialized = vec![];
+        g16_pk.serialize_compressed(&mut decider_pp_serialized).unwrap();
+
+        let cwd = std::env::current_dir().unwrap();
+        std::fs::write(cwd.join("/Users/rohit/tss/result/decider_pp.bin"), &decider_pp_serialized).unwrap();
+        std::fs::write(cwd.join("/Users/rohit/tss/result/decider_vp.bin"), &decider_vp_serialized).unwrap();
+    }
 
     #[test]
     fn test_mimc_groth16() {
@@ -785,7 +839,7 @@ mod tests {
         use ark_groth16::Groth16;
 
         rayon::ThreadPoolBuilder::new()
-            .num_threads(8)
+            .num_threads(NUM_THREADS)
             .build_global()
             .unwrap(); // can only be called once
 
