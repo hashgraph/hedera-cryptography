@@ -151,6 +151,91 @@ fn update_srs_helper_g2(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, mult
     }
 }
 
+fn specialize_srs_helper_g1(
+    state: &mut [G1Affine],
+    matrix_path: &PathBuf,
+    powers: &[G1Affine],
+    num_constraints: usize,
+    num_variables: usize)
+{
+    let matrix = load_from_file::<Matrix<Fr>>(&matrix_path).unwrap();
+    let intermediate = (0..num_constraints)
+        .into_par_iter()
+        .fold(
+            || vec![ark_bn254::G1Projective::zero(); num_variables + 1],
+            |mut local, i| {
+                let u_i = powers[i].into_group();
+                for &(ref coeff, index) in &matrix[i] {
+                    local[index] += u_i * coeff;
+                }
+                local
+            }
+        )
+        .reduce (
+            || vec![ark_bn254::G1Projective::zero(); num_variables + 1],
+            |mut acc, local| {
+                for (a, b) in acc.iter_mut().zip(local.iter()) {
+                    *a += b;
+                }
+                acc
+            }
+        );
+
+    let intermediate = intermediate
+        .into_iter()
+        .map(|p| p.into_affine())
+        .collect::<Vec<G1Affine>>();
+
+    drop(matrix);
+
+    for (dst, src) in state.iter_mut().zip(intermediate.iter()) {
+        *dst = (*dst + *src).into_affine();
+    }
+}
+
+fn specialize_srs_helper_g2(
+    state: &mut [G2Affine],
+    matrix_path: &PathBuf,
+    powers: &[G2Affine],
+    num_constraints: usize,
+    num_variables: usize)
+{
+    let matrix = load_from_file::<Matrix<Fr>>(&matrix_path).unwrap();
+    let intermediate = (0..num_constraints)
+        .into_par_iter()
+        .fold(
+            || vec![ark_bn254::G2Projective::zero(); num_variables + 1],
+            |mut local, i| {
+                let u_i = powers[i].into_group();
+                for &(ref coeff, index) in &matrix[i] {
+                    local[index] += u_i * coeff;
+                }
+                local
+            }
+        )
+        .reduce (
+            || vec![ark_bn254::G2Projective::zero(); num_variables + 1],
+            |mut acc, local| {
+                for (a, b) in acc.iter_mut().zip(local.iter()) {
+                    *a += b;
+                }
+                acc
+            }
+        );
+
+    let intermediate = intermediate
+        .into_iter()
+        .map(|p| p.into_affine())
+        .collect::<Vec<G2Affine>>();
+
+    drop(matrix);
+
+    for (dst, src) in state.iter_mut().zip(intermediate.iter()) {
+        *dst = (*dst + *src).into_affine();
+    }
+}
+
+
 pub struct WRAPSPreprocessing {}
 
 impl WRAPSPreprocessing {
@@ -281,55 +366,6 @@ impl WRAPSPreprocessing {
         update_srs_helper_g1(prev_srs, next_srs, "h_g1.bin", delta_inverse, Fr::from(1u64), true);
     }
 
-    fn specialize_srs_helper_g1(
-        state: &mut [G1Affine],
-        matrix_path: &PathBuf,
-        powers: &[G1Affine],
-        num_constraints: usize,
-        num_variables: usize)
-    {
-        let matrix = load_from_file::<Matrix<Fr>>(&matrix_path).unwrap();
-        // let mut output = vec![G1Affine::zero(); num_variables + 1];
-        // for (i, u_i) in powers.iter().enumerate().take(num_constraints) {
-        //     for &(ref coeff, index) in &matrix[i] {
-        //         output[index] = (output[index] + (*u_i * coeff)).into_affine();
-        //     }
-        // }
-
-        let intermediate = (0..num_constraints)
-            .into_par_iter()
-            .fold(
-                || vec![ark_bn254::G1Projective::zero(); num_variables + 1],
-                |mut local, i| {
-                    let u_i = powers[i].into_group();
-                    for &(ref coeff, index) in &matrix[i] {
-                        local[index] += u_i * coeff;
-                    }
-                    local
-                }
-            )
-            .reduce (
-                || vec![ark_bn254::G1Projective::zero(); num_variables + 1],
-                |mut acc, local| {
-                    for (a, b) in acc.iter_mut().zip(local.iter()) {
-                        *a += b;
-                    }
-                    acc
-                }
-            );
-
-        let intermediate = intermediate
-            .into_iter()
-            .map(|p| p.into_affine())
-            .collect::<Vec<G1Affine>>();
-
-        drop(matrix);
-
-        for (dst, src) in state.iter_mut().zip(intermediate.iter()) {
-            *dst = (*dst + *src).into_affine();
-        }
-    }
-
     pub fn specialize_srs(
         circuit_config: &CircuitConfig, // params related to circuit dimensions
         r1cs_matrix_path: &PathBuf, // path to the R1CS matrices for the circuit
@@ -439,27 +475,27 @@ impl WRAPSPreprocessing {
 
         /* ---------------------------- begin compute abc_g1, a_g1, b_g1 ---------------------------- */
         let start = std::time::Instant::now();
-        Self::specialize_srs_helper_g1(&mut abc_g1, &matrix_a_path, &ifft_of_powers_of_beta_tau_g1, num_constraints, num_variables);
+        specialize_srs_helper_g1(&mut abc_g1, &matrix_a_path, &ifft_of_powers_of_beta_tau_g1, num_constraints, num_variables);
         println!("Updating abc_g1 using powers_of_beta_tau_g1 took {:?}", start.elapsed());
 
         pause_until_enter();
 
         let start = std::time::Instant::now();
-        Self::specialize_srs_helper_g1(&mut abc_g1, &matrix_b_path, &ifft_of_powers_of_alpha_tau_g1, num_constraints, num_variables);
+        specialize_srs_helper_g1(&mut abc_g1, &matrix_b_path, &ifft_of_powers_of_alpha_tau_g1, num_constraints, num_variables);
         println!("Updating abc_g1 using powers_of_alpha_tau_g1 took {:?}", start.elapsed());
 
         pause_until_enter();
 
         let start = std::time::Instant::now();
-        Self::specialize_srs_helper_g1(&mut a_g1, &matrix_a_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        specialize_srs_helper_g1(&mut a_g1, &matrix_a_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
         println!("Updating a_g1 using powers_of_tau_g1 took {:?}. ", start.elapsed());
 
         let start = std::time::Instant::now();
-        Self::specialize_srs_helper_g1(&mut b_g1, &matrix_b_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        specialize_srs_helper_g1(&mut b_g1, &matrix_b_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
         println!("Updating b_g1 using powers_of_tau_g1 took {:?}. ", start.elapsed());
 
         let start = std::time::Instant::now();
-        Self::specialize_srs_helper_g1(&mut abc_g1, &matrix_c_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        specialize_srs_helper_g1(&mut abc_g1, &matrix_c_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
         println!("Updating abc_g1 using powers_of_tau_g1 took {:?}. ", start.elapsed());
 
         /* ---------------------------- end compute abc_g1, a_g1, b_g1 ---------------------------- */
