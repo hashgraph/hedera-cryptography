@@ -177,6 +177,17 @@ public class WRAPSLibraryBridge {
             }
         }
 
+        // Round messages only come from the actual signers:
+        int numOfActualSigners = 0;
+        for (boolean signer : signers) {
+            if (signer) {
+                numOfActualSigners++;
+            }
+        }
+        if (schnorrPublicKeys.length != 0 && numOfActualSigners > schnorrPublicKeys.length) {
+            return null;
+        }
+
         if (phase == SigningProtocolPhase.R1) {
             if (!Arrays.equals(schnorrPublicKeys, EMPTY_BYTE_ARRAY_2)
                     || !Arrays.equals(round1Messages, EMPTY_BYTE_ARRAY_2)
@@ -191,7 +202,7 @@ public class WRAPSLibraryBridge {
                 return null;
             }
             if (schnorrPublicKeys.length == 0
-                    || schnorrPublicKeys.length != round1Messages.length
+                    || numOfActualSigners != round1Messages.length
                     || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)
                     || weights.length != schnorrPublicKeys.length
                     || nodeIds.length != schnorrPublicKeys.length
@@ -205,8 +216,8 @@ public class WRAPSLibraryBridge {
                 return null;
             }
             if (schnorrPublicKeys.length == 0
-                    || schnorrPublicKeys.length != round1Messages.length
-                    || schnorrPublicKeys.length != round2Messages.length
+                    || numOfActualSigners != round1Messages.length
+                    || numOfActualSigners != round2Messages.length
                     || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)
                     || weights.length != schnorrPublicKeys.length
                     || nodeIds.length != schnorrPublicKeys.length
@@ -223,9 +234,9 @@ public class WRAPSLibraryBridge {
                 return null;
             }
             if (schnorrPublicKeys.length == 0
-                    || schnorrPublicKeys.length != round1Messages.length
-                    || schnorrPublicKeys.length != round2Messages.length
-                    || schnorrPublicKeys.length != round3Messages.length
+                    || numOfActualSigners != round1Messages.length
+                    || numOfActualSigners != round2Messages.length
+                    || numOfActualSigners != round3Messages.length
                     || !WRAPSLibraryBridge.validateSchnorrPublicKeys(schnorrPublicKeys)
                     || weights.length != schnorrPublicKeys.length
                     || nodeIds.length != schnorrPublicKeys.length
