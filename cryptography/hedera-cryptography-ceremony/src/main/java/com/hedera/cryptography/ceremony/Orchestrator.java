@@ -44,8 +44,8 @@ public class Orchestrator {
      * create a new "cycle1", or 2, 3, etc. directory in S3.
      * The initial directory structure in S3 looks like this:
      * - cycle0/parameters/* - static parameters shared by all phases/nodes in a given cycle
-     * - cycle0/phase1/initial.bin/* - initial binary files for node0 to pick up as input
-     * - cycle0/phase1/initial.ready - a marker to start the cycle0
+     * - cycle0/phase2/initial.bin/* - initial binary files for node0 to pick up as input
+     * - cycle0/phase2/initial.ready - a marker to start the cycle0
      *
      * @param args the CLI args
      */
@@ -87,20 +87,20 @@ public class Orchestrator {
 
                         // Run phase 1
                         new Phase(
-                                        "1",
+                                        "2",
                                         thisNodeId,
                                         allNodeIds,
-                                        new S3DirectoryAccessor(s3Client, cycle + "/phase1"),
+                                        new S3DirectoryAccessor(s3Client, cycle + "/phase2"),
                                         dataCruncher,
                                         crypto)
                                 .run();
 
                         // Run phase 2
                         new Phase(
-                                        "2",
+                                        "4",
                                         thisNodeId,
                                         allNodeIds,
-                                        new S3DirectoryAccessor(s3Client, cycle + "/phase2"),
+                                        new S3DirectoryAccessor(s3Client, cycle + "/phase4"),
                                         dataCruncher,
                                         crypto)
                                 .run();

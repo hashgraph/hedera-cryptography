@@ -20,7 +20,7 @@ class Phase {
 
     static final String INITIAL_FILE_NAME = "initial";
 
-    /// Phase number, e.g. "1", or "2"
+    /// Phase number, e.g. "2", or "4" (w/o quotes) - these are the only supported phase numbers.
     private final String phase;
     private final long thisNodeId;
     private final List<Long> allNodeIds;
