@@ -789,9 +789,10 @@ mod tests {
         }
     }
 
-    const MIMC_ROUNDS: usize = 3222;
-    const USE_MPC_CEREMONY: bool = true;
-    const PREPROCESS_CIRCUIT: bool = true;
+    const MIMC_ROUNDS: usize = 32222;
+    const TEST_MPC_CEREMONY: bool = false;
+    const PERFORM_MPC_CEREMONY: bool = true;
+    const PREPROCESS_CIRCUIT: bool = false;
     const NUM_THREADS: usize = 16;
 
     #[test]
@@ -828,7 +829,7 @@ mod tests {
 
         // Create parameters for our circuit
         let (_g16_pk, _g16_vk) = {
-            if USE_MPC_CEREMONY {
+            if PERFORM_MPC_CEREMONY {
                 if PREPROCESS_CIRCUIT {
                     extract_circuit(circuit, &tss_root.join("circuit"));
                 }
@@ -868,7 +869,15 @@ mod tests {
             };
 
             let tss_root = PathBuf::from("/tmp/tss");
-            if USE_MPC_CEREMONY {
+
+            if TEST_MPC_CEREMONY {
+                let decider_pp_bytes = std::fs::read(&tss_root.join("result/decider_pp.bin")).unwrap();
+                let decider_vp_bytes = std::fs::read(&tss_root.join("result/decider_vp.bin")).unwrap();
+                let g16_pk = Groth16ProvingKey::deserialize_compressed(decider_pp_bytes.as_slice()).unwrap();
+                let g16_vk = Groth16VerifyingKey::deserialize_compressed(decider_vp_bytes.as_slice()).unwrap();
+                (g16_pk, g16_vk)
+            }
+            else if PERFORM_MPC_CEREMONY {
                 if PREPROCESS_CIRCUIT {
                     extract_circuit(c, &tss_root.join("circuit"));
                 }
