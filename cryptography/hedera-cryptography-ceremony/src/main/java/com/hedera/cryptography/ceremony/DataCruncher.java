@@ -13,8 +13,12 @@ class DataCruncher {
     /// Full path to the executable
     private final String executableFileName;
 
-    DataCruncher(String executableFileName) {
+    /// Full path to static parameters of the current cycle shared between all phases/nodes/runs.
+    private final Path parametersPath;
+
+    DataCruncher(String executableFileName, Path parametersPath) {
         this.executableFileName = executableFileName;
+        this.parametersPath = parametersPath;
     }
 
     /// Run the data cruncher and return its exit code
@@ -23,6 +27,7 @@ class DataCruncher {
                 .command(
                         executableFileName,
                         phase,
+                        parametersPath.toAbsolutePath().toString(),
                         inputPath.toAbsolutePath().toString(),
                         outputPath.toAbsolutePath().toString());
 
