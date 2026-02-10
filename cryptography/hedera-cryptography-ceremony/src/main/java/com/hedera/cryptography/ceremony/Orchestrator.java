@@ -5,8 +5,11 @@ import com.hedera.cryptography.ceremony.s3.S3Client;
 import com.hedera.cryptography.ceremony.s3.S3ClientInitializationException;
 import com.hedera.cryptography.ceremony.s3.S3ResponseException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /// TSS Ceremony Orchestrator.
 public class Orchestrator {
@@ -35,6 +38,15 @@ public class Orchestrator {
      *
      * NOTE: TSS_CEREMONY_S3_ACCESS_KEY and TSS_CEREMONY_S3_SECRET_KEY env vars must be defined.
      *
+     * The Orchestrator runs continuously and supports multiple cycles (always keeping re-running the last "ready"
+     * cycle.) Phases check the ".claimed" files to avoid recomputing and overwriting old data in the current cycle.
+     * So continuous re-runs are effectively no-ops after the initial run. To start a new cycle, simply
+     * create a new "cycle1", or 2, 3, etc. directory in S3.
+     * The initial directory structure in S3 looks like this:
+     * - cycle0/parameters/* - static parameters shared by all phases/nodes in a given cycle
+     * - cycle0/phase1/initial.bin/* - initial binary files for node0 to pick up as input
+     * - cycle0/phase1/initial.ready - a marker to start the cycle0
+     *
      * @param args the CLI args
      */
     public static void main(String[] args) throws S3ClientInitializationException {
@@ -59,7 +71,6 @@ public class Orchestrator {
         final String s3AccessKey = System.getenv("TSS_CEREMONY_S3_ACCESS_KEY");
         final String s3SecretKey = System.getenv("TSS_CEREMONY_S3_SECRET_KEY");
 
-        final DataCruncher dataCruncher = new DataCruncher(dataCruncherExecutableFile);
         try (final S3Client s3Client = new S3Client(s3Region, s3Endpoint, s3BucketName, s3AccessKey, s3SecretKey)) {
             System.err.println("Starting Orchestrator for nodeId: " + thisNodeId + " and allNodeIds: " + allNodeIds
                     + " using dataCruncher: " + dataCruncherExecutableFile);
@@ -71,6 +82,8 @@ public class Orchestrator {
                     final String cycle = determineCycle(s3Client);
                     if (cycle != null) {
                         System.err.println("Running cycle: " + cycle);
+                        final Path parametersDir = obtainParameters(s3Client, cycle);
+                        final DataCruncher dataCruncher = new DataCruncher(dataCruncherExecutableFile, parametersDir);
 
                         // Run phase 1
                         new Phase(
@@ -138,5 +151,24 @@ public class Orchestrator {
         }
 
         return lastCycle == -1 ? null : cycleName(lastCycle);
+    }
+
+    // Parameters occupy some 4GB of space. We don't want to keep re-downloading them as we keep re-running
+    // the same cycle again and again because it's wasteful. So we cache them.
+    private static final Map<String, Path> PARAMETERS_PATHS = new HashMap<>();
+
+    /// Download (if not cached yet) static parameters and return their path
+    private static Path obtainParameters(S3Client s3Client, String cycle) throws IOException {
+        // Map.computeIfAbsent() is nice, but propagating checked exceptions from lambdas isn't.
+        if (PARAMETERS_PATHS.containsKey(cycle)) {
+            return PARAMETERS_PATHS.get(cycle);
+        }
+
+        System.err.println("Downloading static parameters...");
+        final S3DirectoryAccessor s3DirectoryAccessor = new S3DirectoryAccessor(s3Client, cycle);
+        final Path parametersDir = s3DirectoryAccessor.downloadDir("parameters");
+        PARAMETERS_PATHS.put(cycle, parametersDir);
+
+        return parametersDir;
     }
 }
