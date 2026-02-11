@@ -36,6 +36,7 @@ javaModulePackaging {
         architecture = MachineArchitecture.X86_64
     }
 
-    // Bouncy Castle JARs fail as: jlink failed with: Error: signed modular JAR is currently not supported:
-    jlinkOptions.addAll("--ignore-signing-information");
+    // Bouncy Castle JARs fail as: jlink failed with: Error: signed modular JAR is currently not
+    // supported:
+    jlinkOptions.addAll("--ignore-signing-information")
 }
