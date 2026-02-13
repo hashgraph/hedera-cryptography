@@ -294,6 +294,52 @@ impl WRAPSPreprocessing {
         Ok((g16_pk, g16_vk))
     }
 
+    pub fn extract_circuit_r1cs_config(path: &PathBuf) {
+        let mut rng = ark_std::rand::rngs::OsRng;
+        let F_circuit = Circuit::new(())
+            .unwrap();
+
+        let poseidon_config = poseidon_canonical_config::<Fr>();
+
+        let nova_preprocess_params = PreprocessorParam::new(poseidon_config, F_circuit);
+        // Generate Nova parameters for the WRAPS folding circuit.
+        let (nova_pp, nova_vp) = N::preprocess(
+            &mut rng,
+            &nova_preprocess_params
+        ).unwrap();
+
+        let circuit = DeciderEthCircuit::<G1, G2>::dummy((
+            nova_vp.clone().r1cs,
+            nova_vp.clone().cf_r1cs,
+            nova_pp.clone().cf_cs_pp,
+            nova_pp.clone().poseidon_config,
+            (),
+            (),
+            F_circuit.state_len(),
+            2, // Nova's running CommittedInstance contains 2 commitments
+        ));
+
+        let cs = ConstraintSystem::new_ref();
+        cs.set_optimization_goal(OptimizationGoal::Constraints);
+        cs.set_mode(SynthesisMode::Setup);
+        circuit.generate_constraints(cs.clone()).unwrap();
+        cs.finalize();
+
+        let matrices = &cs.to_matrices().unwrap()["R1CS"];
+
+        let circuit_config = CircuitConfig {
+            num_constraints: cs.num_constraints(),
+            num_instance_variables: cs.num_instance_variables(),
+            num_witness_variables: cs.num_witness_variables(),
+        };
+
+        store_to_file(&path.join("matrix_A.bin"), &matrices[0]).unwrap();
+        store_to_file(&path.join("matrix_B.bin"), &matrices[1]).unwrap();
+        store_to_file(&path.join("matrix_C.bin"), &matrices[2]).unwrap();
+
+        store_to_file(&path.join("circuit_config.bin"), &circuit_config).unwrap();
+    }
+
     /// creates an initial SRS for Groth16, using tau = 1, and alpha, beta = 1
     pub fn create_init_srs_phase1(circuit_path: &PathBuf, output_path: &PathBuf) {
         let circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
@@ -624,28 +670,6 @@ mod tests {
     };
     use ark_std::test_rng;
 
-    fn extract_circuit<C: ConstraintSynthesizer<Fr>>(circuit: C, path: &PathBuf) {
-        let cs = ConstraintSystem::new_ref();
-        cs.set_optimization_goal(OptimizationGoal::Constraints);
-        cs.set_mode(SynthesisMode::Setup);
-        circuit.generate_constraints(cs.clone()).unwrap();
-        cs.finalize();
-
-        let matrices = &cs.to_matrices().unwrap()["R1CS"];
-
-        let circuit_config = CircuitConfig {
-            num_constraints: cs.num_constraints(),
-            num_instance_variables: cs.num_instance_variables(),
-            num_witness_variables: cs.num_witness_variables(),
-        };
-
-        store_to_file(&path.join("matrix_A.bin"), &matrices[0]).unwrap();
-        store_to_file(&path.join("matrix_B.bin"), &matrices[1]).unwrap();
-        store_to_file(&path.join("matrix_C.bin"), &matrices[2]).unwrap();
-
-        store_to_file(&path.join("circuit_config.bin"), &circuit_config).unwrap();
-    }
-
     fn sample_ceremony_groth_setup(tss_root: &PathBuf)
         -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), WRAPSError> {
         // coordinator must create the initial SRS
@@ -789,11 +813,6 @@ mod tests {
         }
     }
 
-    const MIMC_ROUNDS: usize = 32222;
-    const TEST_MPC_CEREMONY: bool = false;
-    const PERFORM_MPC_CEREMONY: bool = true;
-    const PREPROCESS_CIRCUIT: bool = false;
-    const NUM_THREADS: usize = 16;
 
     #[test]
     fn test_tss_circuit() {
@@ -825,13 +844,13 @@ mod tests {
             2, // Nova's running CommittedInstance contains 2 commitments
         ));
 
-        let tss_root = PathBuf::from("/Users/rohit/tss");
+        let tss_root = PathBuf::from("/tmp/tss");
 
         // Create parameters for our circuit
         let (_g16_pk, _g16_vk) = {
             if PERFORM_MPC_CEREMONY {
                 if PREPROCESS_CIRCUIT {
-                    extract_circuit(circuit, &tss_root.join("circuit"));
+                    WRAPSPreprocessing::extract_circuit_r1cs_config(&tss_root.join("circuit"));
                 }
                 sample_ceremony_groth_setup(&tss_root).unwrap()
             } else {
@@ -839,6 +858,19 @@ mod tests {
             }
         };
     }
+
+    // this parameter controls the size of the test MiMC circuit.
+    const MIMC_ROUNDS: usize = 32222;
+    // use this to avoid running the MPC ceremony every time we run the test. 
+    // You can set this to `true` to run the ceremony, and then set it back to `false` for faster iterations.
+    const TEST_MPC_CEREMONY: bool = false;
+    // set this to `true` to run the MPC ceremony, and `false` to use a trusted setup (for faster iterations during testing)
+    const PERFORM_MPC_CEREMONY: bool = true;
+    // set this to `true` to preprocess the circuit and store the R1CS matrices to disk before running the MPC ceremony. 
+    // This allows us to purge large data structures from memory during the ceremony, which is important for large circuits.
+    const PREPROCESS_CIRCUIT: bool = true;
+    // number of threads to use for parallelizing the computation
+    const NUM_THREADS: usize = 16;
 
     #[test]
     fn test_mimc_groth16() {
@@ -879,7 +911,26 @@ mod tests {
             }
             else if PERFORM_MPC_CEREMONY {
                 if PREPROCESS_CIRCUIT {
-                    extract_circuit(c, &tss_root.join("circuit"));
+                    let cs = ConstraintSystem::new_ref();
+                    cs.set_optimization_goal(OptimizationGoal::Constraints);
+                    cs.set_mode(SynthesisMode::Setup);
+                    c.generate_constraints(cs.clone()).unwrap();
+                    cs.finalize();
+
+                    let matrices = &cs.to_matrices().unwrap()["R1CS"];
+
+                    let circuit_config = CircuitConfig {
+                        num_constraints: cs.num_constraints(),
+                        num_instance_variables: cs.num_instance_variables(),
+                        num_witness_variables: cs.num_witness_variables(),
+                    };
+
+                    let circuit_path = tss_root.join("circuit");
+                    store_to_file(&circuit_path.join("matrix_A.bin"), &matrices[0]).unwrap();
+                    store_to_file(&circuit_path.join("matrix_B.bin"), &matrices[1]).unwrap();
+                    store_to_file(&circuit_path.join("matrix_C.bin"), &matrices[2]).unwrap();
+
+                    store_to_file(&circuit_path.join("circuit_config.bin"), &circuit_config).unwrap();
                 }
                 sample_ceremony_groth_setup(&tss_root).unwrap()
             } else {
