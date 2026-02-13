@@ -10,10 +10,13 @@ use wraps::preprocessing::WRAPSPreprocessing;
     long_about = "Run WRAPS Groth16 ceremony preprocessing phases.\n\
 \n\
 Required base args:\n\
-  --phase <1..5>\n\
+  --phase <0..5>\n\
   --output-folder <PATH> (used in phases 1, 2, 4, 5)\n\
 \n\
 Folder mapping by phase:\n\
+  phase 0 (extract_circuit_r1cs_config):\n\
+    circuit-folder= circuit\n\
+\n\
   phase 1 (create_init_srs_phase1):\n\
     circuit-folder= circuit\n\
     output= phase1_init\n\
@@ -42,7 +45,7 @@ Folder mapping by phase:\n\
 "
 )]
 struct Args {
-    #[arg(long, value_parser = clap::value_parser!(u8).range(1..=5))]
+    #[arg(long, value_parser = clap::value_parser!(u8).range(0..=5))]
     phase: u8,
     #[arg(long)]
     circuit_folder: Option<PathBuf>,
@@ -80,6 +83,15 @@ fn reject_arg(value: &Option<PathBuf>, flag: &str, phase: u8) -> Result<(), Stri
     } else {
         Ok(())
     }
+}
+
+fn validate_unused_for_phase_0(args: &Args) -> Result<(), String> {
+    reject_arg(&args.input_folder, "input-folder", 0)?;
+    reject_arg(&args.output_folder, "output-folder", 0)?;
+    reject_arg(&args.phase1_input_folder, "phase1-input-folder", 0)?;
+    reject_arg(&args.phase1_output_folder, "phase1-output-folder", 0)?;
+    reject_arg(&args.phase2_input_folder, "phase2-input-folder", 0)?;
+    reject_arg(&args.phase2_output_folder, "phase2-output-folder", 0)
 }
 
 fn validate_unused_for_phase_1(args: &Args) -> Result<(), String> {
@@ -128,6 +140,13 @@ fn ensure_output_dir(path: &PathBuf) -> Result<(), String> {
 
 fn run(args: Args) -> Result<(), String> {
     match args.phase {
+        0 => {
+            validate_unused_for_phase_0(&args)?;
+            let circuit_folder = require_arg(&args.circuit_folder, "circuit-folder")?;
+            ensure_output_dir(&circuit_folder)?;
+            WRAPSPreprocessing::extract_circuit_r1cs_config(&circuit_folder);
+            Ok(())
+        }
         1 => {
             validate_unused_for_phase_1(&args)?;
             let circuit_folder = require_arg(&args.circuit_folder, "circuit-folder")?;

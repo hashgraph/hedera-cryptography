@@ -47,27 +47,32 @@ run_ceremony() {
   (cd "${RUST_ROOT}" && cargo run --release -p ceremony -- "$@")
 }
 
-echo "[1/6] create_init_srs_phase1"
+echo "[1/7] extract_circuit_r1cs_config"
+run_ceremony \
+  --phase 0 \
+  --circuit-folder "${CIRCUIT_FOLDER}"
+
+echo "[2/7] create_init_srs_phase1"
 run_ceremony \
   --phase 1 \
   --circuit-folder "${CIRCUIT_FOLDER}" \
   --output-folder "${PHASE1_INIT}"
 
-echo "[2/6] update_srs_phase1 (update #1)"
+echo "[3/7] update_srs_phase1 (update #1)"
 run_ceremony \
   --phase 2 \
   --circuit-folder "${CIRCUIT_FOLDER}" \
   --input-folder "${PHASE1_INIT}" \
   --output-folder "${NODE1_PHASE1}"
 
-echo "[3/6] update_srs_phase1 (update #2)"
+echo "[4/7] update_srs_phase1 (update #2)"
 run_ceremony \
   --phase 2 \
   --circuit-folder "${CIRCUIT_FOLDER}" \
   --input-folder "${NODE1_PHASE1}" \
   --output-folder "${NODE2_PHASE1}"
 
-echo "[4/6] specialize_srs"
+echo "[5/7] specialize_srs"
 run_ceremony \
   --phase 3 \
   --circuit-folder "${CIRCUIT_FOLDER}" \
@@ -75,14 +80,14 @@ run_ceremony \
   --phase1-output-folder "${PHASE1_OUTPUT}" \
   --phase2-output-folder "${PHASE2_INIT}"
 
-echo "[5/6] update_srs_phase2 (update #1)"
+echo "[6/7] update_srs_phase2 (update #1)"
 run_ceremony \
   --phase 4 \
   --circuit-folder "${CIRCUIT_FOLDER}" \
   --input-folder "${PHASE2_INIT}" \
   --output-folder "${NODE1_PHASE2}"
 
-echo "[6/6] update_srs_phase2 (update #2)"
+echo "[7/7] update_srs_phase2 (update #2)"
 run_ceremony \
   --phase 4 \
   --circuit-folder "${CIRCUIT_FOLDER}" \
