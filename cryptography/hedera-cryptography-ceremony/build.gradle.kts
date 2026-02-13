@@ -2,6 +2,7 @@
 plugins {
     id("org.hiero.gradle.module.application")
     id("org.hiero.gradle.feature.shadow")
+    id("org.gradlex.java-module-packaging") version "1.2"
 }
 
 testModuleInfo {
@@ -12,3 +13,30 @@ testModuleInfo {
 }
 
 application.mainClass = "com.hedera.cryptography.ceremony.Orchestrator"
+
+javaModulePackaging {
+    target("linux-x86_64") {
+        operatingSystem = OperatingSystemFamily.LINUX
+        architecture = MachineArchitecture.X86_64
+    }
+    target("linux-aarch64") {
+        operatingSystem = OperatingSystemFamily.LINUX
+        architecture = MachineArchitecture.ARM64
+    }
+    target("darwin-aarch64") {
+        operatingSystem = OperatingSystemFamily.MACOS
+        architecture = MachineArchitecture.ARM64
+    }
+    target("darwin-x86_64") {
+        operatingSystem = OperatingSystemFamily.MACOS
+        architecture = MachineArchitecture.X86_64
+    }
+    target("windows-x86_64") {
+        operatingSystem = OperatingSystemFamily.WINDOWS
+        architecture = MachineArchitecture.X86_64
+    }
+
+    // Bouncy Castle JARs fail as: jlink failed with: Error: signed modular JAR is currently not
+    // supported:
+    jlinkOptions.addAll("--ignore-signing-information")
+}

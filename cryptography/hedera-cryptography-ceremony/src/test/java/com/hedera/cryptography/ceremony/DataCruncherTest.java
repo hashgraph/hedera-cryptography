@@ -16,14 +16,14 @@ import org.junit.jupiter.api.condition.OS;
 public class DataCruncherTest {
     @Test
     void testTrue() throws IOException {
-        final DataCruncher dataCruncher = new DataCruncher("/usr/bin/true");
+        final DataCruncher dataCruncher = new DataCruncher("/usr/bin/true", Path.of("."));
         final int status = dataCruncher.execute("", Path.of("."), Path.of("."));
         assertEquals(0, status);
     }
 
     @Test
     void testFalse() throws IOException {
-        final DataCruncher dataCruncher = new DataCruncher("/usr/bin/false");
+        final DataCruncher dataCruncher = new DataCruncher("/usr/bin/false", Path.of("."));
         final int status = dataCruncher.execute("", Path.of("."), Path.of("."));
         assertNotEquals(0, status);
     }
