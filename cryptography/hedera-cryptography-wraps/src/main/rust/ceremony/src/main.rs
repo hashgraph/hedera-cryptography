@@ -3,6 +3,16 @@ use std::path::PathBuf;
 
 use wraps::preprocessing::WRAPSPreprocessing;
 
+const NUM_COORDINATOR_THREADS: usize = 32;
+const NUM_PARTICIPANT_THREADS: usize = 4;
+
+fn setup_rayon_thread_pool(num_threads: usize) {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(num_threads)
+        .build_global()
+        .unwrap();
+}
+
 #[derive(Debug, Parser)]
 #[command(
     name = "ceremony",
@@ -103,6 +113,7 @@ fn run(args: Args) -> Result<(), String> {
             Ok(())
         }
         2 => {
+            setup_rayon_thread_pool(NUM_PARTICIPANT_THREADS);
             require_arg_count(
                 &args.args,
                 2,
@@ -123,6 +134,7 @@ fn run(args: Args) -> Result<(), String> {
             Ok(())
         }
         3 => {
+            setup_rayon_thread_pool(NUM_COORDINATOR_THREADS);
             require_arg_count(
                 &args.args,
                 3,
@@ -146,6 +158,7 @@ fn run(args: Args) -> Result<(), String> {
             Ok(())
         }
         4 => {
+            setup_rayon_thread_pool(NUM_PARTICIPANT_THREADS);
             require_arg_count(
                 &args.args,
                 4,
@@ -166,6 +179,7 @@ fn run(args: Args) -> Result<(), String> {
             Ok(())
         }
         5 => {
+            setup_rayon_thread_pool(NUM_COORDINATOR_THREADS);
             require_arg_count(
                 &args.args,
                 5,
