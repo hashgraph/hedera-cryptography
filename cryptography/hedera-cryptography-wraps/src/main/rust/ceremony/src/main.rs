@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use wraps::preprocessing::WRAPSPreprocessing;
 
-const NUM_COORDINATOR_THREADS: usize = 32;
+const NUM_COORDINATOR_THREADS: usize = 48;
 const NUM_PARTICIPANT_THREADS: usize = 4;
 
 fn setup_rayon_thread_pool(num_threads: usize) {
