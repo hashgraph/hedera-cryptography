@@ -302,6 +302,15 @@ impl WRAPSPreprocessing {
             &nova_preprocess_params
         ).unwrap();
 
+        let mut nova_vp_serialized: Vec<u8> = vec![];
+        nova_vp.serialize_compressed(&mut nova_vp_serialized).unwrap();
+        std::fs::write(path.join("nova_vp.bin"), &nova_vp_serialized).unwrap();
+
+        let mut nova_pp_serialized: Vec<u8> = vec![];
+        nova_pp.serialize_compressed(&mut nova_pp_serialized).unwrap();
+        std::fs::write(path.join("nova_pp.bin"), &nova_pp_serialized).unwrap();
+
+
         let circuit = DeciderEthCircuit::<G1, G2>::dummy((
             nova_vp.clone().r1cs,
             nova_vp.clone().cf_r1cs,
@@ -468,38 +477,64 @@ impl WRAPSPreprocessing {
             ifft_of_powers_of_beta_tau_g1,
         ) = std::thread::scope(|scope| {
             let powers_of_tau_g1_handle = scope.spawn(|| {
-                let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
-                let start = std::time::Instant::now();
-                let ifft_of_powers_of_tau_g1 =
-                    ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_tau_g1[..ds]);
-                println!("IFFT (powers_of_tau_g1) took {:?}", start.elapsed());
-                ifft_of_powers_of_tau_g1
+                if ifft_of_powers_of_tau_g1_path.exists() {
+                    println!("Loading ifft_of_powers_of_tau_g1 from disk...");
+                    load_from_file::<Vec<G1Affine>>(&ifft_of_powers_of_tau_g1_path).unwrap()
+                } else {
+                    let phase1_powers_of_tau_g1 =
+                        load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
+                    let start = std::time::Instant::now();
+                    let ifft_of_powers_of_tau_g1 =
+                        ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_tau_g1[..ds]);
+                    println!("IFFT (powers_of_tau_g1) took {:?}", start.elapsed());
+                    store_to_file(&ifft_of_powers_of_tau_g1_path, &ifft_of_powers_of_tau_g1).unwrap();
+                    ifft_of_powers_of_tau_g1
+                }
             });
             let powers_of_tau_g2_handle = scope.spawn(|| {
-                let phase1_powers_of_tau_g2 = load_from_file::<Vec<G2Affine>>(&powers_of_tau_g2_path).unwrap();
-                let start = std::time::Instant::now();
-                let ifft_of_powers_of_tau_g2 =
-                    ECFFTUtils::ifft::<ark_bn254::G2Projective>(&phase1_powers_of_tau_g2[..ds]);
-                println!("IFFT (powers_of_tau_g2) took {:?}", start.elapsed());
-                ifft_of_powers_of_tau_g2
+                if ifft_of_powers_of_tau_g2_path.exists() {
+                    println!("Loading ifft_of_powers_of_tau_g2 from disk...");
+                    load_from_file::<Vec<G2Affine>>(&ifft_of_powers_of_tau_g2_path).unwrap()
+                } else {
+                    let phase1_powers_of_tau_g2 =
+                        load_from_file::<Vec<G2Affine>>(&powers_of_tau_g2_path).unwrap();
+                    let start = std::time::Instant::now();
+                    let ifft_of_powers_of_tau_g2 =
+                        ECFFTUtils::ifft::<ark_bn254::G2Projective>(&phase1_powers_of_tau_g2[..ds]);
+                    println!("IFFT (powers_of_tau_g2) took {:?}", start.elapsed());
+                    store_to_file(&ifft_of_powers_of_tau_g2_path, &ifft_of_powers_of_tau_g2).unwrap();
+                    ifft_of_powers_of_tau_g2
+                }
             });
             let powers_of_alpha_tau_g1_handle = scope.spawn(|| {
-                let phase1_powers_of_alpha_tau_g1 =
-                    load_from_file::<Vec<G1Affine>>(&powers_of_alpha_tau_g1_path).unwrap();
-                let start = std::time::Instant::now();
-                let ifft_of_powers_of_alpha_tau_g1 =
-                    ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_alpha_tau_g1);
-                println!("IFFT (powers_of_alpha_tau_g1) took {:?}", start.elapsed());
-                ifft_of_powers_of_alpha_tau_g1
+                if ifft_of_powers_of_alpha_tau_g1_path.exists() {
+                    println!("Loading ifft_of_powers_of_alpha_tau_g1 from disk...");
+                    load_from_file::<Vec<G1Affine>>(&ifft_of_powers_of_alpha_tau_g1_path).unwrap()
+                } else {
+                    let phase1_powers_of_alpha_tau_g1 =
+                        load_from_file::<Vec<G1Affine>>(&powers_of_alpha_tau_g1_path).unwrap();
+                    let start = std::time::Instant::now();
+                    let ifft_of_powers_of_alpha_tau_g1 =
+                        ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_alpha_tau_g1);
+                    println!("IFFT (powers_of_alpha_tau_g1) took {:?}", start.elapsed());
+                    store_to_file(&ifft_of_powers_of_alpha_tau_g1_path, &ifft_of_powers_of_alpha_tau_g1).unwrap();
+                    ifft_of_powers_of_alpha_tau_g1
+                }
             });
             let powers_of_beta_tau_g1_handle = scope.spawn(|| {
-                let phase1_powers_of_beta_tau_g1 =
-                    load_from_file::<Vec<G1Affine>>(&powers_of_beta_tau_g1_path).unwrap();
-                let start = std::time::Instant::now();
-                let ifft_of_powers_of_beta_tau_g1 =
-                    ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_beta_tau_g1);
-                println!("IFFT (powers_of_beta_tau_g1) took {:?}", start.elapsed());
-                ifft_of_powers_of_beta_tau_g1
+                if ifft_of_powers_of_beta_tau_g1_path.exists() {
+                    println!("Loading ifft_of_powers_of_beta_tau_g1 from disk...");
+                    load_from_file::<Vec<G1Affine>>(&ifft_of_powers_of_beta_tau_g1_path).unwrap()
+                } else {
+                    let phase1_powers_of_beta_tau_g1 =
+                        load_from_file::<Vec<G1Affine>>(&powers_of_beta_tau_g1_path).unwrap();
+                    let start = std::time::Instant::now();
+                    let ifft_of_powers_of_beta_tau_g1 =
+                        ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_beta_tau_g1);
+                    println!("IFFT (powers_of_beta_tau_g1) took {:?}", start.elapsed());
+                    store_to_file(&ifft_of_powers_of_beta_tau_g1_path, &ifft_of_powers_of_beta_tau_g1).unwrap();
+                    ifft_of_powers_of_beta_tau_g1
+                }
             });
 
             (
@@ -509,12 +544,6 @@ impl WRAPSPreprocessing {
                 powers_of_beta_tau_g1_handle.join().unwrap(),
             )
         });
-
-        // let us store the IFFT results to disk, so we can reload them if we crash during specialization
-        store_to_file(&ifft_of_powers_of_tau_g1_path, &ifft_of_powers_of_tau_g1).unwrap();
-        store_to_file(&ifft_of_powers_of_tau_g2_path, &ifft_of_powers_of_tau_g2).unwrap();
-        store_to_file(&ifft_of_powers_of_alpha_tau_g1_path, &ifft_of_powers_of_alpha_tau_g1).unwrap();
-        store_to_file(&ifft_of_powers_of_beta_tau_g1_path, &ifft_of_powers_of_beta_tau_g1).unwrap();
 
         pause_until_enter();
 
