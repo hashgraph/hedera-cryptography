@@ -452,10 +452,10 @@ impl WRAPSPreprocessing {
         let powers_of_beta_tau_g1_path = p1_srs.join("powers_of_beta_tau_g1.bin");
         let powers_of_alpha_tau_g1_path = p1_srs.join("powers_of_alpha_tau_g1.bin");
 
-        // let ifft_of_powers_of_tau_g1_path = p1_out.join("ifft_of_powers_of_tau_g1.bin");
-        // let ifft_of_powers_of_tau_g2_path = p1_out.join("ifft_of_powers_of_tau_g2.bin");
-        // let ifft_of_powers_of_alpha_tau_g1_path = p1_out.join("ifft_of_powers_of_alpha_tau_g1.bin");
-        // let ifft_of_powers_of_beta_tau_g1_path = p1_out.join("ifft_of_powers_of_beta_tau_g1.bin");
+        let ifft_of_powers_of_tau_g1_path = p1_out.join("ifft_of_powers_of_tau_g1.bin");
+        let ifft_of_powers_of_tau_g2_path = p1_out.join("ifft_of_powers_of_tau_g2.bin");
+        let ifft_of_powers_of_alpha_tau_g1_path = p1_out.join("ifft_of_powers_of_alpha_tau_g1.bin");
+        let ifft_of_powers_of_beta_tau_g1_path = p1_out.join("ifft_of_powers_of_beta_tau_g1.bin");
 
         let matrix_a = load_from_file::<Matrix<Fr>>(&matrix_a_path).unwrap();
         let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
@@ -510,10 +510,11 @@ impl WRAPSPreprocessing {
             )
         });
 
-        // store_to_file(&ifft_of_powers_of_tau_g1_path, &ifft_of_powers_of_tau_g1).unwrap();
-        // store_to_file(&ifft_of_powers_of_tau_g2_path, &ifft_of_powers_of_tau_g2).unwrap();
-        // store_to_file(&ifft_of_powers_of_alpha_tau_g1_path, &ifft_of_powers_of_alpha_tau_g1).unwrap();
-        // store_to_file(&ifft_of_powers_of_beta_tau_g1_path, &ifft_of_powers_of_beta_tau_g1).unwrap();
+        // let us store the IFFT results to disk, so we can reload them if we crash during specialization
+        store_to_file(&ifft_of_powers_of_tau_g1_path, &ifft_of_powers_of_tau_g1).unwrap();
+        store_to_file(&ifft_of_powers_of_tau_g2_path, &ifft_of_powers_of_tau_g2).unwrap();
+        store_to_file(&ifft_of_powers_of_alpha_tau_g1_path, &ifft_of_powers_of_alpha_tau_g1).unwrap();
+        store_to_file(&ifft_of_powers_of_beta_tau_g1_path, &ifft_of_powers_of_beta_tau_g1).unwrap();
 
         pause_until_enter();
 
@@ -538,6 +539,7 @@ impl WRAPSPreprocessing {
         specialize_srs_helper_g2(&mut b_g2, &matrix_b, &ifft_of_powers_of_tau_g2, num_constraints, num_variables);
         println!("Computing b_g2 took {:?}", start.elapsed());
         store_to_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin"), &b_g2).unwrap();
+        drop(ifft_of_powers_of_tau_g2);
         drop(b_g2);
         /* ---------------------------- end compute b_g2 ---------------------------- */
 
