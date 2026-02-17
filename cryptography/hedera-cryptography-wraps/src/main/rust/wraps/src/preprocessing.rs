@@ -102,17 +102,6 @@ fn store_to_file<T: CanonicalSerialize>(path: &PathBuf, data: &T) -> Result<(), 
     Ok(())
 }
 
-const PAUSE: bool = true;
-fn pause_until_enter() {
-    if PAUSE {
-        print!("Press Enter to continue...");
-        std::io::stdout().flush().unwrap(); // make sure prompt shows before blocking
-
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap(); // waits for Enter
-    }
-}
-
 fn update_srs_helper_g1(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, multiplier: Fr, tau: Fr, is_vec: bool) {
     if is_vec {
         let prev_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&prev_srs.join(name)).unwrap();
@@ -558,8 +547,6 @@ impl WRAPSPreprocessing {
             )
         });
 
-        pause_until_enter();
-
         /* ---------------------------- begin compute b_g2 ---------------------------- */
         let mut b_g2 = vec![G2Affine::zero(); num_variables + 1];
         let start = std::time::Instant::now();
@@ -569,8 +556,6 @@ impl WRAPSPreprocessing {
         drop(ifft_of_powers_of_tau_g2);
         drop(b_g2);
         /* ---------------------------- end compute b_g2 ---------------------------- */
-
-        pause_until_enter();
 
         /* ---------------------------- begin compute h_g1 ---------------------------- */
         let mut h_g1 = vec![G1Affine::zero(); domain.size() - 1];
@@ -584,8 +569,6 @@ impl WRAPSPreprocessing {
         drop(h_g1);
         drop(phase1_powers_of_tau_g1);
         /* ---------------------------- end compute h_g1 ---------------------------- */
-
-        pause_until_enter();
 
         let mut abc_g1 = vec![G1Affine::zero(); num_variables + 1];
         let mut a_g1 = vec![G1Affine::zero(); num_variables + 1];
@@ -604,13 +587,9 @@ impl WRAPSPreprocessing {
         specialize_srs_helper_g1(&mut abc_g1, &matrix_a, &ifft_of_powers_of_beta_tau_g1, num_constraints, num_variables);
         println!("Updating abc_g1 using powers_of_beta_tau_g1 took {:?}", start.elapsed());
 
-        pause_until_enter();
-
         let start = std::time::Instant::now();
         specialize_srs_helper_g1(&mut abc_g1, &matrix_b, &ifft_of_powers_of_alpha_tau_g1, num_constraints, num_variables);
         println!("Updating abc_g1 using powers_of_alpha_tau_g1 took {:?}", start.elapsed());
-
-        pause_until_enter();
 
         let start = std::time::Instant::now();
         specialize_srs_helper_g1(&mut a_g1, &matrix_a, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
