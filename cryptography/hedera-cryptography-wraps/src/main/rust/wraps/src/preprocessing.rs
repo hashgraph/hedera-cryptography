@@ -160,8 +160,10 @@ fn specialize_srs_helper_g1(
     num_constraints: usize,
     num_variables: usize)
 {
+    let min_chunk_len = min_parallel_chunk_len(num_constraints);
     let intermediate = (0..num_constraints)
         .into_par_iter()
+        .with_min_len(min_chunk_len)
         .fold(
             || vec![ark_bn254::G1Projective::zero(); num_variables + 1],
             |mut local, i| {
@@ -199,8 +201,10 @@ fn specialize_srs_helper_g2(
     num_constraints: usize,
     num_variables: usize)
 {
+    let min_chunk_len = min_parallel_chunk_len(num_constraints);
     let intermediate = (0..num_constraints)
         .into_par_iter()
+        .with_min_len(min_chunk_len)
         .fold(
             || vec![ark_bn254::G2Projective::zero(); num_variables + 1],
             |mut local, i| {
@@ -229,6 +233,14 @@ fn specialize_srs_helper_g2(
     for (dst, src) in state.iter_mut().zip(intermediate.iter()) {
         *dst = (*dst + *src).into_affine();
     }
+}
+
+fn min_parallel_chunk_len(num_constraints: usize) -> usize {
+    let num_threads = rayon::current_num_threads().max(1);
+    let target_tasks = num_threads.saturating_mul(2).max(1);
+    let min_parallel_chunk_len = num_constraints.div_ceil(target_tasks).max(1);
+    println!("Using a minimum parallel chunk length of {} for {} constraints and {} threads.", min_parallel_chunk_len, num_constraints, num_threads);
+    min_parallel_chunk_len
 }
 
 
