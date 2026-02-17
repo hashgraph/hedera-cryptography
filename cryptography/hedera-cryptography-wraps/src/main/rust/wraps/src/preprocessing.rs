@@ -89,14 +89,16 @@ fn load_from_file<T: CanonicalDeserialize>(path: &PathBuf) -> Result<T, Error> {
     let start = std::time::Instant::now();
     let raw_data = std::fs::read(path)?;
     let data: T = T::deserialize_uncompressed(&*raw_data)?;
-    println!("Deserializing {} took {:?}", path.to_str().unwrap_or("unknown"), start.elapsed());
+    println!("Deserializing and loading from disk {} took {:?}", path.to_str().unwrap_or("unknown"), start.elapsed());
     Ok(data)
 }
 
 fn store_to_file<T: CanonicalSerialize>(path: &PathBuf, data: &T) -> Result<(), Error> {
+    let start = std::time::Instant::now();
     let mut raw_data = Vec::new();
     data.serialize_uncompressed(&mut raw_data)?;
     std::fs::write(path, &raw_data)?;
+    println!("Serializing and writing {} to disk took {:?}", path.to_str().unwrap_or("unknown"), start.elapsed());
     Ok(())
 }
 
