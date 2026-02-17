@@ -102,7 +102,7 @@ fn store_to_file<T: CanonicalSerialize>(path: &PathBuf, data: &T) -> Result<(), 
     Ok(())
 }
 
-const PAUSE: bool = false;
+const PAUSE: bool = true;
 fn pause_until_enter() {
     if PAUSE {
         print!("Press Enter to continue...");
@@ -442,7 +442,6 @@ impl WRAPSPreprocessing {
         p2_srs: &PathBuf, // output that will be used as phase 2 starting SRS
     ) {
         let circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
-        pause_until_enter();
         let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
         let domain = GeneralEvaluationDomain::<Fr>::new(n)
             .ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
@@ -549,6 +548,18 @@ impl WRAPSPreprocessing {
 
         pause_until_enter();
 
+        /* ---------------------------- begin compute b_g2 ---------------------------- */
+        let mut b_g2 = vec![G2Affine::zero(); num_variables + 1];
+        let start = std::time::Instant::now();
+        specialize_srs_helper_g2(&mut b_g2, &matrix_b, &ifft_of_powers_of_tau_g2, num_constraints, num_variables);
+        println!("Computing b_g2 took {:?}", start.elapsed());
+        store_to_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin"), &b_g2).unwrap();
+        drop(ifft_of_powers_of_tau_g2);
+        drop(b_g2);
+        /* ---------------------------- end compute b_g2 ---------------------------- */
+
+        pause_until_enter();
+
         /* ---------------------------- begin compute h_g1 ---------------------------- */
         let mut h_g1 = vec![G1Affine::zero(); domain.size() - 1];
         let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
@@ -561,18 +572,6 @@ impl WRAPSPreprocessing {
         drop(h_g1);
         drop(phase1_powers_of_tau_g1);
         /* ---------------------------- end compute h_g1 ---------------------------- */
-
-        pause_until_enter();
-
-        /* ---------------------------- begin compute b_g2 ---------------------------- */
-        let mut b_g2 = vec![G2Affine::zero(); num_variables + 1];
-        let start = std::time::Instant::now();
-        specialize_srs_helper_g2(&mut b_g2, &matrix_b, &ifft_of_powers_of_tau_g2, num_constraints, num_variables);
-        println!("Computing b_g2 took {:?}", start.elapsed());
-        store_to_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin"), &b_g2).unwrap();
-        drop(ifft_of_powers_of_tau_g2);
-        drop(b_g2);
-        /* ---------------------------- end compute b_g2 ---------------------------- */
 
         pause_until_enter();
 
