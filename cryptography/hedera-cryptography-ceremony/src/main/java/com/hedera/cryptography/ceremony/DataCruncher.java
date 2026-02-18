@@ -4,7 +4,6 @@ package com.hedera.cryptography.ceremony;
 import com.hedera.common.nativesupport.NativeBinary;
 import com.hedera.common.nativesupport.OperatingSystem;
 import com.hedera.common.nativesupport.SingletonLoader;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -33,7 +32,6 @@ class DataCruncher {
         // Extract it just once because we keep creating new DataCruncher objects in the Orchestrator
         EXECUTABLE_PATH = CEREMONY_BINARY.extract(DataCruncher.class);
     }
-
 
     /// Full path to static parameters of the current cycle shared between all phases/nodes/runs.
     private final Path parametersPath;
