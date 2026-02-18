@@ -4,6 +4,7 @@
 module com.hedera.cryptography.ceremony {
     exports com.hedera.cryptography.ceremony;
 
+    requires com.hedera.common.nativesupport;
     requires java.logging;
     requires java.net.http;
     requires java.xml;

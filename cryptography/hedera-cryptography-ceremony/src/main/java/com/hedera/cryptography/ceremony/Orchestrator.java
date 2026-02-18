@@ -27,12 +27,11 @@ public class Orchestrator {
     /**
      * Main class that requires command-line arguments:
      * <p>
-     * $ java Orchestrator thisNodeId nodeId1,nodeId2,... dataCruncherExecutableFile s3Region s3Endpoint s3BucketName keyStorePath keyStorePassword
+     * $ java Orchestrator thisNodeId nodeId1,nodeId2,... s3Region s3Endpoint s3BucketName keyStorePath keyStorePassword
      * <p>
      * where:
      * - thisNodeId is a long integer that is this nodeId
      * - "nodeId1 nodeId2 ..." is a comma-separated ordered list of long integers of all nodeIds
-     * - dataCruncherExecutableFile is a path to the data cruncher (the Rust CLI executable)
      * - s3* specify the S3 location, e.g. `us-east-1 "https://s3.amazonaws.com/" TSSCeremonyBucket"
      * - keyStore* specify the location of the local node key store that contains the node's private key
      *
@@ -52,19 +51,18 @@ public class Orchestrator {
     public static void main(String[] args) throws S3ClientInitializationException {
         if (args.length != 8) {
             System.err.println(
-                    "Usage: Orchestrator thisNodeId nodeId1,nodeId2,... dataCruncherExecutableFile s3Region s3Endpoint s3BucketName keyStorePath keyStorePassword");
+                    "Usage: Orchestrator thisNodeId nodeId1,nodeId2,... s3Region s3Endpoint s3BucketName keyStorePath keyStorePassword");
             return;
         }
 
         final long thisNodeId = Long.parseLong(args[0]);
         final List<Long> allNodeIds =
                 Arrays.stream(args[1].split(",")).map(Long::parseLong).toList();
-        final String dataCruncherExecutableFile = args[2];
-        final String s3Region = args[3];
-        final String s3Endpoint = args[4];
-        final String s3BucketName = args[5];
-        final String keyStorePath = args[6];
-        final String keyStorePassword = args[7];
+        final String s3Region = args[2];
+        final String s3Endpoint = args[3];
+        final String s3BucketName = args[4];
+        final String keyStorePath = args[5];
+        final String keyStorePassword = args[6];
 
         final Crypto crypto = new Crypto(thisNodeId, keyStorePath, keyStorePassword.toCharArray());
 
@@ -72,8 +70,7 @@ public class Orchestrator {
         final String s3SecretKey = System.getenv("TSS_CEREMONY_S3_SECRET_KEY");
 
         try (final S3Client s3Client = new S3Client(s3Region, s3Endpoint, s3BucketName, s3AccessKey, s3SecretKey)) {
-            System.err.println("Starting Orchestrator for nodeId: " + thisNodeId + " and allNodeIds: " + allNodeIds
-                    + " using dataCruncher: " + dataCruncherExecutableFile);
+            System.err.println("Starting Orchestrator for nodeId: " + thisNodeId + " and allNodeIds: " + allNodeIds);
 
             while (true) {
                 try {
@@ -83,7 +80,7 @@ public class Orchestrator {
                     if (cycle != null) {
                         System.err.println("Running cycle: " + cycle);
                         final Path parametersDir = obtainParameters(s3Client, cycle);
-                        final DataCruncher dataCruncher = new DataCruncher(dataCruncherExecutableFile, parametersDir);
+                        final DataCruncher dataCruncher = new DataCruncher(parametersDir);
 
                         // Run phase 1
                         new Phase(
