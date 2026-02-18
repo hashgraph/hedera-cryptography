@@ -62,7 +62,7 @@ jobs:
           cache-read-only: false
 
       - name: Build Cargo Darwin
-        run: ./gradlew cargoBuildX86Darwin cargoBuildAarch64Darwin
+        run: ./gradlew -PpackageAllTargets=true cargoBuildX86Darwin cargoBuildAarch64Darwin
 
   build_rust_linux_windows:
     name: Build Rust - Linux / Windows
@@ -111,7 +111,7 @@ jobs:
           sudo apt-get -y install mingw-w64
 
       - name: Build Cargo Linux / Windows
-        run: ./gradlew cargoBuildX86Linux cargoBuildAarch64Linux cargoBuildX86Windows
+        run: ./gradlew -PpackageAllTargets=true cargoBuildX86Linux cargoBuildAarch64Linux cargoBuildX86Windows
 
   build:
     name: Build TSS Crypto Library
@@ -142,13 +142,13 @@ jobs:
           cache-read-only: false
 
       - name: Build software
-        run: ./gradlew -PskipInstallRustToolchains=true assemble
+        run: ./gradlew -PpackageAllTargets=true -PskipInstallRustToolchains=true assemble
 
       - name: Code Quality Checks
-        run: ./gradlew -PskipInstallRustToolchains=true qualityCheck --continue
+        run: ./gradlew -PpackageAllTargets=true -PskipInstallRustToolchains=true qualityCheck --continue
 
       - name: Gradle Unit Test
-        run: ${CG_EXEC} ./gradlew -PskipInstallRustToolchains=true test :aggregation:testCodeCoverageReport --continue
+        run: ${CG_EXEC} ./gradlew -PpackageAllTargets=true -PskipInstallRustToolchains=true test :aggregation:testCodeCoverageReport --continue
 
       - name: Publish Unit Test Results
         uses: step-security/publish-unit-test-result-action@914f0f642c242f38335a491805adfc9bd64b1cbb # v2.21.1
@@ -192,7 +192,7 @@ jobs:
 
       - name: Gradle Unit Test
         # We do -PskipInstallRustToolchains=true, because all cargoBuild task results are taken FROM-CACHE
-        run: ./gradlew test -PskipInstallRustToolchains=true --continue
+        run: ./gradlew -PpackageAllTargets=true -PskipInstallRustToolchains=true test --continue
 
   analyze:
     name: Analyze

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pluginManagement { includeBuild("gradle/plugins") }
 
-plugins { id("org.hiero.gradle.build") version "0.6.3" }
+plugins { id("org.hiero.gradle.build") version "0.7.1" }
 
 buildscript { dependencies.constraints { classpath("com.gradleup.nmcp:nmcp:1.2.1!!") } }
 
