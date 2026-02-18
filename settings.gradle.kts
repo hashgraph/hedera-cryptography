@@ -1,7 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
-pluginManagement { includeBuild("gradle/plugins") }
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven("https://central.sonatype.com/repository/maven-snapshots")
+    }
+    includeBuild("gradle/plugins")
+}
 
-plugins { id("org.hiero.gradle.build") version "0.6.3" }
+buildscript {
+    configurations.classpath { resolutionStrategy.cacheChangingModulesFor(0, "seconds") }
+}
+
+plugins { id("org.hiero.gradle.build") version "0.7.1-SNAPSHOT" }
 
 rootProject.name = "hedera-cryptography"
 
