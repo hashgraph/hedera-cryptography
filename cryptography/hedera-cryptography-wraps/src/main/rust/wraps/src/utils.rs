@@ -173,7 +173,10 @@ impl ECFFTUtils {
         Self::fft_recursive::<C>(data, omega)
     }
 
-    const FFT_PAR_CUTOFF: usize = 1024;
+    // For inputs smaller than FFT_PAR_CUTOFF, we perform the FFT sequentially.
+    // For larger inputs, we parallelize the recursive calls.
+    const FFT_PAR_CUTOFF: usize = 65536;
+
     fn fft_recursive<C: CurveGroup>(data: &[C::Affine], omega: C::ScalarField) -> Vec<C::Affine> {
         let n = data.len();
         if n == 1 {
