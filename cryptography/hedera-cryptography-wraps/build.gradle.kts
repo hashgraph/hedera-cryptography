@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-import org.hiero.gradle.extensions.CargoExtension.Companion.hostArch
-import org.hiero.gradle.extensions.CargoExtension.Companion.hostOs
 import org.hiero.gradle.extensions.CargoToolchain
 import org.hiero.gradle.tasks.CargoBuildTask
 
@@ -54,19 +52,14 @@ tasks.processResources { exclude("com/hedera/nativelib/ceremony/**") }
 // export native binaries built with rust as separate artifacts
 configurations.consumable("nativeBinElements") {
     attributes.attribute(Usage.USAGE_ATTRIBUTE, objects.named("native-bin"))
-    val packageAllTargets =
-        providers.gradleProperty("packageAllTargets").getOrElse("false").toBoolean()
     CargoToolchain.entries.forEach { target ->
-        // conditions are the same as here:
-        // https://github.com/hiero-ledger/hiero-gradle-conventions/blob/41c0ec4b47970d5b7e7218ae3b69760e9f5dd633/src/main/kotlin/org/hiero/gradle/extensions/CargoExtension.kt#L95-L97
-        if (packageAllTargets || (target.os == hostOs() && target.arch == hostArch())) {
-            outgoing.artifact(
-                tasks
-                    .named<CargoBuildTask>(
-                        "cargoBuild${target.name.replaceFirstChar(Char::titlecase)}"
-                    )
-                    .flatMap { it.destinationDirectory }
-            )
-        }
+        // The below if conditions should be added once this is integrated:
+        // https://github.com/hiero-ledger/hiero-gradle-conventions/pull/416
+        // if (packageAllTargets || (target.os == hostOs() && target.arch == hostArch()))
+        outgoing.artifact(
+            tasks
+                .named<CargoBuildTask>("cargoBuild${target.name.replaceFirstChar(Char::titlecase)}")
+                .flatMap { it.destinationDirectory }
+        )
     }
 }
