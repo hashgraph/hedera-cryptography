@@ -86,34 +86,28 @@ pub struct CircuitConfig {
 }
 
 fn load_from_file<T: CanonicalDeserialize>(path: &PathBuf) -> Result<T, Error> {
+    let start = std::time::Instant::now();
     let raw_data = std::fs::read(path)?;
     let data: T = T::deserialize_uncompressed(&*raw_data)?;
+    println!("Deserializing and loading from disk {} took {:?}", path.to_str().unwrap_or("unknown"), start.elapsed());
     Ok(data)
 }
 
 fn store_to_file<T: CanonicalSerialize>(path: &PathBuf, data: &T) -> Result<(), Error> {
+    let start = std::time::Instant::now();
     let mut raw_data = Vec::new();
     data.serialize_uncompressed(&mut raw_data)?;
     std::fs::write(path, &raw_data)?;
+    println!("Serializing and writing {} to disk took {:?}", path.to_str().unwrap_or("unknown"), start.elapsed());
     Ok(())
-}
-
-const PAUSE: bool = false;
-fn pause_until_enter() {
-    if PAUSE {
-        print!("Press Enter to continue...");
-        std::io::stdout().flush().unwrap(); // make sure prompt shows before blocking
-
-        let mut s = String::new();
-        std::io::stdin().read_line(&mut s).unwrap(); // waits for Enter
-    }
 }
 
 fn update_srs_helper_g1(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, multiplier: Fr, tau: Fr, is_vec: bool) {
     if is_vec {
         let prev_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&prev_srs.join(name)).unwrap();
+        println!("Loaded {} from disk. Updating...", name);
         let new_powers_of_tau_g1 = prev_powers_of_tau_g1
-            .iter()
+            .par_iter()
             .enumerate()
             .map(|(i, g)| {
                 let tau_pow_i = multiplier * tau.pow([i as u64]);
@@ -121,8 +115,6 @@ fn update_srs_helper_g1(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, mult
             })
             .collect::<Vec<G1Affine>>();
         store_to_file::<Vec<G1Affine>>(&next_srs.join(name), &new_powers_of_tau_g1).unwrap();
-        drop(new_powers_of_tau_g1);
-        drop(prev_powers_of_tau_g1);
     } else {
         let prev_power = load_from_file::<G1Affine>(&prev_srs.join(name)).unwrap();
         let new_power = prev_power.mul(multiplier).into_affine();
@@ -133,8 +125,9 @@ fn update_srs_helper_g1(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, mult
 fn update_srs_helper_g2(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, multiplier: Fr, tau: Fr, is_vec: bool) {
     if is_vec {
         let prev_powers_of_tau_g2 = load_from_file::<Vec<G2Affine>>(&prev_srs.join(name)).unwrap();
+        println!("Loaded {} from disk. Starting update...", name);
         let new_powers_of_tau_g2 = prev_powers_of_tau_g2
-            .iter()
+            .par_iter()
             .enumerate()
             .map(|(i, g)| {
                 let tau_pow_i = multiplier * tau.pow([i as u64]);
@@ -142,8 +135,6 @@ fn update_srs_helper_g2(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, mult
             })
             .collect::<Vec<G2Affine>>();
         store_to_file::<Vec<G2Affine>>(&next_srs.join(name), &new_powers_of_tau_g2).unwrap();
-        drop(new_powers_of_tau_g2);
-        drop(prev_powers_of_tau_g2);
     } else {
         let prev_power = load_from_file::<G2Affine>(&prev_srs.join(name)).unwrap();
         let new_power = prev_power.mul(multiplier).into_affine();
@@ -153,14 +144,15 @@ fn update_srs_helper_g2(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, mult
 
 fn specialize_srs_helper_g1(
     state: &mut [G1Affine],
-    matrix_path: &PathBuf,
+    matrix: &Matrix<Fr>,
     powers: &[G1Affine],
     num_constraints: usize,
     num_variables: usize)
 {
-    let matrix = load_from_file::<Matrix<Fr>>(&matrix_path).unwrap();
+    let min_chunk_len = min_parallel_chunk_len(num_constraints);
     let intermediate = (0..num_constraints)
         .into_par_iter()
+        .with_min_len(min_chunk_len)
         .fold(
             || vec![ark_bn254::G1Projective::zero(); num_variables + 1],
             |mut local, i| {
@@ -186,8 +178,6 @@ fn specialize_srs_helper_g1(
         .map(|p| p.into_affine())
         .collect::<Vec<G1Affine>>();
 
-    drop(matrix);
-
     for (dst, src) in state.iter_mut().zip(intermediate.iter()) {
         *dst = (*dst + *src).into_affine();
     }
@@ -195,14 +185,15 @@ fn specialize_srs_helper_g1(
 
 fn specialize_srs_helper_g2(
     state: &mut [G2Affine],
-    matrix_path: &PathBuf,
+    matrix: &Matrix<Fr>,
     powers: &[G2Affine],
     num_constraints: usize,
     num_variables: usize)
 {
-    let matrix = load_from_file::<Matrix<Fr>>(&matrix_path).unwrap();
+    let min_chunk_len = min_parallel_chunk_len(num_constraints);
     let intermediate = (0..num_constraints)
         .into_par_iter()
+        .with_min_len(min_chunk_len)
         .fold(
             || vec![ark_bn254::G2Projective::zero(); num_variables + 1],
             |mut local, i| {
@@ -228,11 +219,17 @@ fn specialize_srs_helper_g2(
         .map(|p| p.into_affine())
         .collect::<Vec<G2Affine>>();
 
-    drop(matrix);
-
     for (dst, src) in state.iter_mut().zip(intermediate.iter()) {
         *dst = (*dst + *src).into_affine();
     }
+}
+
+fn min_parallel_chunk_len(num_constraints: usize) -> usize {
+    let num_threads = rayon::current_num_threads().max(1);
+    let target_tasks = num_threads.saturating_mul(2).max(1);
+    let min_parallel_chunk_len = num_constraints.div_ceil(target_tasks).max(1);
+    println!("Using a minimum parallel chunk length of {} for {} constraints and {} threads.", min_parallel_chunk_len, num_constraints, num_threads);
+    min_parallel_chunk_len
 }
 
 
@@ -307,6 +304,15 @@ impl WRAPSPreprocessing {
             &mut rng,
             &nova_preprocess_params
         ).unwrap();
+
+        let mut nova_vp_serialized: Vec<u8> = vec![];
+        nova_vp.serialize_compressed(&mut nova_vp_serialized).unwrap();
+        std::fs::write(path.join("nova_vp.bin"), &nova_vp_serialized).unwrap();
+
+        let mut nova_pp_serialized: Vec<u8> = vec![];
+        nova_pp.serialize_compressed(&mut nova_pp_serialized).unwrap();
+        std::fs::write(path.join("nova_pp.bin"), &nova_pp_serialized).unwrap();
+
 
         let circuit = DeciderEthCircuit::<G1, G2>::dummy((
             nova_vp.clone().r1cs,
@@ -391,11 +397,18 @@ impl WRAPSPreprocessing {
         let alpha = Fr::rand(&mut rng);
         let beta = Fr::rand(&mut rng);
 
+        let now = std::time::Instant::now();
         update_srs_helper_g1(prev_srs, next_srs, "powers_of_tau_g1.bin", Fr::from(1u64), tau, true);
+        println!("Updated powers_of_tau_g1.bin");
         update_srs_helper_g2(prev_srs, next_srs, "powers_of_tau_g2.bin", Fr::from(1u64), tau, true);
+        println!("Updated powers_of_tau_g2.bin");
         update_srs_helper_g1(prev_srs, next_srs, "powers_of_alpha_tau_g1.bin", alpha, tau, true);
+        println!("Updated powers_of_alpha_tau_g1.bin");
         update_srs_helper_g1(prev_srs, next_srs, "powers_of_beta_tau_g1.bin", beta, tau, true);
+        println!("Updated powers_of_beta_tau_g1.bin");
         update_srs_helper_g2(prev_srs, next_srs, "beta_g2.bin", beta, Fr::from(1u64), false);
+        println!("Updated beta_g2.bin");
+        println!("Phase 1 update took {:?}. ", now.elapsed());
     }
 
     pub fn update_srs_phase2(circuit_path: &PathBuf, prev_srs: &PathBuf, next_srs: &PathBuf) {
@@ -407,12 +420,20 @@ impl WRAPSPreprocessing {
         let delta_inverse = delta.inverse().unwrap();
         let gamma_inverse = gamma.inverse().unwrap();
 
+        let now = std::time::Instant::now();
         update_srs_helper_g1(prev_srs, next_srs, "delta_g1.bin", delta, Fr::from(1u64), false);
+        println!("Updated delta_g1.bin");
         update_srs_helper_g2(prev_srs, next_srs, "delta_g2.bin", delta, Fr::from(1u64), false);
+        println!("Updated delta_g2.bin");
         update_srs_helper_g2(prev_srs, next_srs, "gamma_g2.bin", gamma, Fr::from(1u64), false);
+        println!("Updated gamma_g2.bin");
         update_srs_helper_g1(prev_srs, next_srs, "gamma_abc_g1.bin", gamma_inverse, Fr::from(1u64), true);
+        println!("Updated gamma_abc_g1.bin");
         update_srs_helper_g1(prev_srs, next_srs, "delta_abc_g1.bin", delta_inverse, Fr::from(1u64), true);
+        println!("Updated delta_abc_g1.bin");
         update_srs_helper_g1(prev_srs, next_srs, "h_g1.bin", delta_inverse, Fr::from(1u64), true);
+        println!("Updated h_g1.bin");
+        println!("Phase 2 update took {:?}. ", now.elapsed());
     }
 
     pub fn specialize_srs(
@@ -422,7 +443,6 @@ impl WRAPSPreprocessing {
         p2_srs: &PathBuf, // output that will be used as phase 2 starting SRS
     ) {
         let circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
-        pause_until_enter();
         let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
         let domain = GeneralEvaluationDomain::<Fr>::new(n)
             .ok_or(SynthesisError::PolynomialDegreeTooLarge).unwrap();
@@ -448,39 +468,98 @@ impl WRAPSPreprocessing {
         let ifft_of_powers_of_alpha_tau_g1_path = p1_out.join("ifft_of_powers_of_alpha_tau_g1.bin");
         let ifft_of_powers_of_beta_tau_g1_path = p1_out.join("ifft_of_powers_of_beta_tau_g1.bin");
 
-        let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
-        let start = std::time::Instant::now();
-        let ifft_of_powers_of_tau_g1  = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_tau_g1[..ds]);
-        println!("IFFT (powers_of_tau_g1) took {:?}", start.elapsed());
-        store_to_file(&ifft_of_powers_of_tau_g1_path, &ifft_of_powers_of_tau_g1).unwrap();
-        drop(phase1_powers_of_tau_g1);
+        let matrix_a = load_from_file::<Matrix<Fr>>(&matrix_a_path).unwrap();
+        let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
+        let matrix_c = load_from_file::<Matrix<Fr>>(&matrix_c_path).unwrap();
 
-        let phase1_powers_of_tau_g2 = load_from_file::<Vec<G2Affine>>(&powers_of_tau_g2_path).unwrap();
-        let start = std::time::Instant::now();
-        let ifft_of_powers_of_tau_g2  = ECFFTUtils::ifft::<ark_bn254::G2Projective>(&phase1_powers_of_tau_g2[..ds]);
-        println!("IFFT (powers_of_tau_g2) took {:?}", start.elapsed());
-        store_to_file(&ifft_of_powers_of_tau_g2_path, &ifft_of_powers_of_tau_g2).unwrap();
-        drop(phase1_powers_of_tau_g2);
+        let (
+            ifft_of_powers_of_tau_g1,
+            ifft_of_powers_of_tau_g2,
+            ifft_of_powers_of_alpha_tau_g1,
+            ifft_of_powers_of_beta_tau_g1,
+        ) = std::thread::scope(|scope| {
+            let powers_of_tau_g1_handle = scope.spawn(|| {
+                if ifft_of_powers_of_tau_g1_path.exists() {
+                    println!("Loading ifft_of_powers_of_tau_g1 from disk...");
+                    load_from_file::<Vec<G1Affine>>(&ifft_of_powers_of_tau_g1_path).unwrap()
+                } else {
+                    let phase1_powers_of_tau_g1 =
+                        load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
+                    let start = std::time::Instant::now();
+                    let ifft_of_powers_of_tau_g1 =
+                        ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_tau_g1[..ds]);
+                    println!("IFFT (powers_of_tau_g1) took {:?}", start.elapsed());
+                    store_to_file(&ifft_of_powers_of_tau_g1_path, &ifft_of_powers_of_tau_g1).unwrap();
+                    ifft_of_powers_of_tau_g1
+                }
+            });
+            let powers_of_tau_g2_handle = scope.spawn(|| {
+                if ifft_of_powers_of_tau_g2_path.exists() {
+                    println!("Loading ifft_of_powers_of_tau_g2 from disk...");
+                    load_from_file::<Vec<G2Affine>>(&ifft_of_powers_of_tau_g2_path).unwrap()
+                } else {
+                    let phase1_powers_of_tau_g2 =
+                        load_from_file::<Vec<G2Affine>>(&powers_of_tau_g2_path).unwrap();
+                    let start = std::time::Instant::now();
+                    let ifft_of_powers_of_tau_g2 =
+                        ECFFTUtils::ifft::<ark_bn254::G2Projective>(&phase1_powers_of_tau_g2[..ds]);
+                    println!("IFFT (powers_of_tau_g2) took {:?}", start.elapsed());
+                    store_to_file(&ifft_of_powers_of_tau_g2_path, &ifft_of_powers_of_tau_g2).unwrap();
+                    ifft_of_powers_of_tau_g2
+                }
+            });
+            let powers_of_alpha_tau_g1_handle = scope.spawn(|| {
+                if ifft_of_powers_of_alpha_tau_g1_path.exists() {
+                    println!("Loading ifft_of_powers_of_alpha_tau_g1 from disk...");
+                    load_from_file::<Vec<G1Affine>>(&ifft_of_powers_of_alpha_tau_g1_path).unwrap()
+                } else {
+                    let phase1_powers_of_alpha_tau_g1 =
+                        load_from_file::<Vec<G1Affine>>(&powers_of_alpha_tau_g1_path).unwrap();
+                    let start = std::time::Instant::now();
+                    let ifft_of_powers_of_alpha_tau_g1 =
+                        ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_alpha_tau_g1);
+                    println!("IFFT (powers_of_alpha_tau_g1) took {:?}", start.elapsed());
+                    store_to_file(&ifft_of_powers_of_alpha_tau_g1_path, &ifft_of_powers_of_alpha_tau_g1).unwrap();
+                    ifft_of_powers_of_alpha_tau_g1
+                }
+            });
+            let powers_of_beta_tau_g1_handle = scope.spawn(|| {
+                if ifft_of_powers_of_beta_tau_g1_path.exists() {
+                    println!("Loading ifft_of_powers_of_beta_tau_g1 from disk...");
+                    load_from_file::<Vec<G1Affine>>(&ifft_of_powers_of_beta_tau_g1_path).unwrap()
+                } else {
+                    let phase1_powers_of_beta_tau_g1 =
+                        load_from_file::<Vec<G1Affine>>(&powers_of_beta_tau_g1_path).unwrap();
+                    let start = std::time::Instant::now();
+                    let ifft_of_powers_of_beta_tau_g1 =
+                        ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_beta_tau_g1);
+                    println!("IFFT (powers_of_beta_tau_g1) took {:?}", start.elapsed());
+                    store_to_file(&ifft_of_powers_of_beta_tau_g1_path, &ifft_of_powers_of_beta_tau_g1).unwrap();
+                    ifft_of_powers_of_beta_tau_g1
+                }
+            });
 
-        let phase1_powers_of_alpha_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_alpha_tau_g1_path).unwrap();
-        let start = std::time::Instant::now();
-        let ifft_of_powers_of_alpha_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_alpha_tau_g1);
-        println!("IFFT (powers_of_alpha_tau_g1) took {:?}", start.elapsed());
-        store_to_file(&ifft_of_powers_of_alpha_tau_g1_path, &ifft_of_powers_of_alpha_tau_g1).unwrap();
-        drop(phase1_powers_of_alpha_tau_g1);
+            (
+                powers_of_tau_g1_handle.join().unwrap(),
+                powers_of_tau_g2_handle.join().unwrap(),
+                powers_of_alpha_tau_g1_handle.join().unwrap(),
+                powers_of_beta_tau_g1_handle.join().unwrap(),
+            )
+        });
 
-        let phase1_powers_of_beta_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_beta_tau_g1_path).unwrap();
+        /* ---------------------------- begin compute b_g2 ---------------------------- */
+        let mut b_g2 = vec![G2Affine::zero(); num_variables + 1];
         let start = std::time::Instant::now();
-        let ifft_of_powers_of_beta_tau_g1 = ECFFTUtils::ifft::<ark_bn254::G1Projective>(&phase1_powers_of_beta_tau_g1);
-        println!("IFFT (powers_of_beta_tau_g1) took {:?}", start.elapsed());
-        store_to_file(&ifft_of_powers_of_beta_tau_g1_path, &ifft_of_powers_of_beta_tau_g1).unwrap();
-        drop(phase1_powers_of_beta_tau_g1);
-
-        pause_until_enter();
+        specialize_srs_helper_g2(&mut b_g2, &matrix_b, &ifft_of_powers_of_tau_g2, num_constraints, num_variables);
+        println!("Computing b_g2 took {:?}", start.elapsed());
+        store_to_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin"), &b_g2).unwrap();
+        drop(ifft_of_powers_of_tau_g2);
+        drop(b_g2);
+        /* ---------------------------- end compute b_g2 ---------------------------- */
 
         /* ---------------------------- begin compute h_g1 ---------------------------- */
-        let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
         let mut h_g1 = vec![G1Affine::zero(); domain.size() - 1];
+        let phase1_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(&powers_of_tau_g1_path).unwrap();
         let start = std::time::Instant::now();
         for i in 0..=(domain.size()-2) {
             h_g1[i] = (phase1_powers_of_tau_g1[i + domain.size()] - phase1_powers_of_tau_g1[i]).into_affine();
@@ -490,21 +569,6 @@ impl WRAPSPreprocessing {
         drop(h_g1);
         drop(phase1_powers_of_tau_g1);
         /* ---------------------------- end compute h_g1 ---------------------------- */
-
-        pause_until_enter();
-
-        /* ---------------------------- begin compute b_g2 ---------------------------- */
-        let mut b_g2 = vec![G2Affine::zero(); num_variables + 1];
-        let matrix_b = load_from_file::<Matrix<Fr>>(&matrix_b_path).unwrap();
-        let start = std::time::Instant::now();
-        specialize_srs_helper_g2(&mut b_g2, &matrix_b_path, &ifft_of_powers_of_tau_g2, num_constraints, num_variables);
-        println!("Computing b_g2 took {:?}", start.elapsed());
-        store_to_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin"), &b_g2).unwrap();
-        drop(matrix_b);
-        drop(b_g2);
-        /* ---------------------------- end compute b_g2 ---------------------------- */
-
-        pause_until_enter();
 
         let mut abc_g1 = vec![G1Affine::zero(); num_variables + 1];
         let mut a_g1 = vec![G1Affine::zero(); num_variables + 1];
@@ -520,27 +584,23 @@ impl WRAPSPreprocessing {
 
         /* ---------------------------- begin compute abc_g1, a_g1, b_g1 ---------------------------- */
         let start = std::time::Instant::now();
-        specialize_srs_helper_g1(&mut abc_g1, &matrix_a_path, &ifft_of_powers_of_beta_tau_g1, num_constraints, num_variables);
+        specialize_srs_helper_g1(&mut abc_g1, &matrix_a, &ifft_of_powers_of_beta_tau_g1, num_constraints, num_variables);
         println!("Updating abc_g1 using powers_of_beta_tau_g1 took {:?}", start.elapsed());
 
-        pause_until_enter();
-
         let start = std::time::Instant::now();
-        specialize_srs_helper_g1(&mut abc_g1, &matrix_b_path, &ifft_of_powers_of_alpha_tau_g1, num_constraints, num_variables);
+        specialize_srs_helper_g1(&mut abc_g1, &matrix_b, &ifft_of_powers_of_alpha_tau_g1, num_constraints, num_variables);
         println!("Updating abc_g1 using powers_of_alpha_tau_g1 took {:?}", start.elapsed());
 
-        pause_until_enter();
-
         let start = std::time::Instant::now();
-        specialize_srs_helper_g1(&mut a_g1, &matrix_a_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        specialize_srs_helper_g1(&mut a_g1, &matrix_a, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
         println!("Updating a_g1 using powers_of_tau_g1 took {:?}. ", start.elapsed());
 
         let start = std::time::Instant::now();
-        specialize_srs_helper_g1(&mut b_g1, &matrix_b_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        specialize_srs_helper_g1(&mut b_g1, &matrix_b, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
         println!("Updating b_g1 using powers_of_tau_g1 took {:?}. ", start.elapsed());
 
         let start = std::time::Instant::now();
-        specialize_srs_helper_g1(&mut abc_g1, &matrix_c_path, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
+        specialize_srs_helper_g1(&mut abc_g1, &matrix_c, &ifft_of_powers_of_tau_g1, num_constraints, num_variables);
         println!("Updating abc_g1 using powers_of_tau_g1 took {:?}. ", start.elapsed());
 
         /* ---------------------------- end compute abc_g1, a_g1, b_g1 ---------------------------- */
@@ -572,7 +632,6 @@ impl WRAPSPreprocessing {
         p2_srs: &PathBuf,
         output_path: &PathBuf
     ) -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), Error> {
-
         let srs1 = Phase1SRS {
             powers_of_tau_g1: load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_tau_g1.bin"))?,
             powers_of_tau_g2: load_from_file::<Vec<G2Affine>>(&p1_srs.join("powers_of_tau_g2.bin"))?,
