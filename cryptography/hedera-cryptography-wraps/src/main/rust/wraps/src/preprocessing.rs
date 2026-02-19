@@ -318,19 +318,13 @@ impl WRAPSPreprocessing {
         std::fs::write(path.join("nova_pp.bin"), &nova_pp_serialized).unwrap();
 
         let nova_pp_cs_pp: <KZG<'static, PairingCurve> as CommitmentScheme<G1>>::ProverParams = nova_pp.clone().cs_pp;
-        let mut nova_pp_cs_pp_serialized: Vec<u8> = vec![];
-        nova_pp_cs_pp.serialize_compressed(&mut nova_pp_cs_pp_serialized).unwrap();
-        std::fs::write(path.join("nova_pp_cs_pp.bin"), &nova_pp_cs_pp_serialized).unwrap();
+        store_to_file(&path.join("nova_pp_cs_pp.bin"), &nova_pp_cs_pp).unwrap();
 
-        let nova_vp_pp_hash: <G1 as ark_ec::PrimeGroup>::ScalarField = nova_vp.pp_hash().map_err(|_| WRAPSError::CryptographyError).unwrap();
-        let mut nova_vp_pp_hash_serialized: Vec<u8> = vec![];
-        nova_vp_pp_hash.serialize_compressed(&mut nova_vp_pp_hash_serialized).unwrap();
-        std::fs::write(path.join("nova_vp_pp_hash.bin"), &nova_vp_pp_hash_serialized).unwrap();
+        let nova_vp_pp_hash: <G1 as ark_ec::PrimeGroup>::ScalarField = nova_vp.pp_hash().unwrap();
+        store_to_file(&path.join("nova_vp_pp_hash.bin"), &nova_vp_pp_hash).unwrap();
 
         let nova_vp_cs_vp: <KZG<'static, PairingCurve> as CommitmentScheme<G1>>::VerifierParams = nova_vp.clone().cs_vp;
-        let mut nova_vp_cs_vp_serialized: Vec<u8> = vec![];
-        nova_vp_cs_vp.serialize_compressed(&mut nova_vp_cs_vp_serialized).unwrap();
-        std::fs::write(path.join("nova_vp_cs_vp.bin"), &nova_vp_cs_vp_serialized).unwrap();
+        store_to_file(&path.join("nova_vp_cs_vp.bin"), &nova_vp_cs_vp).unwrap();
 
         let circuit = DeciderEthCircuit::<G1, G2>::dummy((
             nova_vp.clone().r1cs,
