@@ -20,7 +20,7 @@ fn setup_rayon_thread_pool(num_threads: usize) {
     long_about = "Run WRAPS Groth16 ceremony preprocessing phases.\n\
 \n\
 Positional CLI format:\n\
-  ceremony <phase> [arg1] [arg2] [arg3] [arg4]\n\
+  ceremony <phase> [arg1] [arg2] [arg3] [arg4] [arg5]\n\
 \n\
 Positional argument meaning by phase:\n\
   phase 0 (extract_circuit_r1cs_config):\n\
@@ -47,10 +47,11 @@ Positional argument meaning by phase:\n\
     arg3 = output-folder\n\
 \n\
   phase 5 (finish_groth_setup):\n\
-    arg1 = phase1-input-folder\n\
-    arg2 = phase1-output-folder\n\
-    arg3 = phase2-input-folder\n\
-    arg4 = output-folder\n\
+    arg1 = circuit-folder\n\
+    arg2 = phase1-input-folder\n\
+    arg3 = phase1-output-folder\n\
+    arg4 = phase2-input-folder\n\
+    arg5 = output-folder\n\
 "
 )]
 struct Args {
@@ -183,24 +184,26 @@ fn run(args: Args) -> Result<(), String> {
             require_arg_count(
                 &args.args,
                 5,
-                4,
-                "<phase1-input-folder> <phase1-output-folder> <phase2-input-folder> <output-folder>",
+                5,
+                "<circuit-folder> <phase1-input-folder> <phase1-output-folder> <phase2-input-folder> <output-folder>",
             )?;
-            let phase1_input_folder = args.args[0].clone();
-            let phase1_output_folder = args.args[1].clone();
-            let phase2_input_folder = args.args[2].clone();
-            let output_folder = args.args[3].clone();
+            let circuit_folder = args.args[0].clone();
+            let phase1_input_folder = args.args[1].clone();
+            let phase1_output_folder = args.args[2].clone();
+            let phase2_input_folder = args.args[3].clone();
+            let output_folder = args.args[4].clone();
+            require_existing_dir(&circuit_folder, "circuit-folder (circuit)")?;
             require_existing_dir(&phase1_input_folder, "phase1-input-folder (final phase1 srs)")?;
             require_existing_dir(&phase1_output_folder, "phase1-output-folder (phase1 output)")?;
             require_existing_dir(&phase2_input_folder, "phase2-input-folder (final phase2 srs)")?;
             ensure_output_dir(&output_folder)?;
             WRAPSPreprocessing::finish_groth_setup(
+                &circuit_folder,
                 &phase1_input_folder,
                 &phase1_output_folder,
                 &phase2_input_folder,
                 &output_folder,
-            )
-            .map_err(|e| format!("finish_groth_setup failed: {}", e))?;
+            );
             Ok(())
         }
         _ => Err(format!("unsupported phase: {}", args.phase)),

@@ -53,7 +53,7 @@ run_ceremony() {
 # - phase 2: <circuit-folder> <input-folder> <output-folder>
 # - phase 3: <circuit-folder> <phase1-input-folder> <phase1-output-folder> <phase2-output-folder>
 # - phase 4: <circuit-folder> <input-folder> <output-folder>
-# - phase 5: <phase1-input-folder> <phase1-output-folder> <phase2-input-folder> <output-folder>
+# - phase 5: <circuit-folder> <phase1-input-folder> <phase1-output-folder> <phase2-input-folder> <output-folder>
 
 echo "[1/7] extract_circuit_r1cs_config"
 run_ceremony \
@@ -105,6 +105,7 @@ run_ceremony \
 echo "[final] finish_groth_setup"
 run_ceremony \
   5 \
+  "${CIRCUIT_FOLDER}" \
   "${NODE2_PHASE1}" \
   "${PHASE1_OUTPUT}" \
   "${NODE2_PHASE2}" \
