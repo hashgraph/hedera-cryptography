@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
+import org.hiero.gradle.extensions.CargoToolchain
+import org.hiero.gradle.tasks.CargoBuildTask
+
+// SPDX-License-Identifier: Apache-2.0
 plugins {
     id("org.hiero.gradle.module.library")
     id("org.hiero.gradle.feature.rust")
@@ -6,7 +10,10 @@ plugins {
     id("DownloadWrapsArtifactTask")
 }
 
-cargo { libname = "wraps" }
+cargo {
+    libname = "wraps"
+    appname = "ceremony"
+}
 
 testModuleInfo { requires("org.junit.jupiter.api") }
 
@@ -38,4 +45,21 @@ tasks.test {
             // "TSS_LIB_WRAPS_SWAP_FILE" to "/tmp/MemoryMapFile",
         )
     )
+}
+
+tasks.processResources { exclude("com/hedera/nativelib/ceremony/**") }
+
+// export native binaries built with rust as separate artifacts
+configurations.consumable("nativeBinElements") {
+    attributes.attribute(Usage.USAGE_ATTRIBUTE, objects.named("native-bin"))
+    CargoToolchain.entries.forEach { target ->
+        // The below if conditions should be added once this is integrated:
+        // https://github.com/hiero-ledger/hiero-gradle-conventions/pull/416
+        // if (packageAllTargets || (target.os == hostOs() && target.arch == hostArch()))
+        outgoing.artifact(
+            tasks
+                .named<CargoBuildTask>("cargoBuild${target.name.replaceFirstChar(Char::titlecase)}")
+                .flatMap { it.destinationDirectory }
+        )
+    }
 }
