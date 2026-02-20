@@ -10,14 +10,10 @@ class DataCruncher {
     /// 3 hours seems more than enough
     private static final long PROCESS_WAIT_TIMEOUT_MILLIS = 3 * 60 * 60 * 1000;
 
-    /// Full path to the executable
-    private final String executableFileName;
-
     /// Full path to static parameters of the current cycle shared between all phases/nodes/runs.
     private final Path parametersPath;
 
-    DataCruncher(String executableFileName, Path parametersPath) {
-        this.executableFileName = executableFileName;
+    DataCruncher(Path parametersPath) {
         this.parametersPath = parametersPath;
     }
 
@@ -25,7 +21,7 @@ class DataCruncher {
     int execute(String phase, Path inputPath, Path outputPath) throws IOException {
         final ProcessBuilder pb = new ProcessBuilder()
                 .command(
-                        executableFileName,
+                        CeremonyExecutable.EXECUTABLE_PATH.toAbsolutePath().toString(),
                         phase,
                         parametersPath.toAbsolutePath().toString(),
                         inputPath.toAbsolutePath().toString(),

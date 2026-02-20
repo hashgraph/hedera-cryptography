@@ -40,3 +40,15 @@ javaModulePackaging {
     // supported:
     jlinkOptions.addAll("--ignore-signing-information")
 }
+
+// package 'ceremony' binary from ':hedera-cryptography-wraps' project into jars
+val nativeBin = configurations.dependencyScope("nativeBin")
+val nativeBinPath =
+    configurations.resolvable("nativeBinPath") {
+        extendsFrom(nativeBin.get())
+        attributes.attribute(Usage.USAGE_ATTRIBUTE, objects.named("native-bin"))
+    }
+
+dependencies { nativeBin(project(":hedera-cryptography-wraps")) }
+
+tasks.processResources { from(nativeBinPath) { include("com/hedera/nativelib/ceremony/**") } }
