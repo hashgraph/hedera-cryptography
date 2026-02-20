@@ -50,6 +50,10 @@ use super::{
     WRAPSError,
     ProvingKey as WRAPSProvingKey,
     VerificationKey as WRAPSVerificationKey,
+    UncompressedProvingKey,
+    CompressedProvingKey,
+    UncompressedVerificationKey,
+    CompressedVerificationKey,
     Fr, N, D, G1, G2
 };
 
@@ -313,6 +317,14 @@ impl WRAPSPreprocessing {
         nova_pp.serialize_compressed(&mut nova_pp_serialized).unwrap();
         std::fs::write(path.join("nova_pp.bin"), &nova_pp_serialized).unwrap();
 
+        let nova_pp_cs_pp: <KZG<'static, PairingCurve> as CommitmentScheme<G1>>::ProverParams = nova_pp.clone().cs_pp;
+        store_to_file(&path.join("nova_pp_cs_pp.bin"), &nova_pp_cs_pp).unwrap();
+
+        let nova_vp_pp_hash: <G1 as ark_ec::PrimeGroup>::ScalarField = nova_vp.pp_hash().unwrap();
+        store_to_file(&path.join("nova_vp_pp_hash.bin"), &nova_vp_pp_hash).unwrap();
+
+        let nova_vp_cs_vp: <KZG<'static, PairingCurve> as CommitmentScheme<G1>>::VerifierParams = nova_vp.clone().cs_vp;
+        store_to_file(&path.join("nova_vp_cs_vp.bin"), &nova_vp_cs_vp).unwrap();
 
         let circuit = DeciderEthCircuit::<G1, G2>::dummy((
             nova_vp.clone().r1cs,
@@ -627,32 +639,33 @@ impl WRAPSPreprocessing {
     }
 
     pub fn finish_groth_setup(
+        circuit_path: &PathBuf,
         p1_srs: &PathBuf,
         p1_out: &PathBuf,
         p2_srs: &PathBuf,
         output_path: &PathBuf
-    ) -> Result<(Groth16ProvingKey<PairingCurve>, Groth16VerifyingKey<PairingCurve>), Error> {
+    ) {
         let srs1 = Phase1SRS {
-            powers_of_tau_g1: load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_tau_g1.bin"))?,
-            powers_of_tau_g2: load_from_file::<Vec<G2Affine>>(&p1_srs.join("powers_of_tau_g2.bin"))?,
-            powers_of_alpha_tau_g1: load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_alpha_tau_g1.bin"))?,
-            powers_of_beta_tau_g1: load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_beta_tau_g1.bin"))?,
-            beta_g2: load_from_file::<G2Affine>(&p1_srs.join("beta_g2.bin"))?,
+            powers_of_tau_g1: load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_tau_g1.bin")).unwrap(),
+            powers_of_tau_g2: load_from_file::<Vec<G2Affine>>(&p1_srs.join("powers_of_tau_g2.bin")).unwrap(),
+            powers_of_alpha_tau_g1: load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_alpha_tau_g1.bin")).unwrap(),
+            powers_of_beta_tau_g1: load_from_file::<Vec<G1Affine>>(&p1_srs.join("powers_of_beta_tau_g1.bin")).unwrap(),
+            beta_g2: load_from_file::<G2Affine>(&p1_srs.join("beta_g2.bin")).unwrap(),
         };
 
         let phase1out = Phase1Output {
-            a_query: load_from_file::<Vec<G1Affine>>(&p1_out.join("a_query.bin"))?,
-            b_g1_query: load_from_file::<Vec<G1Affine>>(&p1_out.join("b_g1_query.bin"))?,
-            b_g2_query: load_from_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin"))?,
+            a_query: load_from_file::<Vec<G1Affine>>(&p1_out.join("a_query.bin")).unwrap(),
+            b_g1_query: load_from_file::<Vec<G1Affine>>(&p1_out.join("b_g1_query.bin")).unwrap(),
+            b_g2_query: load_from_file::<Vec<G2Affine>>(&p1_out.join("b_g2_query.bin")).unwrap(),
         };
 
         let srs2 = Phase2SRS {
-            delta_g1: load_from_file::<G1Affine>(&p2_srs.join("delta_g1.bin"))?,
-            delta_g2: load_from_file::<G2Affine>(&p2_srs.join("delta_g2.bin"))?,
-            gamma_g2: load_from_file::<G2Affine>(&p2_srs.join("gamma_g2.bin"))?,
-            gamma_abc_g1: load_from_file::<Vec<G1Affine>>(&p2_srs.join("gamma_abc_g1.bin"))?,
-            delta_abc_g1: load_from_file::<Vec<G1Affine>>(&p2_srs.join("delta_abc_g1.bin"))?,
-            h_g1: load_from_file::<Vec<G1Affine>>(&p2_srs.join("h_g1.bin"))?,
+            delta_g1: load_from_file::<G1Affine>(&p2_srs.join("delta_g1.bin")).unwrap(),
+            delta_g2: load_from_file::<G2Affine>(&p2_srs.join("delta_g2.bin")).unwrap(),
+            gamma_g2: load_from_file::<G2Affine>(&p2_srs.join("gamma_g2.bin")).unwrap(),
+            gamma_abc_g1: load_from_file::<Vec<G1Affine>>(&p2_srs.join("gamma_abc_g1.bin")).unwrap(),
+            delta_abc_g1: load_from_file::<Vec<G1Affine>>(&p2_srs.join("delta_abc_g1.bin")).unwrap(),
+            h_g1: load_from_file::<Vec<G1Affine>>(&p2_srs.join("h_g1.bin")).unwrap(),
         };
 
         let g16_vk = Groth16VerifyingKey {
@@ -674,18 +687,49 @@ impl WRAPSPreprocessing {
             l_query: srs2.delta_abc_g1.to_vec(),
         };
 
+        // also write g16 pk and vk to disk for testing purposes
+        let mut g16_pk_serialized = vec![];
+        g16_pk.serialize_compressed(&mut g16_pk_serialized).unwrap();
+        let mut g16_vk_serialized = vec![];
+        g16_vk.serialize_compressed(&mut g16_vk_serialized).unwrap();
+        std::fs::write(output_path.join("g16_pk.bin"), &g16_pk_serialized).unwrap();
+        std::fs::write(output_path.join("g16_vk.bin"), &g16_vk_serialized).unwrap();
+
+        let nova_pp_cs_pp = load_from_file
+            ::<<KZG<'static, PairingCurve> as CommitmentScheme<G1>>::ProverParams>(
+                &circuit_path.join("nova_pp_cs_pp.bin")
+            ).unwrap();
+
+        let pp_hash = load_from_file
+            ::<<G1 as ark_ec::PrimeGroup>::ScalarField>(
+                &circuit_path.join("nova_vp_pp_hash.bin")
+            ).unwrap();
+
+        let nova_vp_cs_vp = load_from_file
+            ::<<KZG<'static, PairingCurve> as CommitmentScheme<G1>>::VerifierParams>(
+                &circuit_path.join("nova_vp_cs_vp.bin")
+            ).unwrap();
+
+        let decider_pp = (g16_pk, nova_pp_cs_pp);
+        let decider_vp: CompressedVerificationKey = VerifierParam {
+            pp_hash,
+            snark_vp: g16_vk,
+            cs_vp: nova_vp_cs_vp,
+        };
+
         let mut decider_vp_serialized = vec![];
-        g16_vk.serialize_compressed(&mut decider_vp_serialized).unwrap();
+        decider_vp.serialize_compressed(&mut decider_vp_serialized).unwrap();
 
         let mut decider_pp_serialized = vec![];
-        g16_pk.serialize_compressed(&mut decider_pp_serialized).unwrap();
+        decider_pp.serialize_compressed(&mut decider_pp_serialized).unwrap();
 
         let output_decider_pp_path = output_path.join("decider_pp.bin");
         let output_decider_vp_path = output_path.join("decider_vp.bin");
         std::fs::write(output_decider_pp_path, &decider_pp_serialized).unwrap();
         std::fs::write(output_decider_vp_path, &decider_vp_serialized).unwrap();
 
-        Ok((g16_pk, g16_vk))
+        println!("Finished ceremony.");
+
     }
 
 }
@@ -780,12 +824,17 @@ mod tests {
         );
 
         // finalize the Groth16 keys
-        let (g16_pk, g16_vk) = WRAPSPreprocessing::finish_groth_setup(
+        WRAPSPreprocessing::finish_groth_setup(
+            &tss_root.join("circuit"),
             &tss_root.join("node3/phase1"), // last SRS phase 1 path
             &tss_root.join("coordinator/phase1_output"), // phase 1 output path
             &tss_root.join("node3/phase2"), // last SRS phase 2 path
             &tss_root.join("result") // output path for final Groth16 keys
-        ).unwrap();
+        );
+
+        // read the final Groth16 keys from disk and return them
+        let g16_pk = load_from_file(&tss_root.join("result/g16_pk.bin")).unwrap();
+        let g16_vk = load_from_file(&tss_root.join("result/g16_vk.bin")).unwrap();
 
         Ok((g16_pk, g16_vk))
     }
