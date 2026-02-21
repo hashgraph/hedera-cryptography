@@ -49,7 +49,7 @@ public class Orchestrator {
      * @param args the CLI args
      */
     public static void main(String[] args) throws S3ClientInitializationException {
-        if (args.length != 8) {
+        if (args.length != 7) {
             System.err.println(
                     "Usage: Orchestrator thisNodeId nodeId1,nodeId2,... s3Region s3Endpoint s3BucketName keyStorePath keyStorePassword");
             return;
@@ -82,7 +82,10 @@ public class Orchestrator {
                         final Path parametersDir = obtainParameters(s3Client, cycle);
                         final DataCruncher dataCruncher = new DataCruncher(parametersDir);
 
-                        // Run phase 1
+                        // The `ceremony` executable (the DataCruncher) supports more phases for an operator
+                        // to run manually before, in-between, and after the orchestrated phases 2 and 4:
+
+                        // Run phase 2
                         new Phase(
                                         "2",
                                         thisNodeId,
@@ -92,7 +95,7 @@ public class Orchestrator {
                                         crypto)
                                 .run();
 
-                        // Run phase 2
+                        // Run phase 4
                         new Phase(
                                         "4",
                                         thisNodeId,
@@ -134,7 +137,7 @@ public class Orchestrator {
         // So we loop instead:
         int lastCycle = -1;
         for (int i = 0; i < MAX_CYCLES; i++) {
-            final String name = cycleName(i) + "/phase1/" + Phase.INITIAL_FILE_NAME + ".ready";
+            final String name = cycleName(i) + "/phase2/" + Phase.INITIAL_FILE_NAME + ".ready";
             final List<String> objects = s3Client.listObjects(name, 2);
             if (objects.size() == 1 && objects.get(0).equals(name)) {
                 lastCycle = i;
