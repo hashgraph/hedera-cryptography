@@ -336,6 +336,10 @@ impl HinTS {
         let lhs = <Curve as Pairing>::pairing(hint.sk_i_l_i_of_tau_com_1, crs.powers_of_h[0]);
         let rhs = <Curve as Pairing>::pairing(hint.pk_i, l_i_of_tau_com);
         check_or_return_false!(lhs == rhs);
+       
+        //e([1]_1, [sk_i L_i(τ)]_2) = e([sk_i]_1, [L_i(τ)]_2)
+        let lhs2 = <Curve as Pairing>::pairing(crs.powers_of_g[0], hint.sk_i_l_i_of_tau_com_2);
+        check_or_return_false!(lhs2 == rhs);
 
         for j in 0..n {
             let num: DensePolynomial<F>;
@@ -1101,6 +1105,39 @@ mod tests {
         // try a really high threshold of 99%
         assert!(!HinTS::verify(msg, &vk, &π_attack, (F::from(99), F::from(100))).unwrap());
     }
+
+    #[test]
+    fn verify_hint_rejects_corrupted_sk_i_l_i_of_tau_com_2() {
+        // small universe for fast test; must be power of 2
+        let n = 8usize;
+        let i = 0usize;
+
+        // ----- make a CRS -----
+        let init_crs = PowersOfTauProtocol::init(n);
+        let (crs, proof) = PowersOfTauProtocol::contribute(&init_crs, [86u8; 32]).unwrap();
+        assert!(PowersOfTauProtocol::verify_contribution(&init_crs, &crs, &proof));
+
+        // ----- generate a valid hint -----
+        let sk = F::from(42u64); // deterministic, non-zero
+        let hint = HinTS::hint_gen(&crs, n, i, &sk).unwrap();
+
+        // sanity: valid hint should verify
+        assert!(HinTS::verify_hint(&crs, n, i, &hint).unwrap());
+
+        // ----- corrupt ONLY the G2 hint contribution -----
+        let mut bad_hint = hint.clone();
+
+        // Deterministically make it wrong: add the G2 generator so it MUST differ.
+        bad_hint.sk_i_l_i_of_tau_com_2 = bad_hint
+            .sk_i_l_i_of_tau_com_2
+            .add(&G2AffinePoint::generator())
+            .into_affine();
+
+        // With the bug: this returns true (test FAILS).
+        // After the fix: this returns false (test PASSES).
+        assert!(!HinTS::verify_hint(&crs, n, i, &bad_hint).unwrap());
+    }
+    
 
     fn sample_signing(
         num_signers: usize,
