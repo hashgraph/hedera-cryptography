@@ -2,5 +2,5 @@
 dependencies {
     published(project(":hedera-cryptography-hints"))
     published(project(":hedera-cryptography-wraps"))
-    implementation(project(":hedera-cryptography-ceremony"))
+    published(project(":hedera-cryptography-ceremony"))
 }
