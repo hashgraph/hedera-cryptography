@@ -48,7 +48,7 @@ public class Orchestrator {
      *
      * @param args the CLI args
      */
-    public static void main(String[] args) throws S3ClientInitializationException {
+    public static void main(String[] args) {
         if (args.length != 7) {
             System.err.println(
                     "Usage: Orchestrator thisNodeId nodeId1,nodeId2,... s3Region s3Endpoint s3BucketName keyStorePath keyStorePassword");
@@ -123,6 +123,11 @@ public class Orchestrator {
                     // We don't really support a graceful shutdown, so an operator would have to kill the process.
                 }
             }
+        } catch (S3ClientInitializationException e) {
+            // This is pretty much unrecoverable.
+            System.err.println("FATAL: Unable to initialize S3Client");
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
