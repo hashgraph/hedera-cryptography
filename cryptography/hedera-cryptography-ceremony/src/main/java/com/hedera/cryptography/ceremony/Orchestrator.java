@@ -173,6 +173,8 @@ public class Orchestrator {
         final S3DirectoryAccessor s3DirectoryAccessor = new S3DirectoryAccessor(s3Client, cycle);
         final Path parametersDir = s3DirectoryAccessor.downloadDir("parameters");
         PARAMETERS_PATHS.put(cycle, parametersDir);
+        System.err.println("Downloaded static parameters to "
+                + parametersDir.toAbsolutePath().toString());
 
         return parametersDir;
     }

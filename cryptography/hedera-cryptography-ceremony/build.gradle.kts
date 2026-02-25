@@ -53,3 +53,8 @@ val nativeBinPath =
 dependencies { nativeBin(project(":hedera-cryptography-wraps")) }
 
 tasks.processResources { from(nativeBinPath) { include("com/hedera/nativelib/ceremony/**") } }
+
+tasks.withType<Test>().configureEach {
+    minHeapSize = "512m"
+    maxHeapSize = "4096m"
+}
