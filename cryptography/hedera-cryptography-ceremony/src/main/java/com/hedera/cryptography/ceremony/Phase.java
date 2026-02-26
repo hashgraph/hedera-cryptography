@@ -160,7 +160,7 @@ class Phase {
             s3DirectoryAccessor.uploadDir(outputDir, outputDirName);
 
             System.err.println("Writing ready marker " + readyFileNameAtIndex(thisIndex));
-            s3DirectoryAccessor.writeText(readyFileNameAtIndex(thisIndex), "");
+            s3DirectoryAccessor.writeText(readyFileNameAtIndex(thisIndex), "ready");
             System.err.println("Wrote: " + readyFileNameAtIndex(thisIndex));
 
             System.err.println("Phase " + phase + " is complete.");
