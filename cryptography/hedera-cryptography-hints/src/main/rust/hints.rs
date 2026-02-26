@@ -336,7 +336,7 @@ impl HinTS {
         let lhs = <Curve as Pairing>::pairing(hint.sk_i_l_i_of_tau_com_1, crs.powers_of_h[0]);
         let rhs = <Curve as Pairing>::pairing(hint.pk_i, l_i_of_tau_com);
         check_or_return_false!(lhs == rhs);
-       
+        
         //e([1]_1, [sk_i L_i(τ)]_2) = e([sk_i]_1, [L_i(τ)]_2)
         let lhs2 = <Curve as Pairing>::pairing(crs.powers_of_g[0], hint.sk_i_l_i_of_tau_com_2);
         check_or_return_false!(lhs2 == rhs);
@@ -1096,7 +1096,7 @@ mod tests {
 
         let threshold = (F::from(1), F::from(3)); // 1/3
         assert!(HinTS::verify(msg, &vk, &π, threshold).unwrap());
-
+        
         // attack the proof
         let mut π_attack = π.clone();
         π_attack.agg_weight = F::from(1000000000); // some arbitrary weight
