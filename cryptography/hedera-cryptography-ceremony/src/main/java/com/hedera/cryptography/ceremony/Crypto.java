@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
@@ -85,6 +86,26 @@ class Crypto {
         return tssCert;
     }
 
+    private byte[] signFile(Path path) throws IOException {
+        try {
+            // Signature will throw OOM on a 2GB+ file, so we hash it first and then sign the hash:
+            final MessageDigest md = MessageDigest.getInstance("SHA-384");
+            try (final FileBytesIterator fileBytesIterator = new FileBytesIterator(path)) {
+                while (fileBytesIterator.hasNext()) {
+                    md.update(fileBytesIterator.next());
+                }
+            }
+
+            final Signature signature = Signature.getInstance(SigningSchema.ED25519.getSigningAlgorithm());
+            signature.initSign(keyPair.getPrivate());
+            signature.update(md.digest());
+
+            return signature.sign();
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /// Sign every file in the directory, write .sig files, and then write the signing.cert.pem file as well.
     void signDir(Path filesDir) throws IOException {
         final Map<String, byte[]> fileSignatures = new HashMap<>();
@@ -99,17 +120,8 @@ class Crypto {
 
                 final String fileName = path.getFileName().toString();
 
-                final Signature signature = Signature.getInstance(SigningSchema.ED25519.getSigningAlgorithm());
-                signature.initSign(keyPair.getPrivate());
-                try (final FileBytesIterator fileBytesIterator = new FileBytesIterator(path)) {
-                    while (fileBytesIterator.hasNext()) {
-                        signature.update(fileBytesIterator.next());
-                    }
-                }
-                fileSignatures.put(fileName, signature.sign());
+                fileSignatures.put(fileName, signFile(path));
             }
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-            throw new RuntimeException(e);
         }
 
         // Write each .sig file:

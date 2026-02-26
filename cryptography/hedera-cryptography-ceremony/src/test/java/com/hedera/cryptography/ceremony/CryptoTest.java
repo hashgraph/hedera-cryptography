@@ -8,14 +8,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.hedera.cryptography.ceremony.crypto.SigningSchema;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.security.Signature;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.Random;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -97,14 +100,53 @@ public class CryptoTest {
         assertEquals(crypto.getKeyPair().getPublic(), cert.getPublicKey());
 
         // And then verify every signature
-        for (String name : KEY_CERT_FILES) {
-            assertTrue(Files.exists(KEYS_PATH.resolve(name + ".sig")));
+        verifySignature(KEYS_PATH, KEY_CERT_FILES, cert);
+    }
+
+    private void verifySignature(Path dir, List<String> files, X509Certificate cert) throws Exception {
+        for (String name : files) {
+            assertTrue(Files.exists(dir.resolve(name + ".sig")));
 
             Signature sig = Signature.getInstance(SigningSchema.ED25519.getSigningAlgorithm());
             sig.initVerify(cert);
-            sig.update(Files.readAllBytes(KEYS_PATH.resolve(name)));
 
-            assertTrue(sig.verify(Files.readAllBytes(KEYS_PATH.resolve(name + ".sig"))));
+            final MessageDigest md = MessageDigest.getInstance("SHA-384");
+            try (final FileBytesIterator fileBytesIterator = new FileBytesIterator(dir.resolve(name))) {
+                while (fileBytesIterator.hasNext()) {
+                    md.update(fileBytesIterator.next());
+                }
+            }
+            sig.update(md.digest());
+
+            assertTrue(sig.verify(Files.readAllBytes(dir.resolve(name + ".sig"))));
         }
+    }
+
+    @Test
+    void testSignHugeFile() throws Exception {
+        final Path path = Files.createTempDirectory("hugeFileDir");
+        System.err.println("Writing a huge file to disk. This can take a few seconds...");
+        try (FileOutputStream fos =
+                new FileOutputStream(path.resolve("testHugeFile.bin").toFile())) {
+            // Make a file of 4GB+1byte size
+            final long SIZE = (long) Integer.MAX_VALUE * 2L + 1;
+            final int CHUNKS = 64;
+            final int CHUNK_SIZE = (int) (SIZE / CHUNKS);
+            byte[] array = new byte[CHUNK_SIZE];
+            final Random random = new Random();
+            for (int i = 0; i < CHUNKS; i++) {
+                random.nextBytes(array);
+                fos.write(array);
+            }
+        }
+
+        System.err.println("Done writing the huge file to disk. On to signing and verifying...");
+        final Crypto crypto = new Crypto(NODE_ID, KEYS_PATH.toAbsolutePath().toString(), PASSWORD.toCharArray());
+
+        crypto.signDir(path);
+
+        final X509Certificate cert =
+                loadCertificate(path.resolve("certificate.pem").toAbsolutePath().toString());
+        verifySignature(path, List.of("testHugeFile.bin"), cert);
     }
 }
