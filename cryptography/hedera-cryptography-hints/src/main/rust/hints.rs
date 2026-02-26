@@ -169,8 +169,6 @@ pub struct VerificationKey {
     h_0: G2AffinePoint,
     /// second G1 element from the KZG CRS (for first power of tau)
     h_1: G2AffinePoint,
-    /// third G1 element from the KZG CRS (for second power of tau)
-    h_2: G2AffinePoint,
     /// commitment to the L_{n-1} polynomial
     l_n_minus_1_of_tau_com: G1AffinePoint,
     /// commitment to the W polynomial
@@ -179,8 +177,6 @@ pub struct VerificationKey {
     sk_of_tau_com: G2AffinePoint,
     /// commitment to the vanishing polynomial Z(x) = x^n - 1
     z_of_tau_com: G2AffinePoint,
-    /// commitment to the f(x) = x, which equals [\tau]_2
-    tau_com: G2AffinePoint,
 }
 
 pub struct HinTS;
@@ -461,7 +457,6 @@ impl HinTS {
         }
 
         let z_of_x = utils::compute_vanishing_poly(n);
-        let x_monomial = utils::compute_x_monomial();
         let l_n_minus_1_of_x = utils::lagrange_poly(n, n - 1).ok_or(
             HinTSError::CryptographyCatastrophe(
                 format!("Unable to compute Lagrange<n,i>(x) for i = {}, n = {}", n - 1, n)
@@ -476,12 +471,10 @@ impl HinTS {
             g_0: crs.powers_of_g[0],
             h_0: crs.powers_of_h[0],
             h_1: crs.powers_of_h[1],
-            h_2: crs.powers_of_h[2],
             l_n_minus_1_of_tau_com: KZG::commit_g1(&crs, &l_n_minus_1_of_x)?,
             w_of_tau_com: KZG::commit_g1(&crs, &w_of_x)?,
             sk_of_tau_com: add::<G2AffinePoint>(sk_l_of_tau_coms),
             z_of_tau_com: KZG::commit_g2(&crs, &z_of_x)?,
-            tau_com: KZG::commit_g2(&crs, &x_monomial)?,
         };
 
         let ak = AggregationKey {
@@ -786,7 +779,7 @@ impl HinTS {
         //assert polynomial identity B(x) SK(x) = ask + Q_z(x) Z(x) + Q_x(x) x
         let lhs = <Curve as Pairing>::pairing(&π.b_of_tau_com, &vk.sk_of_tau_com);
         let x1 = <Curve as Pairing>::pairing(&π.qz_of_tau_com, &vk.z_of_tau_com);
-        let x2 = <Curve as Pairing>::pairing(&π.qx_of_tau_com, &vk.tau_com);
+        let x2 = <Curve as Pairing>::pairing(&π.qx_of_tau_com, &vk.h_1);
         let x3 = <Curve as Pairing>::pairing(&π.agg_pk, &vk.h_0);
         let rhs = x1.add(x2).add(x3);
         check_or_return_false!(lhs == rhs);
@@ -815,8 +808,8 @@ impl HinTS {
         check_or_return_false!(lhs == rhs);
 
         //run the degree check e([Qx(τ)]_1, [τ]_2) ?= e([Qx(τ)·τ]_1, [1]_2)
-        let lhs = <Curve as Pairing>::pairing(&π.qx_of_tau_com, &vk.h_2);
-        let rhs = <Curve as Pairing>::pairing(&π.qx_of_tau_mul_tau_com, &vk.h_1);
+        let lhs = x2;
+        let rhs = <Curve as Pairing>::pairing(&π.qx_of_tau_mul_tau_com, &vk.h_0);
 
         check_or_return_false!(lhs == rhs);
 

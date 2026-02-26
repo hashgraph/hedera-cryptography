@@ -1298,15 +1298,15 @@ mod tests {
     #[test]
     fn wraps_simulation() {
         let num_steps = 10;
-        let load_params_from_disk = false;
+        let load_params_from_disk = true;
 
         let (wraps_pk, wraps_vk) = if load_params_from_disk {
             let start = std::time::Instant::now();
             let cwd = env::current_dir().unwrap();
-            let nova_pp_bytes = std::fs::read(cwd.join("resources/nova_pp.bin")).unwrap();
-            let nova_vp_bytes = std::fs::read(cwd.join("resources/nova_vp.bin")).unwrap();
-            let decider_pp_bytes = std::fs::read(cwd.join("resources/decider_pp.bin")).unwrap();
-            let decider_vp_bytes = std::fs::read(cwd.join("resources/decider_vp.bin")).unwrap();
+            let nova_pp_bytes = std::fs::read(cwd.join("resources/ceremony/nova_pp.bin")).unwrap();
+            let nova_vp_bytes = std::fs::read(cwd.join("resources/ceremony/nova_vp.bin")).unwrap();
+            let decider_pp_bytes = std::fs::read(cwd.join("resources/ceremony/decider_pp.bin")).unwrap();
+            let decider_vp_bytes = std::fs::read(cwd.join("resources/ceremony/decider_vp.bin")).unwrap();
             println!("Read all parameters from disk: {:?}", start.elapsed());
 
             let start = std::time::Instant::now();
