@@ -57,7 +57,7 @@ public class PhaseTest {
 
         verify(s3DirectoryAccessor, times(1)).uploadDir(outputPathCaptor.getValue(), "1.bin");
 
-        verify(s3DirectoryAccessor, times(1)).writeText("1.ready", "");
+        verify(s3DirectoryAccessor, times(1)).writeText("1.ready", "ready");
 
         verifyNoMoreInteractions(s3DirectoryAccessor, dataCruncher, crypto);
     }
@@ -87,7 +87,7 @@ public class PhaseTest {
 
         verify(s3DirectoryAccessor, times(1)).uploadDir(outputPathCaptor.getValue(), "2.bin");
 
-        verify(s3DirectoryAccessor, times(1)).writeText("2.ready", "");
+        verify(s3DirectoryAccessor, times(1)).writeText("2.ready", "ready");
 
         verifyNoMoreInteractions(s3DirectoryAccessor, dataCruncher, crypto);
     }
@@ -117,7 +117,7 @@ public class PhaseTest {
 
         verify(s3DirectoryAccessor, times(1)).uploadDir(outputPathCaptor.getValue(), "2.bin");
 
-        verify(s3DirectoryAccessor, times(1)).writeText("2.ready", "");
+        verify(s3DirectoryAccessor, times(1)).writeText("2.ready", "ready");
 
         verifyNoMoreInteractions(s3DirectoryAccessor, dataCruncher, crypto);
     }
