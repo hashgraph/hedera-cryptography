@@ -6,6 +6,7 @@ plugins {
     id("org.hiero.gradle.module.library")
     id("org.hiero.gradle.feature.rust")
     id("org.hiero.gradle.feature.test-multios")
+    id("org.hiero.gradle.feature.benchmark")
     id("DownloadWrapsArtifactTask")
 }
 
@@ -15,6 +16,11 @@ cargo {
 }
 
 testModuleInfo { requires("org.junit.jupiter.api") }
+
+jmhModuleInfo {
+    requires("com.hedera.cryptography.hints")
+    requires("com.hedera.cryptography.wraps")
+}
 
 // remove license header check for rust files
 spotless { format("rust") { clearSteps() } }
