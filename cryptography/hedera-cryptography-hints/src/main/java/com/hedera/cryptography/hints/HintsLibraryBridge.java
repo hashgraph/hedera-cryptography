@@ -370,6 +370,12 @@ public class HintsLibraryBridge {
             long thresholdNumerator,
             long thresholdDenominator);
 
+    /**
+     * Reset cached CRS and AggregatedKey values in native code.
+     * The values will be reparsed and cached again once a method accepting these values is called.
+     */
+    public native void resetCache();
+
     // Returns true if the n is a positive power of two, and the crs isn't null and its length matches or is greater
     // than the n.
     private static boolean validateCRS(final byte[] crs, final int n) {
