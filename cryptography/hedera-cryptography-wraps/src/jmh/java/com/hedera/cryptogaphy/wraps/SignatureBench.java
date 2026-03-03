@@ -103,6 +103,9 @@ public class SignatureBench {
 
         @Setup(Level.Trial)
         public void setup() {
+            // New CRS, new AggregationKey:
+            HINTS.resetCache();
+
             crs = HINTS.initCRS(crsSize);
             numOfSigners = fullNumOfSigners ? (crsSize / 2 + 1) : 3;
 

@@ -5,7 +5,13 @@ use jni::JNIEnv;
 use jni::objects::{JByteArray, JIntArray, JLongArray, JObject, JObjectArray, JValue};
 use jni::sys::{jboolean, jbyteArray, jint, jlong, jobject, jsize};
 use crate::hints::{AggregationKey, ExtendedPublicKey, HinTS, PartialSignature, SecretKey, ThresholdSignature, VerificationKey, Weight, CRS, F};
+use crate::jni_cache::JNICache;
 use crate::jni_util;
+
+// Caches for some "static" values to save time on parsing them from bytes.
+// Java applications can reset the caches by calling HintsLibraryBridge.resetCache().
+static CRS_CACHE: JNICache<CRS> = JNICache::new(jni_util::deserialize_jbyte_array);
+static AGGREGATION_KEY_CACHE: JNICache<AggregationKey> = JNICache::new(jni_util::deserialize_jbyte_array);
 
 /// JNI for HintsLibraryBridge.generateSecretKey
 #[no_mangle]
@@ -36,8 +42,8 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_com
     party_id: jint,
     n: jint,
 ) -> jbyteArray {
-    let crs: CRS = match jni_util::deserialize_jbyte_array(&env, &crs_jarray) {
-        Ok(val) => val,
+    let crs: &CRS = match CRS_CACHE.get(&env, &crs_jarray) {
+        Ok(val) => &(val.clone()),
         Err(_) => return std::ptr::null_mut()
     };
 
@@ -66,8 +72,8 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_val
     party_id: jint,
     n: jint,
 ) -> jboolean {
-    let crs: CRS = match jni_util::deserialize_jbyte_array(&env, &crs_jarray) {
-        Ok(val) => val,
+    let crs: &CRS = match CRS_CACHE.get(&env, &crs_jarray) {
+        Ok(val) => &(val.clone()),
         Err(_) => return jboolean::from(false)
     };
 
@@ -93,8 +99,8 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBri
     weights_jarray: JLongArray,
     n: jint,
 ) -> jobject {
-    let crs: CRS = match jni_util::deserialize_jbyte_array(&env, &crs_jarray) {
-        Ok(val) => val,
+    let crs: &CRS = match CRS_CACHE.get(&env, &crs_jarray) {
+        Ok(val) => &(val.clone()),
         Err(_) => return std::ptr::null_mut()
     };
 
@@ -207,8 +213,8 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
         Err(_) => return jboolean::from(false)
     };
 
-    let aggregation_key: AggregationKey = match jni_util::deserialize_jbyte_array(&env, &aggregation_key_jarray) {
-        Ok(val) => val,
+    let aggregation_key: &AggregationKey = match AGGREGATION_KEY_CACHE.get(&env, &aggregation_key_jarray) {
+        Ok(val) => &(val.clone()),
         Err(_) => return jboolean::from(false)
     };
 
@@ -238,8 +244,8 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
         Err(_) => return jboolean::from(false)
     };
 
-    let aggregation_key: AggregationKey = match jni_util::deserialize_jbyte_array(&env, &aggregation_key_jarray) {
-        Ok(val) => val,
+    let aggregation_key: &AggregationKey = match AGGREGATION_KEY_CACHE.get(&env, &aggregation_key_jarray) {
+        Ok(val) => &(val.clone()),
         Err(_) => return jboolean::from(false)
     };
 
@@ -286,13 +292,13 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_agg
     parties_jarray: JIntArray,
     partial_signatures_jarray: JObjectArray,
 ) -> jbyteArray {
-    let crs: CRS = match jni_util::deserialize_jbyte_array(&env, &crs_jarray) {
-        Ok(val) => val,
+    let crs: &CRS = match CRS_CACHE.get(&env, &crs_jarray) {
+        Ok(val) => &(val.clone()),
         Err(_) => return std::ptr::null_mut()
     };
 
-    let aggregation_key: AggregationKey = match jni_util::deserialize_jbyte_array(&env, &aggregation_key_jarray) {
-        Ok(val) => val,
+    let aggregation_key: &AggregationKey = match AGGREGATION_KEY_CACHE.get(&env, &aggregation_key_jarray) {
+        Ok(val) => &(val.clone()),
         Err(_) => return std::ptr::null_mut()
     };
 
@@ -375,4 +381,13 @@ pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_ver
         Ok(val) => val,
         Err(_) => return jboolean::from(false)
     })
+}
+
+/// JNI for HintsLibraryBridge.resetCache
+#[no_mangle]
+pub extern "system" fn Java_com_hedera_cryptography_hints_HintsLibraryBridge_resetCache(
+    _env: JNIEnv,
+) {
+    CRS_CACHE.reset();
+    AGGREGATION_KEY_CACHE.reset();
 }
