@@ -583,7 +583,11 @@ impl ProvingKey {
             ark_serialize::Validate::Yes,
             ()
         )?;
-        let decider_pp = DPP::deserialize_compressed(decider_pp.as_ref())?;
+        let decider_pp = DPP::deserialize_with_mode(
+            decider_pp.as_ref(),
+            ark_serialize::Compress::Yes,
+            ark_serialize::Validate::No,
+        )?;
         Ok(Self { nova_pp, decider_pp })
     }
 
