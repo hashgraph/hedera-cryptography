@@ -105,7 +105,8 @@ public class Orchestrator {
                                         crypto)
                                 .run();
                     }
-                } catch (S3ResponseException | IOException e) {
+                } catch (Exception e) {
+                    // We do want to catch any and all exceptions here by design. See a comment below for reasoning.
                     e.printStackTrace();
 
                     // An S3 call failed (or maybe a disk read/write failed.) On one hand we could die here.
