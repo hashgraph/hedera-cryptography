@@ -76,6 +76,7 @@ public class PhaseTest {
         phase.run();
 
         verify(s3DirectoryAccessor, times(1)).doesExist("2.claimed");
+        verify(s3DirectoryAccessor, times(1)).doesExist("1.claimed");
 
         verify(s3DirectoryAccessor, times(1)).writeText("2.claimed", "1");
 
@@ -106,6 +107,7 @@ public class PhaseTest {
         phase.run();
 
         verify(s3DirectoryAccessor, times(1)).doesExist("2.claimed");
+        verify(s3DirectoryAccessor, times(1)).doesExist("1.claimed");
 
         verify(s3DirectoryAccessor, times(1)).writeText("2.claimed", "initial");
 
