@@ -82,8 +82,8 @@ class Phase {
                 if (s3DirectoryAccessor.waitForFile(readyFileName, WAIT_ITERATION_MILLIS)) {
                     System.err.println("Found file: " + readyFileName);
                     return thisIndex - 1;
-                } else if ("666".equals(phase)) {
-                    // Support unit-tests with a test phase "666":
+                } else if ("3600".equals(phase)) {
+                    // Support unit-tests with a test phase "3600":
                     break;
                 }
             } catch (IOException e) {

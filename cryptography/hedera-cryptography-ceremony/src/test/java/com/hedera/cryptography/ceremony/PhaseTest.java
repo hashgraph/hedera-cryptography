@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class PhaseTest {
-    private static final String PHASE = "666";
+    private static final String PHASE = "3600";
     private static final List<Long> ALL_NODE_IDS = List.of(1L, 2L);
 
     @Mock
