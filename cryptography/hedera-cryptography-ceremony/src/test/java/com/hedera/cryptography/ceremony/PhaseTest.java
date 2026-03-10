@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class PhaseTest {
-    private static final String PHASE = "666";
+    private static final String PHASE = "3600";
     private static final List<Long> ALL_NODE_IDS = List.of(1L, 2L);
 
     @Mock
@@ -99,8 +99,12 @@ public class PhaseTest {
 
         final Phase phase = new Phase(PHASE, 2L, ALL_NODE_IDS, s3DirectoryAccessor, dataCruncher, crypto);
 
+        doReturn(false).when(s3DirectoryAccessor).doesExist("2.claimed");
         doReturn(true).when(s3DirectoryAccessor).waitForFile(eq("initial.ready"), any(Long.class));
         doReturn(false).when(s3DirectoryAccessor).waitForFile(eq("1.ready"), any(Long.class));
+        doReturn(false).when(s3DirectoryAccessor).doesExist("1.ready");
+        doReturn(false).when(s3DirectoryAccessor).doesExist("1.claimed");
+        doReturn(true).when(s3DirectoryAccessor).doesExist("initial.ready");
         doReturn(inputPath).when(s3DirectoryAccessor).downloadDir("initial.bin");
         doReturn(0).when(dataCruncher).execute(eq(PHASE), eq(inputPath), any(Path.class));
 
