@@ -401,15 +401,15 @@ impl<const K: usize> FCircuit<Fr> for TSSFCircuit<K> {
 }
 
 /// Pads an address book up to `MAX_AB_SIZE` using dummy zero-weight entries.
-fn pad_addressbook(ab: &AddressBook) -> AddressBook {
+fn pad_addressbook(ab: &AddressBook) -> Result<AddressBook, WRAPSError> {
     let mut ab_padded = ab.clone();
-    let dummy_party = WRAPS::keygen([0; 32]).unwrap();
+    let dummy_party = WRAPS::keygen([0; 32])?;
     let zero_weight = Fr::from(0);
     let dummy_node_id = Fr::from(-1); //some really large number
     while ab_padded.len() < MAX_AB_SIZE {
         ab_padded.push((dummy_party.1.clone(), zero_weight, dummy_node_id));
     }
-    ab_padded
+    Ok(ab_padded)
 }
 
 /// Hashes the serialized TSS verification key using Poseidon.
@@ -949,7 +949,7 @@ impl WRAPS {
         }
 
         // Pad the address book to the circuit’s expected length before hashing.
-        let padded_ab = pad_addressbook(ab);
+        let padded_ab = pad_addressbook(ab)?;
 
         hash_addressbook(&padded_ab)
     }
@@ -1080,8 +1080,8 @@ impl WRAPS {
 
         // pad up inputs to MAX_AB_SIZE
         // Ensure both address books and the participation bitmap align with circuit expectations.
-        let padded_prev_ab = pad_addressbook(prev_ab);
-        let padded_next_ab = pad_addressbook(next_ab);
+        let padded_prev_ab = pad_addressbook(prev_ab)?;
+        let padded_next_ab = pad_addressbook(next_ab)?;
 
         let is_genesis: bool = prev_proof.is_none();
         if is_genesis {
