@@ -24,6 +24,11 @@ public abstract class StreamAPI implements ExternalAPI {
     /** @return an InputStream for the API to provide results to the client. */
     protected abstract InputStream getInputStream();
 
+    /** @return the max size of an array that receiveArray() can receive. */
+    protected int getMaxArraySize() {
+        return Integer.MAX_VALUE;
+    }
+
     /**
      * Send a byte array by writing a BIG_ENDIAN 4 bytes integer length followed by the array bytes.
      * @param array a byte array to send
@@ -51,6 +56,11 @@ public abstract class StreamAPI implements ExternalAPI {
             throw new EOFException("Expected 4 bytes in length array, got " + lenBytes.length);
         }
         final int len = arrayToInt(lenBytes);
+        final int maxArraySize = getMaxArraySize();
+        if (maxArraySize < 0 || len > maxArraySize) {
+            throw new IOException(
+                    "Array size out of range, or max is negative. maxArraySize = " + maxArraySize + ", len = " + len);
+        }
         final byte[] output = is.readNBytes(len);
         if (output.length != len) {
             throw new EOFException("Expected " + len + " bytes in data array, got " + output.length);

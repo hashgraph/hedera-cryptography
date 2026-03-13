@@ -80,6 +80,9 @@ public class WRAPSLibraryBridge {
     // DEFINITIONS BELOW MUST MATCH THEIR NATIVE CODE COUNTER-PARTS (see src/rust/wraps/src/lib.rs):
     // ------------------------------------------------------------------------------------------------------
 
+    /** The maximum size of an AddressBook. */
+    public static final int MAX_AB_SIZE = 128;
+
     /** Size of a random seed. */
     public static final int ENTROPY_SIZE = 32;
 
@@ -248,6 +251,17 @@ public class WRAPSLibraryBridge {
             throw new IllegalArgumentException("Unknown phase: " + phase);
         }
 
+        if ((schnorrPrivateKey != null && schnorrPrivateKey.length > MAX_AB_SIZE)
+                || schnorrPublicKeys.length > MAX_AB_SIZE
+                || weights.length > MAX_AB_SIZE
+                || nodeIds.length > MAX_AB_SIZE
+                || signers.length > MAX_AB_SIZE
+                || round1Messages.length > MAX_AB_SIZE
+                || round2Messages.length > MAX_AB_SIZE
+                || round3Messages.length > MAX_AB_SIZE) {
+            return null;
+        }
+
         return runSigningProtocolPhaseImpl(
                 phase.ordinal(),
                 instanceEntropy,
@@ -294,6 +308,7 @@ public class WRAPSLibraryBridge {
                 || messageToSign == null
                 || signature == null
                 || schnorrPublicKeys.length == 0
+                || schnorrPublicKeys.length > MAX_AB_SIZE
                 || weights == null
                 || weights.length != schnorrPublicKeys.length
                 || nodeIds == null
@@ -316,7 +331,7 @@ public class WRAPSLibraryBridge {
 
     /**
      * Computes the Poseidon hash of an address book. This is expected to only be used to compute the ledger ID.
-     * As of 10/20/2025, the address book size is limited to 128 nodes (see MAX_AB_SIZE in Rust code.)
+     * The address book size is limited by the `MAX_AB_SIZE`.
      * @param schnorrPublicKeys Schnorr public keys for nodes in the address book
      * @param weights corresponding non-negative weights of the nodes in the address book
      * @param nodeIds corresponding nodeIds of the nodes in the address book
@@ -325,6 +340,7 @@ public class WRAPSLibraryBridge {
     public byte[] hashAddressBook(final byte[][] schnorrPublicKeys, final long[] weights, final long[] nodeIds) {
         if (schnorrPublicKeys == null
                 || weights == null
+                || schnorrPublicKeys.length > MAX_AB_SIZE
                 || schnorrPublicKeys.length != weights.length
                 || nodeIds == null
                 || schnorrPublicKeys.length != nodeIds.length
@@ -342,7 +358,12 @@ public class WRAPSLibraryBridge {
      * @param array a non-null and non-empty array of bytes
      * @return a hash of the array, or null if errors occur
      */
-    public native byte[] hashArray(byte[] array);
+    public byte[] hashArray(byte[] array) {
+        if (array == null || array.length == 0) return null;
+        return hashArrayImpl(array);
+    }
+
+    private native byte[] hashArrayImpl(byte[] array);
 
     /**
      * Constructs a rotation message by concatenating the hash of the next address book with the hash
@@ -356,6 +377,7 @@ public class WRAPSLibraryBridge {
             byte[][] schnorrPublicKeys, long[] weights, long[] nodeIds, byte[] hintsVerificationKey) {
         if (schnorrPublicKeys == null
                 || weights == null
+                || schnorrPublicKeys.length > MAX_AB_SIZE
                 || schnorrPublicKeys.length != weights.length
                 || nodeIds == null
                 || schnorrPublicKeys.length != nodeIds.length
@@ -411,6 +433,7 @@ public class WRAPSLibraryBridge {
                 || prevSchnorrPublicKeys == null
                 || prevWeights == null
                 || prevSchnorrPublicKeys.length == 0
+                || prevSchnorrPublicKeys.length > MAX_AB_SIZE
                 || prevSchnorrPublicKeys.length != prevWeights.length
                 || prevNodeIds == null
                 || prevSchnorrPublicKeys.length != prevNodeIds.length
@@ -418,6 +441,7 @@ public class WRAPSLibraryBridge {
                 || nextSchnorrPublicKeys == null
                 || nextWeights == null
                 || nextSchnorrPublicKeys.length == 0
+                || nextSchnorrPublicKeys.length > MAX_AB_SIZE
                 || nextSchnorrPublicKeys.length != nextWeights.length
                 || nextNodeIds == null
                 || nextSchnorrPublicKeys.length != nextNodeIds.length
