@@ -271,25 +271,30 @@ impl<const K: usize> FCircuit<Fr> for TSSFCircuit<K> {
     ) -> Result<Vec<FpVar<Fr>>, SynthesisError> {
 
         let prev_pk_vars = (0..K)
-            .map(|i| JubJubVar::new_witness(cs.clone(), || Ok(
-                ark_ed_on_bn254::EdwardsAffine::new(
-                    external_inputs.0[4*i + 0].value()?,
-                    external_inputs.0[4*i + 1].value()?
-                )
-            )).unwrap())
-            .collect::<Vec<_>>();
+            .map(|i| {
+                JubJubVar::new_witness(cs.clone(), || {
+                    Ok(ark_ed_on_bn254::EdwardsAffine::new(
+                        external_inputs.0[4 * i + 0].value()?,
+                        external_inputs.0[4 * i + 1].value()?,
+                    ))
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
 
         let prev_weights = (0..K)
             .map(|i| external_inputs.0[4*i + 2].clone())
             .collect::<Vec<_>>();
 
         let present_bits = (0..K)
-            .map(|i| external_inputs.0[4*K + i].to_bytes_le().unwrap()[0].clone())
-            .collect::<Vec<_>>();
+            .map(|i| {
+                let bytes = external_inputs.0[4 * K + i].to_bytes_le()?;
+                bytes.into_iter().next().ok_or(SynthesisError::Unsatisfiable)
+            })
+            .collect::<Result<Vec<_>, _>>()?;
 
         let aggregate_signature = SchnorrSignatureVar {
-            verifier_challenge: external_inputs.0[5*K + 0].to_bytes_le().unwrap(),
-            prover_response: external_inputs.0[5*K + 1].to_bytes_le().unwrap(),
+            verifier_challenge: external_inputs.0[5 * K + 0].to_bytes_le()?,
+            prover_response: external_inputs.0[5 * K + 1].to_bytes_le()?,
             _group: PhantomData,
         };
 
@@ -361,7 +366,8 @@ impl<const K: usize> FCircuit<Fr> for TSSFCircuit<K> {
         };
 
         // instantiate the Schnorr signature verification gadget
-        let schnorr_parameters = Schnorr::setup(test_rng().gen()).unwrap();
+        let schnorr_parameters =
+            Schnorr::setup(test_rng().gen()).map_err(|_| SynthesisError::Unsatisfiable)?;
         let parameters_var = <SchnorrVerifyGadget as SigVerifyGadget<Schnorr, Fr>>
             ::ParametersVar::new_constant(cs.clone(), schnorr_parameters)?;
         let next_ab_hash = external_inputs.0[5*K + 2].clone();
@@ -395,15 +401,15 @@ impl<const K: usize> FCircuit<Fr> for TSSFCircuit<K> {
 }
 
 /// Pads an address book up to `MAX_AB_SIZE` using dummy zero-weight entries.
-fn pad_addressbook(ab: &AddressBook) -> AddressBook {
+fn pad_addressbook(ab: &AddressBook) -> Result<AddressBook, WRAPSError> {
     let mut ab_padded = ab.clone();
-    let dummy_party = WRAPS::keygen([0; 32]).unwrap();
+    let dummy_party = WRAPS::keygen([0; 32])?;
     let zero_weight = Fr::from(0);
     let dummy_node_id = Fr::from(-1); //some really large number
     while ab_padded.len() < MAX_AB_SIZE {
         ab_padded.push((dummy_party.1.clone(), zero_weight, dummy_node_id));
     }
-    ab_padded
+    Ok(ab_padded)
 }
 
 /// Hashes the serialized TSS verification key using Poseidon.
@@ -419,9 +425,11 @@ pub fn hash_hints_vk(vk_bytes: &[u8]) -> Result<Fr, WRAPSError> {
 
     let out_bytes = PoseidonCRH::evaluate(&poseidon_canonical_config::<Fr>(), tss_vk_hash_elements)
         .map_err(|_| WRAPSError::CryptographyError)?;
-    let out: Vec<Fr> = out_bytes.to_field_elements().unwrap();
-    // out contains only one field element, because Poseidon output is in the field
-    Ok(out[0])
+    let mut out = out_bytes
+        .to_field_elements()
+        .ok_or(WRAPSError::CryptographyError)?;
+    // out should contain one field element, because Poseidon output is in the field
+    out.pop().ok_or(WRAPSError::CryptographyError)
 }
 
 /// Hashes all address book public keys and weights via Poseidon.
@@ -449,9 +457,11 @@ fn hash_addressbook(ab: &AddressBook) -> Result<Fr, WRAPSError> {
         .collect();
     let out_bytes = PoseidonCRH::evaluate(&poseidon_canonical_config::<Fr>(), poseidon_input)
         .map_err(|_| WRAPSError::CryptographyError)?;
-    let out: Vec<Fr> = out_bytes.to_field_elements().unwrap();
-    // out contains only one field element, because Poseidon output is in the field
-    Ok(out[0])
+    let mut out = out_bytes
+        .to_field_elements()
+        .ok_or(WRAPSError::CryptographyError)?;
+    // out should contain one field element, because Poseidon output is in the field
+    out.pop().ok_or(WRAPSError::CryptographyError)
 }
 
 // verifies that each Schnorr public key has a valid proof of knowledge
@@ -514,14 +524,19 @@ fn proof_of_knowledge_random_oracle(
     g: JubJub,
     statement: <JubJub as CurveGroup>::Affine,
     commitment: <JubJub as CurveGroup>::Affine
-) -> JubJubFr {
+) -> Result<JubJubFr, WRAPSError> {
     let mut serialized_data = Vec::new();
-    g.serialize_compressed(&mut serialized_data).unwrap();
-    statement.serialize_compressed(&mut serialized_data).unwrap();
-    commitment.serialize_compressed(&mut serialized_data).unwrap();
+    g.serialize_compressed(&mut serialized_data)
+        .map_err(|_| WRAPSError::CryptographyError)?;
+    statement
+        .serialize_compressed(&mut serialized_data)
+        .map_err(|_| WRAPSError::CryptographyError)?;
+    commitment
+        .serialize_compressed(&mut serialized_data)
+        .map_err(|_| WRAPSError::CryptographyError)?;
 
     let hasher = <DefaultFieldHasher<Sha256> as HashToField<JubJubFr>>::new(&[]);
-    hasher.hash_to_field::<1>(&serialized_data)[0]
+    Ok(hasher.hash_to_field::<1>(&serialized_data)[0])
 }
 
 fn expand_seed(seed: [u8; ENTROPY_SIZE]) -> [u8; 2 * ENTROPY_SIZE] {
@@ -544,23 +559,23 @@ fn expand_seed(seed: [u8; ENTROPY_SIZE]) -> [u8; 2 * ENTROPY_SIZE] {
 fn generate_proof_of_knowledge(
     x: &SchnorrPrivKey,
     seed:[u8; ENTROPY_SIZE]
-) -> SchnorrPoK {
+) -> Result<SchnorrPoK, WRAPSError> {
     let g = JubJub::generator();
     let statement = (g * x).into_affine();
 
     let r = JubJubFr::rand(&mut rand_chacha::ChaCha8Rng::from_seed(seed));
     let commitment = (g * r).into_affine();
 
-    let challenge = proof_of_knowledge_random_oracle(g, statement, commitment);
+    let challenge = proof_of_knowledge_random_oracle(g, statement, commitment)?;
 
     // compute response = x + challenge * sk
     let response = r + challenge * x;
 
-    SchnorrPoK {
+    Ok(SchnorrPoK {
         commitment,
         challenge,
         response,
-    }
+    })
 }
 
 // Verifies a Schnorr proof of knowledge of the discrete log of the public key.
@@ -666,7 +681,7 @@ impl WRAPS {
         // Derive the keypair from the supplied seed.
         let (pk, sk) = Schnorr::keygen(&pp, seed1)
             .map_err(|_| WRAPSError::CryptographyError)?;
-        let pok = generate_proof_of_knowledge(&sk, seed2);
+        let pok = generate_proof_of_knowledge(&sk, seed2)?;
         let attested_pk: SchnorrAttestedPubKey = (pk, pok);
         Ok((sk, attested_pk))
     }
@@ -697,49 +712,65 @@ impl WRAPS {
         round2_messages: &[SigningProtocolMessage], // should be [] if phase == R2
         round3_messages: &[SigningProtocolMessage], // should be [] if phase == R3
     ) -> Result<SigningProtocolObject, WRAPSError> {
+        let invalid_input = |msg: &str| WRAPSError::InvalidInput(msg.to_string());
+
         // extract public keys of participating signers using the bitvector
         let participant_pubkeys: Vec<SchnorrPubKey> = address_book.iter()
             .zip(bitvector.as_ref().iter())
             .filter_map(|(abe, &is_present)| if is_present { Some(abe.0.0.clone()) } else { None })
             .collect();
 
+        if bitvector.as_ref().len() > MAX_AB_SIZE {
+            return Err(invalid_input("Bitvector exceeds maximum supported address book size"));
+        }
+
         let padded_bitvector: [bool; MAX_AB_SIZE] = {
             let mut vec = bitvector.as_ref().to_vec();
             vec.resize(MAX_AB_SIZE, false);
-            vec.try_into().unwrap()
+            vec.try_into()
+                .map_err(|_| invalid_input("Failed to normalize bitvector to fixed-size array"))?
         };
 
         // Use fixed parameters so every participant derives identical protocol parameters.
         // Note that the entropy here is irrelevant since it is used for a salt that is unused.
-        let pp = Schnorr::setup([0u8; 32]).unwrap();
+        let pp = Schnorr::setup([0u8; 32]).map_err(|_| WRAPSError::CryptographyError)?;
 
         match phase {
             SigningProtocolPhase::R1 => {
                 // Round 1 only needs fresh commitments, no prior messages expected.
-                assert!(round1_messages.len() == 0);
-                assert!(round2_messages.len() == 0);
-                assert!(round3_messages.len() == 0);
-                assert!(protocol_instance_entropy.is_some());
+                if !round1_messages.is_empty() || !round2_messages.is_empty() || !round3_messages.is_empty() {
+                    return Err(invalid_input("R1 expects empty round1/round2/round3 message vectors"));
+                }
+                let protocol_instance_entropy = protocol_instance_entropy
+                    .ok_or_else(|| invalid_input("R1 requires protocol_instance_entropy"))?;
                 let r1_msg: ThresholdSchnorrR1Msg = ThresholdSchnorr::sign_round1(
                     &pp,
-                    protocol_instance_entropy.unwrap()
+                    protocol_instance_entropy
                 ).map_err(|_| WRAPSError::CryptographyError)?;
                 let r1_msg_encoded = utils::serialize(&r1_msg);
                 Ok(SigningProtocolObject::ProtocolMessage(r1_msg_encoded))
             },
             SigningProtocolPhase::R2 => {
                 // Round 2 produces each signer's commitments; all R1 messages must be present.
-                assert!(round1_messages.len() == participant_pubkeys.len());
-                assert!(round2_messages.len() == 0);
-                assert!(round3_messages.len() == 0);
-                assert!(protocol_instance_entropy.is_some());
+                if round1_messages.len() != participant_pubkeys.len() {
+                    return Err(invalid_input("R2 requires one round1 message per participating signer"));
+                }
+                if !round2_messages.is_empty() || !round3_messages.is_empty() {
+                    return Err(invalid_input("R2 expects empty round2/round3 message vectors"));
+                }
+                let protocol_instance_entropy = protocol_instance_entropy
+                    .ok_or_else(|| invalid_input("R2 requires protocol_instance_entropy"))?;
                 let r1_msgs: Vec<ThresholdSchnorrR1Msg> = round1_messages
                     .iter()
-                    .map(|m| ThresholdSchnorrR1Msg::deserialize_uncompressed(&mut &m[..]).unwrap())
-                    .collect();
+                    .map(|m| {
+                        let mut msg = m.as_slice();
+                        ThresholdSchnorrR1Msg::deserialize_uncompressed(&mut msg)
+                            .map_err(|_| invalid_input("Failed to deserialize a round1 message"))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
                 let r2_msg: ThresholdSchnorrR2Msg = ThresholdSchnorr::sign_round2(
                     &pp,
-                    protocol_instance_entropy.unwrap(),
+                    protocol_instance_entropy,
                     &r1_msgs
                 ).map_err(|_| WRAPSError::CryptographyError)?;
                 // Encode the second-round commitments to broadcast to the committee.
@@ -748,23 +779,41 @@ impl WRAPS {
             },
             SigningProtocolPhase::R3 => {
                 // Round 3 produces each signer’s response; all prior messages must be present.
-                assert!(round1_messages.len() == participant_pubkeys.len());
-                assert!(round2_messages.len() == participant_pubkeys.len());
-                assert!(round3_messages.len() == 0);
-                assert!(protocol_instance_entropy.is_some());
+                if round1_messages.len() != participant_pubkeys.len()
+                    || round2_messages.len() != participant_pubkeys.len()
+                {
+                    return Err(invalid_input(
+                        "R3 requires round1 and round2 message vectors to match participating signer count",
+                    ));
+                }
+                if !round3_messages.is_empty() {
+                    return Err(invalid_input("R3 expects an empty round3 message vector"));
+                }
+                let protocol_instance_entropy = protocol_instance_entropy
+                    .ok_or_else(|| invalid_input("R3 requires protocol_instance_entropy"))?;
+                let signing_key = signing_key
+                    .ok_or_else(|| invalid_input("R3 requires a signing key"))?;
                 let r1_msgs: Vec<ThresholdSchnorrR1Msg> = round1_messages
                     .iter()
-                    .map(|m| ThresholdSchnorrR1Msg::deserialize_uncompressed(&mut &m[..]).unwrap())
-                    .collect();
+                    .map(|m| {
+                        let mut msg = m.as_slice();
+                        ThresholdSchnorrR1Msg::deserialize_uncompressed(&mut msg)
+                            .map_err(|_| invalid_input("Failed to deserialize a round1 message"))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
                 let r2_msgs: Vec<ThresholdSchnorrR2Msg> = round2_messages
                     .iter()
-                    .map(|m| ThresholdSchnorrR2Msg::deserialize_uncompressed(&mut &m[..]).unwrap())
-                    .collect();
+                    .map(|m| {
+                        let mut msg = m.as_slice();
+                        ThresholdSchnorrR2Msg::deserialize_uncompressed(&mut msg)
+                            .map_err(|_| invalid_input("Failed to deserialize a round2 message"))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
                 let r3_msg = ThresholdSchnorr::sign_round3(
                     &pp,
-                    protocol_instance_entropy.unwrap(),
+                    protocol_instance_entropy,
                     message_to_sign.as_ref(),
-                    signing_key.unwrap(),
+                    signing_key,
                     &participant_pubkeys,
                     &r1_msgs,
                     &r2_msgs
@@ -775,22 +824,41 @@ impl WRAPS {
             },
             SigningProtocolPhase::Aggregate => {
                 // Aggregator verifies inputs and bundles all shares into a final signature.
-                assert!(round1_messages.len() == participant_pubkeys.len());
-                assert!(round2_messages.len() == participant_pubkeys.len());
-                assert!(round3_messages.len() == participant_pubkeys.len());
-                assert!(protocol_instance_entropy.is_none());
+                if round1_messages.len() != participant_pubkeys.len()
+                    || round2_messages.len() != participant_pubkeys.len()
+                    || round3_messages.len() != participant_pubkeys.len()
+                {
+                    return Err(invalid_input(
+                        "Aggregate requires round1/round2/round3 message vectors to match participating signer count",
+                    ));
+                }
+                if protocol_instance_entropy.is_some() {
+                    return Err(invalid_input("Aggregate must not provide protocol_instance_entropy"));
+                }
                 let r1_msgs: Vec<ThresholdSchnorrR1Msg> = round1_messages
                     .iter()
-                    .map(|m| ThresholdSchnorrR1Msg::deserialize_uncompressed(&mut &m[..]).unwrap())
-                    .collect();
+                    .map(|m| {
+                        let mut msg = m.as_slice();
+                        ThresholdSchnorrR1Msg::deserialize_uncompressed(&mut msg)
+                            .map_err(|_| invalid_input("Failed to deserialize a round1 message"))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
                 let r2_msgs: Vec<ThresholdSchnorrR2Msg> = round2_messages
                     .iter()
-                    .map(|m| ThresholdSchnorrR2Msg::deserialize_uncompressed(&mut &m[..]).unwrap())
-                    .collect();
+                    .map(|m| {
+                        let mut msg = m.as_slice();
+                        ThresholdSchnorrR2Msg::deserialize_uncompressed(&mut msg)
+                            .map_err(|_| invalid_input("Failed to deserialize a round2 message"))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
                 let r3_msgs: Vec<ThresholdSchnorrR3Msg> = round3_messages
                     .iter()
-                    .map(|m| ThresholdSchnorrR3Msg::deserialize_uncompressed(&mut &m[..]).unwrap())
-                    .collect();
+                    .map(|m| {
+                        let mut msg = m.as_slice();
+                        ThresholdSchnorrR3Msg::deserialize_uncompressed(&mut msg)
+                            .map_err(|_| invalid_input("Failed to deserialize a round3 message"))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
                 let signature = ThresholdSchnorr::aggregate(
                     &pp,
                     message_to_sign.as_ref(),
@@ -828,7 +896,7 @@ impl WRAPS {
         }
 
         // fixed entropy value [0u8; 32], since we don't need salting in our protocol
-        let pp = Schnorr::setup([0u8; 32]).unwrap();
+        let pp = Schnorr::setup([0u8; 32]).map_err(|_| WRAPSError::CryptographyError)?;
 
         let (bitvector, signature) = multisignature;
 
@@ -881,7 +949,7 @@ impl WRAPS {
         }
 
         // Pad the address book to the circuit’s expected length before hashing.
-        let padded_ab = pad_addressbook(ab);
+        let padded_ab = pad_addressbook(ab)?;
 
         hash_addressbook(&padded_ab)
     }
@@ -998,6 +1066,7 @@ impl WRAPS {
         hints_vk: impl AsRef<[u8]>,                          // TSS verification key for the next AddressBook
         multi_signature: &SchnorrMultiSignature,         // threshold Schnorr signature attesting the next AddressBook
     ) -> Result<(UncompressedProofSerialized, CompressedProofSerialized), WRAPSError> {
+        let invalid_input = |msg: &str| WRAPSError::InvalidInput(msg.to_string());
         let (bitvector, aggregate_signature) = multi_signature;
 
         let prev_ab_valid = verify_addressbook(prev_ab)?;
@@ -1011,15 +1080,25 @@ impl WRAPS {
 
         // pad up inputs to MAX_AB_SIZE
         // Ensure both address books and the participation bitmap align with circuit expectations.
-        let padded_prev_ab = pad_addressbook(prev_ab);
-        let padded_next_ab = pad_addressbook(next_ab);
+        let padded_prev_ab = pad_addressbook(prev_ab)?;
+        let padded_next_ab = pad_addressbook(next_ab)?;
 
         let is_genesis: bool = prev_proof.is_none();
         if is_genesis {
             // ensure genesis ab hash matches
-            assert_eq!(*ab_genesis_hash, hash_addressbook(&padded_prev_ab)?);
+            let padded_prev_ab_hash = hash_addressbook(&padded_prev_ab)?;
+            if *ab_genesis_hash != padded_prev_ab_hash {
+                return Err(invalid_input(
+                    "Assuming genesis as there is no previous proof; but genesis AddressBook hash does not match the provided previous AddressBook",
+                ));
+            }
             // first proof uses same address book for current and next
-            assert_eq!(hash_addressbook(&padded_next_ab)?, hash_addressbook(&padded_prev_ab)?);
+            let padded_next_ab_hash = hash_addressbook(&padded_next_ab)?;
+            if padded_next_ab_hash != padded_prev_ab_hash {
+                return Err(invalid_input(
+                    "Genesis proof requires previous and next AddressBooks to be identical",
+                ));
+            }
         }
 
         // Build the message the committee signed to authorize the rotation.
@@ -1057,7 +1136,11 @@ impl WRAPS {
             instance
         } else {
             // Resume the incremental IVC from the previous proof.
-            let ivc_proof = NovaProof::deserialize_compressed(prev_proof.unwrap().as_slice()).unwrap();
+            let prev_proof = prev_proof
+                .as_ref()
+                .ok_or_else(|| invalid_input("Previous proof is required for non-genesis steps"))?;
+            let ivc_proof = NovaProof::deserialize_compressed(prev_proof.as_slice())
+                .map_err(|_| invalid_input("Failed to deserialize previous Nova proof"))?;
             N::from_ivc_proof(ivc_proof, (), (pk.nova_pp.clone(), vk.nova_vp.clone()))
                 .map_err(|_| WRAPSError::CryptographyError)?
         };
@@ -1070,7 +1153,10 @@ impl WRAPS {
 
         let mut next_ivc_proof_encoded = vec![];
         // Persist the updated uncompressed IVC proof for future iterations.
-        ivc_instance.ivc_proof().serialize_compressed(&mut next_ivc_proof_encoded).unwrap();
+        ivc_instance
+            .ivc_proof()
+            .serialize_compressed(&mut next_ivc_proof_encoded)
+            .map_err(|_| WRAPSError::CryptographyError)?;
 
         // Produce the succinct decider proof for the current state transition.
         let proof = D::prove(thread_rng(), &pk.decider_pp, ivc_instance.clone())
@@ -1086,7 +1172,9 @@ impl WRAPS {
             &ivc_instance.u_i.get_commitments(),
             &proof,
         ).map_err(|_| WRAPSError::CryptographyError)?;
-        assert!(verified);
+        if !verified {
+            return Err(WRAPSError::CryptographyError);
+        }
 
         // serialize the proof
         let compressed_proof = ProofData {
@@ -1099,7 +1187,9 @@ impl WRAPS {
         };
         let mut compressed_proof_serialized = vec![];
         // Archive the decider proof in compressed form for on-chain / off-chain verification.
-        compressed_proof.serialize_compressed(&mut compressed_proof_serialized).unwrap();
+        compressed_proof
+            .serialize_compressed(&mut compressed_proof_serialized)
+            .map_err(|_| WRAPSError::CryptographyError)?;
 
         // NOTE: constructing the proof uses the default proving binary artifacts (decider_pp and friends),
         // and therefore the proof verification must use the verification key associated with these same artifacts.
@@ -1107,12 +1197,15 @@ impl WRAPS {
         // verification calls, and instead we must use the correct key. See `WRAPSVerificationKey` in Java for details.
         let decider_vp_serialized = Self::get_compressed_verification_key_bytes(vk)?;
 
-        assert!(Self::verify_compressed_wraps_proof(
+        let proof_verified = Self::verify_compressed_wraps_proof(
             &decider_vp_serialized,
             &compressed_proof_serialized,
             ab_genesis_hash,
             hints_vk.as_ref(),
-        ).map_err(|_| WRAPSError::CryptographyError)?);
+        )?;
+        if !proof_verified {
+            return Err(WRAPSError::CryptographyError);
+        }
 
         Ok((next_ivc_proof_encoded, compressed_proof_serialized))
     }
