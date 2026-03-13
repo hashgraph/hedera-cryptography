@@ -237,9 +237,9 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     jni_util::u8_vec_to_jbyte_array(&env, &serialized_hash)
 }
 
-/// JNI for WRAPSLibraryBridge.hashArray
+/// JNI for WRAPSLibraryBridge.hashArrayImpl
 #[no_mangle]
-pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBridge_hashArray(
+pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBridge_hashArrayImpl(
     env: JNIEnv,
     _instance: JObject,
     input_jarray: JByteArray,
