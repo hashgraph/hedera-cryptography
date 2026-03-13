@@ -271,25 +271,30 @@ impl<const K: usize> FCircuit<Fr> for TSSFCircuit<K> {
     ) -> Result<Vec<FpVar<Fr>>, SynthesisError> {
 
         let prev_pk_vars = (0..K)
-            .map(|i| JubJubVar::new_witness(cs.clone(), || Ok(
-                ark_ed_on_bn254::EdwardsAffine::new(
-                    external_inputs.0[4*i + 0].value()?,
-                    external_inputs.0[4*i + 1].value()?
-                )
-            )).unwrap())
-            .collect::<Vec<_>>();
+            .map(|i| {
+                JubJubVar::new_witness(cs.clone(), || {
+                    Ok(ark_ed_on_bn254::EdwardsAffine::new(
+                        external_inputs.0[4 * i + 0].value()?,
+                        external_inputs.0[4 * i + 1].value()?,
+                    ))
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
 
         let prev_weights = (0..K)
             .map(|i| external_inputs.0[4*i + 2].clone())
             .collect::<Vec<_>>();
 
         let present_bits = (0..K)
-            .map(|i| external_inputs.0[4*K + i].to_bytes_le().unwrap()[0].clone())
-            .collect::<Vec<_>>();
+            .map(|i| {
+                let bytes = external_inputs.0[4 * K + i].to_bytes_le()?;
+                bytes.into_iter().next().ok_or(SynthesisError::Unsatisfiable)
+            })
+            .collect::<Result<Vec<_>, _>>()?;
 
         let aggregate_signature = SchnorrSignatureVar {
-            verifier_challenge: external_inputs.0[5*K + 0].to_bytes_le().unwrap(),
-            prover_response: external_inputs.0[5*K + 1].to_bytes_le().unwrap(),
+            verifier_challenge: external_inputs.0[5 * K + 0].to_bytes_le()?,
+            prover_response: external_inputs.0[5 * K + 1].to_bytes_le()?,
             _group: PhantomData,
         };
 
@@ -361,7 +366,8 @@ impl<const K: usize> FCircuit<Fr> for TSSFCircuit<K> {
         };
 
         // instantiate the Schnorr signature verification gadget
-        let schnorr_parameters = Schnorr::setup(test_rng().gen()).unwrap();
+        let schnorr_parameters =
+            Schnorr::setup(test_rng().gen()).map_err(|_| SynthesisError::Unsatisfiable)?;
         let parameters_var = <SchnorrVerifyGadget as SigVerifyGadget<Schnorr, Fr>>
             ::ParametersVar::new_constant(cs.clone(), schnorr_parameters)?;
         let next_ab_hash = external_inputs.0[5*K + 2].clone();
