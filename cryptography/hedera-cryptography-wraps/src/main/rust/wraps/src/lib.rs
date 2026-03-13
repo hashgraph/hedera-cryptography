@@ -419,9 +419,11 @@ pub fn hash_hints_vk(vk_bytes: &[u8]) -> Result<Fr, WRAPSError> {
 
     let out_bytes = PoseidonCRH::evaluate(&poseidon_canonical_config::<Fr>(), tss_vk_hash_elements)
         .map_err(|_| WRAPSError::CryptographyError)?;
-    let out: Vec<Fr> = out_bytes.to_field_elements().unwrap();
-    // out contains only one field element, because Poseidon output is in the field
-    Ok(out[0])
+    let mut out = out_bytes
+        .to_field_elements()
+        .ok_or(WRAPSError::CryptographyError)?;
+    // out should contain one field element, because Poseidon output is in the field
+    out.pop().ok_or(WRAPSError::CryptographyError)
 }
 
 /// Hashes all address book public keys and weights via Poseidon.
@@ -449,9 +451,11 @@ fn hash_addressbook(ab: &AddressBook) -> Result<Fr, WRAPSError> {
         .collect();
     let out_bytes = PoseidonCRH::evaluate(&poseidon_canonical_config::<Fr>(), poseidon_input)
         .map_err(|_| WRAPSError::CryptographyError)?;
-    let out: Vec<Fr> = out_bytes.to_field_elements().unwrap();
-    // out contains only one field element, because Poseidon output is in the field
-    Ok(out[0])
+    let mut out = out_bytes
+        .to_field_elements()
+        .ok_or(WRAPSError::CryptographyError)?;
+    // out should contain one field element, because Poseidon output is in the field
+    out.pop().ok_or(WRAPSError::CryptographyError)
 }
 
 // verifies that each Schnorr public key has a valid proof of knowledge
@@ -514,14 +518,19 @@ fn proof_of_knowledge_random_oracle(
     g: JubJub,
     statement: <JubJub as CurveGroup>::Affine,
     commitment: <JubJub as CurveGroup>::Affine
-) -> JubJubFr {
+) -> Result<JubJubFr, WRAPSError> {
     let mut serialized_data = Vec::new();
-    g.serialize_compressed(&mut serialized_data).unwrap();
-    statement.serialize_compressed(&mut serialized_data).unwrap();
-    commitment.serialize_compressed(&mut serialized_data).unwrap();
+    g.serialize_compressed(&mut serialized_data)
+        .map_err(|_| WRAPSError::CryptographyError)?;
+    statement
+        .serialize_compressed(&mut serialized_data)
+        .map_err(|_| WRAPSError::CryptographyError)?;
+    commitment
+        .serialize_compressed(&mut serialized_data)
+        .map_err(|_| WRAPSError::CryptographyError)?;
 
     let hasher = <DefaultFieldHasher<Sha256> as HashToField<JubJubFr>>::new(&[]);
-    hasher.hash_to_field::<1>(&serialized_data)[0]
+    Ok(hasher.hash_to_field::<1>(&serialized_data)[0])
 }
 
 fn expand_seed(seed: [u8; ENTROPY_SIZE]) -> [u8; 2 * ENTROPY_SIZE] {
@@ -544,23 +553,23 @@ fn expand_seed(seed: [u8; ENTROPY_SIZE]) -> [u8; 2 * ENTROPY_SIZE] {
 fn generate_proof_of_knowledge(
     x: &SchnorrPrivKey,
     seed:[u8; ENTROPY_SIZE]
-) -> SchnorrPoK {
+) -> Result<SchnorrPoK, WRAPSError> {
     let g = JubJub::generator();
     let statement = (g * x).into_affine();
 
     let r = JubJubFr::rand(&mut rand_chacha::ChaCha8Rng::from_seed(seed));
     let commitment = (g * r).into_affine();
 
-    let challenge = proof_of_knowledge_random_oracle(g, statement, commitment);
+    let challenge = proof_of_knowledge_random_oracle(g, statement, commitment)?;
 
     // compute response = x + challenge * sk
     let response = r + challenge * x;
 
-    SchnorrPoK {
+    Ok(SchnorrPoK {
         commitment,
         challenge,
         response,
-    }
+    })
 }
 
 // Verifies a Schnorr proof of knowledge of the discrete log of the public key.
@@ -666,7 +675,7 @@ impl WRAPS {
         // Derive the keypair from the supplied seed.
         let (pk, sk) = Schnorr::keygen(&pp, seed1)
             .map_err(|_| WRAPSError::CryptographyError)?;
-        let pok = generate_proof_of_knowledge(&sk, seed2);
+        let pok = generate_proof_of_knowledge(&sk, seed2)?;
         let attested_pk: SchnorrAttestedPubKey = (pk, pok);
         Ok((sk, attested_pk))
     }
@@ -881,7 +890,7 @@ impl WRAPS {
         }
 
         // fixed entropy value [0u8; 32], since we don't need salting in our protocol
-        let pp = Schnorr::setup([0u8; 32]).unwrap();
+        let pp = Schnorr::setup([0u8; 32]).map_err(|_| WRAPSError::CryptographyError)?;
 
         let (bitvector, signature) = multisignature;
 
