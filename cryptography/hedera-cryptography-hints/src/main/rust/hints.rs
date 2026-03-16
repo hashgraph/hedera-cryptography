@@ -878,7 +878,8 @@ fn random_oracle(
     q3_com.serialize_compressed(&mut serialized_data)?;
     q4_com.serialize_compressed(&mut serialized_data)?;
 
-    let hasher = <DefaultFieldHasher<Sha256> as HashToField<F>>::new(&[]);
+    const DST: &str = "HINTS_SIG_BLS12381:FIAT_SHAMIR";
+    let hasher = <DefaultFieldHasher<Sha256> as HashToField<F>>::new(DST.as_bytes());
     let field_elements = hasher.hash_to_field(&serialized_data, 1);
 
     Ok(field_elements[0])
