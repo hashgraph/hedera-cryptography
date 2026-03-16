@@ -16,6 +16,7 @@ use ark_std::collections::HashMap;
 use ark_std::{ops::*, UniformRand};
 use sha2::Sha256;
 use rand_chacha::rand_core::SeedableRng;
+use zeroize::Zeroize;
 
 // hinTS depends on the utils and kzg modules
 use crate::kzg;
@@ -44,11 +45,43 @@ pub type G2ProjectivePoint = Projective<G2Config>;
 /// Type denoting a partial signature, which is a G2 group element
 pub type PartialSignature = G2AffinePoint;
 /// Type denoting secret key, which is just a scalar value
-pub type SecretKey = F;
+#[derive(Clone, Debug, PartialEq, CanonicalDeserialize, CanonicalSerialize)]
+pub struct SecretKey(F);
 /// Type denoting public key, which is a G1 group element
 pub type PublicKey = G1AffinePoint;
 /// Type denoting a signer's weight, which is just a scalar value
 pub type Weight = F;
+
+impl std::ops::Deref for SecretKey {
+    type Target = F;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::borrow::Borrow<F> for SecretKey {
+    fn borrow(&self) -> &F {
+        &self.0
+    }
+}
+
+impl std::borrow::Borrow<F> for &SecretKey {
+    fn borrow(&self) -> &F {
+        &self.0
+    }
+}
+
+impl Zeroize for SecretKey {
+    fn zeroize(&mut self) {
+        self.0 = F::from(0u64);
+    }
+}
+
+impl Drop for SecretKey {
+    fn drop(&mut self) {
+        self.zeroize();
+    }
+}
 
 macro_rules! check_or_return_false {
     ($cond:expr) => {
@@ -187,7 +220,7 @@ impl HinTS {
         seed: [u8; 32]
     ) -> SecretKey {
         let mut rng = rand_chacha::ChaCha8Rng::from_seed(seed);
-        F::rand(&mut rng)
+        SecretKey(F::rand(&mut rng))
     }
 
     /// generates the extended public key (a.k.a. hint) for signer with
@@ -267,7 +300,7 @@ impl HinTS {
         let qx_term_mul_tau_com = KZG::commit_g1(&crs, &qx_term_mul_tau)?;
 
         //release my public key
-        let sk_as_poly = utils::compute_constant_poly(sk);
+        let sk_as_poly = utils::compute_constant_poly::<F>(sk);
         let pk = KZG::commit_g1(&crs, &sk_as_poly)?;
 
         let sk_times_l_i_of_x = utils::poly_eval_mult_c(&l_i_of_x, &sk);
@@ -430,7 +463,8 @@ impl HinTS {
                 epks.push(hint.clone());
             } else {
                 weights.push(F::from(0));
-                epks.push(Self::hint_gen(crs, n, i, &F::from(0))?);
+                let zero_sk = SecretKey(F::from(0));
+                epks.push(Self::hint_gen(crs, n, i, &zero_sk)?);
             }
         }
 
