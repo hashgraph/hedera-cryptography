@@ -612,6 +612,14 @@ impl HinTS {
         // compute bitmap based on entries in partial_signatures
         let mut bitmap: Vec<F> = vec![F::from(0); n];
         for (i, _sig) in partial_signatures.iter() {
+            // Validate party ID is within bounds: 0 <= i <= n - 2
+            // Recall that we reserve location n - 1 for the hinTS scheme,
+            // so the last valid signer ID is n - 2
+            if *i > (n - 2) {
+                return Err(HinTSError::InvalidInput(
+                    format!("Invalid party ID {}: must be <= n - 2 ({})", i, n - 2)
+                ));
+            }
             bitmap[*i] = F::from(1);
         }
 
