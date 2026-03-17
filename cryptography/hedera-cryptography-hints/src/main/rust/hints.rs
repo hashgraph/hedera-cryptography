@@ -352,6 +352,12 @@ impl HinTS {
         check_or_return_false!(hint.i == i);
         check_or_return_false!(hint.n == n);
         check_or_return_false!(n == hint.qz_i_terms.len());
+        check_or_return_false!(!hint.pk_i.is_zero());
+        check_or_return_false!(!hint.sk_i_l_i_of_tau_com_1.is_zero());
+        check_or_return_false!(!hint.sk_i_l_i_of_tau_com_2.is_zero());
+        check_or_return_false!(!hint.qx_i_term.is_zero());
+        check_or_return_false!(!hint.qx_i_term_mul_tau.is_zero());
+        check_or_return_false!(hint.qz_i_terms.iter().all(|point| !point.is_zero()));
 
         //e([sk_i L_i(τ)]1, [1]2) = e([sk_i]1, [L_i(τ)]2)
         let l_i_of_x = utils::lagrange_poly(n, i).ok_or(
