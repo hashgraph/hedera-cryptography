@@ -31,7 +31,7 @@ public class HintsLibraryBridgeTest {
     }
 
     byte[] initAndUpdateCRS(short n) {
-        byte[] crs = INSTANCE.initCRS((short) 4);
+        byte[] crs = INSTANCE.initCRS(n);
         crs = INSTANCE.updateCRS(crs, CRSConstants.RANDOM);
         return crs;
     }
