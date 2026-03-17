@@ -23,7 +23,12 @@ public class WRAPSLibraryBridgeTest {
     // We use ABs with 4 and 5 entries, so 8 should be good.
     private static final int SIGNERS_NUM = 8;
 
-    private static final byte[] CRS = HINTS.initCRS((short) SIGNERS_NUM);
+    private static final byte[] CRS;
+
+    static {
+        byte[] crs = HINTS.initCRS((short) SIGNERS_NUM);
+        CRS = HINTS.updateCRS(crs, Constants.CRS_RANDOM);
+    }
 
     public record Node(
             byte[] seed, SchnorrKeys schnorrKeys, long weight, long nodeId, byte[] hintsSecretKey, byte[] hints) {

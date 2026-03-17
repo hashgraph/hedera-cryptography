@@ -30,6 +30,12 @@ public class HintsLibraryBridgeTest {
         INSTANCE.resetCache();
     }
 
+    byte[] initAndUpdateCRS(short n) {
+        byte[] crs = INSTANCE.initCRS((short) 4);
+        crs = INSTANCE.updateCRS(crs, CRSConstants.RANDOM);
+        return crs;
+    }
+
     @Test
     void testGenerateSecretKey() {
         final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
@@ -44,8 +50,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testComputeHints() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
-        assertArrayEquals(CRSConstants.INIT_CRS_4, crs);
+        final byte[] crs = initAndUpdateCRS((short) 4);
 
         final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
         assertArrayEquals(HintsConstants.SECRET_KEY, secretKey);
@@ -57,7 +62,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testComputeHintsConstraints() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
+        final byte[] crs = initAndUpdateCRS((short) 4);
         final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
 
         // n must be power of two
@@ -107,8 +112,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testValidateHintsKey() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
-        assertArrayEquals(CRSConstants.INIT_CRS_4, crs);
+        final byte[] crs = initAndUpdateCRS((short) 4);
 
         final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
         assertArrayEquals(HintsConstants.SECRET_KEY, secretKey);
@@ -121,7 +125,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testValidateHintsConstraints() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
+        final byte[] crs = initAndUpdateCRS((short) 4);
         final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
         final byte[] hints = INSTANCE.computeHints(crs, secretKey, 2, 4);
 
@@ -171,8 +175,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testPreprocess() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
-        assertArrayEquals(CRSConstants.INIT_CRS_4, crs);
+        final byte[] crs = initAndUpdateCRS((short) 4);
 
         final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
         assertArrayEquals(HintsConstants.SECRET_KEY, secretKey);
@@ -188,7 +191,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testPreprocessConstraints() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
+        final byte[] crs = initAndUpdateCRS((short) 4);
 
         final byte[] secretKey0 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_0);
         final byte[] hints0 = INSTANCE.computeHints(crs, secretKey0, 0, 4);
@@ -301,8 +304,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testVerifyBls() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
-        assertArrayEquals(CRSConstants.INIT_CRS_4, crs);
+        final byte[] crs = initAndUpdateCRS((short) 4);
 
         final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
         assertArrayEquals(HintsConstants.SECRET_KEY, secretKey);
@@ -324,7 +326,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testVerifyBlsConstraints() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
+        final byte[] crs = initAndUpdateCRS((short) 4);
         final byte[] secretKey = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
         final int partyId = 2;
         final byte[] hints = INSTANCE.computeHints(crs, secretKey, partyId, 4);
@@ -367,8 +369,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testVerifyBlsBatch() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
-        assertArrayEquals(CRSConstants.INIT_CRS_4, crs);
+        final byte[] crs = initAndUpdateCRS((short) 4);
 
         final int partyId0 = 0;
         final byte[] secretKey0 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_0);
@@ -393,7 +394,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testVerifyBlsBatchConstraints() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
+        final byte[] crs = initAndUpdateCRS((short) 4);
 
         // partyId 0
         final byte[] secretKey0 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_0);
@@ -454,8 +455,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testAggregateSignatures() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
-        assertArrayEquals(CRSConstants.INIT_CRS_4, crs);
+        final byte[] crs = initAndUpdateCRS((short) 4);
 
         // partyId 2
         final byte[] secretKey1 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
@@ -484,7 +484,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testAggregateSignaturesConstraints() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
+        final byte[] crs = initAndUpdateCRS((short) 4);
 
         // partyId 0
         final byte[] secretKey0 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_0);
@@ -573,8 +573,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testVerifyAggregate_meetsThreshold() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
-        assertArrayEquals(CRSConstants.INIT_CRS_4, crs);
+        final byte[] crs = initAndUpdateCRS((short) 4);
 
         // partyId 2
         final byte[] secretKey2 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
@@ -611,8 +610,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testVerifyAggregate_doesNotMeetThreshold() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
-        assertArrayEquals(CRSConstants.INIT_CRS_4, crs);
+        final byte[] crs = initAndUpdateCRS((short) 4);
 
         // partyId 2
         final byte[] secretKey2 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_2);
@@ -649,7 +647,7 @@ public class HintsLibraryBridgeTest {
 
     @Test
     void testVerifyAggregateConstraints() {
-        final byte[] crs = INSTANCE.initCRS((short) 4);
+        final byte[] crs = initAndUpdateCRS((short) 4);
 
         final byte[] secretKey0 = INSTANCE.generateSecretKey(HintsConstants.RANDOM_0);
         final byte[] hints0 = INSTANCE.computeHints(crs, secretKey0, 0, 4);
