@@ -707,6 +707,9 @@ impl HinTS {
         // RO(SK, W, B, ParSum, Qx, Qz, Qx(τ ) · τ, Q1, Q2, Q3, Q4)
         let r = random_oracle(
             vk.sk_of_tau_com,
+            vk.h_1,
+            agg_pk,
+            total_active_weight,
             vk.w_of_tau_com,
             b_of_tau_com,
             parsum_of_tau_com,
@@ -800,6 +803,9 @@ impl HinTS {
         //RO(SK, W, B, ParSum, Qx, Qz, Qx(τ ) · τ, Q1, Q2, Q3, Q4)
         let r = random_oracle(
             vk.sk_of_tau_com,
+            vk.h_1,
+            π.agg_pk,
+            π.agg_weight,
             vk.w_of_tau_com,
             π.b_of_tau_com,
             π.parsum_of_tau_com,
@@ -868,6 +874,9 @@ impl HinTS {
 /// computes a hash for the Fiat-Shamir heuristic
 fn random_oracle(
     sk_com: G2AffinePoint,
+    tau_com: G2AffinePoint,
+    agg_pk: G1AffinePoint,
+    agg_weight: F,
     w_com: G1AffinePoint,
     b_com: G1AffinePoint,
     parsum_com: G1AffinePoint,
@@ -881,6 +890,9 @@ fn random_oracle(
 ) -> Result<F, HinTSError> {
     let mut serialized_data = Vec::new();
     sk_com.serialize_compressed(&mut serialized_data)?;
+    tau_com.serialize_compressed(&mut serialized_data)?;
+    agg_pk.serialize_compressed(&mut serialized_data)?;
+    agg_weight.serialize_compressed(&mut serialized_data)?;
     w_com.serialize_compressed(&mut serialized_data)?;
     b_com.serialize_compressed(&mut serialized_data)?;
     parsum_com.serialize_compressed(&mut serialized_data)?;
