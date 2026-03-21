@@ -92,13 +92,13 @@ pub struct CircuitConfig {
 // inspired from https://alinush.github.io/groth16
 #[derive(Clone, CanonicalDeserialize, CanonicalSerialize)]
 pub struct Phase1ProofOfKnowledge {
-    pub random_hash_tau: G1Affine,
+    pub pok_tau: G2Affine,
     pub node_contribution_tau: G1Affine,
     pub next_tau: G1Affine,
-    pub random_hash_alpha: G1Affine,
+    pub pok_alpha: G2Affine,
     pub node_contribution_alpha: G1Affine,
     pub next_alpha: G1Affine,
-    pub random_hash_beta: G1Affine,
+    pub pok_beta: G2Affine,
     pub node_contribution_beta: G1Affine,
     pub next_beta: G1Affine,
 }
@@ -122,10 +122,10 @@ fn store_to_file<T: CanonicalSerialize>(path: &PathBuf, data: &T) -> Result<(), 
     Ok(())
 }
 
-fn hash_transcript(prev_path: &PathBuf, additional_data: &G1Affine) -> G1Affine {
+fn hash_transcript(prev_path: &PathBuf, additional_data: &G1Affine) -> G2Affine {
     let transcript_prev = load_from_file::<PhasePokTranscript>(prev_path).unwrap();
     let data_to_hash = serialize_to_vec![transcript_prev, additional_data].unwrap();
-    let hash = utils::hash_to_g1(&data_to_hash).unwrap();
+    let hash = utils::hash_to_g2(&data_to_hash).unwrap();
     hash
 }
 
@@ -154,13 +154,13 @@ fn prove_knowledge_phase1(prev_srs: &PathBuf, next_srs: &PathBuf, tau: &Fr, alph
     ).unwrap();
 
     let proof_of_knowledge = Phase1ProofOfKnowledge {
-        random_hash_tau: pok_tau,
+        pok_tau,
         node_contribution_tau: g_pow_tau,
         next_tau: prev_powers_of_tau_g1[0],
-        random_hash_alpha: pok_alpha,
+        pok_alpha,
         node_contribution_alpha: g_pow_alpha,
         next_alpha: prev_powers_of_alpha_tau_g1[0],
-        random_hash_beta: pok_beta,
+        pok_beta,
         node_contribution_beta: g_pow_beta,
         next_beta: prev_powers_of_beta_tau_g1[0],
     };
@@ -180,19 +180,28 @@ fn verify_knowledge_phase1(prev_srs_path: &PathBuf) {
         .into_iter()
         .take(transcript.len() - 1).
         collect::<Vec<Phase1ProofOfKnowledge>>();
-    let h_tau = utils::hash_to_g1(&serialize_to_vec![transcript_prev, tx.node_contribution_tau].unwrap()).unwrap();
-    let h_alpha = utils::hash_to_g1(&serialize_to_vec![transcript_prev, tx.node_contribution_alpha].unwrap()).unwrap();
-    let h_beta = utils::hash_to_g1(&serialize_to_vec![transcript_prev, tx.node_contribution_beta].unwrap()).unwrap();
+    let h_tau = utils::hash_to_g2(&serialize_to_vec![transcript_prev, tx.node_contribution_tau].unwrap()).unwrap();
+    let h_alpha = utils::hash_to_g2(&serialize_to_vec![transcript_prev, tx.node_contribution_alpha].unwrap()).unwrap();
+    let h_beta = utils::hash_to_g2(&serialize_to_vec![transcript_prev, tx.node_contribution_beta].unwrap()).unwrap();
 
     let zero_contribution = G1Affine::generator().mul(Fr::zero()).into_affine();
     assert!(tx.node_contribution_tau != zero_contribution, "Invalid proof of knowledge: tau contribution is zero");
     assert!(tx.node_contribution_alpha != zero_contribution, "Invalid proof of knowledge: alpha contribution is zero");
     assert!(tx.node_contribution_beta != zero_contribution, "Invalid proof of knowledge: beta contribution is zero");
-    // e(g_pow_tau, hash_transcript_tau) == e(G1Affine::generator(), pok_tau)
-    // assert_eq!(
-    //     <Curve as Pairing>::pairing(tx.node_contribution_tau, h_tau),
-    //     <Curve as Pairing>::pairing(G1Affine::generator(), tx.random_hash_tau)
-    // );
+    // eqns 107-109 in https://alinush.github.io/groth16
+    assert_eq!(
+        <Curve as Pairing>::pairing(tx.node_contribution_tau, h_tau),
+        <Curve as Pairing>::pairing(G1Affine::generator(), tx.pok_tau)
+    );
+    assert_eq!(
+        <Curve as Pairing>::pairing(tx.node_contribution_alpha, h_alpha),
+        <Curve as Pairing>::pairing(G1Affine::generator(), tx.pok_alpha)
+    );
+    assert_eq!(
+        <Curve as Pairing>::pairing(tx.node_contribution_beta, h_beta),
+        <Curve as Pairing>::pairing(G1Affine::generator(), tx.pok_beta)
+    );
+
 }
 
 fn update_srs_helper_g1(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, multiplier: Fr, tau: Fr, is_vec: bool) {

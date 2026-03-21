@@ -3,7 +3,7 @@ use std::env;
 use std::fs::File;
 use std::sync::OnceLock;
 use memmap2::Mmap;
-use ark_bn254::G1Affine;
+use ark_bn254::{G1Affine, G2Affine};
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::{FftField, Field, Zero};
 use ark_ff::field_hashers::{DefaultFieldHasher, HashToField};
@@ -34,6 +34,37 @@ pub fn hash_to_g1(data: &[u8]) -> Result<G1Affine, WRAPSError> {
             return Ok(G1Affine::new_unchecked(x, y));
         }
         x += ark_bn254::Fq::ONE;
+    }
+}
+
+/// Hashes an arbitrary byte slice to a G2 group element on the BN254 curve.
+///
+/// Uses hash-to-field (SHA-256 based) to derive two base field elements,
+/// which form an Fq2 element, then applies try-and-increment to find a valid
+/// curve point. The resulting point has unknown discrete logarithm relative
+/// to the generator.
+pub fn hash_to_g2(data: &[u8]) -> Result<G2Affine, WRAPSError> {
+    use ark_ec::short_weierstrass::SWCurveConfig;
+
+    let hasher = <DefaultFieldHasher<Sha256> as HashToField<ark_bn254::Fq>>::new(
+        b"WRAPS_HASH_TO_G2_BN254",
+    );
+    let field_elems: [ark_bn254::Fq; 2] = hasher.hash_to_field(data);
+    let mut x = ark_bn254::Fq2::new(field_elems[0], field_elems[1]);
+
+    // BN254 G2: y^2 = x^3 + B where B is the sextic twist coefficient in Fq2.
+    // Try successive x values until one yields a quadratic residue
+    // (expected ~2 iterations on average).
+    // BN254 G2 has a non-trivial cofactor, so after finding a curve point we
+    // must clear the cofactor to land in the prime-order subgroup.
+    let coeff_b = <ark_bn254::g2::Config as SWCurveConfig>::COEFF_B;
+    loop {
+        let rhs = x * x * x + coeff_b;
+        if let Some(y) = rhs.sqrt() {
+            let point = G2Affine::new_unchecked(x, y);
+            return Ok(point.clear_cofactor());
+        }
+        x += ark_bn254::Fq2::ONE;
     }
 }
 
@@ -298,6 +329,33 @@ mod tests {
 
         // Empty input should also work
         let point4 = hash_to_g1(b"").unwrap();
+        assert!(point4.is_on_curve());
+        assert!(!point4.is_zero());
+    }
+
+    #[test]
+    fn test_hash_to_g2() {
+        // Hash some data to G2
+        let data = b"hello world";
+        let point = hash_to_g2(data).unwrap();
+
+        // The result must be a valid curve point (on-curve and in the correct subgroup)
+        assert!(point.is_on_curve());
+        assert!(point.is_in_correct_subgroup_assuming_on_curve());
+
+        // Must not be the identity element
+        assert!(!point.is_zero());
+
+        // Determinism: hashing the same input twice must yield the same point
+        let point2 = hash_to_g2(data).unwrap();
+        assert_eq!(point, point2);
+
+        // Different inputs must (with overwhelming probability) produce different points
+        let point3 = hash_to_g2(b"different input").unwrap();
+        assert_ne!(point, point3);
+
+        // Empty input should also work
+        let point4 = hash_to_g2(b"").unwrap();
         assert!(point4.is_on_curve());
         assert!(!point4.is_zero());
     }
