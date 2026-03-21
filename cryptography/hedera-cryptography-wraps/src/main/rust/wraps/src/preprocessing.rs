@@ -499,6 +499,8 @@ impl WRAPSPreprocessing {
     }
 
     pub fn update_srs_phase1(circuit_path: &PathBuf, prev_srs: &PathBuf, next_srs: &PathBuf) {
+        verify_knowledge_phase1(prev_srs);
+
         let circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
         type D<F> = GeneralEvaluationDomain<F>;
         let n = circuit_config.num_constraints + circuit_config.num_instance_variables;
