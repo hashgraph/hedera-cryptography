@@ -3,13 +3,39 @@ use std::env;
 use std::fs::File;
 use std::sync::OnceLock;
 use memmap2::Mmap;
+use ark_bn254::G1Affine;
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_ff::{FftField, Field, Zero};
+use ark_ff::field_hashers::{DefaultFieldHasher, HashToField};
+use ark_crypto_primitives::crh::sha256::Sha256;
 use ark_poly::{EvaluationDomain, domain::general::GeneralEvaluationDomain};
 use ark_std::ops::*;
 use rayon::join;
 
 use crate::{WRAPS, ProvingKey, VerificationKey, WRAPSError};
+
+/// Hashes an arbitrary byte slice to a G1 group element on the BN254 curve.
+///
+/// Uses hash-to-field (SHA-256 based) to derive a base field element, then
+/// applies try-and-increment to find a valid curve point. The resulting point
+/// has unknown discrete logarithm relative to the generator.
+pub fn hash_to_g1(data: &[u8]) -> Result<G1Affine, WRAPSError> {
+    let hasher = <DefaultFieldHasher<Sha256> as HashToField<ark_bn254::Fq>>::new(
+        b"WRAPS_HASH_TO_G1_BN254",
+    );
+    let field_elems: [ark_bn254::Fq; 1] = hasher.hash_to_field(data);
+    let mut x = field_elems[0];
+
+    // BN254 G1: y^2 = x^3 + 3. Try successive x values until one yields
+    // a quadratic residue (expected ~2 iterations on average).
+    loop {
+        let rhs = x * x * x + ark_bn254::Fq::from(3u64);
+        if let Some(y) = rhs.sqrt() {
+            return Ok(G1Affine::new_unchecked(x, y));
+        }
+        x += ark_bn254::Fq::ONE;
+    }
+}
 
 pub fn serialize<T: ark_serialize::CanonicalSerialize>(
     t: &T
@@ -241,5 +267,38 @@ impl ECFFTUtils {
             y[i] = (y[i].mul(n_inv)).into_affine();
         }
         y
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ark_ec::AffineRepr;
+
+    #[test]
+    fn test_hash_to_g1() {
+        // Hash some data to G1
+        let data = b"hello world";
+        let point = hash_to_g1(data).unwrap();
+
+        // The result must be a valid curve point (on-curve and in the correct subgroup)
+        assert!(point.is_on_curve());
+        assert!(point.is_in_correct_subgroup_assuming_on_curve());
+
+        // Must not be the identity element
+        assert!(!point.is_zero());
+
+        // Determinism: hashing the same input twice must yield the same point
+        let point2 = hash_to_g1(data).unwrap();
+        assert_eq!(point, point2);
+
+        // Different inputs must (with overwhelming probability) produce different points
+        let point3 = hash_to_g1(b"different input").unwrap();
+        assert_ne!(point, point3);
+
+        // Empty input should also work
+        let point4 = hash_to_g1(b"").unwrap();
+        assert!(point4.is_on_curve());
+        assert!(!point4.is_zero());
     }
 }

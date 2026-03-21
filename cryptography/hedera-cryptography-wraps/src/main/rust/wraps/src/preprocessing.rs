@@ -2,11 +2,11 @@
 
 use std::path::PathBuf;
 use std::io::Write;
-use ark_bn254::{G1Affine, G2Affine, g1};
-use ark_ec::{CurveGroup, AffineRepr};
+use ark_bn254::{G1Affine, G2Affine, g1, Bn254 as Curve};
+use ark_ec::{CurveGroup, AffineRepr, pairing::Pairing};
 use ark_ff::Field;
 use ark_poly::{EvaluationDomain, GeneralEvaluationDomain, domain};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, serialize_to_vec};
 use ark_std::{Zero, ops::*};
 use ark_relations::utils::matrix::{self, Matrix};
 
@@ -57,7 +57,7 @@ use super::{
     Fr, N, D, G1, G2
 };
 
-use crate::utils::ECFFTUtils;
+use crate::utils::{self, ECFFTUtils};
 
 pub struct Phase1SRS {
     powers_of_tau_g1: Vec<G1Affine>,
@@ -89,6 +89,22 @@ pub struct CircuitConfig {
     pub num_instance_variables: usize,
 }
 
+// inspired from https://alinush.github.io/groth16
+#[derive(Clone, CanonicalDeserialize, CanonicalSerialize)]
+pub struct Phase1ProofOfKnowledge {
+    pub random_hash_tau: G1Affine,
+    pub node_contribution_tau: G1Affine,
+    pub next_tau: G1Affine,
+    pub random_hash_alpha: G1Affine,
+    pub node_contribution_alpha: G1Affine,
+    pub next_alpha: G1Affine,
+    pub random_hash_beta: G1Affine,
+    pub node_contribution_beta: G1Affine,
+    pub next_beta: G1Affine,
+}
+
+type PhasePokTranscript = Vec<Phase1ProofOfKnowledge>;
+
 fn load_from_file<T: CanonicalDeserialize>(path: &PathBuf) -> Result<T, Error> {
     let start = std::time::Instant::now();
     let raw_data = std::fs::read(path)?;
@@ -104,6 +120,79 @@ fn store_to_file<T: CanonicalSerialize>(path: &PathBuf, data: &T) -> Result<(), 
     std::fs::write(path, &raw_data)?;
     println!("Serializing and writing {} to disk took {:?}", path.to_str().unwrap_or("unknown"), start.elapsed());
     Ok(())
+}
+
+fn hash_transcript(prev_path: &PathBuf, additional_data: &G1Affine) -> G1Affine {
+    let transcript_prev = load_from_file::<PhasePokTranscript>(prev_path).unwrap();
+    let data_to_hash = serialize_to_vec![transcript_prev, additional_data].unwrap();
+    let hash = utils::hash_to_g1(&data_to_hash).unwrap();
+    hash
+}
+
+//prove_knowledge_phase1(prev_srs, next_srs, &tau, &alpha, &beta);
+fn prove_knowledge_phase1(prev_srs: &PathBuf, next_srs: &PathBuf, tau: &Fr, alpha: &Fr, beta: &Fr) {
+    let g_pow_tau = G1Affine::generator().mul(*tau).into_affine();
+    let g_pow_alpha = G1Affine::generator().mul(*alpha).into_affine();
+    let g_pow_beta = G1Affine::generator().mul(*beta).into_affine();
+
+    let hash_transcript_tau = hash_transcript(prev_srs, &g_pow_tau);
+    let hash_transcript_alpha = hash_transcript(prev_srs, &g_pow_alpha);
+    let hash_transcript_beta = hash_transcript(prev_srs, &g_pow_beta);
+
+    let pok_tau = hash_transcript_tau.mul(*tau).into_affine();
+    let pok_alpha = hash_transcript_alpha.mul(*alpha).into_affine();
+    let pok_beta = hash_transcript_beta.mul(*beta).into_affine();
+
+    let prev_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(
+        &next_srs.join("powers_of_tau_g1.bin")
+    ).unwrap();
+    let prev_powers_of_alpha_tau_g1 = load_from_file::<Vec<G1Affine>>(
+        &next_srs.join("powers_of_alpha_tau_g1.bin")
+    ).unwrap();
+    let prev_powers_of_beta_tau_g1 = load_from_file::<Vec<G1Affine>>(
+        &next_srs.join("powers_of_beta_tau_g1.bin")
+    ).unwrap();
+
+    let proof_of_knowledge = Phase1ProofOfKnowledge {
+        random_hash_tau: pok_tau,
+        node_contribution_tau: g_pow_tau,
+        next_tau: prev_powers_of_tau_g1[0],
+        random_hash_alpha: pok_alpha,
+        node_contribution_alpha: g_pow_alpha,
+        next_alpha: prev_powers_of_alpha_tau_g1[0],
+        random_hash_beta: pok_beta,
+        node_contribution_beta: g_pow_beta,
+        next_beta: prev_powers_of_beta_tau_g1[0],
+    };
+
+    let mut transcript_prev = load_from_file::<PhasePokTranscript>(
+        &prev_srs.join("pok_transcript.bin")).unwrap();
+    transcript_prev.push(proof_of_knowledge);
+    store_to_file::<PhasePokTranscript>(&next_srs.join("pok_transcript.bin"), &transcript_prev).unwrap();
+}
+
+fn verify_knowledge_phase1(prev_srs_path: &PathBuf) {
+    let transcript = load_from_file::<PhasePokTranscript>(prev_srs_path).unwrap();
+    let tx = transcript.last().unwrap();
+
+    let transcript_prev = transcript
+        .clone()
+        .into_iter()
+        .take(transcript.len() - 1).
+        collect::<Vec<Phase1ProofOfKnowledge>>();
+    let h_tau = utils::hash_to_g1(&serialize_to_vec![transcript_prev, tx.node_contribution_tau].unwrap()).unwrap();
+    let h_alpha = utils::hash_to_g1(&serialize_to_vec![transcript_prev, tx.node_contribution_alpha].unwrap()).unwrap();
+    let h_beta = utils::hash_to_g1(&serialize_to_vec![transcript_prev, tx.node_contribution_beta].unwrap()).unwrap();
+
+    let zero_contribution = G1Affine::generator().mul(Fr::zero()).into_affine();
+    assert!(tx.node_contribution_tau != zero_contribution, "Invalid proof of knowledge: tau contribution is zero");
+    assert!(tx.node_contribution_alpha != zero_contribution, "Invalid proof of knowledge: alpha contribution is zero");
+    assert!(tx.node_contribution_beta != zero_contribution, "Invalid proof of knowledge: beta contribution is zero");
+    // e(g_pow_tau, hash_transcript_tau) == e(G1Affine::generator(), pok_tau)
+    // assert_eq!(
+    //     <Curve as Pairing>::pairing(tx.node_contribution_tau, h_tau),
+    //     <Curve as Pairing>::pairing(G1Affine::generator(), tx.random_hash_tau)
+    // );
 }
 
 fn update_srs_helper_g1(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, multiplier: Fr, tau: Fr, is_vec: bool) {
@@ -395,6 +484,9 @@ impl WRAPSPreprocessing {
         let beta_g2: G2Affine = G2Affine::generator();
         store_to_file::<G2Affine>(&output_path.join("beta_g2.bin"), &beta_g2).unwrap();
 
+        // create empty pok transcript file
+        std::fs::File::create(output_path.join("pok_transcript.bin")).unwrap();
+
     }
 
     pub fn update_srs_phase1(circuit_path: &PathBuf, prev_srs: &PathBuf, next_srs: &PathBuf) {
@@ -420,6 +512,10 @@ impl WRAPSPreprocessing {
         println!("Updated powers_of_beta_tau_g1.bin");
         update_srs_helper_g2(prev_srs, next_srs, "beta_g2.bin", beta, Fr::from(1u64), false);
         println!("Updated beta_g2.bin");
+
+        prove_knowledge_phase1(prev_srs, next_srs, &tau, &alpha, &beta);
+        println!("Updated Phase 1 proof of knowledge");
+
         println!("Phase 1 update took {:?}. ", now.elapsed());
     }
 
