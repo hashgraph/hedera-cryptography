@@ -172,13 +172,15 @@ fn prove_knowledge_phase1(prev_srs: &PathBuf, next_srs: &PathBuf, tau: &Fr, alph
 }
 
 fn verify_knowledge_phase1(prev_srs_path: &PathBuf) {
-    let transcript = load_from_file::<PhasePokTranscript>(
+    let transcript = match load_from_file::<PhasePokTranscript>(
         &prev_srs_path.join("pok_transcript.bin")
-    ).unwrap();
-    if transcript.is_empty() {
-        println!("No proof of knowledge found for phase 1. Skipping verification.");
-        return;
-    }
+    ) {
+        Ok(t) if !t.is_empty() => t,
+        _ => {
+            println!("No proof of knowledge found for phase 1. Skipping verification.");
+            return;
+        }
+    };
     let tx = transcript.last().unwrap();
 
     let transcript_prev = transcript
