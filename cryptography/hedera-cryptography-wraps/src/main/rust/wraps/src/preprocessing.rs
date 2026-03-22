@@ -123,7 +123,9 @@ fn store_to_file<T: CanonicalSerialize>(path: &PathBuf, data: &T) -> Result<(), 
 }
 
 fn hash_transcript(prev_path: &PathBuf, additional_data: &G1Affine) -> G2Affine {
-    let transcript_prev = load_from_file::<PhasePokTranscript>(prev_path).unwrap();
+    let transcript_prev = load_from_file::<PhasePokTranscript>(
+        &prev_path.join("pok_transcript.bin")
+    ).unwrap();
     let data_to_hash = serialize_to_vec![transcript_prev, additional_data].unwrap();
     let hash = utils::hash_to_g2(&data_to_hash).unwrap();
     hash
