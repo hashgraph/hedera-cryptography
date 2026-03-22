@@ -172,7 +172,9 @@ fn prove_knowledge_phase1(prev_srs: &PathBuf, next_srs: &PathBuf, tau: &Fr, alph
 }
 
 fn verify_knowledge_phase1(prev_srs_path: &PathBuf) {
-    let transcript = load_from_file::<PhasePokTranscript>(prev_srs_path).unwrap();
+    let transcript = load_from_file::<PhasePokTranscript>(
+        &prev_srs_path.join("pok_transcript.bin")
+    ).unwrap();
     let tx = transcript.last().unwrap();
 
     let transcript_prev = transcript
