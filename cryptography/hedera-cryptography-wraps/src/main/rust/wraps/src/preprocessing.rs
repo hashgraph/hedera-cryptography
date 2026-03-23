@@ -128,7 +128,7 @@ fn hash_transcript(prev_path: &PathBuf, additional_data: &G1Affine) -> G2Affine 
     ) {
         Ok(t) if !t.is_empty() => t,
         _ => {
-            println!("No proof of knowledge found for phase 1. Skipping verification.");
+            println!("No proof of knowledge found for phase 1. Using empty transcript for hashing.");
             Vec::new()
         }
     };
@@ -177,10 +177,7 @@ fn prove_knowledge_phase1(prev_srs: &PathBuf, next_srs: &PathBuf, tau: &Fr, alph
         &prev_srs.join("pok_transcript.bin")
     ) {
         Ok(t) if !t.is_empty() => t,
-        _ => {
-            println!("No proof of knowledge found for phase 1. Skipping verification.");
-            Vec::new()
-        }
+        _ => Vec::new()
     };
     transcript_prev.push(proof_of_knowledge);
     store_to_file::<PhasePokTranscript>(&next_srs.join("pok_transcript.bin"), &transcript_prev).unwrap();
