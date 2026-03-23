@@ -103,7 +103,19 @@ pub struct Phase1ProofOfKnowledge {
     pub next_beta: G1Affine,
 }
 
-type PhasePokTranscript = Vec<Phase1ProofOfKnowledge>;
+type Phase1PokTranscript = Vec<Phase1ProofOfKnowledge>;
+
+#[derive(Clone, CanonicalDeserialize, CanonicalSerialize)]
+pub struct Phase2ProofOfKnowledge {
+    pub pok_delta: G1Affine,
+    pub node_contribution_delta: G2Affine,
+    pub next_delta: G2Affine,
+    pub pok_gamma: G1Affine,
+    pub node_contribution_gamma: G2Affine,
+    pub next_gamma: G2Affine,
+}
+
+type Phase2PokTranscript = Vec<Phase2ProofOfKnowledge>;
 
 fn load_from_file<T: CanonicalDeserialize>(path: &PathBuf) -> Result<T, Error> {
     let start = std::time::Instant::now();
@@ -122,8 +134,8 @@ fn store_to_file<T: CanonicalSerialize>(path: &PathBuf, data: &T) -> Result<(), 
     Ok(())
 }
 
-fn hash_transcript(prev_path: &PathBuf, additional_data: &G1Affine) -> G2Affine {
-    let transcript_prev = match load_from_file::<PhasePokTranscript>(
+fn hash_transcript_phase1(prev_path: &PathBuf, additional_data: &G1Affine) -> G2Affine {
+    let transcript_prev = match load_from_file::<Phase1PokTranscript>(
         &prev_path.join("pok_transcript.bin")
     ) {
         Ok(t) if !t.is_empty() => t,
@@ -137,54 +149,102 @@ fn hash_transcript(prev_path: &PathBuf, additional_data: &G1Affine) -> G2Affine 
     hash
 }
 
+fn hash_transcript_phase2(prev_path: &PathBuf, additional_data: &G2Affine) -> G1Affine {
+    let transcript_prev = match load_from_file::<Phase2PokTranscript>(
+        &prev_path.join("pok_transcript.bin")
+    ) {
+        Ok(t) if !t.is_empty() => t,
+        _ => {
+            println!("No proof of knowledge found for phase 2. Using empty transcript for hashing.");
+            Vec::new()
+        }
+    };
+    let data_to_hash = serialize_to_vec![transcript_prev, additional_data].unwrap();
+    let hash = utils::hash_to_g1(&data_to_hash).unwrap();
+    hash
+}
+
 //prove_knowledge_phase1(prev_srs, next_srs, &tau, &alpha, &beta);
 fn prove_knowledge_phase1(prev_srs: &PathBuf, next_srs: &PathBuf, tau: &Fr, alpha: &Fr, beta: &Fr) {
     let g_pow_tau = G1Affine::generator().mul(*tau).into_affine();
     let g_pow_alpha = G1Affine::generator().mul(*alpha).into_affine();
     let g_pow_beta = G1Affine::generator().mul(*beta).into_affine();
 
-    let hash_transcript_tau = hash_transcript(prev_srs, &g_pow_tau);
-    let hash_transcript_alpha = hash_transcript(prev_srs, &g_pow_alpha);
-    let hash_transcript_beta = hash_transcript(prev_srs, &g_pow_beta);
+    let hash_transcript_tau = hash_transcript_phase1(prev_srs, &g_pow_tau);
+    let hash_transcript_alpha = hash_transcript_phase1(prev_srs, &g_pow_alpha);
+    let hash_transcript_beta = hash_transcript_phase1(prev_srs, &g_pow_beta);
 
     let pok_tau = hash_transcript_tau.mul(*tau).into_affine();
     let pok_alpha = hash_transcript_alpha.mul(*alpha).into_affine();
     let pok_beta = hash_transcript_beta.mul(*beta).into_affine();
 
-    let prev_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(
+    let next_powers_of_tau_g1 = load_from_file::<Vec<G1Affine>>(
         &next_srs.join("powers_of_tau_g1.bin")
     ).unwrap();
-    let prev_powers_of_alpha_tau_g1 = load_from_file::<Vec<G1Affine>>(
+    let next_powers_of_alpha_tau_g1 = load_from_file::<Vec<G1Affine>>(
         &next_srs.join("powers_of_alpha_tau_g1.bin")
     ).unwrap();
-    let prev_powers_of_beta_tau_g1 = load_from_file::<Vec<G1Affine>>(
+    let next_powers_of_beta_tau_g1 = load_from_file::<Vec<G1Affine>>(
         &next_srs.join("powers_of_beta_tau_g1.bin")
     ).unwrap();
 
     let proof_of_knowledge = Phase1ProofOfKnowledge {
         pok_tau,
         node_contribution_tau: g_pow_tau,
-        next_tau: prev_powers_of_tau_g1[0],
+        next_tau: next_powers_of_tau_g1[0],
         pok_alpha,
         node_contribution_alpha: g_pow_alpha,
-        next_alpha: prev_powers_of_alpha_tau_g1[0],
+        next_alpha: next_powers_of_alpha_tau_g1[0],
         pok_beta,
         node_contribution_beta: g_pow_beta,
-        next_beta: prev_powers_of_beta_tau_g1[0],
+        next_beta: next_powers_of_beta_tau_g1[0],
     };
 
-    let mut transcript_prev = match load_from_file::<PhasePokTranscript>(
+    let mut transcript_prev = match load_from_file::<Phase1PokTranscript>(
         &prev_srs.join("pok_transcript.bin")
     ) {
         Ok(t) if !t.is_empty() => t,
         _ => Vec::new()
     };
     transcript_prev.push(proof_of_knowledge);
-    store_to_file::<PhasePokTranscript>(&next_srs.join("pok_transcript.bin"), &transcript_prev).unwrap();
+    store_to_file::<Phase1PokTranscript>(&next_srs.join("pok_transcript.bin"), &transcript_prev).unwrap();
+}
+
+//prove_knowledge_phase1(prev_srs, next_srs, &tau, &alpha, &beta);
+fn prove_knowledge_phase2(prev_srs: &PathBuf, next_srs: &PathBuf, delta: &Fr, gamma: &Fr) {
+    let g_pow_delta = G2Affine::generator().mul(*delta).into_affine();
+    let g_pow_gamma = G2Affine::generator().mul(*gamma).into_affine();
+
+    let hash_transcript_delta = hash_transcript_phase2(prev_srs, &g_pow_delta);
+    let hash_transcript_gamma = hash_transcript_phase2(prev_srs, &g_pow_gamma);
+
+    let pok_delta = hash_transcript_delta.mul(*delta).into_affine();
+    let pok_gamma = hash_transcript_gamma.mul(*gamma).into_affine();
+
+    let next_delta_g2 = load_from_file::<G2Affine>(&next_srs.join("delta_g2.bin")).unwrap();
+    let next_gamma_g2 = load_from_file::<G2Affine>(&next_srs.join("gamma_g2.bin")).unwrap();
+
+    let proof_of_knowledge = Phase2ProofOfKnowledge {
+        pok_delta,
+        node_contribution_delta: g_pow_delta,
+        next_delta: next_delta_g2,
+        pok_gamma,
+        node_contribution_gamma: g_pow_gamma,
+        next_gamma: next_gamma_g2,
+    };
+
+    let mut transcript_prev = match load_from_file::<Phase2PokTranscript>(
+        &prev_srs.join("pok_transcript.bin")
+    ) {
+        Ok(t) if !t.is_empty() => t,
+        _ => Vec::new()
+    };
+    transcript_prev.push(proof_of_knowledge);
+    store_to_file::<Phase2PokTranscript>(&next_srs.join("pok_transcript.bin"), &transcript_prev).unwrap();
 }
 
 fn verify_knowledge_phase1(prev_srs_path: &PathBuf) {
-    let transcript = match load_from_file::<PhasePokTranscript>(
+    let transcript = match load_from_file::<Phase1PokTranscript>(
         &prev_srs_path.join("pok_transcript.bin")
     ) {
         Ok(t) if !t.is_empty() => t,
@@ -223,6 +283,42 @@ fn verify_knowledge_phase1(prev_srs_path: &PathBuf) {
     );
 
 }
+
+fn verify_knowledge_phase2(prev_srs_path: &PathBuf) {
+    let transcript = match load_from_file::<Phase2PokTranscript>(
+        &prev_srs_path.join("pok_transcript.bin")
+    ) {
+        Ok(t) if !t.is_empty() => t,
+        _ => {
+            println!("No proof of knowledge found for phase 2. Skipping verification.");
+            return;
+        }
+    };
+    let tx = transcript.last().unwrap();
+
+    let transcript_prev = transcript
+        .clone()
+        .into_iter()
+        .take(transcript.len() - 1).
+        collect::<Vec<Phase2ProofOfKnowledge>>();
+    let h_delta = utils::hash_to_g1(&serialize_to_vec![transcript_prev, tx.node_contribution_delta].unwrap()).unwrap();
+    let h_gamma = utils::hash_to_g1(&serialize_to_vec![transcript_prev, tx.node_contribution_gamma].unwrap()).unwrap();
+
+    let zero_contribution = G2Affine::generator().mul(Fr::zero()).into_affine();
+    assert!(tx.node_contribution_delta != zero_contribution, "Invalid proof of knowledge: delta contribution is zero");
+    assert!(tx.node_contribution_gamma != zero_contribution, "Invalid proof of knowledge: gamma contribution is zero");
+    // eqns 107-109 in https://alinush.github.io/groth16
+    assert_eq!(
+        <Curve as Pairing>::pairing(h_delta, tx.node_contribution_delta),
+        <Curve as Pairing>::pairing(tx.pok_delta, G2Affine::generator())
+    );
+    assert_eq!(
+        <Curve as Pairing>::pairing(h_gamma, tx.node_contribution_gamma),
+        <Curve as Pairing>::pairing(tx.pok_gamma, G2Affine::generator())
+    );
+
+}
+
 
 fn update_srs_helper_g1(prev_srs: &PathBuf, next_srs: &PathBuf, name: &str, multiplier: Fr, tau: Fr, is_vec: bool) {
     if is_vec {
