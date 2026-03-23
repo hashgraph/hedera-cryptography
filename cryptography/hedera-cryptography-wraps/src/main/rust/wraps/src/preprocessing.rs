@@ -616,6 +616,7 @@ impl WRAPSPreprocessing {
 
     pub fn update_srs_phase1(circuit_path: &PathBuf, prev_srs: &PathBuf, next_srs: &PathBuf) {
         verify_knowledge_phase1(prev_srs);
+        println!("Verified Phase 1 proof of knowledge");
 
         let circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
         type D<F> = GeneralEvaluationDomain<F>;
@@ -648,6 +649,7 @@ impl WRAPSPreprocessing {
 
     pub fn update_srs_phase2(circuit_path: &PathBuf, prev_srs: &PathBuf, next_srs: &PathBuf) {
         verify_knowledge_phase2(prev_srs);
+        println!("Verified Phase 2 proof of knowledge");
 
         let _circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
         let mut rng = ark_std::rand::rngs::OsRng;
