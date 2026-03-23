@@ -647,6 +647,8 @@ impl WRAPSPreprocessing {
     }
 
     pub fn update_srs_phase2(circuit_path: &PathBuf, prev_srs: &PathBuf, next_srs: &PathBuf) {
+        verify_knowledge_phase2(prev_srs);
+
         let _circuit_config = load_from_file::<CircuitConfig>(&circuit_path.join("circuit_config.bin")).unwrap();
         let mut rng = ark_std::rand::rngs::OsRng;
         let delta = Fr::rand(&mut rng);
@@ -668,6 +670,10 @@ impl WRAPSPreprocessing {
         println!("Updated delta_abc_g1.bin");
         update_srs_helper_g1(prev_srs, next_srs, "h_g1.bin", delta_inverse, Fr::from(1u64), true);
         println!("Updated h_g1.bin");
+
+        prove_knowledge_phase2(prev_srs, next_srs, &delta, &gamma);
+        println!("Updated Phase 2 proof of knowledge");
+
         println!("Phase 2 update took {:?}. ", now.elapsed());
     }
 
