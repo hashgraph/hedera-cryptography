@@ -210,7 +210,6 @@ fn prove_knowledge_phase1(prev_srs: &PathBuf, next_srs: &PathBuf, tau: &Fr, alph
     store_to_file::<Phase1PokTranscript>(&next_srs.join("pok_transcript.bin"), &transcript_prev).unwrap();
 }
 
-//prove_knowledge_phase1(prev_srs, next_srs, &tau, &alpha, &beta);
 fn prove_knowledge_phase2(prev_srs: &PathBuf, next_srs: &PathBuf, delta: &Fr, gamma: &Fr) {
     let g_pow_delta = G2Affine::generator().mul(*delta).into_affine();
     let g_pow_gamma = G2Affine::generator().mul(*gamma).into_affine();
