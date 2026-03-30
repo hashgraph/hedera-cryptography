@@ -56,10 +56,14 @@ Positional argument meaning by phase:\n\
   phase 6 (verify_transcript_phase1):\n\
     arg1 = input-srs-folder\n\
     arg2 = output-srs-folder\n\
+\n\
+  phase 7 (verify_transcript_phase2):\n\
+    arg1 = input-srs-folder\n\
+    arg2 = output-srs-folder\n\
 "
 )]
 struct Args {
-    #[arg(value_parser = clap::value_parser!(u8).range(0..=6))]
+    #[arg(value_parser = clap::value_parser!(u8).range(0..=7))]
     phase: u8,
     #[arg(value_name = "ARG")]
     args: Vec<PathBuf>,
@@ -223,6 +227,21 @@ fn run(args: Args) -> Result<(), String> {
             require_existing_dir(&input_srs, "input-srs-folder")?;
             require_existing_dir(&output_srs, "output-srs-folder")?;
             WRAPSPreprocessing::verify_transcript_phase1(&input_srs, &output_srs);
+            Ok(())
+        }
+        7 => {
+            setup_rayon_thread_pool(NUM_COORDINATOR_THREADS);
+            require_arg_count(
+                &args.args,
+                7,
+                2,
+                "<input-srs-folder> <output-srs-folder>",
+            )?;
+            let input_srs = args.args[0].clone();
+            let output_srs = args.args[1].clone();
+            require_existing_dir(&input_srs, "input-srs-folder")?;
+            require_existing_dir(&output_srs, "output-srs-folder")?;
+            WRAPSPreprocessing::verify_transcript_phase2(&input_srs, &output_srs);
             Ok(())
         }
         _ => Err(format!("unsupported phase: {}", args.phase)),

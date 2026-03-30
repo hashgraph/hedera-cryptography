@@ -319,7 +319,7 @@ fn verify_knowledge_phase2(prev_srs_path: &PathBuf) {
 }
 
 // verication of consecutive steps in the ceremony -- this can only be done by the coordinator
-fn coordinator_verification(prev_srs_path: &PathBuf, next_srs_path: &PathBuf) {
+fn coordinator_verification_phase1(prev_srs_path: &PathBuf, next_srs_path: &PathBuf) {
     let output_transcript = load_from_file::<Phase1PokTranscript>(&next_srs_path.join("pok_transcript.bin")).unwrap();
     let output_transcript_last_entry = output_transcript.last().unwrap();
 
@@ -388,6 +388,67 @@ fn coordinator_verification(prev_srs_path: &PathBuf, next_srs_path: &PathBuf) {
     assert_eq!(
         <Curve as Pairing>::pairing(input_transcript_last_entry.next_beta, output_transcript_last_entry.pok_beta),
         <Curve as Pairing>::pairing(output_transcript_last_entry.next_beta, h_beta)
+    );
+}
+
+// verication of consecutive steps in the ceremony -- this can only be done by the coordinator
+fn coordinator_verification_phase2(prev_srs_path: &PathBuf, next_srs_path: &PathBuf) {
+    let output_transcript = load_from_file::<Phase2PokTranscript>(&next_srs_path.join("pok_transcript.bin")).unwrap();
+    let output_transcript_last_entry = output_transcript.last().unwrap();
+
+    assert!(output_transcript.len() > 0, "No proof of knowledge found in the output transcript for phase 2. Verification failed.");
+    if output_transcript.len() == 1 {
+        // we can just do basic testing if this is the first transcript entry,
+        // since we don't have a previous transcript to compare to
+        verify_knowledge_phase2(next_srs_path);
+        return;
+    }
+
+    // if we got here, than the output transcript has at least 2 entries
+    let input_transcript = load_from_file::<Phase2PokTranscript>(&prev_srs_path.join("pok_transcript.bin")).unwrap();
+    let input_transcript_last_entry = input_transcript.last().unwrap();
+
+    // check that all other transcript entries match -- do this only if prev is not empty
+    {
+        let purported_input_transcript = output_transcript
+            .clone()
+            .into_iter()
+            .take(output_transcript.len() - 1).
+            collect::<Vec<Phase2ProofOfKnowledge>>();
+
+        assert_eq!(
+            input_transcript, purported_input_transcript,
+            "The input transcript does not match the output transcript minus the last entry. Verification failed."
+        );
+    }
+
+    let h_delta = utils::hash_to_g1(&serialize_to_vec![
+        input_transcript, output_transcript_last_entry.node_contribution_delta
+        ].unwrap()).unwrap();
+    let h_gamma = utils::hash_to_g1(&serialize_to_vec![
+        input_transcript, output_transcript_last_entry.node_contribution_gamma
+        ].unwrap()).unwrap();
+
+    let zero_contribution = G2Affine::generator().mul(Fr::zero()).into_affine();
+    assert!(output_transcript_last_entry.node_contribution_delta != zero_contribution, "Invalid proof of knowledge: delta contribution is zero");
+    assert!(output_transcript_last_entry.node_contribution_gamma != zero_contribution, "Invalid proof of knowledge: gamma contribution is zero");
+    // eqns 107-109 in https://alinush.github.io/groth16
+    assert_eq!(
+        <Curve as Pairing>::pairing(h_delta, output_transcript_last_entry.node_contribution_delta),
+        <Curve as Pairing>::pairing(output_transcript_last_entry.pok_delta, G2Affine::generator())
+    );
+    assert_eq!(
+        <Curve as Pairing>::pairing(h_gamma, output_transcript_last_entry.node_contribution_gamma),
+        <Curve as Pairing>::pairing(output_transcript_last_entry.pok_gamma, G2Affine::generator())
+    );
+    // eqns 114-116 in https://alinush.github.io/groth16
+    assert_eq!(
+        <Curve as Pairing>::pairing(output_transcript_last_entry.pok_delta, input_transcript_last_entry.next_delta),
+        <Curve as Pairing>::pairing(h_delta, output_transcript_last_entry.next_delta)
+    );
+    assert_eq!(
+        <Curve as Pairing>::pairing(output_transcript_last_entry.pok_gamma, input_transcript_last_entry.next_gamma),
+        <Curve as Pairing>::pairing(h_gamma, output_transcript_last_entry.next_gamma)
     );
 }
 
@@ -1038,7 +1099,14 @@ impl WRAPSPreprocessing {
         input_srs: &PathBuf,
         output_srs: &PathBuf,
     ) {
-        coordinator_verification(input_srs, output_srs);
+        coordinator_verification_phase1(input_srs, output_srs);
+    }
+
+    pub fn verify_transcript_phase2(
+        input_srs: &PathBuf,
+        output_srs: &PathBuf,
+    ) {
+        coordinator_verification_phase2(input_srs, output_srs);
     }
 
 }

@@ -55,6 +55,7 @@ run_ceremony() {
 # - phase 4: <circuit-folder> <input-folder> <output-folder>
 # - phase 5: <circuit-folder> <phase1-input-folder> <phase1-output-folder> <phase2-input-folder> <output-folder>
 # - phase 6: <input-srs-folder> <output-srs-folder>
+# - phase 7: <input-srs-folder> <output-srs-folder>
 
 echo "[1/7] extract_circuit_r1cs_config"
 run_ceremony \
@@ -123,5 +124,17 @@ run_ceremony \
   6 \
   "${NODE1_PHASE1}" \
   "${NODE2_PHASE1}"
+
+echo "[verify] verify_transcript_phase2 (node1)"
+run_ceremony \
+  7 \
+  "${PHASE2_INIT}" \
+  "${NODE1_PHASE2}"
+
+echo "[verify] verify_transcript_phase2 (node2)"
+run_ceremony \
+  7 \
+  "${NODE1_PHASE2}" \
+  "${NODE2_PHASE2}"
 
 echo "Ceremony completed. Output written to: ${RESULT}"
