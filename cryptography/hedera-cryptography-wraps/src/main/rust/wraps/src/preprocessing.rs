@@ -423,40 +423,40 @@ fn coordinator_verification_phase1(prev_srs_path: &PathBuf, next_srs_path: &Path
     );
 
     // eqn 125-126: consecutive powers of tau in G1 — e([tau^i]_1, [tau]_2) = e([tau^{i+1}]_1, G2)
-    for i in 0..powers_of_tau_g1.len() - 1 {
+    (0..powers_of_tau_g1.len() - 1).into_par_iter().for_each(|i| {
         assert_eq!(
             <Curve as Pairing>::pairing(powers_of_tau_g1[i], tau_g2),
             <Curve as Pairing>::pairing(powers_of_tau_g1[i + 1], g2),
             "Consecutive powers of tau in G1 failed at index {}", i
         );
-    }
+    });
 
     // eqn 127: consecutive powers of tau in G2 — e([tau]_1, [tau^i]_2) = e(G1, [tau^{i+1}]_2)
-    for i in 0..powers_of_tau_g2.len() - 1 {
+    (0..powers_of_tau_g2.len() - 1).into_par_iter().for_each(|i| {
         assert_eq!(
             <Curve as Pairing>::pairing(tau_g1, powers_of_tau_g2[i]),
             <Curve as Pairing>::pairing(g1, powers_of_tau_g2[i + 1]),
             "Consecutive powers of tau in G2 failed at index {}", i
         );
-    }
+    });
 
     // eqn 128: consecutive alpha*tau powers — e([alpha*tau^i]_1, [tau]_2) = e([alpha*tau^{i+1}]_1, G2)
-    for i in 0..powers_of_alpha_tau_g1.len() - 1 {
+    (0..powers_of_alpha_tau_g1.len() - 1).into_par_iter().for_each(|i| {
         assert_eq!(
             <Curve as Pairing>::pairing(powers_of_alpha_tau_g1[i], tau_g2),
             <Curve as Pairing>::pairing(powers_of_alpha_tau_g1[i + 1], g2),
             "Consecutive alpha*tau powers in G1 failed at index {}", i
         );
-    }
+    });
 
     // eqn 129: consecutive beta*tau powers — e([beta*tau^i]_1, [tau]_2) = e([beta*tau^{i+1}]_1, G2)
-    for i in 0..powers_of_beta_tau_g1.len() - 1 {
+    (0..powers_of_beta_tau_g1.len() - 1).into_par_iter().for_each(|i| {
         assert_eq!(
             <Curve as Pairing>::pairing(powers_of_beta_tau_g1[i], tau_g2),
             <Curve as Pairing>::pairing(powers_of_beta_tau_g1[i + 1], g2),
             "Consecutive beta*tau powers in G1 failed at index {}", i
         );
-    }
+    });
 
     // eqn 130: transcript-to-SRS consistency
     assert_eq!(
@@ -559,31 +559,31 @@ fn coordinator_verification_phase2(prev_srs_path: &PathBuf, next_srs_path: &Path
     );
 
     // eqn 151: delta_abc_g1 consistency — e(next[j], next_delta_g2) = e(prev[j], prev_delta_g2)
-    for j in 0..next_delta_abc_g1.len() {
+    (0..next_delta_abc_g1.len()).into_par_iter().for_each(|j| {
         assert_eq!(
             <Curve as Pairing>::pairing(next_delta_abc_g1[j], next_delta_g2),
             <Curve as Pairing>::pairing(prev_delta_abc_g1[j], prev_delta_g2),
             "delta_abc_g1 consistency failed at index {}", j
         );
-    }
+    });
 
     // eqn 152: h_g1 consistency — e(next_h[i], next_delta_g2) = e(prev_h[i], prev_delta_g2)
-    for i in 0..next_h_g1.len() {
+    (0..next_h_g1.len()).into_par_iter().for_each(|i| {
         assert_eq!(
             <Curve as Pairing>::pairing(next_h_g1[i], next_delta_g2),
             <Curve as Pairing>::pairing(prev_h_g1[i], prev_delta_g2),
             "h_g1 consistency failed at index {}", i
         );
-    }
+    });
 
     // eqn 153: gamma_abc_g1 consistency — e(next[j], next_gamma_g2) = e(prev[j], prev_gamma_g2)
-    for j in 0..next_gamma_abc_g1.len() {
+    (0..next_gamma_abc_g1.len()).into_par_iter().for_each(|j| {
         assert_eq!(
             <Curve as Pairing>::pairing(next_gamma_abc_g1[j], next_gamma_g2),
             <Curve as Pairing>::pairing(prev_gamma_abc_g1[j], prev_gamma_g2),
             "gamma_abc_g1 consistency failed at index {}", j
         );
-    }
+    });
 
     // transcript-to-SRS consistency
     assert_eq!(
