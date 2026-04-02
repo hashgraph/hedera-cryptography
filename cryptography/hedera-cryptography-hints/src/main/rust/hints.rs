@@ -1148,6 +1148,65 @@ mod tests {
 
         let π = HinTS::aggregate(&crs, &ak, &vk, &sigs).unwrap();
 
+        // Print verification key fields as byte vectors
+        println!("=== Verification Key ===");
+        println!("vk.n: {}", vk.n);
+        println!("vk.total_weight: {:?}", serialize(&vk.total_weight).unwrap());
+        println!("vk.g_0: {:?}", serialize(&vk.g_0).unwrap());
+        println!("vk.h_0: {:?}", serialize(&vk.h_0).unwrap());
+        println!("vk.h_1: {:?}", serialize(&vk.h_1).unwrap());
+        println!("vk.l_n_minus_1_of_tau_com: {:?}", serialize(&vk.l_n_minus_1_of_tau_com).unwrap());
+        println!("vk.w_of_tau_com: {:?}", serialize(&vk.w_of_tau_com).unwrap());
+        println!("vk.sk_of_tau_com: {:?}", serialize(&vk.sk_of_tau_com).unwrap());
+        println!("vk.z_of_tau_com: {:?}", serialize(&vk.z_of_tau_com).unwrap());
+
+        // Print threshold signature fields as byte vectors
+        println!("=== Threshold Signature ===");
+        println!("π.agg_pk: {:?}", serialize(&π.agg_pk).unwrap());
+        println!("π.agg_weight: {:?}", serialize(&π.agg_weight).unwrap());
+        println!("π.agg_sig: {:?}", serialize(&π.agg_sig).unwrap());
+        println!("π.b_of_tau_com: {:?}", serialize(&π.b_of_tau_com).unwrap());
+        println!("π.qx_of_tau_com: {:?}", serialize(&π.qx_of_tau_com).unwrap());
+        println!("π.qx_of_tau_mul_tau_com: {:?}", serialize(&π.qx_of_tau_mul_tau_com).unwrap());
+        println!("π.qz_of_tau_com: {:?}", serialize(&π.qz_of_tau_com).unwrap());
+        println!("π.parsum_of_tau_com: {:?}", serialize(&π.parsum_of_tau_com).unwrap());
+        println!("π.q1_of_tau_com: {:?}", serialize(&π.q1_of_tau_com).unwrap());
+        println!("π.q3_of_tau_com: {:?}", serialize(&π.q3_of_tau_com).unwrap());
+        println!("π.q2_of_tau_com: {:?}", serialize(&π.q2_of_tau_com).unwrap());
+        println!("π.q4_of_tau_com: {:?}", serialize(&π.q4_of_tau_com).unwrap());
+        println!("π.opening_proof_r: {:?}", serialize(&π.opening_proof_r).unwrap());
+        println!("π.opening_proof_r_div_ω: {:?}", serialize(&π.opening_proof_r_div_ω).unwrap());
+        println!("π.parsum_of_r: {:?}", serialize(&π.parsum_of_r).unwrap());
+        println!("π.parsum_of_r_div_ω: {:?}", serialize(&π.parsum_of_r_div_ω).unwrap());
+        println!("π.w_of_r: {:?}", serialize(&π.w_of_r).unwrap());
+        println!("π.b_of_r: {:?}", serialize(&π.b_of_r).unwrap());
+        println!("π.q1_of_r: {:?}", serialize(&π.q1_of_r).unwrap());
+        println!("π.q3_of_r: {:?}", serialize(&π.q3_of_r).unwrap());
+        println!("π.q2_of_r: {:?}", serialize(&π.q2_of_r).unwrap());
+        println!("π.q4_of_r: {:?}", serialize(&π.q4_of_r).unwrap());
+
+        // Print random oracle field element
+        let r = random_oracle(
+            vk.sk_of_tau_com,
+            vk.h_1,
+            π.agg_pk,
+            π.agg_weight,
+            vk.w_of_tau_com,
+            π.b_of_tau_com,
+            π.parsum_of_tau_com,
+            π.qx_of_tau_com,
+            π.qz_of_tau_com,
+            π.qx_of_tau_mul_tau_com,
+            π.q1_of_tau_com,
+            π.q2_of_tau_com,
+            π.q3_of_tau_com,
+            π.q4_of_tau_com,
+        ).unwrap();
+        println!("=== Random Oracle ===");
+        println!("r: {:?}", serialize(&r).unwrap());
+        let ω: F = utils::nth_root_of_unity(vk.n).unwrap();
+        println!("ω: {:?}", serialize(&ω).unwrap());
+
         let threshold = (F::from(1), F::from(3)); // 1/3
         assert!(HinTS::verify(msg, &vk, &π, threshold).unwrap());
 
