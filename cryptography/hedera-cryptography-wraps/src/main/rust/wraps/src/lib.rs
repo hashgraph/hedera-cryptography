@@ -1288,8 +1288,18 @@ mod tests {
         (ab.try_into().unwrap(), keys.try_into().unwrap())
     }
 
-    fn even_bitvector(ab: &AddressBook) -> Vec<bool> {
+    // For testing purposes, we can use a simple heuristic to select a
+    // sufficiently large subset of signers from the address book.
+    // this is guaranteed to exceed a threshold of 1/2.
+    fn sufficient_bitvector(ab: &AddressBook) -> Vec<bool> {
         ab.iter().enumerate().map(|(i, _)| i % 2 == 0 || i % 3 == 0).collect()
+    }
+
+    // For testing purposes, we can use a simple heuristic to select a
+    // sufficiently large subset of signers from the address book.
+    // this is guaranteed to be below a threshold of 1/2.
+    fn insufficient_bitvector(ab: &AddressBook) -> Vec<bool> {
+        ab.iter().enumerate().map(|(i, _)| i % 3 == 0).collect()
     }
 
     fn signing_subset<'a>(
@@ -1447,7 +1457,7 @@ mod tests {
                 &message,
                 &prev_ab,
                 &prev_keys,
-                &even_bitvector(&prev_ab)
+                &sufficient_bitvector(&prev_ab)
             );
             // sanity check the signature
             assert!(WRAPS::verify_signature(&prev_ab, &message, &multi_signature).unwrap());
@@ -1474,6 +1484,26 @@ mod tests {
                 &next_tss_vk
             ).unwrap();
             assert!(verified);
+
+            // Negative test: sign with insufficient bitvector and verify proof construction fails
+            let insuff_multi_signature = threshold_sign(
+                &message,
+                &prev_ab,
+                &prev_keys,
+                &insufficient_bitvector(&prev_ab),
+            );
+            // Proof construction should also fail
+            let insuff_result = WRAPS::construct_wraps_proof(
+                &wraps_pk,
+                &wraps_vk,
+                &ab_genesis_hash,
+                &prev_ab,
+                &next_ab,
+                if i == 0 { None } else { Some(prev_uncompressed_wraps_proof.clone()) },
+                &next_tss_vk,
+                &insuff_multi_signature,
+            );
+            assert!(insuff_result.is_err(), "WRAPS proof construction should fail with insufficient bitvector");
 
             prev_ab = next_ab;
             prev_keys = next_keys;
