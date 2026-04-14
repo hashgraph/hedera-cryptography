@@ -87,7 +87,7 @@ version = "0.5.0"
 source = "git+https://github.com/winderica/crypto-primitives?rev=af003fc#af003fc69441d431d714331012b02443738ef5b6"
 dependencies = [
  "ahash",
- "ark-crypto-primitives-macros 0.5.0 (git+https://github.com/winderica/crypto-primitives?rev=af003fc)",
+ "ark-crypto-primitives-macros",
  "ark-ec",
  "ark-ff",
  "ark-r1cs-std",
@@ -107,41 +107,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "ark-crypto-primitives"
-version = "0.5.0"
-source = "git+https://github.com/arkworks-rs/crypto-primitives.git#39fb17bd6f46366913526c262454b9fce82a4cd7"
-dependencies = [
- "ahash",
- "ark-crypto-primitives-macros 0.5.0 (git+https://github.com/arkworks-rs/crypto-primitives.git)",
- "ark-ec",
- "ark-ff",
- "ark-relations",
- "ark-serialize",
- "ark-snark",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
- "blake2",
- "derivative",
- "digest",
- "fnv",
- "merlin",
- "num-bigint",
- "sha2",
-]
-
-[[package]]
 name = "ark-crypto-primitives-macros"
 version = "0.5.0"
 source = "git+https://github.com/winderica/crypto-primitives?rev=af003fc#af003fc69441d431d714331012b02443738ef5b6"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
-name = "ark-crypto-primitives-macros"
-version = "0.5.0"
-source = "git+https://github.com/arkworks-rs/crypto-primitives.git#39fb17bd6f46366913526c262454b9fce82a4cd7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -221,7 +189,7 @@ dependencies = [
 name = "ark-groth16"
 version = "0.5.0"
 dependencies = [
- "ark-crypto-primitives 0.5.0 (git+https://github.com/arkworks-rs/crypto-primitives.git)",
+ "ark-crypto-primitives",
  "ark-ec",
  "ark-ff",
  "ark-poly",
@@ -297,7 +265,7 @@ version = "0.5.0"
 source = "git+https://github.com/arkworks-rs/poly-commit#a05ec99d0d3e46c8ba0d6d3592980777bc2847e8"
 dependencies = [
  "ahash",
- "ark-crypto-primitives 0.5.0 (git+https://github.com/winderica/crypto-primitives?rev=af003fc)",
+ "ark-crypto-primitives",
  "ark-ec",
  "ark-ff",
  "ark-poly",
@@ -445,7 +413,7 @@ name = "ceremony"
 version = "0.1.0"
 dependencies = [
  "ark-bn254",
- "ark-crypto-primitives 0.5.0 (git+https://github.com/winderica/crypto-primitives?rev=af003fc)",
+ "ark-crypto-primitives",
  "ark-ec",
  "ark-ed-on-bn254",
  "ark-ff",
@@ -663,7 +631,7 @@ name = "folding-schemes"
 version = "0.1.0"
 dependencies = [
  "ark-bn254",
- "ark-crypto-primitives 0.5.0 (git+https://github.com/winderica/crypto-primitives?rev=af003fc)",
+ "ark-crypto-primitives",
  "ark-ec",
  "ark-ff",
  "ark-groth16",
@@ -1228,7 +1196,7 @@ name = "wraps"
 version = "0.1.0"
 dependencies = [
  "ark-bn254",
- "ark-crypto-primitives 0.5.0 (git+https://github.com/winderica/crypto-primitives?rev=af003fc)",
+ "ark-crypto-primitives",
  "ark-ec",
  "ark-ed-on-bn254",
  "ark-ff",
