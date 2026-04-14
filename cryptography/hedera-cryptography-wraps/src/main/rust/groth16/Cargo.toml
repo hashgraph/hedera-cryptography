@@ -33,15 +33,15 @@ ark-relations = { git = "https://github.com/arkworks-rs/snark.git", default-feat
 # IntelliJ IDEA grays out the ark-snark dependency, but the code needs it still:
 ark-snark = { git = "https://github.com/arkworks-rs/snark.git", default-features = false }
 
-ark-r1cs-std = { git = "https://github.com/arkworks-rs/r1cs-std.git", default-features = false, optional = true }
-ark-crypto-primitives = { git = "https://github.com/arkworks-rs/crypto-primitives.git", default-features = false, features = [ "snark", "sponge" ] }
+ark-r1cs-std = { version = "0.5.0", default-features = false, optional = true }
+ark-crypto-primitives = { version = "0.5.0", default-features = false, features = [ "snark", "sponge" ] }
 tracing = { version = "0.1", default-features = false, features = ["attributes" ], optional = true }
 educe = { version = "0.6.0", default-features = false, features = [ "Clone" ], optional = true }
 
 rayon = { version = "1", optional = true }
 
 [dev-dependencies]
-ark-r1cs-std = { git = "https://github.com/arkworks-rs/r1cs-std.git", default-features = true }
+ark-r1cs-std = { version = "0.5.0", default-features = true }
 
 
 [features]
