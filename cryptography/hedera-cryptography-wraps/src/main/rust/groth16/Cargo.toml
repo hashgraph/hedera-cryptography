@@ -19,25 +19,18 @@ edition = "2021"
 ################################# Dependencies ################################
 
 [dependencies]
-ark-ff = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
-ark-ec = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
-
-# IntelliJ IDEA grays out the ark-serialize dependency, but the code needs it still:
-ark-serialize = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false, features = [ "derive" ] }
-
-ark-poly = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
+ark-ff = { version = "0.5.0", default-features = false }
+ark-ec = { version = "0.5.0", default-features = false }
+ark-serialize = { version = "0.5.0", default-features = false, features = [ "derive" ] }
+ark-poly = { version = "0.5.0", default-features = false }
 ark-std = { version = "0.5.0", default-features = false }
-
-ark-relations = { git = "https://github.com/arkworks-rs/snark.git", default-features = false }
-
-# IntelliJ IDEA grays out the ark-snark dependency, but the code needs it still:
-ark-snark = { git = "https://github.com/arkworks-rs/snark.git", default-features = false }
-
+ark-relations = { version = "0.5.0", default-features = false }
+ark-snark = { version = "0.5.0", default-features = false }
 ark-r1cs-std = { version = "0.5.0", default-features = false, optional = true }
 ark-crypto-primitives = { version = "0.5.0", default-features = false, features = [ "snark", "sponge" ] }
+
 tracing = { version = "0.1", default-features = false, features = ["attributes" ], optional = true }
 educe = { version = "0.6.0", default-features = false, features = [ "Clone" ], optional = true }
-
 rayon = { version = "1", optional = true }
 
 [dev-dependencies]
