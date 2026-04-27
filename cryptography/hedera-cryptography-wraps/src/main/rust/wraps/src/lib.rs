@@ -49,6 +49,12 @@ use ark_relations::gr1cs::{
     SynthesisError, SynthesisMode, Namespace
 };
 
+use ark_ec::hashing::{
+    curve_maps::elligator2::Elligator2Map, map_to_curve_hasher::MapToCurveBasedHasher,
+    HashToCurve,
+};
+use ark_ec::twisted_edwards::Projective as TEProjective;
+
 use core::borrow::Borrow;
 use core::{marker::PhantomData};
 use std::ops::{Add, AddAssign};
@@ -578,11 +584,40 @@ fn generate_proof_of_knowledge(
     })
 }
 
+// Domain-separation tag deterministically defining the sentinel public key.
+const SENTINEL_KEY_INPUT: &[u8] = b"HieroTSS";
+
+// Domain separator passed to `MapToCurveBasedHasher::new` when hashing
+// `SENTINEL_KEY_INPUT` to the JubJub curve.
+const SENTINEL_KEY_DST: &[u8] = b"HieroTSSWrapsSentinelKey";
+
+/// Hashes the fixed `SENTINEL_KEY_INPUT` bytes to a JubJub curve point using
+/// arkworks' `MapToCurveBasedHasher` with `Elligator2Map` (true hash-to-curve).
+/// The resulting point is in the prime-order subgroup (cofactor cleared) and is
+/// returned in the upstream `ark_ed_on_bn254::EdwardsAffine` type.
+fn sentinel_pubkey() -> SchnorrPubKey {
+    let hasher = MapToCurveBasedHasher::<
+        TEProjective<utils::SentinelEdwardsConfig>,
+        DefaultFieldHasher<Sha256>,
+        Elligator2Map<utils::SentinelEdwardsConfig>,
+    >::new(SENTINEL_KEY_DST)
+    .expect("Elligator2 parameters for SentinelEdwardsConfig are valid");
+    let p = hasher
+        .hash(SENTINEL_KEY_INPUT)
+        .expect("hashing a fixed byte string cannot fail");
+    ark_ed_on_bn254::EdwardsAffine::new(p.x, p.y)
+}
+
 // Verifies a Schnorr proof of knowledge of the discrete log of the public key.
+// Sentinel keys (deterministically derived from `SENTINEL_KEY_INPUT`) bypass this
+// check because they are placeholders without a real signer.
 fn verify_proof_of_knowledge(
     pok: &SchnorrPoK,
     pubkey: &SchnorrPubKey
 ) -> bool {
+    if *pubkey == sentinel_pubkey() {
+        return true;
+    }
     let g = JubJub::generator();
     let lhs = g * pok.response;
     let rhs = pok.commitment + (pubkey.clone() * pok.challenge);
@@ -684,6 +719,23 @@ impl WRAPS {
         let pok = generate_proof_of_knowledge(&sk, seed2)?;
         let attested_pk: SchnorrAttestedPubKey = (pk, pok);
         Ok((sk, attested_pk))
+    }
+
+    /// Returns the deterministic sentinel `SchnorrAttestedPubKey`.
+    ///
+    /// The public key is derived by hashing a fixed byte string `SENTINEL_KEY_INPUT`
+    /// to the JubJub curve. The proof of knowledge is
+    /// populated with zero values; `verify_proof_of_knowledge` short-circuits
+    /// to `true` whenever the supplied public key matches this sentinel, so the
+    /// dummy PoK is never validated against the dlog relation.
+    pub fn sentinel_keygen() -> SchnorrAttestedPubKey {
+        let pk = sentinel_pubkey();
+        let pok = SchnorrPoK {
+            commitment: <JubJub as CurveGroup>::Affine::zero(),
+            challenge: JubJubFr::from(0u64),
+            response: JubJubFr::from(0u64),
+        };
+        (pk, pok)
     }
 
     /// Executes a single phase of the threshold Schnorr signing protocol.
