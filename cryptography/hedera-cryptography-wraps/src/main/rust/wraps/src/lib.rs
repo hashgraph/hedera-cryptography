@@ -1562,4 +1562,31 @@ mod tests {
             prev_uncompressed_wraps_proof = next_uncompressed;
         }
     }
+
+    #[test]
+    fn sentinel_key_attested_pok_verifies_and_is_deterministic() {
+        use ark_ec::AffineRepr;
+
+        let (pk1, pok1) = WRAPS::sentinel_keygen();
+
+        // The attested PoK must verify (the verifier short-circuits for sentinels).
+        assert!(
+            verify_proof_of_knowledge(&pok1, &pk1),
+            "sentinel attested key must verify"
+        );
+
+        // The sentinel key must be a real, on-curve, non-identity JubJub point
+        // in the prime-order subgroup.
+        assert!(pk1.is_on_curve());
+        assert!(pk1.is_in_correct_subgroup_assuming_on_curve());
+        assert!(!pk1.is_zero());
+
+        // Determinism: another call returns the same public key and the same
+        // (zero-valued) proof of knowledge.
+        let (pk2, pok2) = WRAPS::sentinel_keygen();
+        assert_eq!(pk1, pk2, "sentinel public key must be deterministic");
+        assert_eq!(pok1.commitment, pok2.commitment);
+        assert_eq!(pok1.challenge, pok2.challenge);
+        assert_eq!(pok1.response, pok2.response);
+    }
 }
