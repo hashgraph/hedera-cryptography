@@ -81,6 +81,18 @@ public class WRAPSLibraryBridgeTest {
     }
 
     @Test
+    public void testProvideSentinelPublicKey() {
+        final byte[] key = WRAPS.provideSentinelPublicKey();
+
+        assertArrayEquals(Constants.SENTINEL_KEY, key);
+
+        // Also check if it's deterministic as it should be:
+        final byte[] key2 = WRAPS.provideSentinelPublicKey();
+
+        assertArrayEquals(Constants.SENTINEL_KEY, key2);
+    }
+
+    @Test
     public void testGenerateSchnorrKeysConstraints() {
         assertEquals(null, WRAPS.generateSchnorrKeys(null));
         assertEquals(null, WRAPS.generateSchnorrKeys(new byte[0]));

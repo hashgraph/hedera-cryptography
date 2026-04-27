@@ -89,6 +89,17 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     keys_obj.into_raw()
 }
 
+/// JNI for WRAPSLibraryBridge.provideSentinelPublicKey
+#[no_mangle]
+pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBridge_provideSentinelPublicKey(
+    env: JNIEnv,
+    _instance: JObject,
+) -> jbyteArray {
+    let public_key: SchnorrAttestedPubKey = WRAPS::sentinel_keygen();
+
+    jni_util::u8_vec_to_jbyte_array(&env, &utils::serialize(&public_key))
+}
+
 /// JNI for WRAPSLibraryBridge.runSigningProtocolPhaseImpl
 #[no_mangle]
 pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBridge_runSigningProtocolPhaseImpl(

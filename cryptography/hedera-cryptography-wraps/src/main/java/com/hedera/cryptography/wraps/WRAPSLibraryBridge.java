@@ -116,6 +116,13 @@ public class WRAPSLibraryBridge {
 
     private native SchnorrKeys generateSchnorrKeysImpl(byte[] seed);
 
+    /**
+     * Returns the deterministic sentinel (aka placeholder) Schnorr public key.
+     * The corresponding private key is unknown and cannot be obtained by design.
+     * @return the bytes of the sentinel Schnorr public key.
+     */
+    public native byte[] provideSentinelPublicKey();
+
     private static final byte[][] EMPTY_BYTE_ARRAY_2 = new byte[0][];
     private static final long[] EMPTY_LONG_ARRAY = new long[0];
     private static final boolean[] EMPTY_BOOLEAN_ARRAY = new boolean[0];
