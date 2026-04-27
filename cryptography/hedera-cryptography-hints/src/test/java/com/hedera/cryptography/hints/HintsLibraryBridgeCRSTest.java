@@ -114,9 +114,10 @@ public class HintsLibraryBridgeCRSTest {
         // Only a real CRS should work correctly
         assertNull(INSTANCE.updateCRS(new byte[0], CRSConstants.RANDOM));
         assertNull(INSTANCE.updateCRS(new byte[1], CRSConstants.RANDOM));
-        // This last one cause a panic. It seems that 16 zeros are able to
-        // represent an (invalid) serialized CRS struct somehow.
-        // assertNull(INSTANCE.updateCRS(new byte[16], CRSConstants.RANDOM));
+
+        // These two could cause a panic, but we can handle that gracefully:
+        assertNull(INSTANCE.updateCRS(new byte[16], CRSConstants.RANDOM));
+        assertNull(INSTANCE.updateCRS(new byte[100], new byte[32]));
     }
 
     @Test
