@@ -49,6 +49,12 @@ use ark_relations::gr1cs::{
     SynthesisError, SynthesisMode, Namespace
 };
 
+use ark_ec::hashing::{
+    curve_maps::elligator2::Elligator2Map, map_to_curve_hasher::MapToCurveBasedHasher,
+    HashToCurve,
+};
+use ark_ec::twisted_edwards::Projective as TEProjective;
+
 use core::borrow::Borrow;
 use core::{marker::PhantomData};
 use std::ops::{Add, AddAssign};
@@ -464,12 +470,18 @@ fn hash_addressbook(ab: &AddressBook) -> Result<Fr, WRAPSError> {
     out.pop().ok_or(WRAPSError::CryptographyError)
 }
 
-// verifies that each Schnorr public key has a valid proof of knowledge
+// verifies that each Schnorr public key has a valid proof of knowledge.
+// Sentinel keys (deterministically derived from `SENTINEL_KEY_INPUT`) are
+// placeholders without a real signer, so their PoK check is skipped.
 fn verify_addressbook(ab: &AddressBook) -> Result<bool, WRAPSError> {
     if ab.len() > MAX_AB_SIZE {
         return Err(WRAPSError::AddressBookSizeExceeded);
     }
+    let sentinel = sentinel_pubkey();
     for ((pk, pok), _weight, _node_id) in ab.iter() {
+        if *pk == sentinel {
+            continue;
+        }
         let is_valid = verify_proof_of_knowledge(pok, pk);
         if !is_valid {
             return Ok(false);
@@ -578,6 +590,30 @@ fn generate_proof_of_knowledge(
     })
 }
 
+// Domain-separation tag deterministically defining the sentinel public key.
+const SENTINEL_KEY_INPUT: &[u8] = b"HieroTSS";
+
+// Domain separator passed to `MapToCurveBasedHasher::new` when hashing
+// `SENTINEL_KEY_INPUT` to the JubJub curve.
+const SENTINEL_KEY_DST: &[u8] = b"HieroTSSWrapsSentinelKey";
+
+/// Hashes the fixed `SENTINEL_KEY_INPUT` bytes to a JubJub curve point using
+/// arkworks' `MapToCurveBasedHasher` with `Elligator2Map` (true hash-to-curve).
+/// The resulting point is in the prime-order subgroup (cofactor cleared) and is
+/// returned in the upstream `ark_ed_on_bn254::EdwardsAffine` type.
+fn sentinel_pubkey() -> SchnorrPubKey {
+    let hasher = MapToCurveBasedHasher::<
+        TEProjective<utils::SentinelEdwardsConfig>,
+        DefaultFieldHasher<Sha256>,
+        Elligator2Map<utils::SentinelEdwardsConfig>,
+    >::new(SENTINEL_KEY_DST)
+    .expect("Elligator2 parameters for SentinelEdwardsConfig are valid");
+    let p = hasher
+        .hash(SENTINEL_KEY_INPUT)
+        .expect("hashing a fixed byte string cannot fail");
+    ark_ed_on_bn254::EdwardsAffine::new(p.x, p.y)
+}
+
 // Verifies a Schnorr proof of knowledge of the discrete log of the public key.
 fn verify_proof_of_knowledge(
     pok: &SchnorrPoK,
@@ -684,6 +720,23 @@ impl WRAPS {
         let pok = generate_proof_of_knowledge(&sk, seed2)?;
         let attested_pk: SchnorrAttestedPubKey = (pk, pok);
         Ok((sk, attested_pk))
+    }
+
+    /// Returns the deterministic sentinel `SchnorrAttestedPubKey`.
+    ///
+    /// The public key is derived by hashing a fixed byte string `SENTINEL_KEY_INPUT`
+    /// to the JubJub curve. The proof of knowledge is
+    /// populated with zero values; `verify_proof_of_knowledge` short-circuits
+    /// to `true` whenever the supplied public key matches this sentinel, so the
+    /// dummy PoK is never validated against the dlog relation.
+    pub fn sentinel_keygen() -> SchnorrAttestedPubKey {
+        let pk = sentinel_pubkey();
+        let pok = SchnorrPoK {
+            commitment: <JubJub as CurveGroup>::Affine::zero(),
+            challenge: JubJubFr::from(0u64),
+            response: JubJubFr::from(0u64),
+        };
+        (pk, pok)
     }
 
     /// Executes a single phase of the threshold Schnorr signing protocol.
@@ -1509,5 +1562,32 @@ mod tests {
             prev_keys = next_keys;
             prev_uncompressed_wraps_proof = next_uncompressed;
         }
+    }
+
+    #[test]
+    fn sentinel_key_attested_pok_verifies_and_is_deterministic() {
+        use ark_ec::AffineRepr;
+
+        let (pk1, pok1) = WRAPS::sentinel_keygen();
+
+        // The attested PoK must verify (the verifier short-circuits for sentinels).
+        assert!(
+            verify_proof_of_knowledge(&pok1, &pk1),
+            "sentinel attested key must verify"
+        );
+
+        // The sentinel key must be a real, on-curve, non-identity JubJub point
+        // in the prime-order subgroup.
+        assert!(pk1.is_on_curve());
+        assert!(pk1.is_in_correct_subgroup_assuming_on_curve());
+        assert!(!pk1.is_zero());
+
+        // Determinism: another call returns the same public key and the same
+        // (zero-valued) proof of knowledge.
+        let (pk2, pok2) = WRAPS::sentinel_keygen();
+        assert_eq!(pk1, pk2, "sentinel public key must be deterministic");
+        assert_eq!(pok1.commitment, pok2.commitment);
+        assert_eq!(pok1.challenge, pok2.challenge);
+        assert_eq!(pok1.response, pok2.response);
     }
 }
