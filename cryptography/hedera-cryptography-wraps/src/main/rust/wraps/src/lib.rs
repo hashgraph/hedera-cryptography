@@ -470,12 +470,18 @@ fn hash_addressbook(ab: &AddressBook) -> Result<Fr, WRAPSError> {
     out.pop().ok_or(WRAPSError::CryptographyError)
 }
 
-// verifies that each Schnorr public key has a valid proof of knowledge
+// verifies that each Schnorr public key has a valid proof of knowledge.
+// Sentinel keys (deterministically derived from `SENTINEL_KEY_INPUT`) are
+// placeholders without a real signer, so their PoK check is skipped.
 fn verify_addressbook(ab: &AddressBook) -> Result<bool, WRAPSError> {
     if ab.len() > MAX_AB_SIZE {
         return Err(WRAPSError::AddressBookSizeExceeded);
     }
+    let sentinel = sentinel_pubkey();
     for ((pk, pok), _weight, _node_id) in ab.iter() {
+        if *pk == sentinel {
+            continue;
+        }
         let is_valid = verify_proof_of_knowledge(pok, pk);
         if !is_valid {
             return Ok(false);
@@ -609,15 +615,10 @@ fn sentinel_pubkey() -> SchnorrPubKey {
 }
 
 // Verifies a Schnorr proof of knowledge of the discrete log of the public key.
-// Sentinel keys (deterministically derived from `SENTINEL_KEY_INPUT`) bypass this
-// check because they are placeholders without a real signer.
 fn verify_proof_of_knowledge(
     pok: &SchnorrPoK,
     pubkey: &SchnorrPubKey
 ) -> bool {
-    if *pubkey == sentinel_pubkey() {
-        return true;
-    }
     let g = JubJub::generator();
     let lhs = g * pok.response;
     let rhs = pok.commitment + (pubkey.clone() * pok.challenge);
