@@ -97,9 +97,11 @@ pub unsafe extern "system" fn Java_com_hedera_cryptography_wraps_WRAPSLibraryBri
     env: JNIEnv,
     _instance: JObject,
 ) -> jbyteArray {
-    let public_key: SchnorrAttestedPubKey = WRAPS::sentinel_keygen();
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let public_key: SchnorrAttestedPubKey = WRAPS::sentinel_keygen();
 
-    jni_util::u8_vec_to_jbyte_array(&env, &utils::serialize(&public_key))
+        jni_util::u8_vec_to_jbyte_array(&env, &utils::serialize(&public_key))
+    })).unwrap_or_else(|_| std::ptr::null_mut())
 }
 
 /// JNI for WRAPSLibraryBridge.runSigningProtocolPhaseImpl
