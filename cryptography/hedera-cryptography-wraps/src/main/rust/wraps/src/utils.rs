@@ -68,6 +68,53 @@ pub fn hash_to_g2(data: &[u8]) -> Result<G2Affine, WRAPSError> {
     }
 }
 
+pub struct SentinelEdwardsConfig;
+
+impl ark_ec::CurveConfig for SentinelEdwardsConfig {
+    type BaseField = <ark_ed_on_bn254::EdwardsConfig as ark_ec::CurveConfig>::BaseField;
+    type ScalarField = <ark_ed_on_bn254::EdwardsConfig as ark_ec::CurveConfig>::ScalarField;
+
+    const COFACTOR: &'static [u64] =
+        <ark_ed_on_bn254::EdwardsConfig as ark_ec::CurveConfig>::COFACTOR;
+    const COFACTOR_INV: Self::ScalarField =
+        <ark_ed_on_bn254::EdwardsConfig as ark_ec::CurveConfig>::COFACTOR_INV;
+}
+
+impl ark_ec::twisted_edwards::TECurveConfig for SentinelEdwardsConfig {
+    const COEFF_A: Self::BaseField =
+        <ark_ed_on_bn254::EdwardsConfig as ark_ec::twisted_edwards::TECurveConfig>::COEFF_A;
+    const COEFF_D: Self::BaseField =
+        <ark_ed_on_bn254::EdwardsConfig as ark_ec::twisted_edwards::TECurveConfig>::COEFF_D;
+    const GENERATOR: ark_ec::twisted_edwards::Affine<Self> = {
+        let g = <ark_ed_on_bn254::EdwardsConfig as ark_ec::twisted_edwards::TECurveConfig>::GENERATOR;
+        ark_ec::twisted_edwards::Affine::<Self>::new_unchecked(g.x, g.y)
+    };
+
+    type MontCurveConfig = SentinelEdwardsConfig;
+}
+
+impl ark_ec::twisted_edwards::MontCurveConfig for SentinelEdwardsConfig {
+    const COEFF_A: Self::BaseField =
+        <ark_ed_on_bn254::EdwardsConfig as ark_ec::twisted_edwards::MontCurveConfig>::COEFF_A;
+    const COEFF_B: Self::BaseField =
+        <ark_ed_on_bn254::EdwardsConfig as ark_ec::twisted_edwards::MontCurveConfig>::COEFF_B;
+
+    type TECurveConfig = SentinelEdwardsConfig;
+}
+
+// Elligator2 parameters for ed_on_bn254 (BN254 scalar field, A=168698, B=168700):
+//   Z = 5 — confirmed quadratic non-residue (5 is the multiplicative-group
+//           generator of Fr_bn254 per ark-bn254, hence has order q-1).
+//   ONE_OVER_COEFF_B_SQUARE = 1 / 168700^2  mod q
+//   COEFF_A_OVER_COEFF_B    = 168698 / 168700  mod q
+impl ark_ec::hashing::curve_maps::elligator2::Elligator2Config for SentinelEdwardsConfig {
+    const Z: Self::BaseField = ark_ff::MontFp!("5");
+    const ONE_OVER_COEFF_B_SQUARE: Self::BaseField =
+        ark_ff::MontFp!("434960922217718232343252710131411531147046209979785943225785176687629841089");
+    const COEFF_A_OVER_COEFF_B: Self::BaseField =
+        ark_ff::MontFp!("4853299424208772548686123611778859703392057609733030116540456584487579683386");
+}
+
 pub fn serialize<T: ark_serialize::CanonicalSerialize>(
     t: &T
 ) -> Vec<u8> {
@@ -358,5 +405,50 @@ mod tests {
         let point4 = hash_to_g2(b"").unwrap();
         assert!(point4.is_on_curve());
         assert!(!point4.is_zero());
+    }
+
+    #[test]
+    fn test_sentinel_hash_to_curve_deterministic() {
+        use ark_ec::hashing::{
+            curve_maps::elligator2::Elligator2Map,
+            map_to_curve_hasher::MapToCurveBasedHasher, HashToCurve,
+        };
+        use ark_ec::twisted_edwards::Projective as TEProjective;
+        use ark_ff::field_hashers::DefaultFieldHasher;
+
+        type Hasher = MapToCurveBasedHasher<
+            TEProjective<SentinelEdwardsConfig>,
+            DefaultFieldHasher<Sha256>,
+            Elligator2Map<SentinelEdwardsConfig>,
+        >;
+
+        // Two independently constructed hashers with the same domain
+        // must produce identical points on the same input.
+        let hasher_a = Hasher::new(&[]).unwrap();
+        let hasher_b = Hasher::new(&[]).unwrap();
+
+        let input = b"HieroTSS";
+        let p1 = hasher_a.hash(input).unwrap();
+        let p2 = hasher_b.hash(input).unwrap();
+        assert_eq!(p1, p2, "hash must be deterministic across hasher instances");
+
+        // Repeating the call on the same hasher also produces the same point.
+        let p3 = hasher_a.hash(input).unwrap();
+        assert_eq!(p1, p3, "hash must be deterministic across repeated calls");
+
+        // The output must land on the curve and in the prime-order subgroup,
+        // and must not be the identity.
+        assert!(p1.is_on_curve());
+        assert!(p1.is_in_correct_subgroup_assuming_on_curve());
+        assert!(!p1.is_zero());
+
+        // Different inputs produce different points (overwhelming probability).
+        let p_other = hasher_a.hash(b"different input").unwrap();
+        assert_ne!(p1, p_other);
+
+        // A different domain separator produces a different point for the same message.
+        let hasher_dom = Hasher::new(b"some-dst").unwrap();
+        let p_dom = hasher_dom.hash(input).unwrap();
+        assert_ne!(p1, p_dom);
     }
 }
