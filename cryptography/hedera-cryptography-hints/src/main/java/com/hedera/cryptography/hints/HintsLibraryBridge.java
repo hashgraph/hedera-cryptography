@@ -18,6 +18,9 @@ public class HintsLibraryBridge {
     /** The max theoretical sum of weights all nodes together can have, which is 2^63-1 because we use signed long. */
     private static final long MAX_SUM_OF_WEIGHTS = Long.MAX_VALUE;
 
+    /** The minimum length of an aggregationKey = 48 prefix + at least 1 byte of data. */
+    private static final int MIN_AGGREGATION_KEY_SIZE = 49;
+
     static {
         // Open the package to allow access to the native library
         // This can be done in module-info.java as well, but by default the compiler complains since there are no
@@ -72,7 +75,14 @@ public class HintsLibraryBridge {
      * @param random the random contribution of 256 bits (32 bytes)
      * @return the updated CRS object and a concatenated contribution proof for the update
      */
-    public native byte[] updateCRS(final byte[] prevCRS, final byte[] random);
+    public byte[] updateCRS(final byte[] prevCRS, final byte[] random) {
+        if (prevCRS == null || prevCRS.length == 0 || random == null || random.length != 32) {
+            return null;
+        }
+        return updateCRSImpl(prevCRS, random);
+    }
+
+    private native byte[] updateCRSImpl(final byte[] prevCRS, final byte[] random);
 
     /**
      * Verifies an updated CRS object.
@@ -81,7 +91,19 @@ public class HintsLibraryBridge {
      * @param contributionProof the contribution proof
      * @return true if the updated CRS object is valid, false otherwise
      */
-    public native boolean verifyCRS(final byte[] prevCRS, final byte[] nextCRS, final byte[] contributionProof);
+    public boolean verifyCRS(final byte[] prevCRS, final byte[] nextCRS, final byte[] contributionProof) {
+        if (prevCRS == null
+                || prevCRS.length == 0
+                || nextCRS == null
+                || nextCRS.length == 0
+                || contributionProof == null) {
+            return false;
+        }
+
+        return verifyCRSImpl(prevCRS, nextCRS, contributionProof);
+    }
+
+    private native boolean verifyCRSImpl(final byte[] prevCRS, final byte[] nextCRS, final byte[] contributionProof);
 
     /**
      * Prunes the CRS to a smaller degree by removing the higher degree elements.
@@ -232,7 +254,7 @@ public class HintsLibraryBridge {
                 || message == null
                 || message.length == 0
                 || aggregationKey == null
-                || aggregationKey.length == 0
+                || aggregationKey.length < MIN_AGGREGATION_KEY_SIZE
                 || partyId < 0
                 || partyId >= MAX_SIGNERS_NUM) {
             return false;
@@ -257,7 +279,7 @@ public class HintsLibraryBridge {
         if (message == null
                 || message.length == 0
                 || aggregationKey == null
-                || aggregationKey.length == 0
+                || aggregationKey.length < MIN_AGGREGATION_KEY_SIZE
                 || parties == null
                 || parties.length == 0
                 || !validatePartialSignatures(parties, partialSignatures)) {
@@ -293,7 +315,7 @@ public class HintsLibraryBridge {
         if (crs == null
                 || crs.length == 0
                 || aggregationKey == null
-                || aggregationKey.length == 0
+                || aggregationKey.length < MIN_AGGREGATION_KEY_SIZE
                 || verificationKey == null
                 || verificationKey.length == 0
                 || parties == null
