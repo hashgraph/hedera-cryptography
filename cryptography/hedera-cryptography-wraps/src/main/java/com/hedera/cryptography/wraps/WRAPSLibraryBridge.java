@@ -70,7 +70,7 @@ public class WRAPSLibraryBridge {
             return false;
         }
         final Set<String> files = Set.of(dir.list());
-        if (!files.equals(Set.of("decider_pp.bin", "decider_vp.bin", "nova_pp.bin", "nova_vp.bin"))) {
+        if (!files.containsAll(Set.of("decider_pp.bin", "decider_vp.bin", "nova_pp.bin", "nova_vp.bin"))) {
             return false;
         }
         return true;
