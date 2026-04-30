@@ -43,10 +43,6 @@ public class HintsLibraryBridge {
         return INSTANCE_HOLDER.getInstance();
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    //                    CRS management methods
-    ///////////////////////////////////////////////////////////////////////////
-
     /**
      * Generates a new CRS object for the given number of signers plus 1.
      * <p>
@@ -120,10 +116,6 @@ public class HintsLibraryBridge {
     }
 
     private native byte[] pruneCRSImpl(final byte[] prevCRS, final short signersNum);
-
-    ///////////////////////////////////////////////////////////////////////////
-    //                          HinTS APIs
-    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * Generates a new secret key.

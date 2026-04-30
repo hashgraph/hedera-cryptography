@@ -27,6 +27,7 @@ spotless { format("rust") { clearSteps() } }
 
 tasks.test {
     dependsOn("downloadWrapsArtifactTask")
+    jvmArgs("--enable-native-access=com.hedera.common.nativesupport,com.hedera.cryptography.hints,com.hedera.cryptography.wraps")
     environment(
         mapOf(
             // For the TSS lib:

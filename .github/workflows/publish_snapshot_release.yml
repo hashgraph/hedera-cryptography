@@ -21,7 +21,7 @@ env:
   GRADLE_CACHE_PASSWORD: ${{ secrets.GRADLE_CACHE_PASSWORD }}
   GRADLE_VERSION: wrapper
   JAVA_DISTRIBUTION: temurin
-  JAVA_VERSION: 21.0.4
+  JAVA_VERSION: 25.0.2
 
 jobs:
   publish-maven-central:
