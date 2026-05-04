@@ -11,3 +11,7 @@ testModuleInfo {
     requires("org.junit.jupiter.api")
     requires("org.junit.jupiter.params")
 }
+
+tasks.test {
+    jvmArgs("--enable-native-access=com.hedera.common.nativesupport,com.hedera.cryptography.hints")
+}
