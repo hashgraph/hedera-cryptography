@@ -482,7 +482,7 @@ fn verify_addressbook(ab: &AddressBook) -> Result<bool, WRAPSError> {
         if *pk == sentinel {
             continue;
         }
-        let is_valid = verify_proof_of_knowledge(pok, pk);
+        let is_valid = verify_proof_of_knowledge(pok, pk)?;
         if !is_valid {
             return Ok(false);
         }
@@ -580,7 +580,7 @@ fn generate_proof_of_knowledge(
 
     let challenge = proof_of_knowledge_random_oracle(g, statement, commitment)?;
 
-    // compute response = x + challenge * sk
+    // compute response = r + challenge * x
     let response = r + challenge * x;
 
     Ok(SchnorrPoK {
@@ -588,6 +588,18 @@ fn generate_proof_of_knowledge(
         challenge,
         response,
     })
+}
+
+// Verifies a Schnorr proof of knowledge of the discrete log of the public key.
+fn verify_proof_of_knowledge(
+    pok: &SchnorrPoK,
+    pubkey: &SchnorrPubKey
+) -> Result<bool, WRAPSError> {
+    let g = JubJub::generator();
+    let challenge = proof_of_knowledge_random_oracle(g, *pubkey, pok.commitment)?;
+    let lhs = g * pok.response;
+    let rhs = pok.commitment + (pubkey.clone() * pok.challenge);
+    Ok(lhs.into_affine() == rhs && challenge == pok.challenge)
 }
 
 // Domain-separation tag deterministically defining the sentinel public key.
@@ -612,17 +624,6 @@ fn sentinel_pubkey() -> SchnorrPubKey {
         .hash(SENTINEL_KEY_INPUT)
         .expect("hashing a fixed byte string cannot fail");
     ark_ed_on_bn254::EdwardsAffine::new(p.x, p.y)
-}
-
-// Verifies a Schnorr proof of knowledge of the discrete log of the public key.
-fn verify_proof_of_knowledge(
-    pok: &SchnorrPoK,
-    pubkey: &SchnorrPubKey
-) -> bool {
-    let g = JubJub::generator();
-    let lhs = g * pok.response;
-    let rhs = pok.commitment + (pubkey.clone() * pok.challenge);
-    lhs.into_affine() == rhs
 }
 
 impl ProvingKey {
@@ -1332,7 +1333,7 @@ mod tests {
         let ab_size = rng.gen_range(MAX_AB_SIZE/4..=MAX_AB_SIZE);
         for i in 0..ab_size {
             let (sk, attested_pk) = WRAPS::keygen(rng.gen()).unwrap();
-            assert!(verify_proof_of_knowledge(&attested_pk.1, &attested_pk.0));
+            assert!(verify_proof_of_knowledge(&attested_pk.1, &attested_pk.0).unwrap());
             let weight = Fr::from(rng.gen_range(475u64..=525u64));
             let node_id = Fr::from(i as u64);
             keys.push(sk);
@@ -1463,10 +1464,10 @@ mod tests {
         let (wraps_pk, wraps_vk) = if load_params_from_disk {
             let start = std::time::Instant::now();
             let cwd = env::current_dir().unwrap();
-            let nova_pp_bytes = std::fs::read(cwd.join("resources/ceremony/nova_pp.bin")).unwrap();
-            let nova_vp_bytes = std::fs::read(cwd.join("resources/ceremony/nova_vp.bin")).unwrap();
-            let decider_pp_bytes = std::fs::read(cwd.join("resources/ceremony/decider_pp.bin")).unwrap();
-            let decider_vp_bytes = std::fs::read(cwd.join("resources/ceremony/decider_vp.bin")).unwrap();
+            let nova_pp_bytes = std::fs::read(cwd.join("resources/ceremony_mainnet/nova_pp.bin")).unwrap();
+            let nova_vp_bytes = std::fs::read(cwd.join("resources/ceremony_mainnet/nova_vp.bin")).unwrap();
+            let decider_pp_bytes = std::fs::read(cwd.join("resources/ceremony_mainnet/decider_pp.bin")).unwrap();
+            let decider_vp_bytes = std::fs::read(cwd.join("resources/ceremony_mainnet/decider_vp.bin")).unwrap();
             println!("Read all parameters from disk: {:?}", start.elapsed());
 
             let start = std::time::Instant::now();
@@ -1565,16 +1566,34 @@ mod tests {
     }
 
     #[test]
+    fn verify_addressbook_accepts_mixed_sentinel_entries() {
+        let rng = &mut thread_rng();
+        let ab_size = 30;
+        let mut ab: AddressBook = Vec::new();
+        for i in 0..ab_size {
+            let attested_pk: SchnorrAttestedPubKey = if i % 3 == 0 {
+                WRAPS::sentinel_keygen()
+            } else {
+                WRAPS::keygen(rng.gen()).unwrap().1
+            };
+            let weight = Fr::from(rng.gen_range(475u64..=525u64));
+            let node_id = Fr::from(i as u64);
+            ab.push((attested_pk, weight, node_id));
+        }
+
+        // Sanity-check that we exercised both branches of verify_addressbook.
+        let sentinel = sentinel_pubkey();
+        assert!(ab.iter().any(|abe| abe.0.0 == sentinel));
+        assert!(ab.iter().any(|abe| abe.0.0 != sentinel));
+
+        assert!(verify_addressbook(&ab).unwrap());
+    }
+
+    #[test]
     fn sentinel_key_attested_pok_verifies_and_is_deterministic() {
         use ark_ec::AffineRepr;
 
         let (pk1, pok1) = WRAPS::sentinel_keygen();
-
-        // The attested PoK must verify (the verifier short-circuits for sentinels).
-        assert!(
-            verify_proof_of_knowledge(&pok1, &pk1),
-            "sentinel attested key must verify"
-        );
 
         // The sentinel key must be a real, on-curve, non-identity JubJub point
         // in the prime-order subgroup.
