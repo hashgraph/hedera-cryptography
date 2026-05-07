@@ -1464,10 +1464,10 @@ mod tests {
         let (wraps_pk, wraps_vk) = if load_params_from_disk {
             let start = std::time::Instant::now();
             let cwd = env::current_dir().unwrap();
-            let nova_pp_bytes = std::fs::read(cwd.join("resources/ceremony/nova_pp.bin")).unwrap();
-            let nova_vp_bytes = std::fs::read(cwd.join("resources/ceremony/nova_vp.bin")).unwrap();
-            let decider_pp_bytes = std::fs::read(cwd.join("resources/ceremony/decider_pp.bin")).unwrap();
-            let decider_vp_bytes = std::fs::read(cwd.join("resources/ceremony/decider_vp.bin")).unwrap();
+            let nova_pp_bytes = std::fs::read(cwd.join("resources/ceremony_mainnet/nova_pp.bin")).unwrap();
+            let nova_vp_bytes = std::fs::read(cwd.join("resources/ceremony_mainnet/nova_vp.bin")).unwrap();
+            let decider_pp_bytes = std::fs::read(cwd.join("resources/ceremony_mainnet/decider_pp.bin")).unwrap();
+            let decider_vp_bytes = std::fs::read(cwd.join("resources/ceremony_mainnet/decider_vp.bin")).unwrap();
             println!("Read all parameters from disk: {:?}", start.elapsed());
 
             let start = std::time::Instant::now();
@@ -1563,6 +1563,30 @@ mod tests {
             prev_keys = next_keys;
             prev_uncompressed_wraps_proof = next_uncompressed;
         }
+    }
+
+    #[test]
+    fn verify_addressbook_accepts_mixed_sentinel_entries() {
+        let rng = &mut thread_rng();
+        let ab_size = 30;
+        let mut ab: AddressBook = Vec::new();
+        for i in 0..ab_size {
+            let attested_pk: SchnorrAttestedPubKey = if i % 3 == 0 {
+                WRAPS::sentinel_keygen()
+            } else {
+                WRAPS::keygen(rng.gen()).unwrap().1
+            };
+            let weight = Fr::from(rng.gen_range(475u64..=525u64));
+            let node_id = Fr::from(i as u64);
+            ab.push((attested_pk, weight, node_id));
+        }
+
+        // Sanity-check that we exercised both branches of verify_addressbook.
+        let sentinel = sentinel_pubkey();
+        assert!(ab.iter().any(|abe| abe.0.0 == sentinel));
+        assert!(ab.iter().any(|abe| abe.0.0 != sentinel));
+
+        assert!(verify_addressbook(&ab).unwrap());
     }
 
     #[test]
