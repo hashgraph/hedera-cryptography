@@ -70,7 +70,7 @@ public class WRAPSLibraryBridge {
             return false;
         }
         final Set<String> files = Set.of(dir.list());
-        if (!files.equals(Set.of("decider_pp.bin", "decider_vp.bin", "nova_pp.bin", "nova_vp.bin"))) {
+        if (!files.containsAll(Set.of("decider_pp.bin", "decider_vp.bin", "nova_pp.bin", "nova_vp.bin"))) {
             return false;
         }
         return true;
@@ -115,6 +115,13 @@ public class WRAPSLibraryBridge {
     }
 
     private native SchnorrKeys generateSchnorrKeysImpl(byte[] seed);
+
+    /**
+     * Returns the deterministic sentinel (aka placeholder) Schnorr public key.
+     * The corresponding private key is unknown and cannot be obtained by design.
+     * @return the bytes of the sentinel Schnorr public key.
+     */
+    public native byte[] provideSentinelPublicKey();
 
     private static final byte[][] EMPTY_BYTE_ARRAY_2 = new byte[0][];
     private static final long[] EMPTY_LONG_ARRAY = new long[0];

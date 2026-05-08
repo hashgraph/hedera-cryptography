@@ -49,6 +49,12 @@ use ark_relations::gr1cs::{
     SynthesisError, SynthesisMode, Namespace
 };
 
+use ark_ec::hashing::{
+    curve_maps::elligator2::Elligator2Map, map_to_curve_hasher::MapToCurveBasedHasher,
+    HashToCurve,
+};
+use ark_ec::twisted_edwards::Projective as TEProjective;
+
 use core::borrow::Borrow;
 use core::{marker::PhantomData};
 use std::ops::{Add, AddAssign};
@@ -464,13 +470,19 @@ fn hash_addressbook(ab: &AddressBook) -> Result<Fr, WRAPSError> {
     out.pop().ok_or(WRAPSError::CryptographyError)
 }
 
-// verifies that each Schnorr public key has a valid proof of knowledge
+// verifies that each Schnorr public key has a valid proof of knowledge.
+// Sentinel keys (deterministically derived from `SENTINEL_KEY_INPUT`) are
+// placeholders without a real signer, so their PoK check is skipped.
 fn verify_addressbook(ab: &AddressBook) -> Result<bool, WRAPSError> {
     if ab.len() > MAX_AB_SIZE {
         return Err(WRAPSError::AddressBookSizeExceeded);
     }
+    let sentinel = sentinel_pubkey();
     for ((pk, pok), _weight, _node_id) in ab.iter() {
-        let is_valid = verify_proof_of_knowledge(pok, pk);
+        if *pk == sentinel {
+            continue;
+        }
+        let is_valid = verify_proof_of_knowledge(pok, pk)?;
         if !is_valid {
             return Ok(false);
         }
@@ -568,7 +580,7 @@ fn generate_proof_of_knowledge(
 
     let challenge = proof_of_knowledge_random_oracle(g, statement, commitment)?;
 
-    // compute response = x + challenge * sk
+    // compute response = r + challenge * x
     let response = r + challenge * x;
 
     Ok(SchnorrPoK {
@@ -582,11 +594,36 @@ fn generate_proof_of_knowledge(
 fn verify_proof_of_knowledge(
     pok: &SchnorrPoK,
     pubkey: &SchnorrPubKey
-) -> bool {
+) -> Result<bool, WRAPSError> {
     let g = JubJub::generator();
+    let challenge = proof_of_knowledge_random_oracle(g, *pubkey, pok.commitment)?;
     let lhs = g * pok.response;
     let rhs = pok.commitment + (pubkey.clone() * pok.challenge);
-    lhs.into_affine() == rhs
+    Ok(lhs.into_affine() == rhs && challenge == pok.challenge)
+}
+
+// Domain-separation tag deterministically defining the sentinel public key.
+const SENTINEL_KEY_INPUT: &[u8] = b"HieroTSS";
+
+// Domain separator passed to `MapToCurveBasedHasher::new` when hashing
+// `SENTINEL_KEY_INPUT` to the JubJub curve.
+const SENTINEL_KEY_DST: &[u8] = b"HieroTSSWrapsSentinelKey";
+
+/// Hashes the fixed `SENTINEL_KEY_INPUT` bytes to a JubJub curve point using
+/// arkworks' `MapToCurveBasedHasher` with `Elligator2Map` (true hash-to-curve).
+/// The resulting point is in the prime-order subgroup (cofactor cleared) and is
+/// returned in the upstream `ark_ed_on_bn254::EdwardsAffine` type.
+fn sentinel_pubkey() -> SchnorrPubKey {
+    let hasher = MapToCurveBasedHasher::<
+        TEProjective<utils::SentinelEdwardsConfig>,
+        DefaultFieldHasher<Sha256>,
+        Elligator2Map<utils::SentinelEdwardsConfig>,
+    >::new(SENTINEL_KEY_DST)
+    .expect("Elligator2 parameters for SentinelEdwardsConfig are valid");
+    let p = hasher
+        .hash(SENTINEL_KEY_INPUT)
+        .expect("hashing a fixed byte string cannot fail");
+    ark_ed_on_bn254::EdwardsAffine::new(p.x, p.y)
 }
 
 impl ProvingKey {
@@ -684,6 +721,23 @@ impl WRAPS {
         let pok = generate_proof_of_knowledge(&sk, seed2)?;
         let attested_pk: SchnorrAttestedPubKey = (pk, pok);
         Ok((sk, attested_pk))
+    }
+
+    /// Returns the deterministic sentinel `SchnorrAttestedPubKey`.
+    ///
+    /// The public key is derived by hashing a fixed byte string `SENTINEL_KEY_INPUT`
+    /// to the JubJub curve. The proof of knowledge is
+    /// populated with zero values; `verify_proof_of_knowledge` short-circuits
+    /// to `true` whenever the supplied public key matches this sentinel, so the
+    /// dummy PoK is never validated against the dlog relation.
+    pub fn sentinel_keygen() -> SchnorrAttestedPubKey {
+        let pk = sentinel_pubkey();
+        let pok = SchnorrPoK {
+            commitment: <JubJub as CurveGroup>::Affine::zero(),
+            challenge: JubJubFr::from(0u64),
+            response: JubJubFr::from(0u64),
+        };
+        (pk, pok)
     }
 
     /// Executes a single phase of the threshold Schnorr signing protocol.
@@ -1279,7 +1333,7 @@ mod tests {
         let ab_size = rng.gen_range(MAX_AB_SIZE/4..=MAX_AB_SIZE);
         for i in 0..ab_size {
             let (sk, attested_pk) = WRAPS::keygen(rng.gen()).unwrap();
-            assert!(verify_proof_of_knowledge(&attested_pk.1, &attested_pk.0));
+            assert!(verify_proof_of_knowledge(&attested_pk.1, &attested_pk.0).unwrap());
             let weight = Fr::from(rng.gen_range(475u64..=525u64));
             let node_id = Fr::from(i as u64);
             keys.push(sk);
@@ -1410,10 +1464,10 @@ mod tests {
         let (wraps_pk, wraps_vk) = if load_params_from_disk {
             let start = std::time::Instant::now();
             let cwd = env::current_dir().unwrap();
-            let nova_pp_bytes = std::fs::read(cwd.join("resources/ceremony/nova_pp.bin")).unwrap();
-            let nova_vp_bytes = std::fs::read(cwd.join("resources/ceremony/nova_vp.bin")).unwrap();
-            let decider_pp_bytes = std::fs::read(cwd.join("resources/ceremony/decider_pp.bin")).unwrap();
-            let decider_vp_bytes = std::fs::read(cwd.join("resources/ceremony/decider_vp.bin")).unwrap();
+            let nova_pp_bytes = std::fs::read(cwd.join("resources/ceremony_mainnet/nova_pp.bin")).unwrap();
+            let nova_vp_bytes = std::fs::read(cwd.join("resources/ceremony_mainnet/nova_vp.bin")).unwrap();
+            let decider_pp_bytes = std::fs::read(cwd.join("resources/ceremony_mainnet/decider_pp.bin")).unwrap();
+            let decider_vp_bytes = std::fs::read(cwd.join("resources/ceremony_mainnet/decider_vp.bin")).unwrap();
             println!("Read all parameters from disk: {:?}", start.elapsed());
 
             let start = std::time::Instant::now();
@@ -1509,5 +1563,50 @@ mod tests {
             prev_keys = next_keys;
             prev_uncompressed_wraps_proof = next_uncompressed;
         }
+    }
+
+    #[test]
+    fn verify_addressbook_accepts_mixed_sentinel_entries() {
+        let rng = &mut thread_rng();
+        let ab_size = 30;
+        let mut ab: AddressBook = Vec::new();
+        for i in 0..ab_size {
+            let attested_pk: SchnorrAttestedPubKey = if i % 3 == 0 {
+                WRAPS::sentinel_keygen()
+            } else {
+                WRAPS::keygen(rng.gen()).unwrap().1
+            };
+            let weight = Fr::from(rng.gen_range(475u64..=525u64));
+            let node_id = Fr::from(i as u64);
+            ab.push((attested_pk, weight, node_id));
+        }
+
+        // Sanity-check that we exercised both branches of verify_addressbook.
+        let sentinel = sentinel_pubkey();
+        assert!(ab.iter().any(|abe| abe.0.0 == sentinel));
+        assert!(ab.iter().any(|abe| abe.0.0 != sentinel));
+
+        assert!(verify_addressbook(&ab).unwrap());
+    }
+
+    #[test]
+    fn sentinel_key_attested_pok_verifies_and_is_deterministic() {
+        use ark_ec::AffineRepr;
+
+        let (pk1, pok1) = WRAPS::sentinel_keygen();
+
+        // The sentinel key must be a real, on-curve, non-identity JubJub point
+        // in the prime-order subgroup.
+        assert!(pk1.is_on_curve());
+        assert!(pk1.is_in_correct_subgroup_assuming_on_curve());
+        assert!(!pk1.is_zero());
+
+        // Determinism: another call returns the same public key and the same
+        // (zero-valued) proof of knowledge.
+        let (pk2, pok2) = WRAPS::sentinel_keygen();
+        assert_eq!(pk1, pk2, "sentinel public key must be deterministic");
+        assert_eq!(pok1.commitment, pok2.commitment);
+        assert_eq!(pok1.challenge, pok2.challenge);
+        assert_eq!(pok1.response, pok2.response);
     }
 }

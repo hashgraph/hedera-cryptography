@@ -21,7 +21,7 @@ ark-relations = { git = "https://github.com/arkworks-rs/snark" }
 ark-snark = { git = "https://github.com/arkworks-rs/snark" }
 ark-crypto-primitives = { git = "https://github.com/winderica/crypto-primitives", rev = "af003fc" }
 ark-r1cs-std = { git = "https://github.com/winderica/r1cs-std", rev = "ae8283a" }         # "sw-fix-updated" branch
-ark-std = { git = "https://github.com/arkworks-rs/std" }
+ark-std = { git = "https://github.com/arkworks-rs/std", rev = "73dcad0", default-features = false }
 ark-poly-commit = { git = "https://github.com/arkworks-rs/poly-commit" }
 
 

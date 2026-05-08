@@ -27,6 +27,9 @@ spotless { format("rust") { clearSteps() } }
 
 tasks.test {
     dependsOn("downloadWrapsArtifactTask")
+    jvmArgs(
+        "--enable-native-access=com.hedera.common.nativesupport,com.hedera.cryptography.hints,com.hedera.cryptography.wraps"
+    )
     environment(
         mapOf(
             // For the TSS lib:
@@ -37,7 +40,7 @@ tasks.test {
                 (tasks.named("downloadWrapsArtifactTask").get().property("wrapsDir")
                         as DirectoryProperty)
                     .get()
-                    .dir("v0.2.0")
+                    .dir("v1.0.0")
                     .asFile
                     .absolutePath,
 

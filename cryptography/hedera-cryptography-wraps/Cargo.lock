@@ -87,7 +87,7 @@ dependencies = [
  "ark-ec",
  "ark-ff",
  "ark-r1cs-std",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
 ]
 
 [[package]]
@@ -103,7 +103,7 @@ dependencies = [
  "ark-relations",
  "ark-serialize",
  "ark-snark",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
  "blake2",
  "derivative",
  "digest",
@@ -135,7 +135,7 @@ dependencies = [
  "ark-ff",
  "ark-poly",
  "ark-serialize",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
  "educe",
  "fnv",
  "hashbrown 0.16.1",
@@ -156,7 +156,7 @@ dependencies = [
  "ark-ec",
  "ark-ff",
  "ark-r1cs-std",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
 ]
 
 [[package]]
@@ -167,7 +167,7 @@ dependencies = [
  "ark-ff-asm",
  "ark-ff-macros",
  "ark-serialize",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
  "digest",
  "educe",
  "num-bigint",
@@ -209,10 +209,7 @@ dependencies = [
  "ark-relations",
  "ark-serialize",
  "ark-snark",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
- "educe",
- "rayon",
- "tracing",
+ "ark-std",
 ]
 
 [[package]]
@@ -224,7 +221,7 @@ dependencies = [
  "ark-ec",
  "ark-ff",
  "ark-r1cs-std",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
 ]
 
 [[package]]
@@ -235,7 +232,7 @@ dependencies = [
  "ark-ec",
  "ark-ff",
  "ark-r1cs-std",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
 ]
 
 [[package]]
@@ -247,7 +244,7 @@ dependencies = [
  "ark-ff",
  "ark-mnt4-298",
  "ark-r1cs-std",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
 ]
 
 [[package]]
@@ -258,7 +255,7 @@ dependencies = [
  "ark-ec",
  "ark-ff",
  "ark-r1cs-std",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
 ]
 
 [[package]]
@@ -269,7 +266,7 @@ dependencies = [
  "ahash",
  "ark-ff",
  "ark-serialize",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
  "educe",
  "fnv",
  "hashbrown 0.16.1",
@@ -287,7 +284,7 @@ dependencies = [
  "ark-ff",
  "ark-poly",
  "ark-serialize",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
  "blake2",
  "derivative",
  "digest",
@@ -304,7 +301,7 @@ dependencies = [
  "ark-ec",
  "ark-ff",
  "ark-relations",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std?rev=73dcad0)",
+ "ark-std",
  "educe",
  "itertools",
  "num-bigint",
@@ -321,7 +318,7 @@ dependencies = [
  "ark-ff",
  "ark-poly",
  "ark-serialize",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
  "foldhash",
  "indexmap 2.14.0",
  "rayon",
@@ -335,7 +332,7 @@ version = "0.5.0"
 source = "git+https://github.com/arkworks-rs/algebra#08aa6de11f481f241ab7d6015be6db89eb03e2f1"
 dependencies = [
  "ark-serialize-derive",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
  "digest",
  "num-bigint",
  "rayon",
@@ -360,7 +357,7 @@ dependencies = [
  "ark-ff",
  "ark-relations",
  "ark-serialize",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
 ]
 
 [[package]]
@@ -373,17 +370,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ark-std"
-version = "0.5.0"
-source = "git+https://github.com/arkworks-rs/std#1693bc56d2ca6657b623f33a3f0b009d0ffeb892"
-dependencies = [
- "colored",
- "num-traits",
- "rand",
- "rayon",
-]
-
-[[package]]
 name = "ark-vesta"
 version = "0.5.0"
 source = "git+https://github.com/arkworks-rs/algebra#08aa6de11f481f241ab7d6015be6db89eb03e2f1"
@@ -392,7 +378,7 @@ dependencies = [
  "ark-ff",
  "ark-pallas",
  "ark-r1cs-std",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
 ]
 
 [[package]]
@@ -470,7 +456,7 @@ dependencies = [
  "ark-relations",
  "ark-serialize",
  "ark-snark",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
  "blake2",
  "clap",
  "digest",
@@ -740,7 +726,7 @@ dependencies = [
  "ark-relations",
  "ark-serialize",
  "ark-snark",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
  "ark-vesta",
  "num-bigint",
  "num-integer",
@@ -1771,7 +1757,7 @@ dependencies = [
  "ark-relations",
  "ark-serialize",
  "ark-snark",
- "ark-std 0.5.0 (git+https://github.com/arkworks-rs/std)",
+ "ark-std",
  "blake2",
  "digest",
  "folding-schemes",
