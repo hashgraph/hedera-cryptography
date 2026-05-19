@@ -80,4 +80,4 @@ By participating, you are expected to uphold this code of conduct.
 
 ## Whitepaper
 
-The Whitepaper for HieroTSS, covering all algorithms, is at https://github.com/hashgraph/hedera-cryptography/Documents
+The Whitepaper for HieroTSS, covering all algorithms, is at https://github.com/hashgraph/hedera-cryptography/Documents 
